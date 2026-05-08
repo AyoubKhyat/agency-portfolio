@@ -2,7 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { FaFacebook, FaInstagram, FaLinkedin, FaWhatsapp } from "react-icons/fa";
+import { FaInstagram, FaWhatsapp } from "react-icons/fa";
+import { HiOutlineEnvelope } from "react-icons/hi2";
 
 export default function Footer() {
   const t = useTranslations("Footer");
@@ -75,25 +76,13 @@ export default function Footer() {
             <h3 className="font-semibold text-white mb-3">{t("follow")}</h3>
             <div className="flex gap-3">
               <a
-                href="#"
-                aria-label="Facebook"
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-secondary transition-colors"
-              >
-                <FaFacebook size={18} />
-              </a>
-              <a
-                href="#"
+                href="https://www.instagram.com/ibda3.digital0/"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Instagram"
                 className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-secondary transition-colors"
               >
                 <FaInstagram size={18} />
-              </a>
-              <a
-                href="#"
-                aria-label="LinkedIn"
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-secondary transition-colors"
-              >
-                <FaLinkedin size={18} />
               </a>
               <a
                 href="https://wa.me/212625461645"
@@ -103,6 +92,13 @@ export default function Footer() {
                 className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-secondary transition-colors"
               >
                 <FaWhatsapp size={18} />
+              </a>
+              <a
+                href="mailto:ibda3.digital0@gmail.com"
+                aria-label="Email"
+                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-secondary transition-colors"
+              >
+                <HiOutlineEnvelope size={18} />
               </a>
             </div>
           </div>
