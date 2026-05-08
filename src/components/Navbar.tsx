@@ -21,11 +21,16 @@ export default function Navbar() {
   ] as const;
 
   return (
-    <nav className="sticky top-0 z-50 bg-secondary/80 backdrop-blur-md border-b border-white/5">
+    <nav className="sticky top-0 z-50 bg-secondary/80 backdrop-blur-md border-b border-line-soft">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="text-2xl font-bold text-white">
-            Ibda3<span className="text-primary"> Digital</span>
+          <Link href="/" className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary-dark grid place-items-center font-serif italic text-xl text-secondary font-semibold shadow-[0_0_30px_rgba(167,139,250,0.4)]">
+              i
+            </span>
+            <span className="font-mono text-sm tracking-[0.12em] uppercase text-text-muted">
+              Ibda3 Digital
+            </span>
           </Link>
 
           <div className="hidden md:flex items-center gap-1">
@@ -33,10 +38,10 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-2 rounded-lg text-sm transition-colors ${
                   pathname === link.href
-                    ? "text-primary bg-primary/10"
-                    : "text-gray-300 hover:text-primary hover:bg-white/5"
+                    ? "text-primary font-medium"
+                    : "text-text-muted hover:text-primary"
                 }`}
               >
                 {link.label}
@@ -45,7 +50,7 @@ export default function Navbar() {
             <LanguageSwitcher />
             <Link
               href="/contact"
-              className="ml-2 px-4 py-2 bg-primary text-secondary rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors"
+              className="ml-3 px-5 py-2 bg-primary text-secondary rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors"
             >
               {t("cta")}
             </Link>
@@ -53,7 +58,7 @@ export default function Navbar() {
 
           <button
             onClick={() => setOpen(!open)}
-            className="md:hidden p-2 rounded-lg text-gray-300 hover:bg-white/5"
+            className="md:hidden p-2 rounded-lg text-text-muted hover:bg-white/5"
           >
             {open ? <HiX size={24} /> : <HiMenu size={24} />}
           </button>
@@ -61,17 +66,17 @@ export default function Navbar() {
       </div>
 
       {open && (
-        <div className="md:hidden border-t border-white/5 bg-secondary max-h-[70vh] overflow-y-auto">
+        <div className="md:hidden border-t border-line-soft bg-secondary max-h-[70vh] overflow-y-auto">
           <div className="px-4 py-3 space-y-1">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+                className={`block px-3 py-2 rounded-lg text-sm ${
                   pathname === link.href
-                    ? "text-primary bg-primary/10"
-                    : "text-gray-300 hover:text-primary"
+                    ? "text-primary font-medium"
+                    : "text-text-muted hover:text-primary"
                 }`}
               >
                 {link.label}

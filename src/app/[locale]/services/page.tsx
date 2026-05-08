@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { HiOutlineCheck } from "react-icons/hi2";
 
 export async function generateMetadata({
   params,
@@ -12,65 +13,57 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "Services" });
   return { title: `${t("title")} — Ibda3 Digital`, description: t("subtitle") };
 }
-import {
-  HiOutlineGlobeAlt,
-  HiOutlineShoppingCart,
-  HiOutlineDevicePhoneMobile,
-  HiOutlineWrenchScrewdriver,
-  HiOutlineCheck,
-} from "react-icons/hi2";
 
 export default function ServicesPage() {
   const t = useTranslations("Services");
 
-  const services = [
-    { key: "web", icon: HiOutlineGlobeAlt },
-    { key: "ecommerce", icon: HiOutlineShoppingCart },
-    { key: "mobile", icon: HiOutlineDevicePhoneMobile },
-    { key: "maintenance", icon: HiOutlineWrenchScrewdriver },
+  const solutions = [
+    { num: "01", key: "web", en: "Websites that load fast." },
+    { num: "02", key: "ecommerce", en: "Shops that convert." },
+    { num: "03", key: "mobile", en: "Apps that scale." },
   ];
 
-  const plans = [
-    { key: "starter", popular: false },
-    { key: "pro", popular: true },
-    { key: "business", popular: false },
+  const rows = [
+    { idx: "/ 01", key: "starter", priceKey: "pricing_starter_price" },
+    { idx: "/ 02", key: "pro", priceKey: "pricing_pro_price" },
+    { idx: "/ 03", key: "business", priceKey: "pricing_business_price" },
   ];
 
   return (
     <>
-      <section className="bg-secondary py-20 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute top-10 right-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white">{t("title")}</h1>
-          <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-            {t("subtitle")}
-          </p>
+      {/* Hero */}
+      <section className="relative bg-secondary py-24 md:py-32 overflow-hidden">
+        <div className="grid-bg" />
+        <div className="glow w-[800px] h-[800px] bg-primary -top-48 -left-48 opacity-20" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <span className="pill">◆ {t("title")}</span>
+          <h1 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[132px] leading-[0.95] tracking-tight text-white max-w-[1200px]">
+            Du code <span className="text-primary italic">moderne</span>,<br />
+            pensé pour les entreprises <span className="text-accent italic">marocaines.</span>
+          </h1>
         </div>
       </section>
 
-      <section className="py-20 bg-surface">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-8">
-            {services.map((s) => {
+      {/* Solution Cards */}
+      <section className="relative py-20 bg-surface-2 overflow-hidden">
+        <div className="grid-bg" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-3 gap-6">
+            {solutions.map((s) => {
               const features = t(`${s.key}_features`).split(",").map((f) => f.trim());
               return (
                 <div
                   key={s.key}
-                  className="bg-secondary rounded-2xl p-8 border border-white/5 hover:border-primary/20 transition-colors"
+                  className="border border-line rounded-2xl p-8 md:p-10 bg-gradient-to-b from-primary/5 to-transparent flex flex-col gap-5 min-h-[320px]"
                 >
-                  <s.icon className="w-12 h-12 text-primary mb-4" />
-                  <h2 className="text-2xl font-bold text-white">
-                    {t(`${s.key}_title`)}
-                  </h2>
-                  <p className="mt-3 text-gray-400 leading-relaxed">
-                    {t(`${s.key}_desc`)}
-                  </p>
-                  <ul className="mt-5 space-y-2">
+                  <span className="font-mono text-xs tracking-[0.18em] text-primary">{s.num}</span>
+                  <h2 className="font-serif text-4xl md:text-5xl text-white">{t(`${s.key}_title`)}</h2>
+                  <span className="font-serif italic text-lg text-text-muted">{s.en}</span>
+                  <p className="text-text-muted leading-relaxed">{t(`${s.key}_desc`)}</p>
+                  <ul className="mt-auto space-y-2">
                     {features.map((feat) => (
-                      <li key={feat} className="flex items-center gap-2 text-sm text-gray-300">
-                        <HiOutlineCheck className="w-5 h-5 text-accent flex-shrink-0" />
+                      <li key={feat} className="flex items-center gap-2 text-sm text-text-muted">
+                        <HiOutlineCheck className="w-4 h-4 text-accent flex-shrink-0" />
                         {feat}
                       </li>
                     ))}
@@ -82,58 +75,71 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      <section className="py-20 bg-secondary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-white text-center mb-12">
-            {t("pricing_title")}
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {plans.map((plan) => (
+      {/* Maintenance card */}
+      <section className="relative py-16 bg-secondary overflow-hidden">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="border border-line rounded-2xl p-8 md:p-10 bg-gradient-to-b from-primary/5 to-transparent">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div>
+                <span className="font-mono text-xs tracking-[0.18em] text-primary">04</span>
+                <h2 className="mt-3 font-serif text-4xl md:text-5xl text-white">{t("maintenance_title")}</h2>
+                <p className="mt-3 text-text-muted max-w-xl leading-relaxed">{t("maintenance_desc")}</p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {t("maintenance_features").split(",").map((f) => (
+                  <span key={f.trim()} className="pill">{f.trim()}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Table */}
+      <section className="relative py-20 bg-surface-2 overflow-hidden">
+        <div className="grid-bg" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-14 gap-6">
+            <h2 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight text-white">
+              {t("pricing_title").split(" ")[0]}<br />&amp; <span className="text-primary italic">{t("pricing_title").split(" ").slice(1).join(" ") || "tarifs"}.</span>
+            </h2>
+            <div className="font-mono text-xs tracking-[0.14em] uppercase text-text-muted text-right leading-relaxed">
+              Prix transparents<br />
+              Devis détaillé sous 48h<br />
+              Paiement échelonné possible
+            </div>
+          </div>
+
+          <div className="border-t border-line-soft">
+            {rows.map((row) => (
               <div
-                key={plan.key}
-                className={`relative bg-surface rounded-2xl p-8 border ${
-                  plan.popular
-                    ? "border-primary shadow-xl shadow-primary/10 scale-105"
-                    : "border-white/5"
-                }`}
+                key={row.key}
+                className="grid grid-cols-1 md:grid-cols-[60px_1fr_1.2fr_auto] items-center py-8 border-b border-line-soft gap-4 md:gap-8"
               >
-                {plan.popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-secondary text-xs font-semibold px-4 py-1 rounded-full">
-                    {t("pricing_popular")}
+                <span className="font-mono text-sm text-primary tracking-[0.12em] hidden md:block">{row.idx}</span>
+                <div>
+                  <span className="font-serif text-3xl md:text-4xl text-white">{t(`pricing_${row.key}`)}</span>
+                </div>
+                <p className="text-text-muted leading-relaxed">{t(`pricing_${row.key}_desc`)}</p>
+                <div className="text-right">
+                  <span className="font-serif text-3xl md:text-4xl text-accent italic">
+                    {t(row.priceKey)}
                   </span>
-                )}
-                <h3 className="text-xl font-bold text-white">
-                  {t(`pricing_${plan.key}`)}
-                </h3>
-                <p className="mt-2 text-2xl font-bold text-accent">
-                  {t(`pricing_${plan.key}_price`)}
-                </p>
-                <p className="mt-2 text-sm text-gray-400">
-                  {t(`pricing_${plan.key}_desc`)}
-                </p>
-                <Link
-                  href="/contact"
-                  className={`block mt-6 text-center px-6 py-3 rounded-xl font-semibold transition-colors ${
-                    plan.popular
-                      ? "bg-primary text-secondary hover:bg-primary-dark"
-                      : "bg-white/5 text-white hover:bg-white/10"
-                  }`}
-                >
-                  {t("cta_button")}
-                </Link>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* CTA */}
       <section className="py-20 bg-primary">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-secondary">{t("cta_title")}</h2>
+          <h2 className="font-serif text-4xl md:text-6xl text-secondary leading-tight">{t("cta_title")}</h2>
           <p className="mt-4 text-lg text-secondary/70">{t("cta_desc")}</p>
           <Link
             href="/contact"
-            className="inline-block mt-8 px-8 py-3.5 bg-secondary text-white rounded-xl font-semibold hover:bg-secondary/90 transition-colors"
+            className="inline-block mt-8 px-10 py-4 bg-secondary text-white rounded-xl font-semibold hover:bg-secondary/90 transition-colors"
           >
             {t("cta_button")}
           </Link>

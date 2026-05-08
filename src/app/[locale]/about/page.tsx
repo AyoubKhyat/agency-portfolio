@@ -11,90 +11,124 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "About" });
   return { title: `${t("title")} — Ibda3 Digital`, description: t("subtitle") };
 }
-import {
-  HiOutlineMapPin,
-  HiOutlineSparkles,
-  HiOutlineHandRaised,
-  HiOutlineBanknotes,
-  HiOutlineCheckBadge,
-  HiOutlineClock,
-  HiOutlineLightBulb,
-  HiOutlineHeart,
-} from "react-icons/hi2";
 
 export default function AboutPage() {
   const t = useTranslations("About");
 
   const reasons = [
-    { key: "why1", icon: HiOutlineMapPin },
-    { key: "why2", icon: HiOutlineSparkles },
-    { key: "why3", icon: HiOutlineHandRaised },
-    { key: "why4", icon: HiOutlineBanknotes },
+    { num: "/ 01", key: "why1", en: "Truly local." },
+    { num: "/ 02", key: "why2", en: "Quality engineering." },
+    { num: "/ 03", key: "why3", en: "Always reachable." },
+    { num: "/ 04", key: "why4", en: "Fair pricing." },
   ];
 
-  const values = [
-    { key: "value1", icon: HiOutlineCheckBadge },
-    { key: "value2", icon: HiOutlineClock },
-    { key: "value3", icon: HiOutlineLightBulb },
-    { key: "value4", icon: HiOutlineHeart },
+  const steps = [
+    { num: "01", key: "discovery", fr: "Découverte", en: "Discovery", desc: "Atelier sur place. On écoute, on cadre les objectifs, on définit le périmètre.", duration: "~ 1 semaine", accent: "primary" },
+    { num: "02", key: "design", fr: "Design", en: "Design", desc: "Maquettes haute-fidélité, prototype cliquable, validation mobile et desktop.", duration: "~ 1–2 semaines", accent: "primary" },
+    { num: "03", key: "dev", fr: "Développement", en: "Development", desc: "Sprints courts, démos hebdomadaires. Code versionné, tests à chaque étape.", duration: "~ 2–6 semaines", accent: "accent" },
+    { num: "04", key: "launch", fr: "Lancement", en: "Launch & Support", desc: "Mise en production, formation, monitoring. Support continu.", duration: "∞ continu", accent: "accent" },
   ];
 
   return (
     <>
-      <section className="bg-secondary py-20 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute top-10 right-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white">{t("title")}</h1>
-          <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-            {t("subtitle")}
-          </p>
-        </div>
-      </section>
-
-      <section className="py-20 bg-surface">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-white mb-6">
-            {t("story_title")}
-          </h2>
-          <p className="text-gray-400 leading-relaxed text-lg">{t("story_p1")}</p>
-          <p className="mt-4 text-gray-400 leading-relaxed text-lg">{t("story_p2")}</p>
+      {/* Story */}
+      <section className="relative bg-secondary py-24 md:py-32 overflow-hidden">
+        <div className="grid-bg" />
+        <div className="glow w-[600px] h-[600px] bg-primary -top-24 right-10 opacity-20" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <span className="pill">● {t("title")}</span>
+          <h1 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.95] tracking-tight text-white">
+            {t("subtitle").split(",")[0]},<br />
+            <span className="text-primary italic">{t("subtitle").split(",").slice(1).join(",").trim()}</span>
+          </h1>
+          <div className="mt-12 max-w-3xl">
+            <p className="text-lg text-text-muted leading-relaxed">{t("story_p1")}</p>
+            <p className="mt-4 text-lg text-text-muted leading-relaxed">{t("story_p2")}</p>
+          </div>
         </div>
       </section>
 
-      <section className="py-20 bg-secondary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-white text-center mb-12">
-            {t("why_title")}
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {reasons.map((r) => (
-              <div
-                key={r.key}
-                className="bg-surface rounded-2xl p-6 border border-white/5 text-center hover:border-primary/20 transition-colors"
-              >
-                <r.icon className="w-10 h-10 text-primary mx-auto mb-4" />
-                <h3 className="font-bold text-white text-lg">
-                  {t(`${r.key}_title`)}
-                </h3>
-                <p className="mt-2 text-sm text-gray-400">{t(`${r.key}_desc`)}</p>
+      {/* Why Us */}
+      <section className="relative py-20 bg-surface-2 overflow-hidden">
+        <div className="grid-bg" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-16">
+            <div>
+              <span className="pill">★ Différenciation</span>
+              <h2 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.92] tracking-tight text-white">
+                Pourquoi<br /><span className="text-primary italic">nous.</span>
+              </h2>
+              <p className="mt-8 font-serif italic text-xl text-text-muted leading-relaxed max-w-md">
+                Une agence qui vit à Marrakech, qui parle votre langue et qui livre du code propre.
+              </p>
+            </div>
+
+            <div className="border-t border-line-soft">
+              {reasons.map((r) => (
+                <div key={r.key} className="grid grid-cols-[60px_1fr] gap-7 py-7 border-b border-line-soft items-start">
+                  <span className="font-mono text-sm text-accent tracking-[0.16em] pt-4">{r.num}</span>
+                  <div>
+                    <h3 className="font-serif text-3xl md:text-4xl text-white">
+                      {t(`${r.key}_title`)}. <span className="italic text-text-muted text-xl md:text-2xl ml-2">{r.en}</span>
+                    </h3>
+                    <p className="mt-2 text-text-muted leading-relaxed max-w-xl">{t(`${r.key}_desc`)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Process Flow */}
+      <section className="relative py-24 bg-secondary overflow-hidden">
+        <div className="grid-bg" />
+        <div className="glow w-[700px] h-[700px] bg-primary top-[20%] left-[30%] opacity-15" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 gap-6">
+            <h2 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight text-white">
+              De l&apos;idée<br />au <span className="text-primary italic">lancement.</span>
+            </h2>
+            <div className="font-mono text-xs tracking-[0.14em] uppercase text-text-muted text-right leading-relaxed">
+              Itératif &amp; transparent<br />
+              Validation à chaque étape<br />
+              Délais respectés
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-6 relative">
+            <div className="hidden md:block absolute top-7 left-0 right-0 border-t border-dashed border-line z-0" />
+            {steps.map((step) => (
+              <div key={step.key} className="relative flex flex-col gap-5">
+                <div className={`relative z-10 w-14 h-14 rounded-full border flex items-center justify-center font-mono text-sm tracking-wider ${
+                  step.accent === "accent"
+                    ? "border-accent text-accent bg-secondary"
+                    : "border-primary text-primary bg-secondary"
+                } ${step.num === "04" ? "!bg-accent !border-accent !text-secondary shadow-[0_0_40px_rgba(245,158,11,0.5)]" : ""}`}>
+                  {step.num}
+                </div>
+                <h3 className="font-serif text-3xl md:text-4xl text-white">{step.fr}</h3>
+                <span className="font-serif italic text-text-muted">{step.en}</span>
+                <p className="text-sm text-text-muted leading-relaxed">{step.desc}</p>
+                <span className="mt-auto pt-4 border-t border-line-soft font-mono text-[11px] tracking-[0.16em] uppercase text-primary">
+                  {step.duration}
+                </span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-20 bg-surface">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-white text-center mb-12">
-            {t("values_title")}
+      {/* Values */}
+      <section className="py-20 bg-surface-2">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="font-serif text-4xl md:text-6xl text-white mb-12">
+            {t("values_title")}.
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {values.map((v, i) => (
-              <div key={i} className="text-center">
-                <v.icon className="w-8 h-8 text-accent mx-auto mb-3" />
-                <p className="font-medium text-gray-300">{t(v.key)}</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {["value1", "value2", "value3", "value4"].map((key) => (
+              <div key={key} className="border border-line rounded-2xl p-6 bg-gradient-to-b from-primary/5 to-transparent">
+                <p className="font-serif text-lg text-text-muted">{t(key)}</p>
               </div>
             ))}
           </div>

@@ -10,19 +10,24 @@ export default function Footer() {
   const nav = useTranslations("Nav");
 
   return (
-    <footer className="bg-secondary border-t border-white/5">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="bg-secondary border-t border-line-soft">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="md:col-span-1">
-            <span className="text-2xl font-bold text-white">
-              Ibda3<span className="text-primary"> Digital</span>
-            </span>
-            <p className="mt-3 text-sm text-gray-400">{t("description")}</p>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary-dark grid place-items-center font-serif italic text-xl text-secondary font-semibold">
+                i
+              </span>
+              <span className="font-mono text-sm tracking-[0.12em] uppercase text-text-muted">
+                Ibda3 Digital
+              </span>
+            </div>
+            <p className="text-sm text-text-muted leading-relaxed">{t("description")}</p>
           </div>
 
           <div>
-            <h3 className="font-semibold text-white mb-3">{t("services")}</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
+            <h3 className="font-mono text-xs tracking-[0.16em] uppercase text-primary mb-4">{t("services")}</h3>
+            <ul className="space-y-2 text-sm text-text-muted">
               <li>
                 <Link href="/services" className="hover:text-primary transition-colors">
                   {t("service_web")}
@@ -47,8 +52,8 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-semibold text-white mb-3">{t("company")}</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
+            <h3 className="font-mono text-xs tracking-[0.16em] uppercase text-primary mb-4">{t("company")}</h3>
+            <ul className="space-y-2 text-sm text-text-muted">
               <li>
                 <Link href="/about" className="hover:text-primary transition-colors">
                   {nav("about")}
@@ -73,14 +78,14 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-semibold text-white mb-3">{t("follow")}</h3>
+            <h3 className="font-mono text-xs tracking-[0.16em] uppercase text-primary mb-4">{t("follow")}</h3>
             <div className="flex gap-3">
               <a
                 href="https://www.instagram.com/ibda3.digital0/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-secondary transition-colors"
+                className="w-10 h-10 rounded-full border border-line flex items-center justify-center text-text-muted hover:border-primary hover:text-primary transition-colors"
               >
                 <FaInstagram size={18} />
               </a>
@@ -89,14 +94,14 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="WhatsApp"
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-secondary transition-colors"
+                className="w-10 h-10 rounded-full border border-line flex items-center justify-center text-text-muted hover:border-primary hover:text-primary transition-colors"
               >
                 <FaWhatsapp size={18} />
               </a>
               <a
                 href="mailto:ibda3.digital0@gmail.com"
                 aria-label="Email"
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-secondary transition-colors"
+                className="w-10 h-10 rounded-full border border-line flex items-center justify-center text-text-muted hover:border-primary hover:text-primary transition-colors"
               >
                 <HiOutlineEnvelope size={18} />
               </a>
@@ -104,16 +109,13 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-gray-500">
-          <p>&copy; {new Date().getFullYear()} Ibda3 Digital. {t("rights")}</p>
-          <div className="flex gap-4">
-            <a href="#" className="hover:text-primary transition-colors">
-              {t("privacy")}
-            </a>
-            <a href="#" className="hover:text-primary transition-colors">
-              {t("terms")}
-            </a>
-          </div>
+        <div className="mt-12 pt-6 border-t border-line-soft flex flex-col sm:flex-row justify-between items-center gap-3">
+          <p className="font-mono text-xs tracking-[0.12em] uppercase text-text-muted">
+            &copy; {new Date().getFullYear()} Ibda3 Digital. {t("rights")}
+          </p>
+          <span className="font-mono text-xs tracking-[0.12em] uppercase text-text-muted">
+            Marrakech · Morocco
+          </span>
         </div>
       </div>
     </footer>

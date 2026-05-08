@@ -134,3 +134,16 @@ npm run lint         # ESLint
   - Updated contact email to ibda3.digital0@gmail.com
 - **2026-05-08** — Analytics
   - Added Google Analytics (G-PK5HSDWHYM) via next/script in root layout
+- **2026-05-08** — Full visual redesign (pitch deck style)
+  - Redesigned all 6 pages to match premium pitch deck aesthetic
+  - New typography: Inter (body), Instrument Serif (headlines), JetBrains Mono (accents)
+  - Added globals.css utility classes: `.grid-bg`, `.glow`, `.pill` for consistent design language
+  - Home: cover-style hero with giant serif title, stats row, numbered service cards, CTA
+  - Services: numbered solution cards (01–03), maintenance card, pricing table rows
+  - Portfolio: bento grid layout with filter buttons, hover effects on project cards
+  - Blog: table-row layout with numbered posts, "Coming Soon" labels
+  - About: two-column "Why Us" with numbered reasons, 4-step process flow with timeline
+  - Contact: hero with contact info card, form with EmailJS, WhatsApp CTA, Google Maps
+  - Navbar: simplified with logo mark (gradient "i" square), mono brand text
+  - Footer: mono headings, circular social icons with border hover
+  - Fixed circular CSS variable bug (`--font-serif: var(--font-serif)` → `--font-instrument`)
