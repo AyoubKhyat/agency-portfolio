@@ -85,7 +85,7 @@ npm run lint         # ESLint
 - [x] Portfolio populated from real GitHub projects
 - [ ] Add real project screenshots/images to portfolio cards
 - [x] Update contact email to ibda3digital.com (placeholder, not yet connected)
-- [ ] Connect contact form to backend (Resend, EmailJS, or API route)
+- [x] Connect contact form to EmailJS (service_j25zf74, env vars on Vercel)
 - [ ] Add real social media links in Footer (Facebook, Instagram, LinkedIn)
 - [ ] Replace Google Maps embed with exact office/home location
 - [ ] Add real blog content (consider MDX for posts)
@@ -120,3 +120,9 @@ npm run lint         # ESLint
   - Updated contact email from webcraft-marrakech to ibda3digital.com
   - Added per-page SEO metadata (Services, Blog, About + locale layout)
   - Removed unused imports
+- **2026-05-08** — Contact form + deploy
+  - Integrated EmailJS (@emailjs/browser) with loading, success, and error states
+  - Added SetLang client component for dynamic html lang attribute
+  - Fixed dev mode crash (html/body must be in root layout in Next.js 16)
+  - Deployed to Vercel: https://agency-portfolio-orcin-tau.vercel.app
+  - Set EmailJS env vars on Vercel (NEXT_PUBLIC_EMAILJS_*)
