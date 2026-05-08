@@ -91,7 +91,7 @@ npm run lint         # ESLint
 - [ ] Add real blog content (consider MDX for posts)
 - [ ] Buy and configure domain (ibda3digital.com or ibda3digital.ma)
 - [x] Deploy to production — https://agency-portfolio-orcin-tau.vercel.app
-- [ ] Set up analytics (Google Analytics or Plausible)
+- [x] Set up analytics (Google Analytics G-PK5HSDWHYM)
 - [ ] Create a pitch deck in Claude Design for client meetings
 
 ## Changelog
@@ -132,3 +132,5 @@ npm run lint         # ESLint
   - Added real social links: Instagram (@ibda3.digital0), WhatsApp, Email
   - Removed placeholder Facebook/LinkedIn icons
   - Updated contact email to ibda3.digital0@gmail.com
+- **2026-05-08** — Analytics
+  - Added Google Analytics (G-PK5HSDWHYM) via next/script in root layout
