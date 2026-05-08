@@ -86,7 +86,7 @@ npm run lint         # ESLint
 - [x] Add project images to portfolio cards (GitHub OG images)
 - [x] Update contact email to ibda3digital.com (placeholder, not yet connected)
 - [x] Connect contact form to EmailJS (service_j25zf74, env vars on Vercel)
-- [ ] Add real social media links in Footer (Facebook, Instagram, LinkedIn)
+- [x] Add real social media links in Footer (Instagram + WhatsApp + Email)
 - [ ] Replace Google Maps embed with exact office/home location
 - [ ] Add real blog content (consider MDX for posts)
 - [ ] Buy and configure domain (ibda3digital.com or ibda3digital.ma)
