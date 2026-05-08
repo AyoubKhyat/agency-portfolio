@@ -32,12 +32,12 @@ export default function AboutPage() {
   return (
     <>
       {/* Story */}
-      <section className="relative bg-secondary py-24 md:py-32 overflow-hidden">
+      <section className="relative bg-background py-24 md:py-32 overflow-hidden">
         <div className="grid-bg" />
         <div className="glow w-[600px] h-[600px] bg-primary -top-24 right-10 opacity-20" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <span className="pill">● {t("title")}</span>
-          <h1 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.95] tracking-tight text-white">
+          <h1 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.95] tracking-tight text-foreground">
             {t("subtitle").split(",")[0]},<br />
             <span className="text-primary italic">{t("subtitle").split(",").slice(1).join(",").trim()}</span>
           </h1>
@@ -55,7 +55,7 @@ export default function AboutPage() {
           <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-16">
             <div>
               <span className="pill">★ Différenciation</span>
-              <h2 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.92] tracking-tight text-white">
+              <h2 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.92] tracking-tight text-foreground">
                 Pourquoi<br /><span className="text-primary italic">nous.</span>
               </h2>
               <p className="mt-8 font-serif italic text-xl text-text-muted leading-relaxed max-w-md">
@@ -68,7 +68,7 @@ export default function AboutPage() {
                 <div key={r.key} className="grid grid-cols-[60px_1fr] gap-7 py-7 border-b border-line-soft items-start">
                   <span className="font-mono text-sm text-accent tracking-[0.16em] pt-4">{r.num}</span>
                   <div>
-                    <h3 className="font-serif text-3xl md:text-4xl text-white">
+                    <h3 className="font-serif text-3xl md:text-4xl text-foreground">
                       {t(`${r.key}_title`)}. <span className="italic text-text-muted text-xl md:text-2xl ml-2">{r.en}</span>
                     </h3>
                     <p className="mt-2 text-text-muted leading-relaxed max-w-xl">{t(`${r.key}_desc`)}</p>
@@ -81,12 +81,12 @@ export default function AboutPage() {
       </section>
 
       {/* Process Flow */}
-      <section className="relative py-24 bg-secondary overflow-hidden">
+      <section className="relative py-24 bg-background overflow-hidden">
         <div className="grid-bg" />
         <div className="glow w-[700px] h-[700px] bg-primary top-[20%] left-[30%] opacity-15" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 gap-6">
-            <h2 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight text-white">
+            <h2 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight text-foreground">
               De l&apos;idée<br />au <span className="text-primary italic">lancement.</span>
             </h2>
             <div className="font-mono text-xs tracking-[0.14em] uppercase text-text-muted text-right leading-relaxed">
@@ -102,12 +102,12 @@ export default function AboutPage() {
               <div key={step.key} className="relative flex flex-col gap-5">
                 <div className={`relative z-10 w-14 h-14 rounded-full border flex items-center justify-center font-mono text-sm tracking-wider ${
                   step.accent === "accent"
-                    ? "border-accent text-accent bg-secondary"
-                    : "border-primary text-primary bg-secondary"
-                } ${step.num === "04" ? "!bg-accent !border-accent !text-secondary shadow-[0_0_40px_rgba(245,158,11,0.5)]" : ""}`}>
+                    ? "border-accent text-accent bg-background"
+                    : "border-primary text-primary bg-background"
+                } ${step.num === "04" ? "!bg-accent !border-accent !text-white shadow-[0_0_40px_rgba(245,158,11,0.5)]" : ""}`}>
                   {step.num}
                 </div>
-                <h3 className="font-serif text-3xl md:text-4xl text-white">{step.fr}</h3>
+                <h3 className="font-serif text-3xl md:text-4xl text-foreground">{step.fr}</h3>
                 <span className="font-serif italic text-text-muted">{step.en}</span>
                 <p className="text-sm text-text-muted leading-relaxed">{step.desc}</p>
                 <span className="mt-auto pt-4 border-t border-line-soft font-mono text-[11px] tracking-[0.16em] uppercase text-primary">
@@ -122,7 +122,7 @@ export default function AboutPage() {
       {/* Values */}
       <section className="py-20 bg-surface-2">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-serif text-4xl md:text-6xl text-white mb-12">
+          <h2 className="font-serif text-4xl md:text-6xl text-foreground mb-12">
             {t("values_title")}.
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">

@@ -25,12 +25,12 @@ export default function BlogPage() {
   return (
     <>
       {/* Hero */}
-      <section className="relative bg-secondary py-24 md:py-32 overflow-hidden">
+      <section className="relative bg-background py-24 md:py-32 overflow-hidden">
         <div className="grid-bg" />
         <div className="glow w-[600px] h-[600px] bg-accent top-10 left-1/2 opacity-15" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <span className="pill">● {t("title")}</span>
-          <h1 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.95] tracking-tight text-white">
+          <h1 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.95] tracking-tight text-foreground">
             {t("title").split(" ")[0]} <span className="text-primary italic">{t("title").split(" ").slice(1).join(" ")}</span>
           </h1>
           <p className="mt-6 font-serif italic text-xl text-text-muted max-w-lg">
@@ -54,7 +54,7 @@ export default function BlogPage() {
                 </span>
                 <div>
                   <span className="pill text-[11px] mb-3">{t(`${post.key}_category`)}</span>
-                  <h2 className="mt-3 font-serif text-2xl md:text-3xl text-white leading-snug">
+                  <h2 className="mt-3 font-serif text-2xl md:text-3xl text-foreground leading-snug">
                     {t(`${post.key}_title`)}
                   </h2>
                 </div>

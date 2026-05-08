@@ -33,12 +33,12 @@ export default function PortfolioPage() {
   return (
     <>
       {/* Hero */}
-      <section className="relative bg-secondary py-24 md:py-32 overflow-hidden">
+      <section className="relative bg-background py-24 md:py-32 overflow-hidden">
         <div className="grid-bg" />
         <div className="glow w-[600px] h-[600px] bg-primary -bottom-32 left-20 opacity-20" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
-            <h1 className="font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.95] tracking-tight text-white">
+            <h1 className="font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.95] tracking-tight text-foreground">
               <span className="text-primary italic">{t("title").split(" ")[0]}</span><br />{t("title").split(" ").slice(1).join(" ")}.
             </h1>
             <p className="font-serif italic text-xl text-text-muted max-w-sm leading-relaxed pb-4">
@@ -59,7 +59,7 @@ export default function PortfolioPage() {
                 onClick={() => setFilter(f.key)}
                 className={`px-5 py-2 rounded-full text-sm font-mono tracking-wider uppercase transition-colors ${
                   filter === f.key
-                    ? "bg-primary text-secondary"
+                    ? "bg-primary text-white"
                     : "border border-line text-text-muted hover:border-primary/30 hover:text-primary"
                 }`}
               >
@@ -81,7 +81,7 @@ export default function PortfolioPage() {
                     project.feature ? "md:col-span-2 md:row-span-2" : ""
                   }`}
                 >
-                  <div className="relative h-48 md:h-56 bg-secondary overflow-hidden">
+                  <div className="relative h-48 md:h-56 bg-background overflow-hidden">
                     <Image
                       src={`https://opengraph.githubassets.com/${project.og}/AyoubKhyat/${project.github}`}
                       alt={t(`${project.key}_title`)}
@@ -94,7 +94,7 @@ export default function PortfolioPage() {
                     <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-primary">
                       ▸ {project.tag}
                     </span>
-                    <h3 className="font-serif text-2xl md:text-3xl text-white">
+                    <h3 className="font-serif text-2xl md:text-3xl text-foreground">
                       {t(`${project.key}_title`)}
                     </h3>
                     <p className="text-sm text-text-muted leading-relaxed">

@@ -147,3 +147,12 @@ npm run lint         # ESLint
   - Navbar: simplified with logo mark (gradient "i" square), mono brand text
   - Footer: mono headings, circular social icons with border hover
   - Fixed circular CSS variable bug (`--font-serif: var(--font-serif)` → `--font-instrument`)
+- **2026-05-08** — Light/dark theme toggle
+  - Light theme as default, dark mode via toggle button (sun/moon icon)
+  - Dual-theme CSS variable system in globals.css (`:root` light, `.dark` dark)
+  - Created ThemeToggle component with localStorage persistence
+  - Inline script in root layout prevents flash of wrong theme
+  - Updated all pages: `text-white` → `text-foreground`, `bg-secondary` → `bg-background`
+  - Fixed LanguageSwitcher colors for theme compatibility
+  - Navbar background adapts via `--nav-bg` CSS variable
+  - Primary buttons always use `text-white` for contrast on both themes

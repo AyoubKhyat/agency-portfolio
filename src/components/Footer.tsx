@@ -10,12 +10,12 @@ export default function Footer() {
   const nav = useTranslations("Nav");
 
   return (
-    <footer className="bg-secondary border-t border-line-soft">
+    <footer className="bg-background border-t border-line-soft">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-4">
-              <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary-dark grid place-items-center font-serif italic text-xl text-secondary font-semibold">
+              <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary-dark grid place-items-center font-serif italic text-xl text-white font-semibold">
                 i
               </span>
               <span className="font-mono text-sm tracking-[0.12em] uppercase text-text-muted">

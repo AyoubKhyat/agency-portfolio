@@ -13,13 +13,13 @@ export default function LanguageSwitcher() {
   };
 
   return (
-    <div className="flex items-center gap-1 bg-white/10 rounded-lg p-0.5">
+    <div className="flex items-center gap-1 bg-foreground/10 rounded-lg p-0.5">
       <button
         onClick={() => switchLocale("fr")}
         className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
           locale === "fr"
-            ? "bg-primary text-secondary"
-            : "text-gray-400 hover:text-white"
+            ? "bg-primary text-white"
+            : "text-text-muted hover:text-foreground"
         }`}
       >
         FR
@@ -28,8 +28,8 @@ export default function LanguageSwitcher() {
         onClick={() => switchLocale("en")}
         className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
           locale === "en"
-            ? "bg-primary text-secondary"
-            : "text-gray-400 hover:text-white"
+            ? "bg-primary text-white"
+            : "text-text-muted hover:text-foreground"
         }`}
       >
         EN
