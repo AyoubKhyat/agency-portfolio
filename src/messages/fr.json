@@ -138,6 +138,8 @@
     "form_message": "Votre message",
     "form_submit": "Envoyer le message",
     "form_success": "Message envoyé avec succès !",
+    "form_sending": "Envoi en cours...",
+    "form_error": "Une erreur est survenue. Veuillez réessayer ou nous contacter sur WhatsApp.",
     "form_send_another": "Envoyer un autre message",
     "info_title": "Informations",
     "info_address": "Marrakech, Maroc",

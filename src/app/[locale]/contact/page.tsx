@@ -1,19 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import emailjs from "@emailjs/browser";
 import {
   HiOutlineMapPin,
   HiOutlineEnvelope,
   HiOutlinePhone,
   HiOutlineClock,
   HiOutlineCheckCircle,
+  HiOutlineExclamationTriangle,
 } from "react-icons/hi2";
 import { FaWhatsapp } from "react-icons/fa";
 
 export default function ContactPage() {
   const t = useTranslations("Contact");
-  const [submitted, setSubmitted] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
 
   const info = [
     { icon: HiOutlineMapPin, value: t("info_address") },
@@ -22,9 +25,28 @@ export default function ContactPage() {
     { icon: HiOutlineClock, value: t("info_hours") },
   ];
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSubmitted(true);
+    if (!formRef.current) return;
+
+    setStatus("sending");
+
+    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+    const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
+    if (!serviceId || !templateId || !publicKey) {
+      setStatus("error");
+      return;
+    }
+
+    try {
+      await emailjs.sendForm(serviceId, templateId, formRef.current, { publicKey });
+      setStatus("success");
+      formRef.current.reset();
+    } catch {
+      setStatus("error");
+    }
   }
 
   return (
@@ -45,19 +67,25 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12">
             <div className="bg-secondary rounded-2xl p-8 border border-white/5">
-              {submitted ? (
+              {status === "success" ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <HiOutlineCheckCircle className="w-16 h-16 text-green-400 mb-4" />
                   <p className="text-xl font-semibold text-white">{t("form_success")}</p>
                   <button
-                    onClick={() => setSubmitted(false)}
+                    onClick={() => setStatus("idle")}
                     className="mt-6 px-6 py-2.5 bg-white/5 text-gray-300 rounded-xl text-sm font-medium hover:bg-white/10 transition-colors"
                   >
                     {t("form_send_another")}
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
+                  {status === "error" && (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                      <HiOutlineExclamationTriangle className="w-5 h-5 flex-shrink-0" />
+                      {t("form_error")}
+                    </div>
+                  )}
                   <div>
                     <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-1.5">
                       {t("form_name")}
@@ -121,9 +149,10 @@ export default function ContactPage() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full px-6 py-3.5 bg-primary text-secondary rounded-xl font-semibold hover:bg-primary-dark transition-colors"
+                    disabled={status === "sending"}
+                    className="w-full px-6 py-3.5 bg-primary text-secondary rounded-xl font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {t("form_submit")}
+                    {status === "sending" ? t("form_sending") : t("form_submit")}
                   </button>
                 </form>
               )}

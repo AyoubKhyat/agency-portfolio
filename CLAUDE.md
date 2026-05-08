@@ -90,7 +90,7 @@ npm run lint         # ESLint
 - [ ] Replace Google Maps embed with exact office/home location
 - [ ] Add real blog content (consider MDX for posts)
 - [ ] Buy and configure domain (ibda3digital.com or ibda3digital.ma)
-- [ ] Deploy to production (Vercel recommended)
+- [x] Deploy to production — https://agency-portfolio-orcin-tau.vercel.app
 - [ ] Set up analytics (Google Analytics or Plausible)
 - [ ] Create a pitch deck in Claude Design for client meetings
 
