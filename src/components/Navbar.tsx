@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import LanguageSwitcher from "./LanguageSwitcher";
+import ThemeToggle from "./ThemeToggle";
 import { HiMenu, HiX } from "react-icons/hi";
 
 export default function Navbar() {
@@ -21,11 +22,11 @@ export default function Navbar() {
   ] as const;
 
   return (
-    <nav className="sticky top-0 z-50 bg-secondary/80 backdrop-blur-md border-b border-line-soft">
+    <nav className="sticky top-0 z-50 backdrop-blur-md border-b border-line-soft" style={{ background: "var(--nav-bg)" }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-3">
-            <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary-dark grid place-items-center font-serif italic text-xl text-secondary font-semibold shadow-[0_0_30px_rgba(167,139,250,0.4)]">
+            <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary-dark grid place-items-center font-serif italic text-xl text-white font-semibold shadow-[0_0_30px_rgba(167,139,250,0.4)]">
               i
             </span>
             <span className="font-mono text-sm tracking-[0.12em] uppercase text-text-muted">
@@ -48,9 +49,10 @@ export default function Navbar() {
               </Link>
             ))}
             <LanguageSwitcher />
+            <ThemeToggle />
             <Link
               href="/contact"
-              className="ml-3 px-5 py-2 bg-primary text-secondary rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors"
+              className="ml-3 px-5 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors"
             >
               {t("cta")}
             </Link>
@@ -58,7 +60,7 @@ export default function Navbar() {
 
           <button
             onClick={() => setOpen(!open)}
-            className="md:hidden p-2 rounded-lg text-text-muted hover:bg-white/5"
+            className="md:hidden p-2 rounded-lg text-text-muted hover:bg-foreground/5"
           >
             {open ? <HiX size={24} /> : <HiMenu size={24} />}
           </button>
@@ -66,7 +68,7 @@ export default function Navbar() {
       </div>
 
       {open && (
-        <div className="md:hidden border-t border-line-soft bg-secondary max-h-[70vh] overflow-y-auto">
+        <div className="md:hidden border-t border-line-soft bg-background max-h-[70vh] overflow-y-auto">
           <div className="px-4 py-3 space-y-1">
             {links.map((link) => (
               <Link
@@ -84,11 +86,12 @@ export default function Navbar() {
             ))}
             <div className="pt-2 flex items-center gap-3">
               <LanguageSwitcher />
+              <ThemeToggle />
             </div>
             <Link
               href="/contact"
               onClick={() => setOpen(false)}
-              className="block mt-2 px-4 py-2 bg-primary text-secondary rounded-lg text-sm font-semibold text-center hover:bg-primary-dark transition-colors"
+              className="block mt-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold text-center hover:bg-primary-dark transition-colors"
             >
               {t("cta")}
             </Link>

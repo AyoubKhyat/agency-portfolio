@@ -48,7 +48,7 @@ export default function ContactPage() {
   return (
     <>
       {/* Hero */}
-      <section className="relative bg-secondary py-24 md:py-32 overflow-hidden">
+      <section className="relative bg-background py-24 md:py-32 overflow-hidden">
         <div className="grid-bg" />
         <div className="glow w-[800px] h-[800px] bg-primary -bottom-72 -right-48 opacity-25" />
         <div className="glow w-[500px] h-[500px] bg-accent -top-36 left-[10%] opacity-12" />
@@ -56,10 +56,10 @@ export default function ContactPage() {
           <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-16 items-end">
             <div>
               <span className="pill">→ {t("title")}</span>
-              <h1 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[140px] leading-[0.9] tracking-tight text-white">
+              <h1 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[140px] leading-[0.9] tracking-tight text-foreground">
                 Parlons de<br />votre <span className="text-primary italic">projet.</span>
               </h1>
-              <p className="mt-8 font-serif italic text-2xl text-white leading-snug max-w-xl">
+              <p className="mt-8 font-serif italic text-2xl text-foreground leading-snug max-w-xl">
                 {t("subtitle")}
               </p>
             </div>
@@ -69,7 +69,7 @@ export default function ContactPage() {
               {contactRows.map((row) => (
                 <div key={row.label} className="grid grid-cols-[80px_1fr] py-5 border-b border-line-soft items-baseline gap-6 last:border-b-0">
                   <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-primary">{row.label}</span>
-                  <span className={`font-serif text-xl md:text-2xl ${row.amber ? "text-accent italic" : "text-white"}`}>
+                  <span className={`font-serif text-xl md:text-2xl ${row.amber ? "text-accent italic" : "text-foreground"}`}>
                     {row.value}
                   </span>
                 </div>
@@ -88,11 +88,11 @@ export default function ContactPage() {
         <div className="grid-bg" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12">
-            <div className="border border-line rounded-2xl p-8 bg-secondary">
+            <div className="border border-line rounded-2xl p-8 bg-background">
               {status === "success" ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <HiOutlineCheckCircle className="w-16 h-16 text-green-400 mb-4" />
-                  <p className="text-xl font-serif text-white">{t("form_success")}</p>
+                  <p className="text-xl font-serif text-foreground">{t("form_success")}</p>
                   <button
                     onClick={() => setStatus("idle")}
                     className="mt-6 px-6 py-2.5 border border-line text-text-muted rounded-xl text-sm font-mono tracking-wider uppercase hover:border-primary/30 transition-colors"
@@ -117,7 +117,7 @@ export default function ContactPage() {
                       name="fullName"
                       type="text"
                       required
-                      className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-white placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-foreground placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                   </div>
                   <div className="grid sm:grid-cols-2 gap-5">
@@ -130,7 +130,7 @@ export default function ContactPage() {
                         name="email"
                         type="email"
                         required
-                        className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-white placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-foreground placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                       />
                     </div>
                     <div>
@@ -141,7 +141,7 @@ export default function ContactPage() {
                         id="phone"
                         name="phone"
                         type="tel"
-                        className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-white placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-foreground placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                       />
                     </div>
                   </div>
@@ -154,7 +154,7 @@ export default function ContactPage() {
                       name="subject"
                       type="text"
                       required
-                      className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-white placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-foreground placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                   </div>
                   <div>
@@ -166,13 +166,13 @@ export default function ContactPage() {
                       name="message"
                       rows={5}
                       required
-                      className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-white placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+                      className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-foreground placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={status === "sending"}
-                    className="w-full px-6 py-3.5 bg-primary text-secondary rounded-xl font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-6 py-3.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {status === "sending" ? t("form_sending") : t("form_submit")}
                   </button>
