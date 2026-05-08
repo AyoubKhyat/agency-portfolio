@@ -126,3 +126,9 @@ npm run lint         # ESLint
   - Fixed dev mode crash (html/body must be in root layout in Next.js 16)
   - Deployed to Vercel: https://agency-portfolio-orcin-tau.vercel.app
   - Set EmailJS env vars on Vercel (NEXT_PUBLIC_EMAILJS_*)
+- **2026-05-08** — Portfolio images + social links
+  - Added GitHub OG images to portfolio cards with hover zoom
+  - Configured next/image for opengraph.githubassets.com
+  - Added real social links: Instagram (@ibda3.digital0), WhatsApp, Email
+  - Removed placeholder Facebook/LinkedIn icons
+  - Updated contact email to ibda3.digital0@gmail.com
