@@ -83,7 +83,7 @@ npm run lint         # ESLint
 - [x] Phone number updated in translations
 - [x] Dark & premium color palette applied
 - [x] Portfolio populated from real GitHub projects
-- [ ] Add real project screenshots/images to portfolio cards
+- [x] Add project images to portfolio cards (GitHub OG images)
 - [x] Update contact email to ibda3digital.com (placeholder, not yet connected)
 - [x] Connect contact form to EmailJS (service_j25zf74, env vars on Vercel)
 - [ ] Add real social media links in Footer (Facebook, Instagram, LinkedIn)

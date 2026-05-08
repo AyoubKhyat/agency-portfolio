@@ -2,18 +2,19 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { HiOutlineArrowTopRightOnSquare } from "react-icons/hi2";
 import { FaGithub } from "react-icons/fa";
 
 type Category = "all" | "web" | "app" | "plugin";
 
 const projects = [
-  { id: 1, key: "project1", category: "app", color: "from-primary/30 to-accent/20", github: "ManagementStockWeb" },
-  { id: 2, key: "project2", category: "app", color: "from-accent/20 to-primary/30", github: "School" },
-  { id: 3, key: "project3", category: "app", color: "from-primary/20 to-accent/30", github: "Rent-Car" },
-  { id: 4, key: "project4", category: "web", color: "from-accent/30 to-primary/20", github: "Sykweb_Site" },
-  { id: 5, key: "project5", category: "web", color: "from-primary/30 to-accent/10", github: "Main-Site-Baraka-Idman" },
-  { id: 6, key: "project6", category: "plugin", color: "from-accent/20 to-primary/20", github: "portalAddons" },
+  { id: 1, key: "project1", category: "app", github: "ManagementStockWeb", og: "7b0cc63b4492ad5d6d69e2be5aba26f51fb9a43f22949eda1a5929109c57f294" },
+  { id: 2, key: "project2", category: "app", github: "School", og: "c9eb563c2d914c701c536473c339515b5c8ffdf3bbc508ec21303ed5c9ca83f5" },
+  { id: 3, key: "project3", category: "app", github: "Rent-Car", og: "570d2c2440f47d994401dc86fbf19abb8db5d953cee7dd1125797c842732027a" },
+  { id: 4, key: "project4", category: "web", github: "Sykweb_Site", og: "3aaf66b9b94f8446a993f15b885630d63f706becfafe506e7c5a725304eb4d92" },
+  { id: 5, key: "project5", category: "web", github: "Main-Site-Baraka-Idman", og: "16e7e1c37c3434fa7dfc4afb1b35b18a56420bff01d4f8118861086835f42b8c" },
+  { id: 6, key: "project6", category: "plugin", github: "portalAddons", og: "9a9b70d6c25a909623c0ccf6b95c54667d988ac1378bb68b9d60a68fff471eff" },
 ];
 
 export default function PortfolioPage() {
@@ -70,12 +71,14 @@ export default function PortfolioPage() {
                   key={project.id}
                   className="group bg-secondary rounded-2xl overflow-hidden border border-white/5 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5 transition-all"
                 >
-                  <div
-                    className={`h-48 bg-gradient-to-br ${project.color} flex items-center justify-center`}
-                  >
-                    <span className="text-5xl font-bold text-white/10">
-                      {t(`${project.key}_title`).charAt(0)}
-                    </span>
+                  <div className="relative h-48 bg-secondary overflow-hidden">
+                    <Image
+                      src={`https://opengraph.githubassets.com/${project.og}/AyoubKhyat/${project.github}`}
+                      alt={t(`${project.key}_title`)}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
                   </div>
                   <div className="p-6">
                     <h3 className="text-lg font-bold text-white">
