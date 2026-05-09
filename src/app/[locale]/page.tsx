@@ -23,7 +23,7 @@ export default function HomePage() {
   const stats = [
     { value: "50+", label: t("stats_projects") },
     { value: "40+", label: t("stats_clients") },
-    { value: "3+", label: t("stats_years") },
+    { value: "5+", label: t("stats_years") },
     { value: "24/7", label: t("stats_support") },
   ];
 
