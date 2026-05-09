@@ -11,6 +11,7 @@ if (typeof window !== "undefined") {
 }
 
 const STYLES = `
+  .cinematic-hero { background: var(--bg); }
   .cinematic-hero .gsap-reveal { visibility: hidden; }
 
   .cinematic-hero .film-grain {
@@ -22,10 +23,16 @@ const STYLES = `
   .cinematic-hero .bg-grid-cinematic {
     background-size: 60px 60px;
     background-image:
-      linear-gradient(to right, rgba(167,139,250,0.06) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(167,139,250,0.06) 1px, transparent 1px);
+      linear-gradient(to right, rgba(139,111,224,0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(139,111,224,0.06) 1px, transparent 1px);
     mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
     -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+  }
+
+  .dark .cinematic-hero .bg-grid-cinematic {
+    background-image:
+      linear-gradient(to right, rgba(167,139,250,0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(167,139,250,0.06) 1px, transparent 1px);
   }
 
   .dark .cinematic-hero .text-silver-hero {
@@ -91,13 +98,22 @@ const STYLES = `
     mix-blend-mode: screen; transition: opacity 0.3s ease;
   }
 
-  .cinematic-hero .phone-frame {
+  .dark .cinematic-hero .phone-frame {
     background-color: #111;
     box-shadow:
       inset 0 0 0 2px #52525B,
       inset 0 0 0 6px #000,
       0 30px 60px -10px rgba(0,0,0,0.9),
       0 10px 20px -5px rgba(0,0,0,0.7);
+  }
+
+  .cinematic-hero .phone-frame {
+    background-color: #222;
+    box-shadow:
+      inset 0 0 0 2px #71717a,
+      inset 0 0 0 6px #333,
+      0 30px 60px -10px rgba(0,0,0,0.2),
+      0 10px 20px -5px rgba(0,0,0,0.1);
   }
 
   .cinematic-hero .screen-glare {
@@ -240,14 +256,14 @@ export default function CinematicHero({
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
       <section
         ref={sectionRef}
-        className="cinematic-hero relative min-h-screen bg-background dark:bg-[#0A0A14] overflow-hidden flex items-center"
+        className="cinematic-hero relative min-h-screen overflow-hidden flex items-center"
       >
         {/* Environment */}
         <div className="film-grain" />
         <div className="absolute inset-0 bg-grid-cinematic" />
-        <div className="absolute -top-48 -right-48 w-[800px] h-[800px] rounded-full bg-[#A78BFA] opacity-[0.12] blur-[120px] pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 w-[600px] h-[600px] rounded-full bg-[#F59E0B] opacity-[0.07] blur-[100px] pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[#A78BFA] opacity-[0.05] blur-[150px] pointer-events-none" />
+        <div className="absolute -top-48 -right-48 w-[800px] h-[800px] rounded-full bg-[#A78BFA] opacity-[0.06] dark:opacity-[0.12] blur-[120px] pointer-events-none" />
+        <div className="absolute -bottom-32 -left-32 w-[600px] h-[600px] rounded-full bg-[#F59E0B] opacity-[0.04] dark:opacity-[0.07] blur-[100px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[#A78BFA] opacity-[0.03] dark:opacity-[0.05] blur-[150px] pointer-events-none" />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 w-full">
           <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-12 lg:gap-16 items-center">
