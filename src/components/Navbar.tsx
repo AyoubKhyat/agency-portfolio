@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import Image from "next/image";
@@ -13,6 +13,16 @@ export default function Navbar() {
   const t = useTranslations("Nav");
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains("dark"));
+    const observer = new MutationObserver(() => {
+      setDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   const links = [
     { href: "/", label: t("home") },
@@ -29,11 +39,18 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
             <Image
+              src={dark ? "/Logo_horizontal.png" : "/logo_transparent.png"}
+              alt="Ibda3 Digital"
+              width={160}
+              height={40}
+              className="hidden md:block"
+            />
+            <Image
               src="/logo_ibda3.png"
               alt="Ibda3 Digital"
-              width={40}
-              height={40}
-              className="rounded-lg"
+              width={48}
+              height={48}
+              className="md:hidden rounded-lg"
             />
           </Link>
 
