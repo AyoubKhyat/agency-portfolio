@@ -28,7 +28,7 @@ const STYLES = `
     -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
   }
 
-  .cinematic-hero .text-silver-hero {
+  .dark .cinematic-hero .text-silver-hero {
     background: linear-gradient(180deg, #FFFFFF 0%, #A1A1AA 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -39,7 +39,15 @@ const STYLES = `
       drop-shadow(0px 2px 4px rgba(0,0,0,0.4));
   }
 
-  .cinematic-hero .text-card-silver {
+  .cinematic-hero .text-silver-hero {
+    background: linear-gradient(180deg, #1a1a2e 0%, #3a3a5c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    transform: translateZ(0);
+  }
+
+  .dark .cinematic-hero .text-card-silver {
     background: linear-gradient(180deg, #FFFFFF 0%, #A1A1AA 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -50,7 +58,15 @@ const STYLES = `
       drop-shadow(0px 2px 4px rgba(0,0,0,0.6));
   }
 
-  .cinematic-hero .premium-card {
+  .cinematic-hero .text-card-silver {
+    background: linear-gradient(180deg, #1a1a2e 0%, #3a3a5c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    transform: translateZ(0);
+  }
+
+  .dark .cinematic-hero .premium-card {
     background: linear-gradient(145deg, #1E1045 0%, #0A0A14 100%);
     box-shadow:
       0 40px 100px -20px rgba(0,0,0,0.9),
@@ -58,6 +74,14 @@ const STYLES = `
       inset 0 1px 2px rgba(167,139,250,0.15),
       inset 0 -2px 4px rgba(0,0,0,0.8);
     border: 1px solid rgba(167,139,250,0.08);
+  }
+
+  .cinematic-hero .premium-card {
+    background: linear-gradient(145deg, #f0ecff 0%, #e8e4f8 100%);
+    box-shadow:
+      0 40px 100px -20px rgba(0,0,0,0.1),
+      0 20px 40px -20px rgba(0,0,0,0.08);
+    border: 1px solid rgba(167,139,250,0.2);
   }
 
   .cinematic-hero .card-sheen {
@@ -80,7 +104,7 @@ const STYLES = `
     background: linear-gradient(110deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 45%);
   }
 
-  .cinematic-hero .glass-badge {
+  .dark .cinematic-hero .glass-badge {
     background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.01) 100%);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -88,6 +112,15 @@ const STYLES = `
       0 0 0 1px rgba(255,255,255,0.1),
       0 20px 40px -10px rgba(0,0,0,0.8),
       inset 0 1px 1px rgba(255,255,255,0.15);
+  }
+
+  .cinematic-hero .glass-badge {
+    background: linear-gradient(135deg, rgba(167,139,250,0.1) 0%, rgba(167,139,250,0.03) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow:
+      0 0 0 1px rgba(167,139,250,0.15),
+      0 10px 20px -5px rgba(0,0,0,0.08);
   }
 
   .cinematic-hero .btn-hero-light {
@@ -207,7 +240,7 @@ export default function CinematicHero({
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
       <section
         ref={sectionRef}
-        className="cinematic-hero relative min-h-screen bg-[#0A0A14] overflow-hidden flex items-center"
+        className="cinematic-hero relative min-h-screen bg-background dark:bg-[#0A0A14] overflow-hidden flex items-center"
       >
         {/* Environment */}
         <div className="film-grain" />
@@ -242,13 +275,13 @@ export default function CinematicHero({
 
               <p
                 data-hero-subtitle
-                className="mt-8 font-serif italic text-2xl md:text-3xl text-white/90 max-w-2xl leading-snug invisible"
+                className="mt-8 font-serif italic text-2xl md:text-3xl text-foreground dark:text-white/90 max-w-2xl leading-snug invisible"
               >
                 {subtitle}.
               </p>
               <p
                 data-hero-desc
-                className="mt-4 text-lg text-white/45 max-w-xl invisible"
+                className="mt-4 text-lg text-text-muted dark:text-white/45 max-w-xl invisible"
               >
                 {description}
               </p>
@@ -333,19 +366,19 @@ export default function CinematicHero({
               </div>
 
               {/* Floating Badges */}
-              <div data-hero-badge className="glass-badge absolute -top-3 -left-4 px-4 py-2 rounded-full text-white/80 text-xs font-mono tracking-wider invisible">
+              <div data-hero-badge className="glass-badge absolute -top-3 -left-4 px-4 py-2 rounded-full text-foreground/80 dark:text-white/80 text-xs font-mono tracking-wider invisible">
                 Next.js
               </div>
-              <div data-hero-badge className="glass-badge absolute top-[20%] -right-6 px-4 py-2 rounded-full text-white/80 text-xs font-mono tracking-wider invisible">
+              <div data-hero-badge className="glass-badge absolute top-[20%] -right-6 px-4 py-2 rounded-full text-foreground/80 dark:text-white/80 text-xs font-mono tracking-wider invisible">
                 React
               </div>
-              <div data-hero-badge className="glass-badge absolute bottom-[25%] -left-6 px-4 py-2 rounded-full text-white/80 text-xs font-mono tracking-wider invisible">
+              <div data-hero-badge className="glass-badge absolute bottom-[25%] -left-6 px-4 py-2 rounded-full text-foreground/80 dark:text-white/80 text-xs font-mono tracking-wider invisible">
                 <span className="text-[#F59E0B]">50+</span> Projects
               </div>
-              <div data-hero-badge className="glass-badge absolute -bottom-3 right-8 px-4 py-2 rounded-full text-white/80 text-xs font-mono tracking-wider invisible">
+              <div data-hero-badge className="glass-badge absolute -bottom-3 right-8 px-4 py-2 rounded-full text-foreground/80 dark:text-white/80 text-xs font-mono tracking-wider invisible">
                 Laravel · PHP
               </div>
-              <div data-hero-badge className="glass-badge absolute top-[55%] -right-10 px-4 py-2 rounded-full text-white/80 text-xs font-mono tracking-wider invisible">
+              <div data-hero-badge className="glass-badge absolute top-[55%] -right-10 px-4 py-2 rounded-full text-foreground/80 dark:text-white/80 text-xs font-mono tracking-wider invisible">
                 Tailwind CSS
               </div>
             </div>
@@ -356,11 +389,11 @@ export default function CinematicHero({
             data-hero-bottom
             className="mt-16 flex justify-between items-end invisible"
           >
-            <span className="font-mono text-xs tracking-[0.16em] uppercase text-white/30">
-              <strong className="text-white/60 font-normal">إبداع</strong> · ibdaa ·{" "}
-              <em className="italic text-white/30">creation</em>
+            <span className="font-mono text-xs tracking-[0.16em] uppercase text-text-muted/50 dark:text-white/30">
+              <strong className="text-text-muted dark:text-white/60 font-normal">إبداع</strong> · ibdaa ·{" "}
+              <em className="italic text-text-muted/50 dark:text-white/30">creation</em>
             </span>
-            <span className="font-mono text-xs tracking-[0.16em] uppercase text-white/30 text-right hidden sm:block">
+            <span className="font-mono text-xs tracking-[0.16em] uppercase text-text-muted/50 dark:text-white/30 text-right hidden sm:block">
               Marrakech · Morocco
             </span>
           </div>
