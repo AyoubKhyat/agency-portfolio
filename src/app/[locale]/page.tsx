@@ -1,25 +1,19 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import {
-  HiOutlineGlobeAlt,
-  HiOutlineShoppingCart,
-  HiOutlineDevicePhoneMobile,
-  HiOutlineMagnifyingGlass,
-  HiOutlineWrenchScrewdriver,
-} from "react-icons/hi2";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 import CinematicHero from "@/components/CinematicHero";
+import ServicesScroll from "@/components/ServicesScroll";
 
 export default function HomePage() {
   const t = useTranslations("Home");
   const sTranslations = useTranslations("Services");
 
   const services = [
-    { icon: HiOutlineGlobeAlt, key: "web", num: "01" },
-    { icon: HiOutlineShoppingCart, key: "ecommerce", num: "02" },
-    { icon: HiOutlineDevicePhoneMobile, key: "mobile", num: "03" },
-    { icon: HiOutlineMagnifyingGlass, key: "seo", num: "04" },
-    { icon: HiOutlineWrenchScrewdriver, key: "maintenance", num: "05" },
+    { key: "web", num: "01", title: sTranslations("web_title"), desc: sTranslations("web_desc") },
+    { key: "ecommerce", num: "02", title: sTranslations("ecommerce_title"), desc: sTranslations("ecommerce_desc") },
+    { key: "mobile", num: "03", title: sTranslations("mobile_title"), desc: sTranslations("mobile_desc") },
+    { key: "seo", num: "04", title: sTranslations("seo_title"), desc: sTranslations("seo_desc") },
+    { key: "maintenance", num: "05", title: sTranslations("maintenance_title"), desc: sTranslations("maintenance_desc") },
   ];
 
   const stats = [
@@ -57,42 +51,11 @@ export default function HomePage() {
       </section>
 
       {/* Services preview */}
-      <section className="relative py-24 bg-surface-2 overflow-hidden">
-        <div className="grid-bg" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeIn>
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 gap-6">
-              <div>
-                <span className="pill">◆ {t("services_title")}</span>
-                <h2 className="mt-6 font-serif text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight text-foreground">
-                  {t("services_title").split(" ")[0]} <span className="text-primary italic">{t("services_title").split(" ").slice(1).join(" ")}</span>
-                </h2>
-              </div>
-              <p className="font-serif italic text-xl text-text-muted max-w-md leading-relaxed">
-                {t("services_subtitle")}
-              </p>
-            </div>
-          </FadeIn>
-          <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {services.map((s) => (
-              <StaggerItem key={s.key}>
-                <Link
-                  href="/services"
-                  className="group border border-line rounded-2xl p-8 bg-gradient-to-b from-primary/5 to-transparent hover:border-primary/30 transition-all flex flex-col gap-4 min-h-[260px] hover:-translate-y-1"
-                >
-                  <span className="font-mono text-xs tracking-[0.18em] text-primary">{s.num}</span>
-                  <h3 className="font-serif text-3xl md:text-4xl text-foreground">
-                    {sTranslations(`${s.key}_title`)}
-                  </h3>
-                  <p className="mt-auto text-sm text-text-muted leading-relaxed">
-                    {sTranslations(`${s.key}_desc`)}
-                  </p>
-                </Link>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </div>
-      </section>
+      <ServicesScroll
+        title={t("services_title")}
+        subtitle={t("services_subtitle")}
+        services={services}
+      />
 
       {/* CTA */}
       <section className="relative py-24 bg-background overflow-hidden">
