@@ -2,7 +2,7 @@
 
 ## Project Overview
 Portfolio website for **Ibda3 Digital** (إبداع), a web development agency based in Marrakech, Morocco.
-Built with Next.js 16 (App Router), Tailwind CSS v4, and next-intl for i18n (French + English).
+Built with Next.js 16 (App Router), Tailwind CSS v4, and next-intl for i18n (French + English + Arabic).
 
 **Owner:** Ayoub Khyat
 **GitHub:** https://github.com/AyoubKhyat
@@ -11,7 +11,7 @@ Built with Next.js 16 (App Router), Tailwind CSS v4, and next-intl for i18n (Fre
 ## Tech Stack
 - **Framework**: Next.js 16 with App Router
 - **Styling**: Tailwind CSS v4 with custom color theme (dark & premium)
-- **i18n**: next-intl v4 — French (default) + English
+- **i18n**: next-intl v4 — French (default) + English + Arabic (RTL)
 - **Icons**: react-icons (Heroicons + Font Awesome)
 - **Routing**: next-intl middleware (proxy.ts in Next.js 16)
 - **Node**: Requires Node.js >= 20 (`nvm use 20`)
@@ -43,26 +43,30 @@ src/
 │   ├── Navbar.tsx               # Sticky nav with mobile menu + CTA button
 │   ├── Footer.tsx               # 4-column footer with social links
 │   ├── WhatsAppButton.tsx       # Floating green WhatsApp button (bottom-right)
-│   └── LanguageSwitcher.tsx     # FR/EN toggle pill
+│   ├── LanguageSwitcher.tsx     # FR/EN/AR toggle pill
+│   ├── ThemeToggle.tsx          # Light/dark mode toggle with localStorage
+│   └── SetLang.tsx              # Sets html lang + dir (RTL for Arabic)
 ├── i18n/
-│   ├── routing.ts               # Locale config (fr default, en)
+│   ├── routing.ts               # Locale config (fr default, en, ar)
 │   ├── request.ts               # Server request config
 │   └── navigation.ts            # Typed Link, useRouter, usePathname
 ├── messages/
 │   ├── fr.json                  # French translations (all pages)
-│   └── en.json                  # English translations (all pages)
+│   ├── en.json                  # English translations (all pages)
+│   └── ar.json                  # Arabic translations (all pages, RTL)
 └── proxy.ts                     # Locale detection (Next.js 16 uses proxy, not middleware)
 ```
 
-## Portfolio Projects (from GitHub)
-| # | Project | Category | Tech | GitHub Repo |
-|---|---------|----------|------|-------------|
-| 1 | Gestion de Stock | Application | Laravel, PHP | ManagementStockWeb |
-| 2 | Gestion Scolaire | Application | Laravel, PHP | School |
-| 3 | Rent-Car | Application | Laravel, PHP | Rent-Car |
-| 4 | Sykweb Agency | Site Web | HTML, SCSS, JS | Sykweb_Site |
-| 5 | Baraka Idman | Site Web | HTML, CSS | Main-Site-Baraka-Idman |
-| 6 | Portal Football | Plugin | WordPress, PHP, JS | portalAddons |
+## Portfolio Projects
+| # | Project | Category | Tech | Link |
+|---|---------|----------|------|------|
+| 1 | Gestion de Stock | Application | Laravel, PHP | [GitHub](https://github.com/AyoubKhyat/ManagementStockWeb) |
+| 2 | Gestion Scolaire | Application | Laravel, PHP | [GitHub](https://github.com/AyoubKhyat/School) |
+| 3 | Rent-Car | Application | Laravel, PHP | [GitHub](https://github.com/AyoubKhyat/Rent-Car) |
+| 4 | Sykweb Agency | Site Web | HTML, SCSS, JS | [GitHub](https://github.com/AyoubKhyat/Sykweb_Site) |
+| 5 | Baraka Idman | Site Web | HTML, CSS | [GitHub](https://github.com/AyoubKhyat/Main-Site-Baraka-Idman) |
+| 6 | Portal Football | Plugin | WordPress, PHP, JS | [GitHub](https://github.com/AyoubKhyat/portalAddons) |
+| 7 | Terrene Studio | Site Web | HTML, CSS, JS | [Live](https://terrene.webyms.com/) |
 
 ## Commands
 ```bash
@@ -72,10 +76,12 @@ npm run build        # Production build
 npm run lint         # ESLint
 ```
 
-## Pricing (displayed on Services page)
-- **Starter**: À partir de 3,000 MAD — site vitrine simple
-- **Pro**: À partir de 8,000 MAD — site avancé avec CMS
-- **Business**: À partir de 15,000 MAD — e-commerce ou application sur mesure
+## Services (displayed on Services page)
+1. **Websites** — Modern, responsive showcase sites
+2. **E-Commerce** — Online stores with payment & inventory
+3. **Mobile Apps** — iOS & Android apps
+4. **SEO** — Technical SEO, keyword strategy, optimization
+5. **Maintenance & Support** — Monthly update/security packages
 
 ## Customization Checklist
 - [x] Agency name: "Ibda3 Digital"
@@ -92,6 +98,12 @@ npm run lint         # ESLint
 - [ ] Buy and configure domain (ibda3digital.com or ibda3digital.ma)
 - [x] Deploy to production — https://ibda3-digital.vercel.app
 - [x] Set up analytics (Google Analytics G-PK5HSDWHYM)
+- [x] Favicon replaced with Ibda3 Digital logo
+- [x] Theme-aware navbar logos (light: logo_transparent, dark: Logo_horizontal)
+- [x] Added SEO service (5th service)
+- [x] Removed pricing section from Services page
+- [x] Added Arabic (ar) language with RTL support
+- [x] Added Terrene Studio (external client project) to portfolio
 - [ ] Create a pitch deck in Claude Design for client meetings
 
 ## Changelog
@@ -156,3 +168,19 @@ npm run lint         # ESLint
   - Fixed LanguageSwitcher colors for theme compatibility
   - Navbar background adapts via `--nav-bg` CSS variable
   - Primary buttons always use `text-white` for contrast on both themes
+- **2026-05-09** — Domain, branding, services & i18n
+  - Renamed Vercel project to ibda3-digital (ibda3-digital.vercel.app)
+  - Replaced favicon with Ibda3 Digital logo (icon.png)
+  - Theme-aware navbar: logo_transparent.png (light), Logo_horizontal.png (dark)
+  - Mobile navbar shows square logo (logo_ibda3.png) at 48px
+  - Added SEO as 5th service across all pages (Home, Services, Footer)
+  - Removed pricing table section from Services page
+  - Unified all services into one grid (no separate maintenance card)
+  - Updated stats: years of experience 3+ → 5+
+  - Added Arabic language (ar.json) with full translations
+  - RTL support via SetLang component (dir="rtl" for Arabic)
+  - Language switcher updated: FR / EN / ع
+  - Arabic metadata for SEO
+  - Added Terrene Studio (architecture site) to portfolio with hero image
+  - Portfolio cards now all same size (removed feature/bento layout)
+  - Portfolio supports external URLs with link icon (not just GitHub)
