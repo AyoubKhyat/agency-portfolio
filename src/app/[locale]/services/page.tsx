@@ -22,13 +22,10 @@ export default function ServicesPage() {
     { num: "01", key: "web", en: "Websites that load fast." },
     { num: "02", key: "ecommerce", en: "Shops that convert." },
     { num: "03", key: "mobile", en: "Apps that scale." },
+    { num: "04", key: "seo", en: "Rank higher. Grow faster." },
+    { num: "05", key: "maintenance", en: "Always up to date." },
   ];
 
-  const rows = [
-    { idx: "/ 01", key: "starter", priceKey: "pricing_starter_price" },
-    { idx: "/ 02", key: "pro", priceKey: "pricing_pro_price" },
-    { idx: "/ 03", key: "business", priceKey: "pricing_business_price" },
-  ];
 
   return (
     <>
@@ -53,7 +50,7 @@ export default function ServicesPage() {
       <section className="relative py-20 bg-surface-2 overflow-hidden">
         <div className="grid-bg" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <StaggerContainer className="grid md:grid-cols-3 gap-6">
+          <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {solutions.map((s) => {
               const features = t(`${s.key}_features`).split(",").map((f) => f.trim());
               return (
@@ -75,64 +72,6 @@ export default function ServicesPage() {
                 </StaggerItem>
               );
             })}
-          </StaggerContainer>
-        </div>
-      </section>
-
-      {/* Maintenance card */}
-      <section className="relative py-16 bg-background overflow-hidden">
-        <FadeIn className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="border border-line rounded-2xl p-8 md:p-10 bg-gradient-to-b from-primary/5 to-transparent">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-              <div>
-                <span className="font-mono text-xs tracking-[0.18em] text-primary">04</span>
-                <h2 className="mt-3 font-serif text-4xl md:text-5xl text-foreground">{t("maintenance_title")}</h2>
-                <p className="mt-3 text-text-muted max-w-xl leading-relaxed">{t("maintenance_desc")}</p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {t("maintenance_features").split(",").map((f) => (
-                  <span key={f.trim()} className="pill">{f.trim()}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </FadeIn>
-      </section>
-
-      {/* Pricing Table */}
-      <section className="relative py-20 bg-surface-2 overflow-hidden">
-        <div className="grid-bg" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeIn>
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-14 gap-6">
-              <h2 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight text-foreground">
-                {t("pricing_title").split(" ")[0]}<br />&amp; <span className="text-primary italic">{t("pricing_title").split(" ").slice(1).join(" ") || "tarifs"}.</span>
-              </h2>
-              <div className="font-mono text-xs tracking-[0.14em] uppercase text-text-muted text-right leading-relaxed">
-                Prix transparents<br />
-                Devis détaillé sous 48h<br />
-                Paiement échelonné possible
-              </div>
-            </div>
-          </FadeIn>
-
-          <StaggerContainer className="border-t border-line-soft">
-            {rows.map((row) => (
-              <StaggerItem key={row.key}>
-                <div className="grid grid-cols-1 md:grid-cols-[60px_1fr_1.2fr_auto] items-center py-8 border-b border-line-soft gap-4 md:gap-8">
-                  <span className="font-mono text-sm text-primary tracking-[0.12em] hidden md:block">{row.idx}</span>
-                  <div>
-                    <span className="font-serif text-3xl md:text-4xl text-foreground">{t(`pricing_${row.key}`)}</span>
-                  </div>
-                  <p className="text-text-muted leading-relaxed">{t(`pricing_${row.key}_desc`)}</p>
-                  <div className="text-right">
-                    <span className="font-serif text-3xl md:text-4xl text-accent italic">
-                      {t(row.priceKey)}
-                    </span>
-                  </div>
-                </div>
-              </StaggerItem>
-            ))}
           </StaggerContainer>
         </div>
       </section>

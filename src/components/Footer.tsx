@@ -48,6 +48,11 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/services" className="hover:text-primary transition-colors">
+                  {t("service_seo")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/services" className="hover:text-primary transition-colors">
                   {t("service_maintenance")}
                 </Link>
               </li>
