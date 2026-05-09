@@ -184,3 +184,6 @@ npm run lint         # ESLint
   - Added Terrene Studio (architecture site) to portfolio with hero image
   - Portfolio cards now all same size (removed feature/bento layout)
   - Portfolio supports external URLs with link icon (not just GitHub)
+  - Made CinematicHero theme-aware: white bg in light mode, dark cinematic in dark mode
+  - Theme-aware phone mockup, premium card, glass badges, glow blobs
+  - Configured Tailwind v4 `@variant dark` to use `.dark` class selector (was using media query)
