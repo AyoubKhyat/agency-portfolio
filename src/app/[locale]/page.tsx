@@ -4,6 +4,7 @@ import {
   HiOutlineGlobeAlt,
   HiOutlineShoppingCart,
   HiOutlineDevicePhoneMobile,
+  HiOutlineMagnifyingGlass,
   HiOutlineWrenchScrewdriver,
 } from "react-icons/hi2";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
@@ -17,7 +18,8 @@ export default function HomePage() {
     { icon: HiOutlineGlobeAlt, key: "web", num: "01" },
     { icon: HiOutlineShoppingCart, key: "ecommerce", num: "02" },
     { icon: HiOutlineDevicePhoneMobile, key: "mobile", num: "03" },
-    { icon: HiOutlineWrenchScrewdriver, key: "maintenance", num: "04" },
+    { icon: HiOutlineMagnifyingGlass, key: "seo", num: "04" },
+    { icon: HiOutlineWrenchScrewdriver, key: "maintenance", num: "05" },
   ];
 
   const stats = [
