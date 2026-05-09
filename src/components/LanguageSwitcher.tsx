@@ -8,32 +8,31 @@ export default function LanguageSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const switchLocale = (newLocale: "fr" | "en") => {
+  const switchLocale = (newLocale: "fr" | "en" | "ar") => {
     router.replace(pathname, { locale: newLocale });
   };
 
+  const locales = [
+    { code: "fr" as const, label: "FR" },
+    { code: "en" as const, label: "EN" },
+    { code: "ar" as const, label: "ع" },
+  ];
+
   return (
     <div className="flex items-center gap-1 bg-foreground/10 rounded-lg p-0.5">
-      <button
-        onClick={() => switchLocale("fr")}
-        className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-          locale === "fr"
-            ? "bg-primary text-white"
-            : "text-text-muted hover:text-foreground"
-        }`}
-      >
-        FR
-      </button>
-      <button
-        onClick={() => switchLocale("en")}
-        className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-          locale === "en"
-            ? "bg-primary text-white"
-            : "text-text-muted hover:text-foreground"
-        }`}
-      >
-        EN
-      </button>
+      {locales.map((l) => (
+        <button
+          key={l.code}
+          onClick={() => switchLocale(l.code)}
+          className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+            locale === l.code
+              ? "bg-primary text-white"
+              : "text-text-muted hover:text-foreground"
+          }`}
+        >
+          {l.label}
+        </button>
+      ))}
     </div>
   );
 }
