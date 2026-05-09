@@ -89,7 +89,10 @@
     "project6_title": "بوابة كرة القدم",
     "project6_desc": "إضافة ووردبريس لعرض نتائج مباريات كرة القدم مباشرة مع مصادقة المستخدمين.",
     "project6_tags": "WordPress,PHP,JavaScript,API",
-    "project6_github": "portalAddons"
+    "project6_github": "portalAddons",
+    "project7_title": "ستوديو Terrene",
+    "project7_desc": "موقع بورتفوليو فاخر لاستوديو هندسة معمارية وتصميم داخلي يضم عرض المشاريع وفلسفة التصميم وشهادات العملاء.",
+    "project7_tags": "HTML,CSS,JavaScript,بورتفوليو"
   },
   "Blog": {
     "title": "مدونتنا",

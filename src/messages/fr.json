@@ -89,7 +89,10 @@
     "project6_title": "Portal Football",
     "project6_desc": "Plugin WordPress affichant les résultats et matchs de football en temps réel avec authentification utilisateur.",
     "project6_tags": "WordPress,PHP,JavaScript,API",
-    "project6_github": "portalAddons"
+    "project6_github": "portalAddons",
+    "project7_title": "Terrene Studio",
+    "project7_desc": "Site portfolio premium pour un studio d'architecture et design d'intérieur avec présentation de projets, philosophie de design et témoignages clients.",
+    "project7_tags": "HTML,CSS,JavaScript,Portfolio"
   },
   "Blog": {
     "title": "Notre Blog",
