@@ -13,14 +13,19 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const isEn = locale === "en";
+  const titles: Record<string, string> = {
+    en: "Ibda3 Digital — Web Agency Marrakech",
+    fr: "Ibda3 Digital — Agence Web Marrakech",
+    ar: "إبداع ديجيتال — وكالة ويب مراكش",
+  };
+  const descriptions: Record<string, string> = {
+    en: "Web agency in Marrakech — Custom websites, mobile apps and e-commerce solutions.",
+    fr: "Agence web à Marrakech — Création de sites web, applications mobiles et solutions e-commerce sur mesure.",
+    ar: "وكالة ويب في مراكش — مواقع إلكترونية، تطبيقات موبايل وحلول تجارة إلكترونية مخصصة.",
+  };
   return {
-    title: isEn
-      ? "Ibda3 Digital — Web Agency Marrakech"
-      : "Ibda3 Digital — Agence Web Marrakech",
-    description: isEn
-      ? "Web agency in Marrakech — Custom websites, mobile apps and e-commerce solutions."
-      : "Agence web à Marrakech — Création de sites web, applications mobiles et solutions e-commerce sur mesure.",
+    title: titles[locale] || titles.fr,
+    description: descriptions[locale] || descriptions.fr,
   };
 }
 
@@ -32,7 +37,7 @@ type Props = {
 export default async function LocaleLayout({ children, params }: Props) {
   const { locale } = await params;
 
-  if (!routing.locales.includes(locale as "fr" | "en")) {
+  if (!routing.locales.includes(locale as "fr" | "en" | "ar")) {
     notFound();
   }
 
