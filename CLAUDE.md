@@ -90,7 +90,7 @@ npm run lint         # ESLint
 - [ ] Replace Google Maps embed with exact office/home location
 - [ ] Add real blog content (consider MDX for posts)
 - [ ] Buy and configure domain (ibda3digital.com or ibda3digital.ma)
-- [x] Deploy to production — https://agency-portfolio-orcin-tau.vercel.app
+- [x] Deploy to production — https://ibda3-digital.vercel.app
 - [x] Set up analytics (Google Analytics G-PK5HSDWHYM)
 - [ ] Create a pitch deck in Claude Design for client meetings
 
@@ -124,7 +124,7 @@ npm run lint         # ESLint
   - Integrated EmailJS (@emailjs/browser) with loading, success, and error states
   - Added SetLang client component for dynamic html lang attribute
   - Fixed dev mode crash (html/body must be in root layout in Next.js 16)
-  - Deployed to Vercel: https://agency-portfolio-orcin-tau.vercel.app
+  - Deployed to Vercel: https://ibda3-digital.vercel.app
   - Set EmailJS env vars on Vercel (NEXT_PUBLIC_EMAILJS_*)
 - **2026-05-08** — Portfolio images + social links
   - Added GitHub OG images to portfolio cards with hover zoom
