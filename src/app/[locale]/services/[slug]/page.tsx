@@ -8,10 +8,6 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 const SLUGS = ["web", "ecommerce", "mobile", "seo", "maintenance"] as const;
 type Slug = (typeof SLUGS)[number];
 
-export async function generateStaticParams() {
-  return SLUGS.map((slug) => ({ slug }));
-}
-
 export async function generateMetadata({
   params,
 }: {
