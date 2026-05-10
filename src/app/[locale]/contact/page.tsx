@@ -12,8 +12,17 @@ import { FadeIn, motion } from "@/components/motion";
 
 export default function ContactPage() {
   const t = useTranslations("Contact");
+  const s = useTranslations("Services");
   const formRef = useRef<HTMLFormElement>(null);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+
+  const services = [
+    { key: "web", label: s("web_title") },
+    { key: "ecommerce", label: s("ecommerce_title") },
+    { key: "mobile", label: s("mobile_title") },
+    { key: "seo", label: s("seo_title") },
+    { key: "maintenance", label: s("maintenance_title") },
+  ];
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -164,13 +173,20 @@ export default function ContactPage() {
                       <label htmlFor="subject" className="block text-sm font-mono tracking-wider uppercase text-text-muted mb-2">
                         {t("form_subject")}
                       </label>
-                      <input
+                      <select
                         id="subject"
                         name="subject"
-                        type="text"
                         required
-                        className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-foreground placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                      />
+                        defaultValue=""
+                        className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none"
+                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239CA3AF' d='M2 4l4 4 4-4'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 16px center" }}
+                      >
+                        <option value="" disabled className="text-text-muted">{t("form_subject_placeholder")}</option>
+                        {services.map((svc) => (
+                          <option key={svc.key} value={svc.label}>{svc.label}</option>
+                        ))}
+                        <option value={t("form_subject_other")}>{t("form_subject_other")}</option>
+                      </select>
                     </div>
                     <div>
                       <label htmlFor="message" className="block text-sm font-mono tracking-wider uppercase text-text-muted mb-2">
