@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { HiOutlineCheck } from "react-icons/hi2";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
+import FaqAccordion from "@/components/FaqAccordion";
 
 export async function generateMetadata({
   params,
@@ -15,8 +16,31 @@ export async function generateMetadata({
   return { title: `${t("title")} — Ibda3 Digital`, description: t("subtitle") };
 }
 
+function FaqJsonLd({ items }: { items: { question: string; answer: string }[] }) {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
+    })),
+  };
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
 export default function ServicesPage() {
   const t = useTranslations("Services");
+
+  const faqItems = [1, 2, 3, 4, 5].map((n) => ({
+    question: t(`faq${n}_q`),
+    answer: t(`faq${n}_a`),
+  }));
 
   const solutions = [
     { num: "01", key: "web" },
@@ -72,6 +96,21 @@ export default function ServicesPage() {
               );
             })}
           </StaggerContainer>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="relative py-20 bg-surface-2 overflow-hidden">
+        <div className="grid-bg" />
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeIn className="text-center mb-12">
+            <span className="pill">FAQ</span>
+            <h2 className="mt-6 font-serif text-4xl md:text-5xl text-foreground">{t("faq_title")}</h2>
+          </FadeIn>
+          <FadeIn delay={0.15}>
+            <FaqAccordion items={faqItems} />
+          </FadeIn>
+          <FaqJsonLd items={faqItems} />
         </div>
       </section>
 

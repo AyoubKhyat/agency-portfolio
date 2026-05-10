@@ -74,7 +74,18 @@
     "pricing_business": "Business",
     "pricing_business_price": "À partir de 15 000 MAD",
     "pricing_popular": "Populaire",
-    "pricing_business_desc": "E-commerce ou application sur mesure"
+    "pricing_business_desc": "E-commerce ou application sur mesure",
+    "faq_title": "Questions fréquentes",
+    "faq1_q": "Combien coûte un site web ?",
+    "faq1_a": "Nos tarifs commencent à 3 000 MAD pour un site vitrine simple. Le prix varie selon la complexité, les fonctionnalités et le design. Contactez-nous pour un devis gratuit et personnalisé.",
+    "faq2_q": "Combien de temps prend la création d'un site ?",
+    "faq2_a": "Un site vitrine prend généralement 2 à 3 semaines. Un e-commerce ou une application plus complexe peut nécessiter 4 à 8 semaines. Nous définissons le planning ensemble dès le départ.",
+    "faq3_q": "Est-ce que le site sera responsive et optimisé mobile ?",
+    "faq3_a": "Absolument. Tous nos sites sont conçus mobile-first et testés sur tous les appareils. L'optimisation mobile est incluse dans chaque projet.",
+    "faq4_q": "Proposez-vous la maintenance après la livraison ?",
+    "faq4_a": "Oui, nous proposons des forfaits de maintenance mensuels incluant les mises à jour, la sécurité, les sauvegardes et le support technique réactif.",
+    "faq5_q": "Quelles technologies utilisez-vous ?",
+    "faq5_a": "Nous utilisons les technologies les plus modernes : Next.js, React, Laravel, PHP, Tailwind CSS. Le choix dépend des besoins spécifiques de votre projet."
   },
   "Portfolio": {
     "title": "Notre Portfolio",

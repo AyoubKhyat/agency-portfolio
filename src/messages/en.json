@@ -74,7 +74,18 @@
     "pricing_business": "Business",
     "pricing_business_price": "From 15,000 MAD",
     "pricing_popular": "Popular",
-    "pricing_business_desc": "E-commerce or custom application"
+    "pricing_business_desc": "E-commerce or custom application",
+    "faq_title": "Frequently Asked Questions",
+    "faq1_q": "How much does a website cost?",
+    "faq1_a": "Our prices start at 3,000 MAD for a simple showcase site. The cost varies based on complexity, features and design. Contact us for a free, personalized quote.",
+    "faq2_q": "How long does it take to build a website?",
+    "faq2_a": "A showcase website typically takes 2 to 3 weeks. An e-commerce store or complex application may require 4 to 8 weeks. We define the timeline together from the start.",
+    "faq3_q": "Will the site be responsive and mobile-optimized?",
+    "faq3_a": "Absolutely. All our sites are designed mobile-first and tested across all devices. Mobile optimization is included in every project.",
+    "faq4_q": "Do you offer maintenance after delivery?",
+    "faq4_a": "Yes, we offer monthly maintenance packages including updates, security, backups and responsive technical support.",
+    "faq5_q": "What technologies do you use?",
+    "faq5_a": "We use the most modern technologies: Next.js, React, Laravel, PHP, Tailwind CSS. The choice depends on the specific needs of your project."
   },
   "Portfolio": {
     "title": "Our Portfolio",
