@@ -1,9 +1,24 @@
+import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 import CinematicHero from "@/components/CinematicHero";
 import ServicesScroll from "@/components/ServicesScroll";
 import HeroParallax from "@/components/HeroParallax";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Home" });
+  return {
+    title: `Ibda3 Digital — ${t("hero_title")}`,
+    description: t("hero_subtitle"),
+  };
+}
 
 export default function HomePage() {
   const t = useTranslations("Home");
