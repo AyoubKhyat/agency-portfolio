@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useLayoutEffect, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
@@ -195,6 +195,7 @@ export default function CinematicHero({
   const mainCardRef = useRef<HTMLDivElement>(null);
   const mockupRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<number>(0);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const id = "cinematic-hero-styles";
@@ -253,6 +254,8 @@ export default function CinematicHero({
       gsap.set(".main-card", { y: window.innerHeight + 200, autoAlpha: 1 });
       gsap.set([".card-left-text", ".card-right-text", ".mockup-scroll-wrapper", ".floating-badge", ".phone-widget"], { autoAlpha: 0 });
       gsap.set(".cta-wrapper", { autoAlpha: 0, scale: 0.8, filter: "blur(30px)" });
+
+      setReady(true);
 
       const introTl = gsap.timeline({ delay: 0.3 });
       introTl
@@ -314,6 +317,14 @@ export default function CinematicHero({
       className={cn("relative w-screen h-screen overflow-hidden flex items-center justify-center bg-background text-foreground font-sans antialiased")}
       style={{ perspective: "1500px" }}
     >
+      {!ready && (
+        <div className="absolute inset-0 z-[100] bg-background flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-text-muted font-mono tracking-widest uppercase">Ibda3 Digital</span>
+          </div>
+        </div>
+      )}
       <div className="film-grain" aria-hidden="true" />
       <div className="bg-grid-theme absolute inset-0 z-0 pointer-events-none opacity-50" aria-hidden="true" />
 

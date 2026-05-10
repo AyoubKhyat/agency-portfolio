@@ -86,8 +86,8 @@ export default function PortfolioPage() {
             <AnimatePresence mode="popLayout">
               {filtered.map((project, index) => {
                 const tags = t(`${project.key}_tags`).split(",").map((tag) => tag.trim());
-                const href = project.url || `https://github.com/AyoubKhyat/${project.github}`;
-                const imgSrc = project.image || `https://opengraph.githubassets.com/${project.og}/AyoubKhyat/${project.github}`;
+                const href = project.url || "#";
+                const imgSrc = project.image || "";
                 return (
                   <motion.a
                     key={project.key}
