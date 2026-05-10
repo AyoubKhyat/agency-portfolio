@@ -62,13 +62,13 @@ const HeroParallax = ({ products, title, subtitle }: HeroParallaxProps) => {
   return (
     <div
       ref={ref}
-      className="h-[300vh] py-40 overflow-hidden antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d] bg-background"
+      className="h-[200vh] md:h-[300vh] py-20 md:py-40 overflow-hidden antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d] bg-background"
     >
-      <div className="max-w-7xl relative mx-auto py-20 md:py-40 px-4 w-full left-0 top-0">
-        <h2 className="text-2xl md:text-7xl font-bold text-foreground">
+      <div className="max-w-7xl relative mx-auto py-10 md:py-40 px-4 w-full left-0 top-0">
+        <h2 className="text-3xl md:text-7xl font-bold text-foreground">
           {title}
         </h2>
-        <p className="max-w-2xl text-base md:text-xl mt-8 text-text-muted">
+        <p className="max-w-2xl text-base md:text-xl mt-4 md:mt-8 text-text-muted">
           {subtitle}
         </p>
       </div>
@@ -80,7 +80,7 @@ const HeroParallax = ({ products, title, subtitle }: HeroParallaxProps) => {
           opacity,
         }}
       >
-        <motion.div className="flex flex-row-reverse space-x-reverse space-x-20 mb-20">
+        <motion.div className="flex flex-row-reverse space-x-reverse space-x-8 md:space-x-20 mb-8 md:mb-20">
           {firstRow.map((product, i) => (
             <ProductCard
               product={product}
@@ -89,7 +89,7 @@ const HeroParallax = ({ products, title, subtitle }: HeroParallaxProps) => {
             />
           ))}
         </motion.div>
-        <motion.div className="flex flex-row mb-20 space-x-20">
+        <motion.div className="flex flex-row mb-8 md:mb-20 space-x-8 md:space-x-20">
           {secondRow.map((product, i) => (
             <ProductCard
               product={product}
@@ -98,7 +98,7 @@ const HeroParallax = ({ products, title, subtitle }: HeroParallaxProps) => {
             />
           ))}
         </motion.div>
-        <motion.div className="flex flex-row-reverse space-x-reverse space-x-20">
+        <motion.div className="flex flex-row-reverse space-x-reverse space-x-8 md:space-x-20">
           {thirdRow.map((product, i) => (
             <ProductCard
               product={product}
@@ -123,7 +123,7 @@ const ProductCard = ({
     <motion.div
       style={{ x: translate }}
       whileHover={{ y: -20 }}
-      className="group/product h-96 w-[30rem] relative flex-shrink-0"
+      className="group/product h-48 md:h-96 w-[16rem] md:w-[30rem] relative flex-shrink-0"
     >
       <a
         href={product.link}

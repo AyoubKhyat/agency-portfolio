@@ -67,7 +67,7 @@ export default function HomePage() {
             {stats.map((stat, i) => (
               <StaggerItem
                 key={stat.label}
-                className={`py-8 md:py-10 ${i < 3 ? "border-r border-line-soft" : ""} text-center`}
+                className={`py-8 md:py-10 ${i % 2 === 0 ? "border-r border-line-soft" : ""} ${i === 1 ? "md:border-r md:border-line-soft" : ""} text-center`}
               >
                 <p className="font-serif text-5xl md:text-6xl text-primary">{stat.value}</p>
                 <p className="text-sm text-text-muted mt-2">{stat.label}</p>
