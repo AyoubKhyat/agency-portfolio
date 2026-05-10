@@ -46,6 +46,7 @@ export default function RootLayout({
   return (
     <html
       className={`${inter.variable} ${instrumentSerif.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <head>

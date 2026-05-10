@@ -43,13 +43,15 @@ export default function Navbar() {
               alt="Ibda3 Digital"
               width={160}
               height={40}
-              className="hidden md:block"
+              priority
+              className="hidden md:block h-auto"
             />
             <Image
               src="/logo_ibda3.png"
               alt="Ibda3 Digital"
               width={48}
               height={48}
+              priority
               className="md:hidden rounded-lg"
             />
           </Link>

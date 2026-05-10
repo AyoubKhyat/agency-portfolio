@@ -26,6 +26,7 @@ export async function generateMetadata({
 export default function HomePage() {
   const t = useTranslations("Home");
   const sTranslations = useTranslations("Services");
+  const about = useTranslations("About");
 
   const services = [
     { key: "web", num: "01", title: sTranslations("web_title"), desc: sTranslations("web_desc") },
@@ -110,6 +111,54 @@ export default function HomePage() {
         title={t("parallax_title")}
         subtitle={t("parallax_subtitle")}
       />
+
+      {/* Process */}
+      <section className="relative py-24 bg-background overflow-hidden">
+        <div className="grid-bg" />
+        <div className="glow w-[700px] h-[700px] bg-primary top-[20%] left-[30%] opacity-15" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeIn>
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 gap-6">
+              <h2 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight text-foreground">
+                {about("process_heading")}<br /><span className="text-primary italic">{about("process_heading_accent")}</span>
+              </h2>
+              <div className="font-mono text-xs tracking-[0.14em] uppercase text-text-muted text-right leading-relaxed">
+                {about("process_tag1")}<br />
+                {about("process_tag2")}<br />
+                {about("process_tag3")}
+              </div>
+            </div>
+          </FadeIn>
+
+          <StaggerContainer className="grid md:grid-cols-4 gap-6 relative" delay={0.15}>
+            <div className="hidden md:block absolute top-7 left-0 right-0 border-t border-dashed border-line z-0" />
+            {[
+              { num: "01", stepKey: "step1", accent: "primary" },
+              { num: "02", stepKey: "step2", accent: "primary" },
+              { num: "03", stepKey: "step3", accent: "accent" },
+              { num: "04", stepKey: "step4", accent: "accent" },
+            ].map((step) => (
+              <StaggerItem key={step.stepKey}>
+                <div className="relative flex flex-col gap-5">
+                  <div className={`relative z-10 w-14 h-14 rounded-full border flex items-center justify-center font-mono text-sm tracking-wider ${
+                    step.accent === "accent"
+                      ? "border-accent text-accent bg-background"
+                      : "border-primary text-primary bg-background"
+                  } ${step.num === "04" ? "!bg-accent !border-accent !text-white shadow-[0_0_40px_rgba(245,158,11,0.5)]" : ""}`}>
+                    {step.num}
+                  </div>
+                  <h3 className="font-serif text-3xl md:text-4xl text-foreground">{about(`${step.stepKey}_title`)}</h3>
+                  <span className="font-serif italic text-text-muted">{about(`${step.stepKey}_sub`)}</span>
+                  <p className="text-sm text-text-muted leading-relaxed">{about(`${step.stepKey}_desc`)}</p>
+                  <span className="mt-auto pt-4 border-t border-line-soft font-mono text-[11px] tracking-[0.16em] uppercase text-primary">
+                    {about(`${step.stepKey}_duration`)}
+                  </span>
+                </div>
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+        </div>
+      </section>
 
       {/* CTA */}
       <section className="relative py-24 bg-background overflow-hidden">
