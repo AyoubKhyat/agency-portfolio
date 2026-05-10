@@ -136,29 +136,3 @@ body {
   background: linear-gradient(to bottom, var(--card-from), transparent);
   border-color: var(--card-border);
 }
-
-.portfolio-card {
-  position: relative;
-  transition: border-color 0.2s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.portfolio-card:hover {
-  border-color: var(--prim) !important;
-  transform: translateY(-4px);
-}
-
-.portfolio-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), var(--ln-soft) 0%, transparent 65%);
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.portfolio-card:hover::before {
-  opacity: 1;
-}
