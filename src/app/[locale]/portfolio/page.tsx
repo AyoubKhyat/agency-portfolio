@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { FaGithub, FaExternalLinkAlt } from "react-icons/fa";
-import { ZoomParallax } from "@/components/ZoomParallax";
+import { FadeIn, StaggerContainer, StaggerItem, motion, AnimatePresence } from "@/components/motion";
 
 type Category = "all" | "web" | "app" | "plugin";
 
@@ -18,25 +18,9 @@ const projects = [
   { id: 7, key: "project7", category: "web", url: "https://terrene.webyms.com/", image: "/projects/terrene.jpg", tag: "Architecture studio" },
 ];
 
-const categoryDots: Record<string, string> = {
-  web: "#7F77DD",
-  app: "#1D9E75",
-  plugin: "#D85A30",
-};
-
-function getImageSrc(project: (typeof projects)[number]) {
-  return project.image || `https://opengraph.githubassets.com/${project.og}/AyoubKhyat/${project.github}`;
-}
-
 export default function PortfolioPage() {
   const t = useTranslations("Portfolio");
   const [filter, setFilter] = useState<Category>("all");
-  const [displayedCards, setDisplayedCards] = useState(projects);
-  const [cardPhase, setCardPhase] = useState<"visible" | "exiting" | "entering">("visible");
-
-  const tabsRef = useRef<HTMLDivElement>(null);
-  const pillRef = useRef<HTMLDivElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
 
   const filters: { key: Category; label: string }[] = [
     { key: "all", label: t("filter_all") },
@@ -45,185 +29,113 @@ export default function PortfolioPage() {
     { key: "plugin", label: t("filter_plugin") },
   ];
 
-  const parallaxImages = projects.map((p) => ({
-    src: getImageSrc(p),
-    alt: t(`${p.key}_title`),
-  }));
-
-  const movePill = useCallback(() => {
-    if (!tabsRef.current || !pillRef.current) return;
-    const activeBtn = tabsRef.current.querySelector<HTMLButtonElement>("[data-active='true']");
-    if (!activeBtn) return;
-    pillRef.current.style.left = `${activeBtn.offsetLeft}px`;
-    pillRef.current.style.width = `${activeBtn.offsetWidth}px`;
-  }, []);
-
-  useEffect(() => {
-    movePill();
-  }, [filter, movePill]);
-
-  useEffect(() => {
-    movePill();
-    window.addEventListener("resize", movePill);
-    return () => window.removeEventListener("resize", movePill);
-  }, [movePill]);
-
-  const handleFilter = (key: Category) => {
-    if (key === filter || cardPhase !== "visible") return;
-
-    const currentCards = gridRef.current?.querySelectorAll<HTMLElement>("[data-card]");
-    const exitCount = currentCards?.length ?? 0;
-
-    setCardPhase("exiting");
-    setFilter(key);
-
-    if (currentCards) {
-      currentCards.forEach((card, i) => {
-        card.style.transition = `opacity 220ms ease-in ${i * 30}ms, transform 220ms ease-in ${i * 30}ms`;
-        card.style.opacity = "0";
-        card.style.transform = "translateY(-10px) scale(0.96)";
-      });
-    }
-
-    setTimeout(() => {
-      const next = key === "all" ? projects : projects.filter((p) => p.category === key);
-      setDisplayedCards(next);
-      setCardPhase("entering");
-    }, exitCount * 30 + 240);
-  };
-
-  useEffect(() => {
-    if (cardPhase !== "entering") return;
-
-    const cards = gridRef.current?.querySelectorAll<HTMLElement>("[data-card]");
-    if (!cards) return;
-
-    cards.forEach((card) => {
-      card.style.transition = "none";
-      card.style.opacity = "0";
-      card.style.transform = "translateY(22px) scale(0.95)";
-    });
-
-    setTimeout(() => {
-      cards.forEach((card, i) => {
-        card.style.transition = `opacity 450ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 60}ms, transform 450ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 60}ms`;
-        card.style.opacity = "1";
-        card.style.transform = "translateY(0) scale(1)";
-      });
-      setTimeout(() => setCardPhase("visible"), (cards.length - 1) * 60 + 480);
-    }, 20);
-  }, [cardPhase, displayedCards]);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    e.currentTarget.style.setProperty("--mx", `${((e.clientX - rect.left) / rect.width) * 100}%`);
-    e.currentTarget.style.setProperty("--my", `${((e.clientY - rect.top) / rect.height) * 100}%`);
-  };
+  const filtered =
+    filter === "all" ? projects : projects.filter((p) => p.category === filter);
 
   return (
     <>
-      {/* Zoom Parallax Hero */}
-      <ZoomParallax images={parallaxImages} />
-
-      {/* Title */}
-      <section className="relative bg-background py-20 md:py-28 overflow-hidden">
+      {/* Hero */}
+      <section className="relative bg-background py-24 md:py-32 overflow-hidden">
         <div className="grid-bg" />
         <div className="glow w-[600px] h-[600px] bg-primary -bottom-32 left-20 opacity-20" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
-            <h1 className="font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.95] tracking-tight text-foreground">
-              <span className="text-primary italic">{t("title").split(" ")[0]}</span><br />{t("title").split(" ").slice(1).join(" ")}.
-            </h1>
-            <p className="font-serif italic text-xl text-text-muted max-w-sm leading-relaxed pb-4">
-              {t("subtitle")}
-            </p>
-          </div>
+          <FadeIn>
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+              <h1 className="font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.95] tracking-tight text-foreground">
+                <span className="text-primary italic">{t("title").split(" ")[0]}</span><br />{t("title").split(" ").slice(1).join(" ")}.
+              </h1>
+              <p className="font-serif italic text-xl text-text-muted max-w-sm leading-relaxed pb-4">
+                {t("subtitle")}
+              </p>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* Filters + Grid */}
-      <section className="relative py-20 bg-background overflow-hidden">
+      <section className="relative py-20 bg-surface-2 overflow-hidden">
         <div className="grid-bg" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-          {/* Filter tabs */}
-          <div ref={tabsRef} className="portfolio-tabs relative flex flex-wrap gap-1 mb-12 p-1 rounded-full w-fit bg-surface border border-line">
-            <div
-              ref={pillRef}
-              id="tab-pill"
-              className="absolute top-1 bottom-1 rounded-full pointer-events-none bg-surface-2 border border-line"
-              style={{
-                transition: "left 0.35s cubic-bezier(0.16, 1, 0.3, 1), width 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
-                left: 0,
-                width: 0,
-              }}
-            />
-            {filters.map((f) => (
-              <button
-                key={f.key}
-                data-active={filter === f.key ? "true" : "false"}
-                onClick={() => handleFilter(f.key)}
-                className={`relative z-10 px-5 py-2 rounded-full text-sm font-mono tracking-wider uppercase transition-colors duration-200 ${
-                  filter === f.key ? "text-foreground" : "text-text-muted"
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Cards grid */}
-          <div ref={gridRef} className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {displayedCards.map((project) => {
-              const tags = t(`${project.key}_tags`).split(",").map((tag) => tag.trim());
-              const href = project.url || `https://github.com/AyoubKhyat/${project.github}`;
-              const imgSrc = getImageSrc(project);
-              const dotColor = categoryDots[project.category] || "var(--txt-muted)";
-              return (
-                <a
-                  key={project.key}
-                  data-card
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onMouseMove={handleMouseMove}
-                  className="portfolio-card group rounded-2xl overflow-hidden flex flex-col bg-surface border border-line"
+          <FadeIn>
+            <div className="flex flex-wrap gap-3 mb-12 relative">
+              {filters.map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => setFilter(f.key)}
+                  className={`relative px-5 py-2 rounded-full text-sm font-mono tracking-wider uppercase transition-colors ${
+                    filter === f.key
+                      ? "text-white"
+                      : "border border-line text-text-muted hover:border-primary/30 hover:text-primary"
+                  }`}
                 >
-                  <div className="relative h-48 md:h-56 overflow-hidden bg-background">
-                    <Image
-                      src={imgSrc}
-                      alt={t(`${project.key}_title`)}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  {filter === f.key && (
+                    <motion.div
+                      layoutId="active-tab"
+                      className="absolute inset-0 bg-primary rounded-full"
+                      transition={{ type: "spring", stiffness: 500, damping: 35 }}
                     />
-                  </div>
-                  <div className="p-6 flex flex-col flex-1 gap-3">
-                    <span className="font-mono text-[11px] tracking-[0.18em] uppercase flex items-center gap-2 text-foreground">
-                      <span className="inline-block w-2 h-2 rounded-full" style={{ background: dotColor }} />
-                      {project.tag}
-                    </span>
-                    <h3 className="font-serif text-2xl md:text-3xl text-foreground">
-                      {t(`${project.key}_title`)}
-                    </h3>
-                    <p className="text-sm leading-relaxed text-text-muted">
-                      {t(`${project.key}_desc`)}
-                    </p>
-                    <div className="mt-auto pt-4 flex items-center justify-between">
-                      <span className="font-mono text-xs tracking-wider text-text-muted">
-                        {tags.join(" · ")}
-                      </span>
-                      {project.url ? (
-                        <FaExternalLinkAlt className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
-                      ) : (
-                        <FaGithub className="w-5 h-5 text-text-muted group-hover:text-primary transition-colors" />
-                      )}
+                  )}
+                  <span className="relative z-10">{f.label}</span>
+                </button>
+              ))}
+            </div>
+          </FadeIn>
+
+          <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <AnimatePresence mode="popLayout">
+              {filtered.map((project, index) => {
+                const tags = t(`${project.key}_tags`).split(",").map((tag) => tag.trim());
+                const href = project.url || `https://github.com/AyoubKhyat/${project.github}`;
+                const imgSrc = project.image || `https://opengraph.githubassets.com/${project.og}/AyoubKhyat/${project.github}`;
+                return (
+                  <motion.a
+                    key={project.key}
+                    layout
+                    initial={{ opacity: 0, scale: 0.94, y: 16 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.94, y: -8 }}
+                    transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1], delay: index * 0.055 }}
+                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group border border-line rounded-2xl overflow-hidden bg-surface-2 hover:border-primary/30 transition-[border-color] flex flex-col"
+                  >
+                    <div className="relative h-48 md:h-56 bg-background overflow-hidden">
+                      <Image
+                        src={imgSrc}
+                        alt={t(`${project.key}_title`)}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
                     </div>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
+                    <div className="p-6 flex flex-col flex-1 gap-3">
+                      <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-primary">
+                        ▸ {project.tag}
+                      </span>
+                      <h3 className="font-serif text-2xl md:text-3xl text-foreground">
+                        {t(`${project.key}_title`)}
+                      </h3>
+                      <p className="text-sm text-text-muted leading-relaxed">
+                        {t(`${project.key}_desc`)}
+                      </p>
+                      <div className="mt-auto pt-4 flex items-center justify-between">
+                        <span className="font-mono text-xs tracking-wider text-text-muted">
+                          {tags.join(" · ")}
+                        </span>
+                        {project.url ? (
+                          <FaExternalLinkAlt className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
+                        ) : (
+                          <FaGithub className="w-5 h-5 text-text-muted group-hover:text-primary transition-colors" />
+                        )}
+                      </div>
+                    </div>
+                  </motion.a>
+                );
+              })}
+            </AnimatePresence>
+          </motion.div>
         </div>
       </section>
     </>

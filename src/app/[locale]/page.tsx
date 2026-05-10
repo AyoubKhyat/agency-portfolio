@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 import CinematicHero from "@/components/CinematicHero";
 import ServicesScroll from "@/components/ServicesScroll";
+import HeroParallax from "@/components/HeroParallax";
 
 export default function HomePage() {
   const t = useTranslations("Home");
@@ -23,10 +24,28 @@ export default function HomePage() {
     { value: "24/7", label: t("stats_support") },
   ];
 
+  const products = [
+    { title: "Gestion de Stock", link: "https://github.com/AyoubKhyat/ManagementStockWeb", thumbnail: "https://opengraph.githubassets.com/7b0cc63b4492ad5d6d69e2be5aba26f51fb9a43f22949eda1a5929109c57f294/AyoubKhyat/ManagementStockWeb" },
+    { title: "Gestion Scolaire", link: "https://github.com/AyoubKhyat/School", thumbnail: "https://opengraph.githubassets.com/c9eb563c2d914c701c536473c339515b5c8ffdf3bbc508ec21303ed5c9ca83f5/AyoubKhyat/School" },
+    { title: "Rent-Car", link: "https://github.com/AyoubKhyat/Rent-Car", thumbnail: "https://opengraph.githubassets.com/570d2c2440f47d994401dc86fbf19abb8db5d953cee7dd1125797c842732027a/AyoubKhyat/Rent-Car" },
+    { title: "Sykweb Agency", link: "https://github.com/AyoubKhyat/Sykweb_Site", thumbnail: "https://opengraph.githubassets.com/3aaf66b9b94f8446a993f15b885630d63f706becfafe506e7c5a725304eb4d92/AyoubKhyat/Sykweb_Site" },
+    { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.jpg" },
+    { title: "Baraka Idman", link: "https://github.com/AyoubKhyat/Main-Site-Baraka-Idman", thumbnail: "https://opengraph.githubassets.com/16e7e1c37c3434fa7dfc4afb1b35b18a56420bff01d4f8118861086835f42b8c/AyoubKhyat/Main-Site-Baraka-Idman" },
+    { title: "Portal Football", link: "https://github.com/AyoubKhyat/portalAddons", thumbnail: "https://opengraph.githubassets.com/9a9b70d6c25a909623c0ccf6b95c54667d988ac1378bb68b9d60a68fff471eff/AyoubKhyat/portalAddons" },
+    { title: "Gestion de Stock", link: "https://github.com/AyoubKhyat/ManagementStockWeb", thumbnail: "https://opengraph.githubassets.com/7b0cc63b4492ad5d6d69e2be5aba26f51fb9a43f22949eda1a5929109c57f294/AyoubKhyat/ManagementStockWeb" },
+    { title: "Gestion Scolaire", link: "https://github.com/AyoubKhyat/School", thumbnail: "https://opengraph.githubassets.com/c9eb563c2d914c701c536473c339515b5c8ffdf3bbc508ec21303ed5c9ca83f5/AyoubKhyat/School" },
+    { title: "Rent-Car", link: "https://github.com/AyoubKhyat/Rent-Car", thumbnail: "https://opengraph.githubassets.com/570d2c2440f47d994401dc86fbf19abb8db5d953cee7dd1125797c842732027a/AyoubKhyat/Rent-Car" },
+    { title: "Sykweb Agency", link: "https://github.com/AyoubKhyat/Sykweb_Site", thumbnail: "https://opengraph.githubassets.com/3aaf66b9b94f8446a993f15b885630d63f706becfafe506e7c5a725304eb4d92/AyoubKhyat/Sykweb_Site" },
+    { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.jpg" },
+    { title: "Baraka Idman", link: "https://github.com/AyoubKhyat/Main-Site-Baraka-Idman", thumbnail: "https://opengraph.githubassets.com/16e7e1c37c3434fa7dfc4afb1b35b18a56420bff01d4f8118861086835f42b8c/AyoubKhyat/Main-Site-Baraka-Idman" },
+    { title: "Portal Football", link: "https://github.com/AyoubKhyat/portalAddons", thumbnail: "https://opengraph.githubassets.com/9a9b70d6c25a909623c0ccf6b95c54667d988ac1378bb68b9d60a68fff471eff/AyoubKhyat/portalAddons" },
+    { title: "Sykweb Agency", link: "https://github.com/AyoubKhyat/Sykweb_Site", thumbnail: "https://opengraph.githubassets.com/3aaf66b9b94f8446a993f15b885630d63f706becfafe506e7c5a725304eb4d92/AyoubKhyat/Sykweb_Site" },
+  ];
+
   return (
     <>
       <CinematicHero
-        tagline="Web Studio / Marrakech, MA"
+        tagline="Web Studio / Marrakech"
         subtitle={t("hero_title")}
         description={t("hero_subtitle")}
         ctaLabel={t("hero_cta")}
@@ -56,6 +75,9 @@ export default function HomePage() {
         subtitle={t("services_subtitle")}
         services={services}
       />
+
+      {/* Portfolio Parallax */}
+      <HeroParallax products={products} />
 
       {/* CTA */}
       <section className="relative py-24 bg-background overflow-hidden">
