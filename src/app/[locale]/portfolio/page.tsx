@@ -58,11 +58,12 @@ export default function PortfolioPage() {
         <div className="grid-bg" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
-            <div className="flex flex-wrap gap-3 mb-12 relative">
+            <div className="flex flex-wrap gap-3 mb-12 relative" role="group" aria-label="Project filters">
               {filters.map((f) => (
                 <button
                   key={f.key}
                   onClick={() => setFilter(f.key)}
+                  aria-pressed={filter === f.key}
                   className={`relative px-5 py-2 rounded-full text-sm font-mono tracking-wider uppercase transition-colors ${
                     filter === f.key
                       ? "text-white"

@@ -8,7 +8,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { hostname: "opengraph.githubassets.com" },
     ],
+    formats: ["image/avif", "image/webp"],
   },
+  poweredByHeader: false,
 };
 
 export default withNextIntl(nextConfig);

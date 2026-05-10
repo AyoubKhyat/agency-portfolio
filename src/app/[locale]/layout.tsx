@@ -187,8 +187,11 @@ export default async function LocaleLayout({ children, params }: Props) {
       <SetLang locale={locale} />
       <JsonLd locale={locale} />
       <LoadingScreen />
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold">
+        Skip to content
+      </a>
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main id="main-content" className="flex-1">{children}</main>
       <Footer />
       <WhatsAppButton />
     </NextIntlClientProvider>

@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
-import CinematicHero from "@/components/CinematicHero";
-import ServicesScroll from "@/components/ServicesScroll";
-import HeroParallax from "@/components/HeroParallax";
+
+const CinematicHero = dynamic(() => import("@/components/CinematicHero"));
+const ServicesScroll = dynamic(() => import("@/components/ServicesScroll"));
+const HeroParallax = dynamic(() => import("@/components/HeroParallax"));
 
 export async function generateMetadata({
   params,
