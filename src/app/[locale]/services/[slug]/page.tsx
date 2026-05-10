@@ -1,7 +1,5 @@
-import { use } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { HiOutlineCheck } from "react-icons/hi2";
@@ -28,17 +26,17 @@ export async function generateMetadata({
   };
 }
 
-export default function ServiceDetailPage({
+export default async function ServiceDetailPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }) {
-  const { slug } = use(params);
+  const { locale, slug } = await params;
 
   if (!SLUGS.includes(slug as Slug)) notFound();
 
-  const t = useTranslations("ServiceDetail");
-  const nav = useTranslations("Nav");
+  const t = await getTranslations({ locale, namespace: "ServiceDetail" });
+  const nav = await getTranslations({ locale, namespace: "Nav" });
 
   const features = t(`${slug}_features`).split(",").map((f) => f.trim());
   const steps = [1, 2, 3].map((n) => ({
