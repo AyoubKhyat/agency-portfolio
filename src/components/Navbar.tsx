@@ -44,7 +44,8 @@ export default function Navbar() {
               width={160}
               height={40}
               priority
-              className="hidden md:block h-auto"
+              className="hidden md:block"
+              style={{ width: "auto", height: "auto" }}
             />
             <Image
               src="/logo_ibda3.png"

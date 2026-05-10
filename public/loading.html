@@ -497,7 +497,9 @@ try {
   }, 60);
 
   var pc = document.getElementById('particles');
-  var sheet = document.styleSheets[0];
+  var dynStyle = document.createElement('style');
+  document.head.appendChild(dynStyle);
+  var sheet = dynStyle.sheet;
   for(var k=0;k<26;k++){
     var el = document.createElement('span');
     el.className = 'particle';

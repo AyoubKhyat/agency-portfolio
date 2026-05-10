@@ -82,7 +82,7 @@ export default function HomePage() {
       {/* Stats */}
       <section className="bg-background border-t border-line-soft">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-0 border-t border-line-soft">
+          <StaggerContainer className="relative grid grid-cols-2 md:grid-cols-4 gap-0 border-t border-line-soft">
             {stats.map((stat, i) => (
               <StaggerItem
                 key={stat.label}
