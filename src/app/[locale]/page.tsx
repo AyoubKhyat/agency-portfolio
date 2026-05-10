@@ -50,6 +50,14 @@ export default function HomePage() {
         description={t("hero_subtitle")}
         ctaLabel={t("hero_cta")}
         cta2Label={t("hero_cta2")}
+        cardHeadline={t("hero_card_headline")}
+        cardDesc={t("hero_card_desc")}
+        badge1Title={t("hero_badge1_title")}
+        badge1Sub={t("hero_badge1_sub")}
+        badge2Title={t("hero_badge2_title")}
+        badge2Sub={t("hero_badge2_sub")}
+        phoneDashboard={t("hero_phone_dashboard")}
+        phoneProjects={t("hero_phone_projects")}
       />
 
       {/* Stats */}
@@ -77,7 +85,11 @@ export default function HomePage() {
       />
 
       {/* Portfolio Parallax */}
-      <HeroParallax products={products} />
+      <HeroParallax
+        products={products}
+        title={t("parallax_title")}
+        subtitle={t("parallax_subtitle")}
+      />
 
       {/* CTA */}
       <section className="relative py-24 bg-background overflow-hidden">

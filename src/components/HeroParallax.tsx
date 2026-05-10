@@ -16,7 +16,13 @@ interface Product {
   thumbnail: string;
 }
 
-const HeroParallax = ({ products }: { products: Product[] }) => {
+interface HeroParallaxProps {
+  products: Product[];
+  title: string;
+  subtitle: string;
+}
+
+const HeroParallax = ({ products, title, subtitle }: HeroParallaxProps) => {
   const firstRow = products.slice(0, 5);
   const secondRow = products.slice(5, 10);
   const thirdRow = products.slice(10, 15);
@@ -60,12 +66,10 @@ const HeroParallax = ({ products }: { products: Product[] }) => {
     >
       <div className="max-w-7xl relative mx-auto py-20 md:py-40 px-4 w-full left-0 top-0">
         <h2 className="text-2xl md:text-7xl font-bold text-foreground">
-          Our Latest <br /> Projects
+          {title}
         </h2>
         <p className="max-w-2xl text-base md:text-xl mt-8 text-text-muted">
-          We build beautiful products with the latest technologies and
-          frameworks. From web applications to e-commerce platforms, we deliver
-          digital excellence from Marrakech to the world.
+          {subtitle}
         </p>
       </div>
       <motion.div
