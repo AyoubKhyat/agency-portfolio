@@ -33,7 +33,8 @@
     "hero_badge2_title": "Laravel · PHP",
     "hero_badge2_sub": "Puissance backend",
     "hero_phone_dashboard": "Tableau de bord",
-    "hero_phone_projects": "Projets"
+    "hero_phone_projects": "Projets",
+    "tech_title": "Technologies avec lesquelles nous travaillons"
   },
   "Services": {
     "title": "Nos Services",
@@ -215,6 +216,12 @@
     "hero_heading": "Parlons de votre projet.",
     "availability": "Disponibles cette semaine.",
     "availability_tag": "→ Disponible"
+  },
+  "WhatsApp": {
+    "online": "Répond généralement en quelques minutes",
+    "greeting": "Bonjour ! 👋 Comment pouvons-nous vous aider avec votre projet ?",
+    "reply_time": "Répond en quelques minutes",
+    "start_chat": "Démarrer une conversation"
   },
   "Cookies": {
     "message": "Nous utilisons des cookies pour analyser le trafic et améliorer votre expérience. Vous pouvez accepter ou refuser les cookies non essentiels.",
