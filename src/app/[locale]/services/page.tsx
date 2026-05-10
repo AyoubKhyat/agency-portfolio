@@ -19,11 +19,11 @@ export default function ServicesPage() {
   const t = useTranslations("Services");
 
   const solutions = [
-    { num: "01", key: "web", en: "Websites that load fast." },
-    { num: "02", key: "ecommerce", en: "Shops that convert." },
-    { num: "03", key: "mobile", en: "Apps that scale." },
-    { num: "04", key: "seo", en: "Rank higher. Grow faster." },
-    { num: "05", key: "maintenance", en: "Always up to date." },
+    { num: "01", key: "web" },
+    { num: "02", key: "ecommerce" },
+    { num: "03", key: "mobile" },
+    { num: "04", key: "seo" },
+    { num: "05", key: "maintenance" },
   ];
 
 
@@ -39,8 +39,7 @@ export default function ServicesPage() {
           </FadeIn>
           <FadeIn delay={0.15}>
             <h1 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[132px] leading-[0.95] tracking-tight text-foreground max-w-[1200px]">
-              Du code <span className="text-primary italic">moderne</span>,<br />
-              pensé pour les entreprises <span className="text-accent italic">marocaines.</span>
+              {t("hero_headline")}
             </h1>
           </FadeIn>
         </div>
@@ -58,7 +57,7 @@ export default function ServicesPage() {
                   <div className="border border-line rounded-2xl p-8 md:p-10 bg-gradient-to-b from-primary/5 to-transparent flex flex-col gap-5 min-h-[320px] hover:border-primary/30 transition-all hover:-translate-y-1">
                     <span className="font-mono text-xs tracking-[0.18em] text-primary">{s.num}</span>
                     <h2 className="font-serif text-4xl md:text-5xl text-foreground">{t(`${s.key}_title`)}</h2>
-                    <span className="font-serif italic text-lg text-text-muted">{s.en}</span>
+                    <span className="font-serif italic text-lg text-text-muted">{t(`${s.key}_subtitle`)}</span>
                     <p className="text-text-muted leading-relaxed">{t(`${s.key}_desc`)}</p>
                     <ul className="mt-auto space-y-2">
                       {features.map((feat) => (

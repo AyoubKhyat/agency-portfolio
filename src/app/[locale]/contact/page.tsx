@@ -59,7 +59,7 @@ export default function ContactPage() {
               <div>
                 <span className="pill">→ {t("title")}</span>
                 <h1 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[140px] leading-[0.9] tracking-tight text-foreground">
-                  Parlons de<br />votre <span className="text-primary italic">projet.</span>
+                  {t("hero_heading")}
                 </h1>
                 <p className="mt-8 font-serif italic text-2xl text-foreground leading-snug max-w-xl">
                   {t("subtitle")}
@@ -79,8 +79,8 @@ export default function ContactPage() {
                   </div>
                 ))}
                 <div className="mt-6 pt-6 border-t border-line-soft flex items-center justify-between">
-                  <span className="font-serif italic text-text-muted">Disponibles cette semaine.</span>
-                  <span className="font-mono text-xs tracking-[0.16em] uppercase text-accent">→ Available</span>
+                  <span className="font-serif italic text-text-muted">{t("availability")}</span>
+                  <span className="font-mono text-xs tracking-[0.16em] uppercase text-accent">{t("availability_tag")}</span>
                 </div>
               </div>
             </FadeIn>

@@ -166,6 +166,14 @@ interface CinematicHeroProps {
   description: string;
   ctaLabel: string;
   cta2Label: string;
+  cardHeadline?: string;
+  cardDesc?: string;
+  badge1Title?: string;
+  badge1Sub?: string;
+  badge2Title?: string;
+  badge2Sub?: string;
+  phoneDashboard?: string;
+  phoneProjects?: string;
 }
 
 export default function CinematicHero({
@@ -174,6 +182,14 @@ export default function CinematicHero({
   description,
   ctaLabel,
   cta2Label,
+  cardHeadline = "Digital excellence, delivered.",
+  cardDesc = "Ibda3 Digital builds stunning websites, mobile apps, and e-commerce solutions from Marrakech for clients worldwide.",
+  badge1Title = "Next.js · React",
+  badge1Sub = "Modern stack",
+  badge2Title = "Laravel · PHP",
+  badge2Sub = "Backend power",
+  phoneDashboard = "Dashboard",
+  phoneProjects = "Projects",
 }: CinematicHeroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mainCardRef = useRef<HTMLDivElement>(null);
@@ -381,7 +397,7 @@ export default function CinematicHero({
                     <div className="relative w-full h-full pt-12 px-5 pb-8 flex flex-col">
                       <div className="phone-widget flex justify-between items-center mb-8">
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-neutral-400 uppercase tracking-widest font-bold mb-1">Dashboard</span>
+                          <span className="text-[10px] text-neutral-400 uppercase tracking-widest font-bold mb-1">{phoneDashboard}</span>
                           <span className="text-xl font-bold tracking-tight text-white drop-shadow-md">Ibda3 Digital</span>
                         </div>
                         <div className="w-9 h-9 rounded-full overflow-hidden border border-white/10 shadow-lg shadow-black/50">
@@ -396,7 +412,7 @@ export default function CinematicHero({
                         </svg>
                         <div className="text-center z-10 flex flex-col items-center">
                           <span className="counter-val text-4xl font-extrabold tracking-tighter text-white">0</span>
-                          <span className="text-[8px] text-purple-200/50 uppercase tracking-[0.1em] font-bold mt-0.5">Projects</span>
+                          <span className="text-[8px] text-purple-200/50 uppercase tracking-[0.1em] font-bold mt-0.5">{phoneProjects}</span>
                         </div>
                       </div>
 
@@ -436,8 +452,8 @@ export default function CinematicHero({
                     <span className="text-base lg:text-xl drop-shadow-lg" aria-hidden="true">🚀</span>
                   </div>
                   <div>
-                    <p className="text-white text-xs lg:text-sm font-bold tracking-tight">Next.js · React</p>
-                    <p className="text-purple-200/50 text-[10px] lg:text-xs font-medium">Modern stack</p>
+                    <p className="text-white text-xs lg:text-sm font-bold tracking-tight">{badge1Title}</p>
+                    <p className="text-purple-200/50 text-[10px] lg:text-xs font-medium">{badge1Sub}</p>
                   </div>
                 </div>
 
@@ -446,8 +462,8 @@ export default function CinematicHero({
                     <span className="text-base lg:text-lg drop-shadow-lg" aria-hidden="true">⚡</span>
                   </div>
                   <div>
-                    <p className="text-white text-xs lg:text-sm font-bold tracking-tight">Laravel · PHP</p>
-                    <p className="text-amber-200/50 text-[10px] lg:text-xs font-medium">Backend power</p>
+                    <p className="text-white text-xs lg:text-sm font-bold tracking-tight">{badge2Title}</p>
+                    <p className="text-amber-200/50 text-[10px] lg:text-xs font-medium">{badge2Sub}</p>
                   </div>
                 </div>
               </div>
@@ -456,10 +472,10 @@ export default function CinematicHero({
             {/* Left Text */}
             <div className="card-left-text gsap-reveal order-3 lg:order-1 flex flex-col justify-center text-center lg:text-left z-20 w-full lg:max-w-none px-4 lg:px-0">
               <h3 className="text-white text-2xl md:text-3xl lg:text-4xl font-bold mb-0 lg:mb-5 tracking-tight">
-                Digital excellence,<br />delivered.
+                {cardHeadline}
               </h3>
               <p className="hidden md:block text-purple-100/70 text-sm md:text-base lg:text-lg font-normal leading-relaxed mx-auto lg:mx-0 max-w-sm lg:max-w-none">
-                <span className="text-white font-semibold">Ibda3 Digital</span> builds stunning websites, mobile apps, and e-commerce solutions from Marrakech for clients worldwide.
+                {cardDesc}
               </p>
             </div>
 

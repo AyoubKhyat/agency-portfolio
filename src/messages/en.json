@@ -23,7 +23,17 @@
     "stats_projects": "Projects delivered",
     "stats_clients": "Happy clients",
     "stats_years": "Years of experience",
-    "stats_support": "Support 7 days/week"
+    "stats_support": "Support 7 days/week",
+    "parallax_title": "Our Latest Projects",
+    "parallax_subtitle": "We build beautiful products with the latest technologies and frameworks. From web applications to e-commerce platforms, we deliver digital excellence from Marrakech to the world.",
+    "hero_card_headline": "Digital excellence, delivered.",
+    "hero_card_desc": "Ibda3 Digital builds stunning websites, mobile apps, and e-commerce solutions from Marrakech for clients worldwide.",
+    "hero_badge1_title": "Next.js · React",
+    "hero_badge1_sub": "Modern stack",
+    "hero_badge2_title": "Laravel · PHP",
+    "hero_badge2_sub": "Backend power",
+    "hero_phone_dashboard": "Dashboard",
+    "hero_phone_projects": "Projects"
   },
   "Services": {
     "title": "Our Services",
@@ -45,6 +55,14 @@
     "maintenance_features": "Updates, Security, Backups, Responsive support",
     "cta_title": "Have a project in mind?",
     "cta_desc": "Let's discuss your needs and find the perfect solution together.",
+    "hero_headline": "Modern code, built for Moroccan businesses.",
+    "hero_word1": "Modern",
+    "hero_word2": "Moroccan",
+    "web_subtitle": "Websites that load fast.",
+    "ecommerce_subtitle": "Shops that convert.",
+    "mobile_subtitle": "Apps that scale.",
+    "seo_subtitle": "Rank higher. Grow faster.",
+    "maintenance_subtitle": "Always up to date.",
     "cta_button": "Request a Free Quote",
     "pricing_title": "Our Plans",
     "pricing_starter": "Starter",
@@ -152,7 +170,10 @@
     "info_email": "ibda3.digital0@gmail.com",
     "info_phone": "+212 625 461 645",
     "info_hours": "Mon - Fri: 9am - 6pm",
-    "whatsapp_cta": "Message us on WhatsApp"
+    "whatsapp_cta": "Message us on WhatsApp",
+    "hero_heading": "Let's talk about your project.",
+    "availability": "Available this week.",
+    "availability_tag": "→ Available"
   },
   "Footer": {
     "description": "Web agency in Marrakech specializing in website creation, mobile apps and e-commerce solutions.",

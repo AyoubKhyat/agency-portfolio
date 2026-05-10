@@ -39,7 +39,6 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="fr"
       className={`${inter.variable} ${instrumentSerif.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >

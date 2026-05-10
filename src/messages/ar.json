@@ -23,7 +23,17 @@
     "stats_projects": "مشروع منجز",
     "stats_clients": "عميل سعيد",
     "stats_years": "سنوات خبرة",
-    "stats_support": "دعم 7 أيام/أسبوع"
+    "stats_support": "دعم 7 أيام/أسبوع",
+    "parallax_title": "أحدث مشاريعنا",
+    "parallax_subtitle": "نبني منتجات رقمية رائعة بأحدث التقنيات. من تطبيقات الويب إلى منصات التجارة الإلكترونية، نقدم التميز الرقمي من مراكش إلى العالم.",
+    "hero_card_headline": "التميز الرقمي، بين يديك.",
+    "hero_card_desc": "إبداع ديجيتال تبني مواقع إلكترونية مذهلة، تطبيقات موبايل وحلول تجارة إلكترونية من مراكش لعملاء حول العالم.",
+    "hero_badge1_title": "Next.js · React",
+    "hero_badge1_sub": "تقنيات حديثة",
+    "hero_badge2_title": "Laravel · PHP",
+    "hero_badge2_sub": "قوة الباكند",
+    "hero_phone_dashboard": "لوحة التحكم",
+    "hero_phone_projects": "مشاريع"
   },
   "Services": {
     "title": "خدماتنا",
@@ -45,6 +55,14 @@
     "maintenance_features": "تحديثات, أمان, نسخ احتياطي, دعم سريع",
     "cta_title": "لديك مشروع في البال؟",
     "cta_desc": "دعنا نناقش احتياجاتك ونجد الحل المثالي معاً.",
+    "hero_headline": "كود حديث، مصمم للشركات المغربية.",
+    "hero_word1": "حديث",
+    "hero_word2": "المغربية",
+    "web_subtitle": "مواقع سريعة التحميل.",
+    "ecommerce_subtitle": "متاجر تحقق المبيعات.",
+    "mobile_subtitle": "تطبيقات قابلة للتوسع.",
+    "seo_subtitle": "تصدّر النتائج. نمو أسرع.",
+    "maintenance_subtitle": "دائماً محدّث.",
     "cta_button": "اطلب عرض سعر مجاني",
     "pricing_title": "باقاتنا",
     "pricing_starter": "أساسي",
@@ -152,7 +170,10 @@
     "info_email": "ibda3.digital0@gmail.com",
     "info_phone": "+212 625 461 645",
     "info_hours": "الاثنين - الجمعة: 9 صباحاً - 6 مساءً",
-    "whatsapp_cta": "راسلنا على واتساب"
+    "whatsapp_cta": "راسلنا على واتساب",
+    "hero_heading": "لنتحدث عن مشروعك.",
+    "availability": "متاحون هذا الأسبوع.",
+    "availability_tag": "← متاح"
   },
   "Footer": {
     "description": "وكالة ويب في مراكش متخصصة في إنشاء المواقع الإلكترونية وتطبيقات الموبايل وحلول التجارة الإلكترونية.",

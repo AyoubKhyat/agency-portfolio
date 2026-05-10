@@ -23,7 +23,17 @@
     "stats_projects": "Projets livrés",
     "stats_clients": "Clients satisfaits",
     "stats_years": "Années d'expérience",
-    "stats_support": "Support 7j/7"
+    "stats_support": "Support 7j/7",
+    "parallax_title": "Nos Derniers Projets",
+    "parallax_subtitle": "Nous créons des produits numériques avec les technologies les plus modernes. Des applications web aux plateformes e-commerce, nous livrons l'excellence digitale de Marrakech au monde entier.",
+    "hero_card_headline": "L'excellence digitale, livrée.",
+    "hero_card_desc": "Ibda3 Digital crée des sites web, applications mobiles et solutions e-commerce depuis Marrakech pour des clients du monde entier.",
+    "hero_badge1_title": "Next.js · React",
+    "hero_badge1_sub": "Stack moderne",
+    "hero_badge2_title": "Laravel · PHP",
+    "hero_badge2_sub": "Puissance backend",
+    "hero_phone_dashboard": "Tableau de bord",
+    "hero_phone_projects": "Projets"
   },
   "Services": {
     "title": "Nos Services",
@@ -45,6 +55,14 @@
     "maintenance_features": "Mises à jour, Sécurité, Sauvegardes, Support réactif",
     "cta_title": "Un projet en tête ?",
     "cta_desc": "Discutons de vos besoins et trouvons la solution idéale ensemble.",
+    "hero_headline": "Du code moderne, pensé pour les entreprises marocaines.",
+    "hero_word1": "moderne",
+    "hero_word2": "marocaines",
+    "web_subtitle": "Des sites qui chargent vite.",
+    "ecommerce_subtitle": "Des boutiques qui convertissent.",
+    "mobile_subtitle": "Des apps qui scalent.",
+    "seo_subtitle": "Montez en classement. Croissez plus vite.",
+    "maintenance_subtitle": "Toujours à jour.",
     "cta_button": "Demander un devis gratuit",
     "pricing_title": "Nos Forfaits",
     "pricing_starter": "Starter",
@@ -152,7 +170,10 @@
     "info_email": "ibda3.digital0@gmail.com",
     "info_phone": "+212 625 461 645",
     "info_hours": "Lun - Ven : 9h - 18h",
-    "whatsapp_cta": "Écrivez-nous sur WhatsApp"
+    "whatsapp_cta": "Écrivez-nous sur WhatsApp",
+    "hero_heading": "Parlons de votre projet.",
+    "availability": "Disponibles cette semaine.",
+    "availability_tag": "→ Disponible"
   },
   "Footer": {
     "description": "Agence web à Marrakech spécialisée dans la création de sites web, applications mobiles et solutions e-commerce.",
