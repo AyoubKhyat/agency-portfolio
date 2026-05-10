@@ -78,7 +78,7 @@ export default function ServicesPage() {
               const features = t(`${s.key}_features`).split(",").map((f) => f.trim());
               return (
                 <StaggerItem key={s.key}>
-                  <div className="border border-line rounded-2xl p-8 md:p-10 bg-gradient-to-b from-primary/5 to-transparent flex flex-col gap-5 min-h-[320px] hover:border-primary/30 transition-all hover:-translate-y-1">
+                  <Link href={`/services/${s.key}`} className="block border border-line rounded-2xl p-8 md:p-10 bg-gradient-to-b from-primary/5 to-transparent flex flex-col gap-5 min-h-[320px] hover:border-primary/30 transition-all hover:-translate-y-1 group">
                     <span className="font-mono text-xs tracking-[0.18em] text-primary">{s.num}</span>
                     <h2 className="font-serif text-4xl md:text-5xl text-foreground">{t(`${s.key}_title`)}</h2>
                     <span className="font-serif italic text-lg text-text-muted">{t(`${s.key}_subtitle`)}</span>
@@ -91,7 +91,10 @@ export default function ServicesPage() {
                         </li>
                       ))}
                     </ul>
-                  </div>
+                    <span className="font-mono text-xs tracking-[0.16em] uppercase text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                      {t("learn_more")} →
+                    </span>
+                  </Link>
                 </StaggerItem>
               );
             })}
