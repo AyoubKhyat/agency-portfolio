@@ -216,6 +216,11 @@
     "availability": "Disponibles cette semaine.",
     "availability_tag": "→ Disponible"
   },
+  "Cookies": {
+    "message": "Nous utilisons des cookies pour analyser le trafic et améliorer votre expérience. Vous pouvez accepter ou refuser les cookies non essentiels.",
+    "accept": "Accepter",
+    "decline": "Refuser"
+  },
   "Footer": {
     "description": "Agence web à Marrakech spécialisée dans la création de sites web, applications mobiles et solutions e-commerce.",
     "services": "Services",
