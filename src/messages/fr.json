@@ -34,7 +34,12 @@
     "hero_badge2_sub": "Puissance backend",
     "hero_phone_dashboard": "Tableau de bord",
     "hero_phone_projects": "Projets",
-    "tech_title": "Technologies avec lesquelles nous travaillons"
+    "tech_title": "Technologies avec lesquelles nous travaillons",
+    "hero_rotate1": "Sites Élégants",
+    "hero_rotate2": "Boutiques en Ligne",
+    "hero_rotate3": "Apps Mobiles",
+    "hero_rotate4": "SEO & Visibilité",
+    "hero_rotate5": "Support Continu"
   },
   "Services": {
     "title": "Nos Services",
@@ -320,6 +325,24 @@
     "message": "Nous utilisons des cookies pour analyser le trafic et améliorer votre expérience. Vous pouvez accepter ou refuser les cookies non essentiels.",
     "accept": "Accepter",
     "decline": "Refuser"
+  },
+  "Comparison": {
+    "pill": "Comparer",
+    "heading": "Trouvez le bon",
+    "heading_accent": "service.",
+    "feature": "Fonctionnalité",
+    "custom_design": "Design personnalisé",
+    "responsive": "Responsive & Mobile",
+    "cms": "Intégration CMS",
+    "seo_optimization": "Optimisation SEO",
+    "payment": "Intégration paiement",
+    "analytics": "Analytics & Rapports",
+    "ssl": "Certificat SSL",
+    "push_notifications": "Notifications push",
+    "performance": "Audit de performance",
+    "ongoing_support": "Support continu",
+    "backups": "Sauvegardes automatiques",
+    "security_monitoring": "Surveillance sécurité"
   },
   "Footer": {
     "description": "Agence web à Marrakech spécialisée dans la création de sites web, applications mobiles et solutions e-commerce.",

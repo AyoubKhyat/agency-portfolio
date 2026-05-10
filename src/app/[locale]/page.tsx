@@ -79,6 +79,13 @@ export default function HomePage() {
         badge2Sub={t("hero_badge2_sub")}
         phoneDashboard={t("hero_phone_dashboard")}
         phoneProjects={t("hero_phone_projects")}
+        rotatingWords={[
+          t("hero_rotate1"),
+          t("hero_rotate2"),
+          t("hero_rotate3"),
+          t("hero_rotate4"),
+          t("hero_rotate5"),
+        ]}
       />
 
       {/* Stats */}
