@@ -110,7 +110,10 @@
     "project6_github": "portalAddons",
     "project7_title": "ستوديو Terrene",
     "project7_desc": "موقع بورتفوليو فاخر لاستوديو هندسة معمارية وتصميم داخلي يضم عرض المشاريع وفلسفة التصميم وشهادات العملاء.",
-    "project7_tags": "HTML,CSS,JavaScript,بورتفوليو"
+    "project7_tags": "HTML,CSS,JavaScript,بورتفوليو",
+    "project8_title": "سلسلة الانتصار",
+    "project8_desc": "تطبيق ويب ثنائي اللغة (إنجليزي/عربي) لتتبع وإدارة مسارات الإنجاز الشخصي مع دعم الوضع الفاتح والداكن.",
+    "project8_tags": "React,Vite,ثنائي اللغة,PWA"
   },
   "Blog": {
     "title": "مدونتنا",

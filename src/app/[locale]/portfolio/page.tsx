@@ -9,13 +9,14 @@ import { FadeIn, StaggerContainer, StaggerItem, motion, AnimatePresence } from "
 type Category = "all" | "web" | "app" | "plugin";
 
 const projects = [
-  { id: 1, key: "project1", category: "app", github: "ManagementStockWeb", og: "7b0cc63b4492ad5d6d69e2be5aba26f51fb9a43f22949eda1a5929109c57f294", tag: "Plateforme · Laravel" },
-  { id: 2, key: "project2", category: "app", github: "School", og: "c9eb563c2d914c701c536473c339515b5c8ffdf3bbc508ec21303ed5c9ca83f5", tag: "Administration" },
-  { id: 3, key: "project3", category: "app", github: "Rent-Car", og: "570d2c2440f47d994401dc86fbf19abb8db5d953cee7dd1125797c842732027a", tag: "Booking app" },
-  { id: 4, key: "project4", category: "web", github: "Sykweb_Site", og: "3aaf66b9b94f8446a993f15b885630d63f706becfafe506e7c5a725304eb4d92", tag: "Agency site" },
-  { id: 5, key: "project5", category: "web", github: "Main-Site-Baraka-Idman", og: "16e7e1c37c3434fa7dfc4afb1b35b18a56420bff01d4f8118861086835f42b8c", tag: "Sports site" },
-  { id: 6, key: "project6", category: "plugin", github: "portalAddons", og: "9a9b70d6c25a909623c0ccf6b95c54667d988ac1378bb68b9d60a68fff471eff", tag: "WordPress plugin" },
+  // { id: 1, key: "project1", category: "app", github: "ManagementStockWeb", og: "7b0cc63b4492ad5d6d69e2be5aba26f51fb9a43f22949eda1a5929109c57f294", tag: "Plateforme · Laravel" },
+  // { id: 2, key: "project2", category: "app", github: "School", og: "c9eb563c2d914c701c536473c339515b5c8ffdf3bbc508ec21303ed5c9ca83f5", tag: "Administration" },
+  // { id: 3, key: "project3", category: "app", github: "Rent-Car", og: "570d2c2440f47d994401dc86fbf19abb8db5d953cee7dd1125797c842732027a", tag: "Booking app" },
+  // { id: 4, key: "project4", category: "web", github: "Sykweb_Site", og: "3aaf66b9b94f8446a993f15b885630d63f706becfafe506e7c5a725304eb4d92", tag: "Agency site" },
+  // { id: 5, key: "project5", category: "web", github: "Main-Site-Baraka-Idman", og: "16e7e1c37c3434fa7dfc4afb1b35b18a56420bff01d4f8118861086835f42b8c", tag: "Sports site" },
+  // { id: 6, key: "project6", category: "plugin", github: "portalAddons", og: "9a9b70d6c25a909623c0ccf6b95c54667d988ac1378bb68b9d60a68fff471eff", tag: "WordPress plugin" },
   { id: 7, key: "project7", category: "web", url: "https://terrene.webyms.com/", image: "/projects/terrene.jpg", tag: "Architecture studio" },
+  { id: 8, key: "project8", category: "app", url: "https://victory-path-beta.vercel.app/login", image: "/projects/victory-path-v2.jpg", tag: "Web app" },
 ];
 
 export default function PortfolioPage() {
