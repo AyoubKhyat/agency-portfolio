@@ -24,10 +24,10 @@ export default function AboutPage() {
   ];
 
   const steps = [
-    { num: "01", key: "discovery", fr: "Découverte", en: "Discovery", desc: "Atelier sur place. On écoute, on cadre les objectifs, on définit le périmètre.", duration: "~ 1 semaine", accent: "primary" },
-    { num: "02", key: "design", fr: "Design", en: "Design", desc: "Maquettes haute-fidélité, prototype cliquable, validation mobile et desktop.", duration: "~ 1–2 semaines", accent: "primary" },
-    { num: "03", key: "dev", fr: "Développement", en: "Development", desc: "Sprints courts, démos hebdomadaires. Code versionné, tests à chaque étape.", duration: "~ 2–6 semaines", accent: "accent" },
-    { num: "04", key: "launch", fr: "Lancement", en: "Launch & Support", desc: "Mise en production, formation, monitoring. Support continu.", duration: "∞ continu", accent: "accent" },
+    { num: "01", stepKey: "step1", accent: "primary" },
+    { num: "02", stepKey: "step2", accent: "primary" },
+    { num: "03", stepKey: "step3", accent: "accent" },
+    { num: "04", stepKey: "step4", accent: "accent" },
   ];
 
   return (
@@ -60,12 +60,12 @@ export default function AboutPage() {
           <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-16">
             <FadeIn>
               <div>
-                <span className="pill">★ Différenciation</span>
+                <span className="pill">{t("why_pill")}</span>
                 <h2 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.92] tracking-tight text-foreground">
-                  Pourquoi<br /><span className="text-primary italic">nous.</span>
+                  {t("why_heading")}<br /><span className="text-primary italic">{t("why_heading_accent")}</span>
                 </h2>
                 <p className="mt-8 font-serif italic text-xl text-text-muted leading-relaxed max-w-md">
-                  Une agence qui vit à Marrakech, qui parle votre langue et qui livre du code propre.
+                  {t("why_tagline")}
                 </p>
               </div>
             </FadeIn>
@@ -97,12 +97,12 @@ export default function AboutPage() {
           <FadeIn>
             <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 gap-6">
               <h2 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight text-foreground">
-                De l&apos;idée<br />au <span className="text-primary italic">lancement.</span>
+                {t("process_heading")}<br /><span className="text-primary italic">{t("process_heading_accent")}</span>
               </h2>
               <div className="font-mono text-xs tracking-[0.14em] uppercase text-text-muted text-right leading-relaxed">
-                Itératif &amp; transparent<br />
-                Validation à chaque étape<br />
-                Délais respectés
+                {t("process_tag1")}<br />
+                {t("process_tag2")}<br />
+                {t("process_tag3")}
               </div>
             </div>
           </FadeIn>
@@ -110,7 +110,7 @@ export default function AboutPage() {
           <StaggerContainer className="grid md:grid-cols-4 gap-6 relative" delay={0.15}>
             <div className="hidden md:block absolute top-7 left-0 right-0 border-t border-dashed border-line z-0" />
             {steps.map((step) => (
-              <StaggerItem key={step.key}>
+              <StaggerItem key={step.stepKey}>
                 <div className="relative flex flex-col gap-5">
                   <div className={`relative z-10 w-14 h-14 rounded-full border flex items-center justify-center font-mono text-sm tracking-wider ${
                     step.accent === "accent"
@@ -119,11 +119,11 @@ export default function AboutPage() {
                   } ${step.num === "04" ? "!bg-accent !border-accent !text-white shadow-[0_0_40px_rgba(245,158,11,0.5)]" : ""}`}>
                     {step.num}
                   </div>
-                  <h3 className="font-serif text-3xl md:text-4xl text-foreground">{step.fr}</h3>
-                  <span className="font-serif italic text-text-muted">{step.en}</span>
-                  <p className="text-sm text-text-muted leading-relaxed">{step.desc}</p>
+                  <h3 className="font-serif text-3xl md:text-4xl text-foreground">{t(`${step.stepKey}_title`)}</h3>
+                  <span className="font-serif italic text-text-muted">{t(`${step.stepKey}_sub`)}</span>
+                  <p className="text-sm text-text-muted leading-relaxed">{t(`${step.stepKey}_desc`)}</p>
                   <span className="mt-auto pt-4 border-t border-line-soft font-mono text-[11px] tracking-[0.16em] uppercase text-primary">
-                    {step.duration}
+                    {t(`${step.stepKey}_duration`)}
                   </span>
                 </div>
               </StaggerItem>

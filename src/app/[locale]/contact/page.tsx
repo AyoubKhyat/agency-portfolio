@@ -28,6 +28,12 @@ export default function ContactPage() {
     e.preventDefault();
     if (!formRef.current) return;
 
+    const honeypot = new FormData(formRef.current).get("website") as string;
+    if (honeypot) {
+      setStatus("success");
+      return;
+    }
+
     setStatus("sending");
 
     const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
@@ -122,6 +128,9 @@ export default function ContactPage() {
                   </motion.div>
                 ) : (
                   <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
+                    <div aria-hidden="true" style={{ position: "absolute", left: "-9999px" }}>
+                      <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+                    </div>
                     {status === "error" && (
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}

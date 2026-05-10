@@ -70,6 +70,13 @@ html {
   overflow-x: hidden;
 }
 
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 0.4s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
 body {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 16px;
@@ -142,6 +149,15 @@ body {
   outline: 2px solid var(--prim);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+@keyframes theme-icon-in {
+  from { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+  to { opacity: 1; transform: rotate(0) scale(1); }
+}
+
+.animate-theme-icon {
+  animation: theme-icon-in 0.35s var(--ease) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
