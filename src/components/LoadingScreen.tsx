@@ -33,7 +33,7 @@ export default function LoadingScreen() {
         transition: "opacity 0.8s ease",
         opacity: fading ? 0 : 1,
         pointerEvents: "auto",
-        background: "#06060B",
+        background: "var(--bg)",
       }}
     >
       <iframe
