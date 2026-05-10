@@ -10,6 +10,7 @@ import {
   SiTypescript,
   SiVercel,
 } from "react-icons/si";
+import { Marquee } from "./Marquee";
 
 const logos = [
   { icon: SiNextdotjs, name: "Next.js" },
@@ -31,11 +32,11 @@ export default function LogoCarousel({ title }: { title: string }) {
       <div className="relative">
         <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-surface-2 to-transparent z-10 pointer-events-none" />
         <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-surface-2 to-transparent z-10 pointer-events-none" />
-        <div className="flex animate-marquee">
-          {[...logos, ...logos].map((logo, i) => (
+        <Marquee pauseOnHover className="[--duration:25s] [--gap:2rem]" repeat={2}>
+          {logos.map((logo) => (
             <div
-              key={`${logo.name}-${i}`}
-              className="flex items-center gap-3 px-8 md:px-12 shrink-0"
+              key={logo.name}
+              className="flex items-center gap-3 px-6 shrink-0"
             >
               <logo.icon className="w-7 h-7 text-text-muted" />
               <span className="font-mono text-sm tracking-wider text-text-muted whitespace-nowrap">
@@ -43,7 +44,7 @@ export default function LogoCarousel({ title }: { title: string }) {
               </span>
             </div>
           ))}
-        </div>
+        </Marquee>
       </div>
     </section>
   );
