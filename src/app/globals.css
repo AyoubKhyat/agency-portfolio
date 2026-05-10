@@ -3,45 +3,47 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  --bg: #FFFFFF;
-  --fg: #1A1A2E;
-  --surf: #F4F4F8;
-  --surf-2: #EBEBF0;
-  --surf-3: #E0E0E8;
-  --txt-muted: #6B7280;
-  --ln: rgba(139, 111, 224, 0.18);
-  --ln-soft: rgba(0, 0, 0, 0.07);
+  --bg: #fafafa;
+  --fg: #0a0a0a;
+  --surf: #f0f0f0;
+  --surf-2: #e8e8e8;
+  --surf-3: #e0e0e0;
+  --txt-muted: #666666;
+  --ln: rgba(10, 10, 10, 0.1);
+  --ln-soft: rgba(0, 0, 0, 0.06);
   --prim: #8B6FE0;
   --prim-dark: #7C5CFA;
-  --acc: #D97706;
-  --acc-dark: #B45309;
-  --grid-line: rgba(139, 111, 224, 0.06);
-  --glow-opacity: 0.08;
+  --acc: #d4c420;
+  --acc-dark: #b8a900;
+  --grid-line: rgba(10, 10, 10, 0.04);
+  --glow-opacity: 0.06;
   --pill-bg: rgba(139, 111, 224, 0.06);
   --card-from: rgba(139, 111, 224, 0.04);
-  --card-border: rgba(139, 111, 224, 0.14);
-  --nav-bg: rgba(255, 255, 255, 0.85);
+  --card-border: rgba(10, 10, 10, 0.1);
+  --nav-bg: rgba(250, 250, 250, 0.85);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration: 0.6s;
 }
 
 .dark {
-  --bg: #0F0F1A;
-  --fg: #F5F5FA;
-  --surf: #1E1E2E;
-  --surf-2: #15152A;
-  --surf-3: #1C1C36;
-  --txt-muted: #8B8BA8;
-  --ln: rgba(167, 139, 250, 0.16);
-  --ln-soft: rgba(255, 255, 255, 0.08);
+  --bg: #0a0a0a;
+  --fg: #f0efef;
+  --surf: #111111;
+  --surf-2: #0e0e0e;
+  --surf-3: #161616;
+  --txt-muted: #888888;
+  --ln: rgba(245, 230, 66, 0.12);
+  --ln-soft: rgba(255, 255, 255, 0.06);
   --prim: #A78BFA;
   --prim-dark: #7C5CFA;
-  --acc: #F59E0B;
-  --acc-dark: #D97706;
-  --grid-line: rgba(167, 139, 250, 0.05);
-  --glow-opacity: 0.2;
+  --acc: #f5e642;
+  --acc-dark: #d4c420;
+  --grid-line: rgba(245, 230, 66, 0.04);
+  --glow-opacity: 0.15;
   --pill-bg: rgba(167, 139, 250, 0.06);
-  --card-from: rgba(167, 139, 250, 0.05);
-  --card-border: rgba(167, 139, 250, 0.16);
-  --nav-bg: rgba(15, 15, 26, 0.8);
+  --card-from: rgba(167, 139, 250, 0.04);
+  --card-border: rgba(245, 230, 66, 0.1);
+  --nav-bg: rgba(10, 10, 10, 0.85);
 }
 
 @theme inline {
@@ -59,6 +61,7 @@
   --color-line-soft: var(--ln-soft);
   --font-sans: var(--font-inter);
   --font-serif: var(--font-instrument);
+  --font-display: var(--font-jakarta);
   --font-mono: var(--font-jetbrains);
 }
 
@@ -68,12 +71,26 @@ html {
 
 body {
   font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
   color: var(--color-foreground);
   background: var(--color-background);
 }
 
 .font-serif {
   font-family: var(--font-serif), Georgia, serif;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+}
+
+.hero-headline {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+  font-size: clamp(72px, 10vw, 96px);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  font-weight: 800;
 }
 
 .font-mono {

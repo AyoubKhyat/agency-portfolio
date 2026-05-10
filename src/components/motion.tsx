@@ -36,7 +36,7 @@ export function FadeIn({
       ref={ref}
       initial={{ opacity: 0, ...off }}
       animate={inView ? { opacity: 1, x: 0, y: 0 } : { opacity: 0, ...off }}
-      transition={{ duration, delay, ease: [0.25, 0.4, 0.25, 1] }}
+      transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
       className={className}
     >
       {children}
@@ -71,7 +71,7 @@ export function StaggerContainer({
 
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.4, 0.25, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
 };
 
 export function StaggerItem({

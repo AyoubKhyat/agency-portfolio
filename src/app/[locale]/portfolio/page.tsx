@@ -57,43 +57,49 @@ export default function PortfolioPage() {
         <div className="grid-bg" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
-            <div className="flex flex-wrap gap-3 mb-12">
+            <div className="flex flex-wrap gap-3 mb-12 relative">
               {filters.map((f) => (
-                <motion.button
+                <button
                   key={f.key}
                   onClick={() => setFilter(f.key)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`px-5 py-2 rounded-full text-sm font-mono tracking-wider uppercase transition-colors ${
+                  className={`relative px-5 py-2 rounded-full text-sm font-mono tracking-wider uppercase transition-colors ${
                     filter === f.key
-                      ? "bg-primary text-white"
+                      ? "text-white"
                       : "border border-line text-text-muted hover:border-primary/30 hover:text-primary"
                   }`}
                 >
-                  {f.label}
-                </motion.button>
+                  {filter === f.key && (
+                    <motion.div
+                      layoutId="active-tab"
+                      className="absolute inset-0 bg-primary rounded-full"
+                      transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                  <span className="relative z-10">{f.label}</span>
+                </button>
               ))}
             </div>
           </FadeIn>
 
           <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             <AnimatePresence mode="popLayout">
-              {filtered.map((project) => {
+              {filtered.map((project, index) => {
                 const tags = t(`${project.key}_tags`).split(",").map((tag) => tag.trim());
                 const href = project.url || `https://github.com/AyoubKhyat/${project.github}`;
                 const imgSrc = project.image || `https://opengraph.githubassets.com/${project.og}/AyoubKhyat/${project.github}`;
                 return (
                   <motion.a
-                    key={project.id}
+                    key={project.key}
                     layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
+                    initial={{ opacity: 0, scale: 0.94, y: 16 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.94, y: -8 }}
+                    transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1], delay: index * 0.055 }}
+                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group border border-line rounded-2xl overflow-hidden bg-surface-2 hover:border-primary/30 transition-all flex flex-col hover:-translate-y-1"
+                    className="group border border-line rounded-2xl overflow-hidden bg-surface-2 hover:border-primary/30 transition-[border-color] flex flex-col"
                   >
                     <div className="relative h-48 md:h-56 bg-background overflow-hidden">
                       <Image
