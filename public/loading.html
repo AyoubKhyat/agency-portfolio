@@ -170,6 +170,12 @@ try {
   }
   .face.txt .small{display:block;font-size:9px;letter-spacing:.4em;color:var(--muted);margin-top:6px;font-weight:500}
   .face.txt .ser{font-size:30px;letter-spacing:0;text-transform:none}
+  .face-title{font-size:42px;letter-spacing:.04em}
+  .face-sm{font-size:13px}
+  .face-tagline{font-size:32px;letter-spacing:0}
+  .face-coord{font-size:22px}
+  .face-craft{font-size:11px;letter-spacing:.32em}
+  .face-excellence{font-size:30px}
 
   .f-front {transform:translateZ(100px)}
   .f-back  {transform:rotateY(180deg) translateZ(100px)}
@@ -282,6 +288,62 @@ try {
     animation:scan 5s linear infinite;
   }
   @keyframes scan{0%{top:9%}50%{top:91%}100%{top:9%}}
+
+  @media(max-width:640px){
+    .topbar{height:48px;padding:0 16px}
+    .topbar .brand img{height:18px}
+    .topbar .right{gap:8px;font-size:9px}
+    .topbar .right span:nth-child(2){display:none}
+
+    .scene{width:180px;height:180px}
+    .cube{width:130px;height:130px;left:25px;top:25px}
+    .f-front {transform:translateZ(65px)}
+    .f-back  {transform:rotateY(180deg) translateZ(65px)}
+    .f-right {transform:rotateY( 90deg) translateZ(65px)}
+    .f-left  {transform:rotateY(-90deg) translateZ(65px)}
+    .f-top   {transform:rotateX( 90deg) translateZ(65px)}
+    .f-bottom{transform:rotateX(-90deg) translateZ(65px)}
+    .face{border-radius:12px}
+    .face::before{border-radius:12px}
+    .face.txt{font-size:12px}
+    .face.txt .ser{font-size:20px}
+    .face.txt .small{font-size:7px;letter-spacing:.3em}
+
+    .ring{width:240px;height:240px;margin:-120px 0 0 -120px}
+    .ring.r2{width:300px;height:300px;margin:-150px 0 0 -150px}
+    .ring.r3{width:360px;height:360px;margin:-180px 0 0 -180px}
+
+    .stage{perspective:1000px}
+
+    .tagline{top:calc(50% + 150px)}
+    .tagline .name{font-size:11px;letter-spacing:.3em;gap:10px}
+    .rotator{font-size:10px;letter-spacing:.12em}
+
+    .ch{display:none}
+
+    .hud{
+      grid-template-columns:1fr;gap:12px;padding:16px 20px 20px;
+      text-align:center;
+    }
+    .hud > div:first-child{display:none}
+    .right-meta{display:none}
+    .progress-wrap{width:100%;max-width:100%}
+    .progress-meta{font-size:9px}
+
+    .face-title{font-size:26px}
+    .face-sm{font-size:10px}
+    .face-tagline{font-size:20px}
+    .face-coord{font-size:15px}
+    .face-craft{font-size:9px;letter-spacing:.2em}
+    .face-excellence{font-size:19px}
+    .tick{width:6px;height:6px}
+    .tick.tl{top:6px;left:6px}
+    .tick.tr{top:6px;right:6px}
+    .tick.bl{bottom:6px;left:6px}
+    .tick.br{bottom:6px;right:6px}
+    .sat{width:7px;height:7px}
+    .ring.r3 .sat{width:4px;height:4px}
+  }
 </style>
 </head>
 
@@ -321,7 +383,7 @@ try {
       <div class="face f-back txt">
         <span class="tick tl"></span><span class="tick tr"></span><span class="tick bl"></span><span class="tick br"></span>
         <div>
-          <div class="gradient" style="font-size:42px;letter-spacing:.04em">IBDA3</div>
+          <div class="gradient face-title">IBDA3</div>
           <div class="serif ser" style="margin-top:4px">digital.</div>
           <div class="small">marrakech</div>
         </div>
@@ -329,33 +391,33 @@ try {
       <div class="face f-right txt">
         <span class="tick tl"></span><span class="tick tr"></span><span class="tick bl"></span><span class="tick br"></span>
         <div>
-          <div style="font-size:13px">WEB</div>
-          <div style="font-size:13px;margin-top:6px;color:var(--muted)">&middot;</div>
-          <div class="gradient" style="font-size:13px;margin-top:6px">APPS</div>
-          <div style="font-size:13px;margin-top:6px;color:var(--muted)">&middot;</div>
-          <div style="font-size:13px;margin-top:6px">AI</div>
+          <div class="face-sm">WEB</div>
+          <div class="face-sm" style="margin-top:6px;color:var(--muted)">&middot;</div>
+          <div class="gradient face-sm" style="margin-top:6px">APPS</div>
+          <div class="face-sm" style="margin-top:6px;color:var(--muted)">&middot;</div>
+          <div class="face-sm" style="margin-top:6px">AI</div>
         </div>
       </div>
       <div class="face f-left txt">
         <span class="tick tl"></span><span class="tick tr"></span><span class="tick bl"></span><span class="tick br"></span>
         <div>
-          <div class="serif" style="font-size:32px;letter-spacing:0;text-transform:none">we build.</div>
-          <div class="serif gradient" style="font-size:32px;letter-spacing:0;text-transform:none">you grow.</div>
+          <div class="serif face-tagline" style="text-transform:none">we build.</div>
+          <div class="serif gradient face-tagline" style="text-transform:none">you grow.</div>
         </div>
       </div>
       <div class="face f-top txt">
         <span class="tick tl"></span><span class="tick tr"></span><span class="tick bl"></span><span class="tick br"></span>
         <div>
           <div class="small" style="margin:0 0 8px">studio &middot; est. 2024</div>
-          <div class="gradient" style="font-size:22px">31.62&deg;N</div>
-          <div class="gradient" style="font-size:22px;margin-top:2px">7.98&deg;W</div>
+          <div class="gradient face-coord">31.62&deg;N</div>
+          <div class="gradient face-coord" style="margin-top:2px">7.98&deg;W</div>
         </div>
       </div>
       <div class="face f-bottom txt">
         <span class="tick tl"></span><span class="tick tr"></span><span class="tick bl"></span><span class="tick br"></span>
         <div>
-          <div style="font-size:11px;letter-spacing:.32em">CRAFTING</div>
-          <div class="serif" style="font-size:30px;margin-top:4px;text-transform:none">l'excellence</div>
+          <div class="face-craft">CRAFTING</div>
+          <div class="serif face-excellence" style="margin-top:4px;text-transform:none">l'excellence</div>
           <div class="small" style="margin-top:6px">digitale.</div>
         </div>
       </div>
