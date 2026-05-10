@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
+import AnimatedCounter from "@/components/AnimatedCounter";
 
 const CinematicHero = dynamic(() => import("@/components/CinematicHero"));
 const ServicesScroll = dynamic(() => import("@/components/ServicesScroll"));
@@ -35,10 +36,10 @@ export default function HomePage() {
   ];
 
   const stats = [
-    { value: "50+", label: t("stats_projects") },
-    { value: "40+", label: t("stats_clients") },
-    { value: "5+", label: t("stats_years") },
-    { value: "24/7", label: t("stats_support") },
+    { value: 50, suffix: "+", label: t("stats_projects") },
+    { value: 40, suffix: "+", label: t("stats_clients") },
+    { value: 5, suffix: "+", label: t("stats_years") },
+    { value: 24, suffix: "/7", label: t("stats_support") },
   ];
 
   const products = [
@@ -86,7 +87,9 @@ export default function HomePage() {
                 key={stat.label}
                 className={`py-8 md:py-10 ${i % 2 === 0 ? "border-r border-line-soft" : ""} ${i === 1 ? "md:border-r md:border-line-soft" : ""} text-center`}
               >
-                <p className="font-serif text-5xl md:text-6xl text-primary">{stat.value}</p>
+                <p className="font-serif text-5xl md:text-6xl text-primary">
+                  <AnimatedCounter value={stat.value} suffix={stat.suffix} />
+                </p>
                 <p className="text-sm text-text-muted mt-2">{stat.label}</p>
               </StaggerItem>
             ))}
