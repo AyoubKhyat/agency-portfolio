@@ -7,6 +7,10 @@ import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import SetLang from "@/components/SetLang";
 import LoadingScreen from "@/components/LoadingScreen";
+import ScrollProgress from "@/components/ScrollProgress";
+import BackToTop from "@/components/BackToTop";
+import CookieConsent from "@/components/CookieConsent";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 const BASE_URL = "https://ibda3-digital.vercel.app";
 
@@ -190,10 +194,14 @@ export default async function LocaleLayout({ children, params }: Props) {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold">
         Skip to content
       </a>
+      <ScrollProgress />
       <Navbar />
+      <Breadcrumbs />
       <main id="main-content" className="flex-1">{children}</main>
       <Footer />
       <WhatsAppButton />
+      <BackToTop />
+      <CookieConsent />
     </NextIntlClientProvider>
   );
 }

@@ -216,6 +216,11 @@
     "availability": "Available this week.",
     "availability_tag": "→ Available"
   },
+  "Cookies": {
+    "message": "We use cookies to analyze site traffic and improve your experience. You can accept or decline non-essential cookies.",
+    "accept": "Accept",
+    "decline": "Decline"
+  },
   "Footer": {
     "description": "Web agency in Marrakech specializing in website creation, mobile apps and e-commerce solutions.",
     "services": "Services",
