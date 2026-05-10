@@ -27,6 +27,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://ibda3-digital.vercel.app"),
   title: "Ibda3 Digital — Agence Web Marrakech",
   description:
     "Ibda3 Digital — Agence web à Marrakech. Création de sites web, applications mobiles et solutions e-commerce sur mesure.",
