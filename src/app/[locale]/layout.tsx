@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import SetLang from "@/components/SetLang";
+import LoadingScreen from "@/components/LoadingScreen";
 
 export async function generateMetadata({
   params,
@@ -44,6 +45,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <NextIntlClientProvider locale={locale}>
       <SetLang locale={locale} />
+      <LoadingScreen />
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
