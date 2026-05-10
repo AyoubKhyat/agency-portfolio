@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
+import WordRotate from "@/components/WordRotate";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -174,6 +175,7 @@ interface CinematicHeroProps {
   badge2Sub?: string;
   phoneDashboard?: string;
   phoneProjects?: string;
+  rotatingWords?: string[];
 }
 
 export default function CinematicHero({
@@ -190,6 +192,7 @@ export default function CinematicHero({
   badge2Sub = "Backend power",
   phoneDashboard = "Dashboard",
   phoneProjects = "Projects",
+  rotatingWords,
 }: CinematicHeroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mainCardRef = useRef<HTMLDivElement>(null);
@@ -336,6 +339,11 @@ export default function CinematicHero({
         <h1 className="text-days gsap-reveal text-silver-matte text-5xl md:text-7xl lg:text-[6rem] font-extrabold tracking-tighter">
           {tagline}
         </h1>
+        {rotatingWords && rotatingWords.length > 0 && (
+          <p className="text-track gsap-reveal mt-4 text-2xl md:text-4xl lg:text-5xl font-bold tracking-tight text-primary">
+            <WordRotate words={rotatingWords} interval={2500} />
+          </p>
+        )}
       </div>
 
       {/* CTA Section (appears after card pullback) */}

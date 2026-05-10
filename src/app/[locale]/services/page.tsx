@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { HiOutlineCheck } from "react-icons/hi2";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 import FaqAccordion from "@/components/FaqAccordion";
+import ServiceComparison from "@/components/ServiceComparison";
 
 export async function generateMetadata({
   params,
@@ -101,6 +102,9 @@ export default function ServicesPage() {
           </StaggerContainer>
         </div>
       </section>
+
+      {/* Comparison Table */}
+      <ServiceComparison />
 
       {/* FAQ */}
       <section className="relative py-20 bg-surface-2 overflow-hidden">

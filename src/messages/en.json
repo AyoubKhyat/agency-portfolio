@@ -34,7 +34,12 @@
     "hero_badge2_sub": "Backend power",
     "hero_phone_dashboard": "Dashboard",
     "hero_phone_projects": "Projects",
-    "tech_title": "Technologies we work with"
+    "tech_title": "Technologies we work with",
+    "hero_rotate1": "Stunning Websites",
+    "hero_rotate2": "Online Stores",
+    "hero_rotate3": "Mobile Apps",
+    "hero_rotate4": "SEO & Visibility",
+    "hero_rotate5": "Ongoing Support"
   },
   "Services": {
     "title": "Our Services",
@@ -320,6 +325,24 @@
     "message": "We use cookies to analyze site traffic and improve your experience. You can accept or decline non-essential cookies.",
     "accept": "Accept",
     "decline": "Decline"
+  },
+  "Comparison": {
+    "pill": "Compare",
+    "heading": "Find the right",
+    "heading_accent": "service.",
+    "feature": "Feature",
+    "custom_design": "Custom Design",
+    "responsive": "Responsive & Mobile",
+    "cms": "CMS Integration",
+    "seo_optimization": "SEO Optimization",
+    "payment": "Payment Integration",
+    "analytics": "Analytics & Reports",
+    "ssl": "SSL Certificate",
+    "push_notifications": "Push Notifications",
+    "performance": "Performance Audit",
+    "ongoing_support": "Ongoing Support",
+    "backups": "Automated Backups",
+    "security_monitoring": "Security Monitoring"
   },
   "Footer": {
     "description": "Web agency in Marrakech specializing in website creation, mobile apps and e-commerce solutions.",

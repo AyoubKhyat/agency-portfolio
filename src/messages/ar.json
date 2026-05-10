@@ -34,7 +34,12 @@
     "hero_badge2_sub": "قوة الباكند",
     "hero_phone_dashboard": "لوحة التحكم",
     "hero_phone_projects": "مشاريع",
-    "tech_title": "التقنيات التي نعمل بها"
+    "tech_title": "التقنيات التي نعمل بها",
+    "hero_rotate1": "مواقع مذهلة",
+    "hero_rotate2": "متاجر إلكترونية",
+    "hero_rotate3": "تطبيقات موبايل",
+    "hero_rotate4": "SEO وظهور",
+    "hero_rotate5": "دعم مستمر"
   },
   "Services": {
     "title": "خدماتنا",
@@ -320,6 +325,24 @@
     "message": "نستخدم ملفات تعريف الارتباط لتحليل حركة المرور وتحسين تجربتك. يمكنك قبول أو رفض ملفات تعريف الارتباط غير الأساسية.",
     "accept": "قبول",
     "decline": "رفض"
+  },
+  "Comparison": {
+    "pill": "مقارنة",
+    "heading": "اعثر على الخدمة",
+    "heading_accent": "المناسبة.",
+    "feature": "الميزة",
+    "custom_design": "تصميم مخصص",
+    "responsive": "متجاوب وموبايل",
+    "cms": "تكامل نظام إدارة المحتوى",
+    "seo_optimization": "تحسين محركات البحث",
+    "payment": "تكامل الدفع",
+    "analytics": "تحليلات وتقارير",
+    "ssl": "شهادة SSL",
+    "push_notifications": "إشعارات فورية",
+    "performance": "تدقيق الأداء",
+    "ongoing_support": "دعم مستمر",
+    "backups": "نسخ احتياطي تلقائي",
+    "security_monitoring": "مراقبة أمنية"
   },
   "Footer": {
     "description": "وكالة ويب في مراكش متخصصة في إنشاء المواقع الإلكترونية وتطبيقات الموبايل وحلول التجارة الإلكترونية.",
