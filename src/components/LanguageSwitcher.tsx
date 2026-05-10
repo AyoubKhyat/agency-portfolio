@@ -13,17 +13,19 @@ export default function LanguageSwitcher() {
   };
 
   const locales = [
-    { code: "fr" as const, label: "FR" },
-    { code: "en" as const, label: "EN" },
-    { code: "ar" as const, label: "ع" },
+    { code: "fr" as const, label: "FR", name: "Français" },
+    { code: "en" as const, label: "EN", name: "English" },
+    { code: "ar" as const, label: "ع", name: "العربية" },
   ];
 
   return (
-    <div className="flex items-center gap-1 bg-foreground/10 rounded-lg p-0.5">
+    <div className="flex items-center gap-1 bg-foreground/10 rounded-lg p-0.5" role="group" aria-label="Language">
       {locales.map((l) => (
         <button
           key={l.code}
           onClick={() => switchLocale(l.code)}
+          aria-label={l.name}
+          aria-current={locale === l.code ? "true" : undefined}
           className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
             locale === l.code
               ? "bg-primary text-white"
