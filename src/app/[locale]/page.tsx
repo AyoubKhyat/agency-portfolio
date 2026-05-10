@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import LogoCarousel from "@/components/LogoCarousel";
+import Testimonials from "@/components/Testimonials";
 
 const CinematicHero = dynamic(() => import("@/components/CinematicHero"));
 const ServicesScroll = dynamic(() => import("@/components/ServicesScroll"));
@@ -163,6 +164,9 @@ export default function HomePage() {
           </StaggerContainer>
         </div>
       </section>
+
+      {/* Testimonials */}
+      <Testimonials />
 
       {/* CTA */}
       <section className="relative py-24 bg-background overflow-hidden">
