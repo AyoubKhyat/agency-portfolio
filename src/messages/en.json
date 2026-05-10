@@ -110,7 +110,10 @@
     "project6_github": "portalAddons",
     "project7_title": "Terrene Studio",
     "project7_desc": "Premium portfolio website for an architecture and interior design studio featuring project showcases, design philosophy and client testimonials.",
-    "project7_tags": "HTML,CSS,JavaScript,Portfolio"
+    "project7_tags": "HTML,CSS,JavaScript,Portfolio",
+    "project8_title": "Victory Path",
+    "project8_desc": "Bilingual web application (English/Arabic) for tracking and managing personal achievement paths with dark/light theme support.",
+    "project8_tags": "React,Vite,Bilingual,PWA"
   },
   "Blog": {
     "title": "Our Blog",
