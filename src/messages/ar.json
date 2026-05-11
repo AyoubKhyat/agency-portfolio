@@ -326,6 +326,16 @@
     "accept": "قبول",
     "decline": "رفض"
   },
+  "Validation": {
+    "name_required": "الاسم مطلوب.",
+    "name_min": "يجب أن يحتوي الاسم على حرفين على الأقل.",
+    "email_required": "البريد الإلكتروني مطلوب.",
+    "email_invalid": "يرجى إدخال عنوان بريد إلكتروني صالح.",
+    "phone_invalid": "يرجى إدخال رقم هاتف صالح.",
+    "subject_required": "يرجى اختيار خدمة.",
+    "message_required": "الرسالة مطلوبة.",
+    "message_min": "يجب أن تحتوي الرسالة على 10 أحرف على الأقل."
+  },
   "Comparison": {
     "pill": "مقارنة",
     "heading": "اعثر على الخدمة",
