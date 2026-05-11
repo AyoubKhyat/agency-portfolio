@@ -10,11 +10,25 @@ import {
 import { FaWhatsapp } from "react-icons/fa";
 import { FadeIn, motion } from "@/components/motion";
 
+type FieldErrors = {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  subject?: string;
+  message?: string;
+};
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^[+\d][\d\s\-().]{7,}$/;
+
 export default function ContactPage() {
   const t = useTranslations("Contact");
   const s = useTranslations("Services");
+  const v = useTranslations("Validation");
   const formRef = useRef<HTMLFormElement>(null);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const services = [
     { key: "web", label: s("web_title") },
@@ -23,6 +37,62 @@ export default function ContactPage() {
     { key: "seo", label: s("seo_title") },
     { key: "maintenance", label: s("maintenance_title") },
   ];
+
+  function validateField(name: string, value: string): string | undefined {
+    switch (name) {
+      case "fullName":
+        if (!value.trim()) return v("name_required");
+        if (value.trim().length < 2) return v("name_min");
+        return undefined;
+      case "email":
+        if (!value.trim()) return v("email_required");
+        if (!EMAIL_RE.test(value)) return v("email_invalid");
+        return undefined;
+      case "phone":
+        if (value.trim() && !PHONE_RE.test(value)) return v("phone_invalid");
+        return undefined;
+      case "subject":
+        if (!value) return v("subject_required");
+        return undefined;
+      case "message":
+        if (!value.trim()) return v("message_required");
+        if (value.trim().length < 10) return v("message_min");
+        return undefined;
+      default:
+        return undefined;
+    }
+  }
+
+  function handleBlur(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+    const { name, value } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+  }
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+    const { name, value } = e.target;
+    if (touched[name]) {
+      setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+    }
+  }
+
+  function validateAll(): boolean {
+    if (!formRef.current) return false;
+    const data = new FormData(formRef.current);
+    const fields = ["fullName", "email", "phone", "subject", "message"];
+    const newErrors: FieldErrors = {};
+    let valid = true;
+    for (const field of fields) {
+      const err = validateField(field, (data.get(field) as string) || "");
+      if (err) {
+        newErrors[field as keyof FieldErrors] = err;
+        valid = false;
+      }
+    }
+    setErrors(newErrors);
+    setTouched(Object.fromEntries(fields.map((f) => [f, true])));
+    return valid;
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,6 +103,8 @@ export default function ContactPage() {
       setStatus("success");
       return;
     }
+
+    if (!validateAll()) return;
 
     setStatus("sending");
 
@@ -49,10 +121,19 @@ export default function ContactPage() {
       await emailjs.sendForm(serviceId, templateId, formRef.current, { publicKey });
       setStatus("success");
       formRef.current.reset();
+      setErrors({});
+      setTouched({});
     } catch {
       setStatus("error");
     }
   }
+
+  const fieldClass = (name: keyof FieldErrors) =>
+    `w-full px-4 py-3 rounded-xl bg-surface-2 border text-foreground placeholder-text-muted outline-none transition-all ${
+      touched[name] && errors[name]
+        ? "border-red-400 focus:border-red-400 focus:ring-2 focus:ring-red-400/20"
+        : "border-line-soft focus:border-primary focus:ring-2 focus:ring-primary/20"
+    }`;
 
   const contactRows = [
     { label: "Tél", value: t("info_phone") },
@@ -127,7 +208,7 @@ export default function ContactPage() {
                     </button>
                   </motion.div>
                 ) : (
-                  <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
+                  <form ref={formRef} onSubmit={handleSubmit} className="space-y-5" noValidate>
                     <div aria-hidden="true" style={{ position: "absolute", left: "-9999px" }}>
                       <input type="text" name="website" tabIndex={-1} autoComplete="off" />
                     </div>
@@ -150,8 +231,13 @@ export default function ContactPage() {
                         name="fullName"
                         type="text"
                         required
-                        className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-foreground placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        onBlur={handleBlur}
+                        onChange={handleChange}
+                        className={fieldClass("fullName")}
                       />
+                      {touched.fullName && errors.fullName && (
+                        <p className="mt-1.5 text-xs text-red-400">{errors.fullName}</p>
+                      )}
                     </div>
                     <div className="grid sm:grid-cols-2 gap-5">
                       <div>
@@ -163,8 +249,13 @@ export default function ContactPage() {
                           name="email"
                           type="email"
                           required
-                          className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-foreground placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                          onBlur={handleBlur}
+                          onChange={handleChange}
+                          className={fieldClass("email")}
                         />
+                        {touched.email && errors.email && (
+                          <p className="mt-1.5 text-xs text-red-400">{errors.email}</p>
+                        )}
                       </div>
                       <div>
                         <label htmlFor="phone" className="block text-sm font-mono tracking-wider uppercase text-text-muted mb-2">
@@ -174,8 +265,13 @@ export default function ContactPage() {
                           id="phone"
                           name="phone"
                           type="tel"
-                          className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-foreground placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                          onBlur={handleBlur}
+                          onChange={handleChange}
+                          className={fieldClass("phone")}
                         />
+                        {touched.phone && errors.phone && (
+                          <p className="mt-1.5 text-xs text-red-400">{errors.phone}</p>
+                        )}
                       </div>
                     </div>
                     <div>
@@ -187,7 +283,9 @@ export default function ContactPage() {
                         name="subject"
                         required
                         defaultValue=""
-                        className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none"
+                        onBlur={handleBlur}
+                        onChange={handleChange}
+                        className={`${fieldClass("subject")} appearance-none`}
                         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239CA3AF' d='M2 4l4 4 4-4'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 16px center" }}
                       >
                         <option value="" disabled className="text-text-muted">{t("form_subject_placeholder")}</option>
@@ -196,6 +294,9 @@ export default function ContactPage() {
                         ))}
                         <option value={t("form_subject_other")}>{t("form_subject_other")}</option>
                       </select>
+                      {touched.subject && errors.subject && (
+                        <p className="mt-1.5 text-xs text-red-400">{errors.subject}</p>
+                      )}
                     </div>
                     <div>
                       <label htmlFor="message" className="block text-sm font-mono tracking-wider uppercase text-text-muted mb-2">
@@ -206,8 +307,13 @@ export default function ContactPage() {
                         name="message"
                         rows={5}
                         required
-                        className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-line-soft text-foreground placeholder-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+                        onBlur={handleBlur}
+                        onChange={handleChange}
+                        className={`${fieldClass("message")} resize-none`}
                       />
+                      {touched.message && errors.message && (
+                        <p className="mt-1.5 text-xs text-red-400">{errors.message}</p>
+                      )}
                     </div>
                     <motion.button
                       type="submit"

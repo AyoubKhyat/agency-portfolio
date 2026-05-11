@@ -104,6 +104,11 @@ npm run lint         # ESLint
 - [x] Removed pricing section from Services page
 - [x] Added Arabic (ar) language with RTL support
 - [x] Added Terrene Studio (external client project) to portfolio
+- [x] Animated hero text with word rotation (WordRotate component)
+- [x] Service comparison table on Services page (12 features × 5 services)
+- [x] Service JSON-LD structured data on detail pages
+- [x] Real-time contact form validation with inline error messages (translated)
+- [x] Sitemap includes service detail pages + x-default hreflang
 - [ ] Create a pitch deck in Claude Design for client meetings
 
 ## Changelog
@@ -187,3 +192,27 @@ npm run lint         # ESLint
   - Made CinematicHero theme-aware: white bg in light mode, dark cinematic in dark mode
   - Theme-aware phone mockup, premium card, glass badges, glow blobs
   - Configured Tailwind v4 `@variant dark` to use `.dark` class selector (was using media query)
+- **2026-05-10** — UX enhancements & polish
+  - Cookie consent banner (GDPR) gating Google Analytics
+  - Page transitions (framer-motion fade + slide)
+  - Scroll progress bar (3px primary at top)
+  - Back-to-top button (bottom-left, appears after 400px)
+  - Breadcrumbs with BreadcrumbList JSON-LD on inner pages
+  - Theme transition animation (smooth 450ms background/color/border)
+  - About page i18n (replaced all hardcoded French text)
+  - Honeypot spam protection on contact form
+  - Fixed console warnings (LCP, scroll-behavior, cssRules, container position)
+  - Tech logo carousel (marquee of framework logos)
+  - WhatsApp chat widget (popup with greeting, online status, CTA)
+  - Blur image placeholders on portfolio cards
+  - Testimonials marquee section (6 client reviews, two-row)
+  - Individual service detail pages (/services/[slug]) with features, process, tools
+  - Process section added to home page (from About)
+- **2026-05-11** — Animated hero, comparison table & SEO
+  - WordRotate component: animated word cycling in hero (5 service keywords, 2.5s interval)
+  - Service comparison table: 12-feature matrix across 5 services on Services page
+  - Service JSON-LD schema on each service detail page
+  - Real-time contact form validation with inline errors (name, email, phone, subject, message)
+  - Validation translations added for all 3 locales
+  - Sitemap expanded: service detail pages included, x-default hreflang added
+  - Layout metadata: x-default hreflang for fallback locale

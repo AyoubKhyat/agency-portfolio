@@ -8,6 +8,40 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 const SLUGS = ["web", "ecommerce", "mobile", "seo", "maintenance"] as const;
 type Slug = (typeof SLUGS)[number];
 
+const BASE_URL = "https://ibda3-digital.vercel.app";
+
+function ServiceJsonLd({ locale, slug, name, description }: { locale: string; slug: string; name: string; description: string }) {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name,
+    description,
+    url: `${BASE_URL}/${locale}/services/${slug}`,
+    provider: {
+      "@type": "ProfessionalService",
+      name: "Ibda3 Digital",
+      url: `${BASE_URL}/${locale}`,
+      telephone: "+212625461645",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Marrakech",
+        addressCountry: "MA",
+      },
+    },
+    areaServed: {
+      "@type": "Country",
+      name: "Morocco",
+    },
+    serviceType: name,
+  };
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -43,6 +77,13 @@ export default async function ServiceDetailPage({
 
   return (
     <>
+      <ServiceJsonLd
+        locale={locale}
+        slug={slug}
+        name={t(`${slug}_title`)}
+        description={t(`${slug}_intro`)}
+      />
+
       {/* Hero */}
       <section className="relative bg-background py-24 md:py-32 overflow-hidden">
         <div className="grid-bg" />

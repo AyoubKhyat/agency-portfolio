@@ -326,6 +326,16 @@
     "accept": "Accepter",
     "decline": "Refuser"
   },
+  "Validation": {
+    "name_required": "Le nom est requis.",
+    "name_min": "Le nom doit contenir au moins 2 caractères.",
+    "email_required": "L'email est requis.",
+    "email_invalid": "Veuillez entrer une adresse email valide.",
+    "phone_invalid": "Veuillez entrer un numéro de téléphone valide.",
+    "subject_required": "Veuillez sélectionner un service.",
+    "message_required": "Le message est requis.",
+    "message_min": "Le message doit contenir au moins 10 caractères."
+  },
   "Comparison": {
     "pill": "Comparer",
     "heading": "Trouvez le bon",
