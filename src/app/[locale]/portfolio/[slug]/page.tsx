@@ -7,12 +7,13 @@ import { HiOutlineCheck } from "react-icons/hi2";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 
-const SLUGS = ["goudoukh", "tannour", "terrene", "victory-path"] as const;
+const SLUGS = ["hammam-nour", "goudoukh", "tannour", "terrene", "victory-path"] as const;
 type CaseStudySlug = (typeof SLUGS)[number];
 
 const BASE_URL = "https://ibda3-digital.vercel.app";
 
 const PROJECT_DATA: Record<CaseStudySlug, { image: string; url: string }> = {
+  "hammam-nour": { image: "/projects/hammam-nour.png", url: "https://hammam-nour.vercel.app/" },
   goudoukh: { image: "/projects/goudoukh.png", url: "https://goudoukh-luxury-cars.vercel.app/" },
   tannour: { image: "/projects/tannour.png", url: "https://tannour.vercel.app/" },
   terrene: { image: "/projects/terrene.jpg", url: "https://terrene.webyms.com/" },
