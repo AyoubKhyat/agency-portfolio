@@ -13,11 +13,11 @@ type CaseStudySlug = (typeof SLUGS)[number];
 const BASE_URL = "https://ibda3-digital.vercel.app";
 
 const PROJECT_DATA: Record<CaseStudySlug, { image: string; url: string }> = {
-  "hammam-nour": { image: "/projects/hammam-nour.png", url: "https://hammam-nour.vercel.app/" },
-  goudoukh: { image: "/projects/goudoukh.png", url: "https://goudoukh-luxury-cars.vercel.app/" },
-  tannour: { image: "/projects/tannour.png", url: "https://tannour.vercel.app/" },
-  terrene: { image: "/projects/terrene.jpg", url: "https://terrene.webyms.com/" },
-  "victory-path": { image: "/projects/victory-path-v2.jpg", url: "https://victory-path-beta.vercel.app/login" },
+  "hammam-nour": { image: "/projects/hammam-nour.webp", url: "https://hammam-nour.vercel.app/" },
+  goudoukh: { image: "/projects/goudoukh.webp", url: "https://goudoukh-luxury-cars.vercel.app/" },
+  tannour: { image: "/projects/tannour.webp", url: "https://tannour.vercel.app/" },
+  terrene: { image: "/projects/terrene.webp", url: "https://terrene.webyms.com/" },
+  "victory-path": { image: "/projects/victory-path-v2.webp", url: "https://victory-path-beta.vercel.app/login" },
 };
 
 function CaseStudyJsonLd({ locale, slug, name, description }: { locale: string; slug: string; name: string; description: string }) {
