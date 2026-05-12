@@ -200,7 +200,13 @@
     "project7_tags": "HTML,CSS,JavaScript,Portfolio",
     "project8_title": "Victory Path",
     "project8_desc": "Bilingual web application (English/Arabic) for tracking and managing personal achievement paths with dark/light theme support.",
-    "project8_tags": "React,Vite,Bilingual,PWA"
+    "project8_tags": "React,Vite,Bilingual,PWA",
+    "project9_title": "Goudoukh Luxury Cars",
+    "project9_desc": "Premium luxury car rental platform in Marrakesh with fleet showcase, quick booking system, vehicle comparison and concierge services.",
+    "project9_tags": "Next.js,React,Booking,Luxury",
+    "project10_title": "Tannour",
+    "project10_desc": "Artisan leather goods e-commerce store from Marrakesh featuring handcrafted bags, wallets and accessories with a heritage brand experience.",
+    "project10_tags": "Next.js,React,E-commerce,Luxury"
   },
   "Blog": {
     "title": "Our Blog",
