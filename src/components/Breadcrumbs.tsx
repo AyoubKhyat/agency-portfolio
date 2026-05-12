@@ -14,7 +14,7 @@ const PAGE_KEYS: Record<string, string> = {
   contact: "contact",
 };
 
-const CASE_STUDY_SLUGS = ["goudoukh", "tannour", "terrene", "victory-path"];
+const CASE_STUDY_SLUGS = ["hammam-nour", "goudoukh", "tannour", "terrene", "victory-path"];
 
 export default function Breadcrumbs() {
   const pathname = usePathname();
