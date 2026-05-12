@@ -125,8 +125,9 @@ export default function HomePage() {
         subtitle={t("parallax_subtitle")}
       />
 
-      {/* Client Projects */}
+      {/* Client Projects — hidden for now
       <ClientStrip title={t("clients_title")} />
+      */}
 
       {/* Process */}
       <section className="relative py-24 bg-background overflow-hidden">
