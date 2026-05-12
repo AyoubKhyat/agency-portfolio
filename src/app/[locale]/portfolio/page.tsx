@@ -12,11 +12,11 @@ type Category = "all" | "web" | "app" | "plugin";
 const BLUR_PLACEHOLDER = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGZpbHRlciBpZD0iYiI+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMTIiLz48L2ZpbHRlcj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzFhMWEyYSIgZmlsdGVyPSJ1cmwoI2IpIi8+PC9zdmc+";
 
 const projects = [
-  { id: 11, key: "project11", category: "web", url: "https://hammam-nour.vercel.app/", image: "/projects/hammam-nour.png", tag: "Spa & Wellness", caseStudy: "hammam-nour" },
-  { id: 9, key: "project9", category: "web", url: "https://goudoukh-luxury-cars.vercel.app/", image: "/projects/goudoukh.png", tag: "Luxury car rental", caseStudy: "goudoukh" },
-  { id: 10, key: "project10", category: "web", url: "https://tannour.vercel.app/", image: "/projects/tannour.png", tag: "E-commerce", caseStudy: "tannour" },
-  { id: 7, key: "project7", category: "web", url: "https://terrene.webyms.com/", image: "/projects/terrene.jpg", tag: "Architecture studio", caseStudy: "terrene" },
-  { id: 8, key: "project8", category: "app", url: "https://victory-path-beta.vercel.app/login", image: "/projects/victory-path-v2.jpg", tag: "Web app", caseStudy: "victory-path" },
+  { id: 11, key: "project11", category: "web", url: "https://hammam-nour.vercel.app/", image: "/projects/hammam-nour.webp", tag: "Spa & Wellness", caseStudy: "hammam-nour" },
+  { id: 9, key: "project9", category: "web", url: "https://goudoukh-luxury-cars.vercel.app/", image: "/projects/goudoukh.webp", tag: "Luxury car rental", caseStudy: "goudoukh" },
+  { id: 10, key: "project10", category: "web", url: "https://tannour.vercel.app/", image: "/projects/tannour.webp", tag: "E-commerce", caseStudy: "tannour" },
+  { id: 7, key: "project7", category: "web", url: "https://terrene.webyms.com/", image: "/projects/terrene.webp", tag: "Architecture studio", caseStudy: "terrene" },
+  { id: 8, key: "project8", category: "app", url: "https://victory-path-beta.vercel.app/login", image: "/projects/victory-path-v2.webp", tag: "Web app", caseStudy: "victory-path" },
 ];
 
 export default function PortfolioPage() {
