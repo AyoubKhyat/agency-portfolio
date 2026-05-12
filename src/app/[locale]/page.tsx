@@ -46,20 +46,20 @@ export default function HomePage() {
   ];
 
   const products = [
+    { title: "Goudoukh Luxury Cars", link: "https://goudoukh-luxury-cars.vercel.app/", thumbnail: "/projects/goudoukh.png" },
+    { title: "Tannour", link: "https://tannour.vercel.app/", thumbnail: "/projects/tannour.png" },
     { title: "Victory Path", link: "https://victory-path-beta.vercel.app/login", thumbnail: "/projects/victory-path-v2.jpg" },
     { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.jpg" },
+    { title: "Goudoukh Luxury Cars", link: "https://goudoukh-luxury-cars.vercel.app/", thumbnail: "/projects/goudoukh.png" },
+    { title: "Tannour", link: "https://tannour.vercel.app/", thumbnail: "/projects/tannour.png" },
     { title: "Victory Path", link: "https://victory-path-beta.vercel.app/login", thumbnail: "/projects/victory-path-v2.jpg" },
     { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.jpg" },
+    { title: "Goudoukh Luxury Cars", link: "https://goudoukh-luxury-cars.vercel.app/", thumbnail: "/projects/goudoukh.png" },
+    { title: "Tannour", link: "https://tannour.vercel.app/", thumbnail: "/projects/tannour.png" },
     { title: "Victory Path", link: "https://victory-path-beta.vercel.app/login", thumbnail: "/projects/victory-path-v2.jpg" },
     { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.jpg" },
-    { title: "Victory Path", link: "https://victory-path-beta.vercel.app/login", thumbnail: "/projects/victory-path-v2.jpg" },
-    { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.jpg" },
-    { title: "Victory Path", link: "https://victory-path-beta.vercel.app/login", thumbnail: "/projects/victory-path-v2.jpg" },
-    { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.jpg" },
-    { title: "Victory Path", link: "https://victory-path-beta.vercel.app/login", thumbnail: "/projects/victory-path-v2.jpg" },
-    { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.jpg" },
-    { title: "Victory Path", link: "https://victory-path-beta.vercel.app/login", thumbnail: "/projects/victory-path-v2.jpg" },
-    { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.jpg" },
+    { title: "Goudoukh Luxury Cars", link: "https://goudoukh-luxury-cars.vercel.app/", thumbnail: "/projects/goudoukh.png" },
+    { title: "Tannour", link: "https://tannour.vercel.app/", thumbnail: "/projects/tannour.png" },
     { title: "Victory Path", link: "https://victory-path-beta.vercel.app/login", thumbnail: "/projects/victory-path-v2.jpg" },
   ];
 
