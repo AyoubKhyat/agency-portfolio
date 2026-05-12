@@ -13,6 +13,8 @@ const BLUR_PLACEHOLDER = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdo
 const projects = [
   { id: 7, key: "project7", category: "web", url: "https://terrene.webyms.com/", image: "/projects/terrene.jpg", tag: "Architecture studio" },
   { id: 8, key: "project8", category: "app", url: "https://victory-path-beta.vercel.app/login", image: "/projects/victory-path-v2.jpg", tag: "Web app" },
+  { id: 9, key: "project9", category: "web", url: "https://goudoukh-luxury-cars.vercel.app/", image: "/projects/goudoukh.png", tag: "Luxury car rental" },
+  { id: 10, key: "project10", category: "web", url: "https://tannour.vercel.app/", image: "/projects/tannour.png", tag: "E-commerce" },
 ];
 
 export default function PortfolioPage() {
