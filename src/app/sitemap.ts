@@ -4,6 +4,7 @@ const BASE_URL = "https://ibda3-digital.vercel.app";
 const locales = ["fr", "en", "ar"];
 const pages = ["", "/services", "/portfolio", "/blog", "/about", "/contact"];
 const serviceSlugs = ["web", "ecommerce", "mobile", "seo", "maintenance"];
+const caseStudySlugs = ["goudoukh", "tannour", "terrene", "victory-path"];
 
 function entry(
   path: string,
@@ -36,6 +37,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   for (const slug of serviceSlugs) {
     entries.push(entry(`/services/${slug}`, "monthly", 0.85));
+  }
+
+  for (const slug of caseStudySlugs) {
+    entries.push(entry(`/portfolio/${slug}`, "monthly", 0.8));
   }
 
   return entries;

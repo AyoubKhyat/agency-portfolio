@@ -14,33 +14,51 @@ const PAGE_KEYS: Record<string, string> = {
   contact: "contact",
 };
 
+const CASE_STUDY_SLUGS = ["goudoukh", "tannour", "terrene", "victory-path"];
+
 export default function Breadcrumbs() {
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations("Nav");
+  const cs = useTranslations("CaseStudy");
 
-  const slug = pathname.replace(/^\//, "").split("/")[0];
+  const segments = pathname.replace(/^\//, "").split("/");
+  const slug = segments[0];
+  const subSlug = segments[1];
   const pageKey = PAGE_KEYS[slug];
 
   if (!pageKey || pathname === "/") return null;
 
+  const isCaseStudy = slug === "portfolio" && subSlug && CASE_STUDY_SLUGS.includes(subSlug);
+
+  const items = [
+    {
+      "@type": "ListItem" as const,
+      position: 1,
+      name: t("home"),
+      item: `${BASE_URL}/${locale}`,
+    },
+    {
+      "@type": "ListItem" as const,
+      position: 2,
+      name: t(pageKey),
+      item: `${BASE_URL}/${locale}/${slug}`,
+    },
+  ];
+
+  if (isCaseStudy) {
+    items.push({
+      "@type": "ListItem" as const,
+      position: 3,
+      name: cs(`${subSlug}_title`),
+      item: `${BASE_URL}/${locale}/${slug}/${subSlug}`,
+    });
+  }
+
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: t("home"),
-        item: `${BASE_URL}/${locale}`,
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: t(pageKey),
-        item: `${BASE_URL}/${locale}/${slug}`,
-      },
-    ],
+    itemListElement: items,
   };
 
   return (
@@ -62,9 +80,25 @@ export default function Breadcrumbs() {
           <li aria-hidden="true">
             <HiChevronRight className="w-3 h-3" />
           </li>
-          <li>
-            <span className="text-foreground">{t(pageKey)}</span>
-          </li>
+          {isCaseStudy ? (
+            <>
+              <li>
+                <Link href="/portfolio" className="hover:text-primary transition-colors">
+                  {t(pageKey)}
+                </Link>
+              </li>
+              <li aria-hidden="true">
+                <HiChevronRight className="w-3 h-3" />
+              </li>
+              <li>
+                <span className="text-foreground">{cs(`${subSlug}_title`)}</span>
+              </li>
+            </>
+          ) : (
+            <li>
+              <span className="text-foreground">{t(pageKey)}</span>
+            </li>
+          )}
         </ol>
       </nav>
     </>

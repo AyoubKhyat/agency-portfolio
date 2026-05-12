@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Inter, Instrument_Serif, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { Inter, Instrument_Serif, JetBrains_Mono, Plus_Jakarta_Sans, Noto_Kufi_Arabic } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -31,6 +31,13 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const notoKufiArabic = Noto_Kufi_Arabic({
+  variable: "--font-arabic",
+  subsets: ["arabic"],
+  weight: ["400", "700"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://ibda3-digital.vercel.app"),
   title: "Ibda3 Digital — Agence Web Marrakech",
@@ -45,7 +52,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      className={`${inter.variable} ${instrumentSerif.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${instrumentSerif.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} ${notoKufiArabic.variable} h-full antialiased`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >

@@ -37,10 +37,19 @@ export async function generateMetadata({
   return {
     title,
     description,
-    keywords: [
-      "web agency", "agence web", "Marrakech", "Morocco", "Maroc",
-      "website", "site web", "mobile app", "e-commerce", "SEO",
-      "Ibda3 Digital", "إبداع ديجيتال",
+    keywords: locale === "ar" ? [
+      "تصميم مواقع مراكش", "وكالة ويب المغرب", "متجر إلكتروني", "تطوير تطبيقات الموبايل",
+      "تحسين محركات البحث المغرب", "إنشاء موقع إلكتروني", "شركة برمجة مراكش",
+      "تصميم متجر إلكتروني المغرب", "تطوير مواقع الويب", "وكالة تسويق رقمي مراكش",
+      "إبداع ديجيتال", "Ibda3 Digital", "Marrakech",
+    ] : locale === "en" ? [
+      "web agency Marrakech", "website development Morocco", "mobile app development",
+      "e-commerce solutions Morocco", "SEO Morocco", "web design Marrakech",
+      "digital agency Morocco", "Ibda3 Digital",
+    ] : [
+      "agence web Marrakech", "création site web Maroc", "développement application mobile",
+      "e-commerce Maroc", "SEO Maroc", "agence digitale Marrakech",
+      "création site internet Marrakech", "Ibda3 Digital",
     ],
     authors: [{ name: "Ibda3 Digital" }],
     creator: "Ibda3 Digital",
