@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { FaGithub, FaExternalLinkAlt } from "react-icons/fa";
+import { Link } from "@/i18n/navigation";
 import { FadeIn, StaggerContainer, StaggerItem, motion, AnimatePresence } from "@/components/motion";
 
 type Category = "all" | "web" | "app" | "plugin";
@@ -11,10 +12,10 @@ type Category = "all" | "web" | "app" | "plugin";
 const BLUR_PLACEHOLDER = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGZpbHRlciBpZD0iYiI+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMTIiLz48L2ZpbHRlcj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzFhMWEyYSIgZmlsdGVyPSJ1cmwoI2IpIi8+PC9zdmc+";
 
 const projects = [
-  { id: 7, key: "project7", category: "web", url: "https://terrene.webyms.com/", image: "/projects/terrene.jpg", tag: "Architecture studio" },
-  { id: 8, key: "project8", category: "app", url: "https://victory-path-beta.vercel.app/login", image: "/projects/victory-path-v2.jpg", tag: "Web app" },
-  { id: 9, key: "project9", category: "web", url: "https://goudoukh-luxury-cars.vercel.app/", image: "/projects/goudoukh.png", tag: "Luxury car rental" },
-  { id: 10, key: "project10", category: "web", url: "https://tannour.vercel.app/", image: "/projects/tannour.png", tag: "E-commerce" },
+  { id: 9, key: "project9", category: "web", url: "https://goudoukh-luxury-cars.vercel.app/", image: "/projects/goudoukh.png", tag: "Luxury car rental", caseStudy: "goudoukh" },
+  { id: 10, key: "project10", category: "web", url: "https://tannour.vercel.app/", image: "/projects/tannour.png", tag: "E-commerce", caseStudy: "tannour" },
+  { id: 7, key: "project7", category: "web", url: "https://terrene.webyms.com/", image: "/projects/terrene.jpg", tag: "Architecture studio", caseStudy: "terrene" },
+  { id: 8, key: "project8", category: "app", url: "https://victory-path-beta.vercel.app/login", image: "/projects/victory-path-v2.jpg", tag: "Web app", caseStudy: "victory-path" },
 ];
 
 export default function PortfolioPage() {
@@ -85,10 +86,9 @@ export default function PortfolioPage() {
             <AnimatePresence mode="popLayout">
               {filtered.map((project, index) => {
                 const tags = t(`${project.key}_tags`).split(",").map((tag) => tag.trim());
-                const href = project.url || "#";
                 const imgSrc = project.image || "";
                 return (
-                  <motion.a
+                  <motion.div
                     key={project.key}
                     layout
                     initial={{ opacity: 0, scale: 0.94, y: 16 }}
@@ -96,44 +96,54 @@ export default function PortfolioPage() {
                     exit={{ opacity: 0, scale: 0.94, y: -8 }}
                     transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1], delay: index * 0.055 }}
                     whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="group border border-line rounded-2xl overflow-hidden bg-surface-2 hover:border-primary/30 transition-[border-color] flex flex-col"
                   >
-                    <div className="relative h-48 md:h-56 bg-background overflow-hidden">
-                      <Image
-                        src={imgSrc}
-                        alt={t(`${project.key}_title`)}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        placeholder="blur"
-                        blurDataURL={BLUR_PLACEHOLDER}
-                      />
-                    </div>
-                    <div className="p-6 flex flex-col flex-1 gap-3">
-                      <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-primary">
-                        ▸ {project.tag}
-                      </span>
-                      <h3 className="font-serif text-2xl md:text-3xl text-foreground">
-                        {t(`${project.key}_title`)}
-                      </h3>
-                      <p className="text-sm text-text-muted leading-relaxed">
-                        {t(`${project.key}_desc`)}
-                      </p>
-                      <div className="mt-auto pt-4 flex items-center justify-between">
-                        <span className="font-mono text-xs tracking-wider text-text-muted">
-                          {tags.join(" · ")}
-                        </span>
-                        {project.url ? (
-                          <FaExternalLinkAlt className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
-                        ) : (
-                          <FaGithub className="w-5 h-5 text-text-muted group-hover:text-primary transition-colors" />
-                        )}
+                    <Link href={`/portfolio/${project.caseStudy}`} className="flex flex-col flex-1">
+                      <div className="relative h-48 md:h-56 bg-background overflow-hidden">
+                        <Image
+                          src={imgSrc}
+                          alt={t(`${project.key}_title`)}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          placeholder="blur"
+                          blurDataURL={BLUR_PLACEHOLDER}
+                        />
                       </div>
-                    </div>
-                  </motion.a>
+                      <div className="p-6 flex flex-col flex-1 gap-3">
+                        <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-primary">
+                          ▸ {project.tag}
+                        </span>
+                        <h3 className="font-serif text-2xl md:text-3xl text-foreground">
+                          {t(`${project.key}_title`)}
+                        </h3>
+                        <p className="text-sm text-text-muted leading-relaxed">
+                          {t(`${project.key}_desc`)}
+                        </p>
+                        <div className="mt-auto pt-4 flex items-center justify-between">
+                          <span className="font-mono text-xs tracking-wider text-text-muted">
+                            {tags.join(" · ")}
+                          </span>
+                          <span className="text-xs font-mono tracking-wider text-text-muted group-hover:text-primary transition-colors">
+                            {t("view_case_study")} →
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                    {project.url && (
+                      <div className="px-6 pb-4">
+                        <a
+                          href={project.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-mono tracking-wider text-text-muted hover:text-primary transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <FaExternalLinkAlt className="w-3 h-3" /> {t("live_site")}
+                        </a>
+                      </div>
+                    )}
+                  </motion.div>
                 );
               })}
             </AnimatePresence>

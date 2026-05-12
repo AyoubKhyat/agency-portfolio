@@ -65,6 +65,11 @@
   --font-mono: var(--font-jetbrains);
 }
 
+html[dir="rtl"] {
+  --font-sans: var(--font-arabic), var(--font-inter);
+  --font-serif: var(--font-arabic), var(--font-instrument);
+}
+
 html {
   overflow-x: hidden;
 }
