@@ -4,7 +4,7 @@ const BASE_URL = "https://ibda3-digital.vercel.app";
 const locales = ["fr", "en", "ar"];
 const pages = ["", "/services", "/portfolio", "/blog", "/about", "/contact"];
 const serviceSlugs = ["web", "ecommerce", "mobile", "seo", "maintenance"];
-const caseStudySlugs = ["hammam-nour", "goudoukh", "tannour", "terrene", "victory-path"];
+const caseStudySlugs = ["hammam-nour", "goudoukh", "tannour", "terrene", "victory-path", "aylani-parfums"];
 
 function entry(
   path: string,

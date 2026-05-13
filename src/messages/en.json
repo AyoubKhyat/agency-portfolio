@@ -211,6 +211,9 @@
     "project11_title": "Hammam Nour",
     "project11_desc": "Luxury spa and traditional Moroccan hammam booking platform in the heart of Marrakech's medina with services, gallery and online reservations.",
     "project11_tags": "Next.js,React,Booking,Wellness",
+    "project12_title": "Aylani Parfums",
+    "project12_desc": "Luxury fragrance e-commerce platform targeting the Moroccan market with curated perfume collections, WhatsApp ordering and an elegant shopping experience.",
+    "project12_tags": "Next.js,React,E-commerce,Luxury",
     "view_case_study": "View Case Study",
     "live_site": "Live Site"
   },
@@ -501,6 +504,28 @@
     "victory-path_result2_value": "100%",
     "victory-path_result2_label": "RTL coverage",
     "victory-path_result3_value": "PWA",
-    "victory-path_result3_label": "Offline capable"
+    "victory-path_result3_label": "Offline capable",
+
+    "aylani-parfums_title": "Aylani Parfums",
+    "aylani-parfums_tagline": "Exceptional fragrances, curated for the Moroccan market.",
+    "aylani-parfums_meta_desc": "Case study: How we built a luxury perfume e-commerce platform for Aylani Parfums with curated collections, WhatsApp ordering and an elegant shopping experience.",
+    "aylani-parfums_client": "Aylani Parfums",
+    "aylani-parfums_industry": "E-commerce / Luxury Fragrances",
+    "aylani-parfums_challenge": "Aylani Parfums needed a digital storefront that conveys the exclusivity and sophistication of their curated fragrance collections. They wanted a seamless browsing experience with a WhatsApp-first ordering model adapted to the Moroccan market.",
+    "aylani-parfums_solution": "We designed a luxurious, minimalist e-commerce platform that puts the fragrances center stage. A refined white and gold aesthetic, high-quality product imagery and smooth category navigation create a premium feel, while WhatsApp integration provides direct, personalized customer service.",
+    "aylani-parfums_step1_title": "Brand & UX Strategy",
+    "aylani-parfums_step1_desc": "Defined the luxury visual identity — clean typography, soft palette and generous whitespace. Mapped the product catalog and customer journey from discovery to WhatsApp order.",
+    "aylani-parfums_step2_title": "Design & Development",
+    "aylani-parfums_step2_desc": "Built the platform with Next.js and React, featuring product cards with availability status, category filters (women/men), and a hero section showcasing hero fragrances.",
+    "aylani-parfums_step3_title": "Launch & Social Integration",
+    "aylani-parfums_step3_desc": "Integrated WhatsApp commerce for direct ordering, connected Instagram for social proof, optimized for mobile and deployed on Vercel for fast global delivery.",
+    "aylani-parfums_features": "Curated product catalog with categories,WhatsApp-first ordering system,Product cards with size and pricing,Customer testimonials section,Instagram social integration,Mobile-optimized shopping experience",
+    "aylani-parfums_tech": "Next.js,React,Tailwind CSS,Vercel",
+    "aylani-parfums_result1_value": "2",
+    "aylani-parfums_result1_label": "Product categories",
+    "aylani-parfums_result2_value": "<2s",
+    "aylani-parfums_result2_label": "Load time",
+    "aylani-parfums_result3_value": "100%",
+    "aylani-parfums_result3_label": "Mobile-optimized"
   }
 }
