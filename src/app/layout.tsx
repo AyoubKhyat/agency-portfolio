@@ -56,17 +56,15 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}})()`,
-          }}
-        />
+      <body className="min-h-full flex flex-col">
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`(function(){try{var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}})();`}
+        </Script>
+        {children}
         <Script id="ga-consent-gate" strategy="afterInteractive">
           {`(function(){try{if(localStorage.getItem('cookie-consent')==='declined')return;var s=document.createElement('script');s.src='https://www.googletagmanager.com/gtag/js?id=G-PK5HSDWHYM';s.async=true;document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-PK5HSDWHYM');}catch(e){}})();`}
         </Script>
-      </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      </body>
     </html>
   );
 }

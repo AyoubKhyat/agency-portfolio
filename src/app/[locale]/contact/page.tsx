@@ -118,11 +118,29 @@ export default function ContactPage() {
     }
 
     try {
-      await emailjs.sendForm(serviceId, templateId, formRef.current, { publicKey });
-      setStatus("success");
-      formRef.current.reset();
-      setErrors({});
-      setTouched({});
+      const formData = new FormData(formRef.current);
+      const [emailResult] = await Promise.allSettled([
+        emailjs.sendForm(serviceId, templateId, formRef.current, { publicKey }),
+        fetch("/api/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: formData.get("fullName"),
+            email: formData.get("email"),
+            phone: formData.get("phone") || undefined,
+            subject: formData.get("subject"),
+            message: formData.get("message"),
+          }),
+        }),
+      ]);
+      if (emailResult.status === "fulfilled") {
+        setStatus("success");
+        formRef.current.reset();
+        setErrors({});
+        setTouched({});
+      } else {
+        setStatus("error");
+      }
     } catch {
       setStatus("error");
     }

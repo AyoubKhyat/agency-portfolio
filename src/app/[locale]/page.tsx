@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import LogoCarousel from "@/components/LogoCarousel";
 import Testimonials from "@/components/Testimonials";
-import ClientStrip from "@/components/ClientStrip";
+import { getVisibleProjects } from "@/lib/dal";
 
 const CinematicHero = dynamic(() => import("@/components/CinematicHero"));
 const ServicesScroll = dynamic(() => import("@/components/ServicesScroll"));
@@ -26,10 +25,15 @@ export async function generateMetadata({
   };
 }
 
-export default function HomePage() {
-  const t = useTranslations("Home");
-  const sTranslations = useTranslations("Services");
-  const about = useTranslations("About");
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Home" });
+  const sTranslations = await getTranslations({ locale, namespace: "Services" });
+  const about = await getTranslations({ locale, namespace: "About" });
 
   const services = [
     { key: "web", num: "01", title: sTranslations("web_title"), desc: sTranslations("web_desc") },
@@ -46,26 +50,15 @@ export default function HomePage() {
     { value: 24, suffix: "/7", label: t("stats_support") },
   ];
 
-  const products = [
-    { title: "Hammam Nour", link: "https://hammam-nour.vercel.app/", thumbnail: "/projects/hammam-nour.webp" },
-    { title: "Goudoukh Luxury Cars", link: "https://goudoukh-luxury-cars.vercel.app/", thumbnail: "/projects/goudoukh.webp" },
-    { title: "Tannour", link: "https://tannour.vercel.app/", thumbnail: "/projects/tannour.webp" },
-    { title: "Victory Path", link: "https://victory-path-beta.vercel.app/login", thumbnail: "/projects/victory-path-v2.webp" },
-    { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.webp" },
-    { title: "Aylani Parfums", link: "https://aylani-parfums.vercel.app", thumbnail: "/projects/aylani-parfums.webp" },
-    { title: "Hammam Nour", link: "https://hammam-nour.vercel.app/", thumbnail: "/projects/hammam-nour.webp" },
-    { title: "Goudoukh Luxury Cars", link: "https://goudoukh-luxury-cars.vercel.app/", thumbnail: "/projects/goudoukh.webp" },
-    { title: "Tannour", link: "https://tannour.vercel.app/", thumbnail: "/projects/tannour.webp" },
-    { title: "Victory Path", link: "https://victory-path-beta.vercel.app/login", thumbnail: "/projects/victory-path-v2.webp" },
-    { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.webp" },
-    { title: "Aylani Parfums", link: "https://aylani-parfums.vercel.app", thumbnail: "/projects/aylani-parfums.webp" },
-    { title: "Hammam Nour", link: "https://hammam-nour.vercel.app/", thumbnail: "/projects/hammam-nour.webp" },
-    { title: "Goudoukh Luxury Cars", link: "https://goudoukh-luxury-cars.vercel.app/", thumbnail: "/projects/goudoukh.webp" },
-    { title: "Tannour", link: "https://tannour.vercel.app/", thumbnail: "/projects/tannour.webp" },
-    { title: "Victory Path", link: "https://victory-path-beta.vercel.app/login", thumbnail: "/projects/victory-path-v2.webp" },
-    { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.webp" },
-    { title: "Aylani Parfums", link: "https://aylani-parfums.vercel.app", thumbnail: "/projects/aylani-parfums.webp" },
-  ];
+  const dbProjects = await getVisibleProjects(locale);
+  const baseProducts = dbProjects
+    .filter((p) => p.image && p.image.startsWith("/"))
+    .map((p) => ({
+      title: p.title,
+      link: p.url,
+      thumbnail: p.image,
+    }));
+  const products = [...baseProducts, ...baseProducts, ...baseProducts];
 
   return (
     <>
