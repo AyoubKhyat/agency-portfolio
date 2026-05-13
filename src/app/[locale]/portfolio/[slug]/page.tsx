@@ -7,7 +7,7 @@ import { HiOutlineCheck } from "react-icons/hi2";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 
-const SLUGS = ["hammam-nour", "goudoukh", "tannour", "terrene", "victory-path"] as const;
+const SLUGS = ["hammam-nour", "goudoukh", "tannour", "terrene", "victory-path", "aylani-parfums"] as const;
 type CaseStudySlug = (typeof SLUGS)[number];
 
 const BASE_URL = "https://ibda3-digital.vercel.app";
@@ -18,6 +18,7 @@ const PROJECT_DATA: Record<CaseStudySlug, { image: string; url: string }> = {
   tannour: { image: "/projects/tannour.webp", url: "https://tannour.vercel.app/" },
   terrene: { image: "/projects/terrene.webp", url: "https://terrene.webyms.com/" },
   "victory-path": { image: "/projects/victory-path-v2.webp", url: "https://victory-path-beta.vercel.app/login" },
+  "aylani-parfums": { image: "/projects/aylani-parfums.webp", url: "https://aylani-parfums.vercel.app" },
 };
 
 function CaseStudyJsonLd({ locale, slug, name, description }: { locale: string; slug: string; name: string; description: string }) {

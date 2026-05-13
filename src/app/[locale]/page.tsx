@@ -52,16 +52,19 @@ export default function HomePage() {
     { title: "Tannour", link: "https://tannour.vercel.app/", thumbnail: "/projects/tannour.webp" },
     { title: "Victory Path", link: "https://victory-path-beta.vercel.app/login", thumbnail: "/projects/victory-path-v2.webp" },
     { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.webp" },
+    { title: "Aylani Parfums", link: "https://aylani-parfums.vercel.app", thumbnail: "/projects/aylani-parfums.webp" },
     { title: "Hammam Nour", link: "https://hammam-nour.vercel.app/", thumbnail: "/projects/hammam-nour.webp" },
     { title: "Goudoukh Luxury Cars", link: "https://goudoukh-luxury-cars.vercel.app/", thumbnail: "/projects/goudoukh.webp" },
     { title: "Tannour", link: "https://tannour.vercel.app/", thumbnail: "/projects/tannour.webp" },
     { title: "Victory Path", link: "https://victory-path-beta.vercel.app/login", thumbnail: "/projects/victory-path-v2.webp" },
     { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.webp" },
+    { title: "Aylani Parfums", link: "https://aylani-parfums.vercel.app", thumbnail: "/projects/aylani-parfums.webp" },
     { title: "Hammam Nour", link: "https://hammam-nour.vercel.app/", thumbnail: "/projects/hammam-nour.webp" },
     { title: "Goudoukh Luxury Cars", link: "https://goudoukh-luxury-cars.vercel.app/", thumbnail: "/projects/goudoukh.webp" },
     { title: "Tannour", link: "https://tannour.vercel.app/", thumbnail: "/projects/tannour.webp" },
     { title: "Victory Path", link: "https://victory-path-beta.vercel.app/login", thumbnail: "/projects/victory-path-v2.webp" },
     { title: "Terrene Studio", link: "https://terrene.webyms.com/", thumbnail: "/projects/terrene.webp" },
+    { title: "Aylani Parfums", link: "https://aylani-parfums.vercel.app", thumbnail: "/projects/aylani-parfums.webp" },
   ];
 
   return (

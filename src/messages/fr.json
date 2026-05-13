@@ -211,6 +211,9 @@
     "project11_title": "Hammam Nour",
     "project11_desc": "Plateforme de réservation pour spa de luxe et hammam marocain traditionnel au cœur de la médina de Marrakech avec services, galerie et réservations en ligne.",
     "project11_tags": "Next.js,React,Réservation,Bien-être",
+    "project12_title": "Aylani Parfums",
+    "project12_desc": "Plateforme e-commerce de parfums de luxe pour le marché marocain avec collections de fragrances sélectionnées, commande via WhatsApp et expérience d'achat élégante.",
+    "project12_tags": "Next.js,React,E-commerce,Luxe",
     "view_case_study": "Voir l'étude de cas",
     "live_site": "Site en ligne"
   },
@@ -501,6 +504,28 @@
     "victory-path_result2_value": "100%",
     "victory-path_result2_label": "Couverture RTL",
     "victory-path_result3_value": "PWA",
-    "victory-path_result3_label": "Capable hors ligne"
+    "victory-path_result3_label": "Capable hors ligne",
+
+    "aylani-parfums_title": "Aylani Parfums",
+    "aylani-parfums_tagline": "Des fragrances d'exception, sélectionnées pour le marché marocain.",
+    "aylani-parfums_meta_desc": "Étude de cas : Comment nous avons créé une plateforme e-commerce de parfums de luxe pour Aylani Parfums avec collections sélectionnées, commande WhatsApp et expérience d'achat élégante.",
+    "aylani-parfums_client": "Aylani Parfums",
+    "aylani-parfums_industry": "E-commerce / Parfums de Luxe",
+    "aylani-parfums_challenge": "Aylani Parfums avait besoin d'une vitrine digitale qui transmette l'exclusivité et la sophistication de leurs collections de fragrances sélectionnées. Ils voulaient une expérience de navigation fluide avec un modèle de commande WhatsApp adapté au marché marocain.",
+    "aylani-parfums_solution": "Nous avons conçu une plateforme e-commerce luxueuse et minimaliste qui met les fragrances en vedette. Une esthétique blanche et dorée raffinée, des images produits de haute qualité et une navigation fluide par catégorie créent une expérience premium, tandis que l'intégration WhatsApp offre un service client direct et personnalisé.",
+    "aylani-parfums_step1_title": "Stratégie Marque & UX",
+    "aylani-parfums_step1_desc": "Définition de l'identité visuelle luxe — typographie épurée, palette douce et espaces blancs généreux. Cartographie du catalogue produits et du parcours client de la découverte à la commande WhatsApp.",
+    "aylani-parfums_step2_title": "Design & Développement",
+    "aylani-parfums_step2_desc": "Construction de la plateforme avec Next.js et React, incluant les fiches produits avec statut de disponibilité, filtres par catégorie (femme/homme) et section héro mettant en avant les fragrances phares.",
+    "aylani-parfums_step3_title": "Lancement & Intégration Sociale",
+    "aylani-parfums_step3_desc": "Intégration du commerce WhatsApp pour la commande directe, connexion Instagram pour la preuve sociale, optimisation mobile et déploiement sur Vercel pour une livraison rapide.",
+    "aylani-parfums_features": "Catalogue de produits sélectionnés avec catégories,Système de commande WhatsApp,Fiches produits avec tailles et prix,Section témoignages clients,Intégration sociale Instagram,Expérience d'achat optimisée mobile",
+    "aylani-parfums_tech": "Next.js,React,Tailwind CSS,Vercel",
+    "aylani-parfums_result1_value": "2",
+    "aylani-parfums_result1_label": "Catégories de produits",
+    "aylani-parfums_result2_value": "<2s",
+    "aylani-parfums_result2_label": "Temps de chargement",
+    "aylani-parfums_result3_value": "100%",
+    "aylani-parfums_result3_label": "Optimisé mobile"
   }
 }

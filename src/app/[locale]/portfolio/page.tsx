@@ -17,6 +17,7 @@ const projects = [
   { id: 10, key: "project10", category: "web", url: "https://tannour.vercel.app/", image: "/projects/tannour.webp", tag: "E-commerce", caseStudy: "tannour" },
   { id: 7, key: "project7", category: "web", url: "https://terrene.webyms.com/", image: "/projects/terrene.webp", tag: "Architecture studio", caseStudy: "terrene" },
   { id: 8, key: "project8", category: "app", url: "https://victory-path-beta.vercel.app/login", image: "/projects/victory-path-v2.webp", tag: "Web app", caseStudy: "victory-path" },
+  { id: 12, key: "project12", category: "web", url: "https://aylani-parfums.vercel.app", image: "/projects/aylani-parfums.webp", tag: "E-commerce Parfums", caseStudy: "aylani-parfums" },
 ];
 
 export default function PortfolioPage() {
