@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("admin_users")
+}
+
+model Project {
+  id        String  @id @default(cuid())
+  slug      String  @unique
+  category  String
+  url       String
+  image     String
+  tag       String
+  visible   Boolean @default(true)
+  sortOrder Int     @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  translations ProjectTranslation[]
+
+  @@map("projects")
+}
+
+model ProjectTranslation {
+  id        String @id @default(cuid())
+  projectId String @map("project_id")
+  locale    String
+
+  title String
+  desc  String
+  tags  String
+
+  tagline      String?
+  metaDesc     String? @map("meta_desc")
+  client       String?
+  industry     String?
+  challenge    String?
+  solution     String?
+  step1Title   String? @map("step1_title")
+  step1Desc    String? @map("step1_desc")
+  step2Title   String? @map("step2_title")
+  step2Desc    String? @map("step2_desc")
+  step3Title   String? @map("step3_title")
+  step3Desc    String? @map("step3_desc")
+  features     String?
+  tech         String?
+  result1Value String? @map("result1_value")
+  result1Label String? @map("result1_label")
+  result2Value String? @map("result2_value")
+  result2Label String? @map("result2_label")
+  result3Value String? @map("result3_value")
+  result3Label String? @map("result3_label")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, locale])
+  @@map("project_translations")
+}
+
+model Lead {
+  id       String @id @default(cuid())
+  fullName String @map("full_name")
+  email    String
+  phone    String?
+  subject  String
+  message  String
+  status   String @default("NEW")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  notes LeadNote[]
+
+  @@map("leads")
+}
+
+model LeadNote {
+  id       String   @id @default(cuid())
+  leadId   String   @map("lead_id")
+  content  String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@map("lead_notes")
+}

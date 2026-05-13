@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
+import { getAllProjectSlugs } from "@/lib/dal";
 
 const BASE_URL = "https://ibda3-digital.vercel.app";
 const locales = ["fr", "en", "ar"];
 const pages = ["", "/services", "/portfolio", "/blog", "/about", "/contact"];
 const serviceSlugs = ["web", "ecommerce", "mobile", "seo", "maintenance"];
-const caseStudySlugs = ["hammam-nour", "goudoukh", "tannour", "terrene", "victory-path", "aylani-parfums"];
 
 function entry(
   path: string,
@@ -26,7 +26,7 @@ function entry(
   };
 }
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 
   for (const page of pages) {
@@ -39,7 +39,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     entries.push(entry(`/services/${slug}`, "monthly", 0.85));
   }
 
-  for (const slug of caseStudySlugs) {
+  const projectSlugs = await getAllProjectSlugs();
+  for (const slug of projectSlugs) {
     entries.push(entry(`/portfolio/${slug}`, "monthly", 0.8));
   }
 
