@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { createLead } from "@/lib/dal";
 import { z } from "zod";
 
 const schema = z.object({
@@ -24,9 +24,11 @@ export async function POST(req: Request) {
   }
 
   const { fullName, email, phone, subject, message } = parsed.data;
-  await prisma.lead.create({
-    data: { fullName, email, phone: phone || null, subject, message },
-  });
+  try {
+    await createLead({ fullName, email, phone: phone || undefined, subject, message });
+  } catch {
+    // DB not available — still return success since EmailJS handles delivery
+  }
 
   return NextResponse.json({ success: true }, { status: 201 });
 }
