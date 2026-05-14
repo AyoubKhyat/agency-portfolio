@@ -9,6 +9,10 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
+  if (!prisma) {
+    return NextResponse.json({ error: "Database not available" }, { status: 503 });
+  }
+
   const body = await req.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
