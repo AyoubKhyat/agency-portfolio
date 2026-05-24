@@ -103,12 +103,12 @@ export default function PortfolioGrid({ projects }: { projects: PortfolioProject
                     className="group border border-line rounded-2xl overflow-hidden bg-surface-2 hover:border-primary/30 transition-[border-color] flex flex-col"
                   >
                     <Link href={`/portfolio/${project.slug}`} className="flex flex-col flex-1">
-                      <div className="relative h-48 md:h-56 bg-background overflow-hidden">
+                      <div className="relative h-52 md:h-64 bg-background overflow-hidden">
                         {project.image && project.image.startsWith("/") ? <Image
                           src={project.image}
                           alt={project.title}
                           fill
-                          className="object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                          className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
                           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           placeholder="blur"
                           blurDataURL={BLUR_PLACEHOLDER}

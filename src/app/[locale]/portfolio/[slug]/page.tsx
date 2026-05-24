@@ -138,7 +138,7 @@ export default async function CaseStudyPage({
                 src={project.image}
                 alt={tr.title}
                 fill
-                className="object-cover object-top"
+                className="object-cover object-center"
                 sizes="(max-width: 1280px) 100vw, 1280px"
                 priority
               />
