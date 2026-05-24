@@ -8,7 +8,7 @@ const clients = [
   { name: "Goudoukh Luxury Cars", logo: "/clients/goudoukh.webp", url: "https://goudoukh-luxury-cars.vercel.app/" },
   { name: "Tannour", logo: null, url: "https://tannour.vercel.app/" },
   { name: "Terrene Studio", logo: null, url: "https://terrene.webyms.com/" },
-  { name: "Aylani Parfums", logo: "/clients/aylani-parfums.webp", url: "https://aylani-parfums.vercel.app/" },
+  { name: "Aylani Parfums", logo: null, url: "https://aylani-parfums.vercel.app/" },
   { name: "Luxury Copro", logo: "/clients/luxury-copro.webp", url: "https://luxurycopro.webyms.com/" },
   { name: "Victory Path", logo: null, url: "https://victory-path-beta.vercel.app/" },
 ];
