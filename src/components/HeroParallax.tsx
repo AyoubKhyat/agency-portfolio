@@ -123,7 +123,7 @@ const ProductCard = ({
     <motion.div
       style={{ x: translate }}
       whileHover={{ y: -20 }}
-      className="group/product h-48 md:h-96 w-[16rem] md:w-[30rem] relative flex-shrink-0"
+      className="group/product h-40 md:h-72 w-[20rem] md:w-[36rem] relative flex-shrink-0"
     >
       <a
         href={product.link}
