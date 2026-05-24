@@ -103,7 +103,7 @@ export default function PortfolioGrid({ projects }: { projects: PortfolioProject
                     className="group border border-line rounded-2xl overflow-hidden bg-surface-2 hover:border-primary/30 transition-[border-color] flex flex-col"
                   >
                     <Link href={`/portfolio/${project.slug}`} className="flex flex-col flex-1">
-                      <div className="relative h-52 md:h-64 bg-background overflow-hidden">
+                      <div className="relative aspect-video bg-background overflow-hidden">
                         {project.image && project.image.startsWith("/") ? <Image
                           src={project.image}
                           alt={project.title}
