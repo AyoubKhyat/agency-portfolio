@@ -5,6 +5,7 @@ export const FALLBACK_PROJECTS = [
   { id: "4", slug: "terrene", category: "web", url: "https://terrene.webyms.com/", image: "/projects/terrene.webp", tag: "Architecture studio", sortOrder: 3 },
   { id: "5", slug: "victory-path", category: "app", url: "https://victory-path-beta.vercel.app/login", image: "/projects/victory-path-v2.webp", tag: "Web app", sortOrder: 4 },
   { id: "6", slug: "aylani-parfums", category: "web", url: "https://aylani-parfums.vercel.app", image: "/projects/aylani-parfums.webp", tag: "E-commerce Parfums", sortOrder: 5 },
+  { id: "7", slug: "luxury-copro", category: "web", url: "https://luxurycopro.webyms.com/", image: "/projects/luxury-copro.webp", tag: "Immobilier", sortOrder: 6 },
 ];
 
 export const FALLBACK_SLUGS = FALLBACK_PROJECTS.map((p) => p.slug);

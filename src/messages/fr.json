@@ -214,6 +214,9 @@
     "project12_title": "Aylani Parfums",
     "project12_desc": "Plateforme e-commerce de parfums de luxe pour le marché marocain avec collections de fragrances sélectionnées, commande via WhatsApp et expérience d'achat élégante.",
     "project12_tags": "Next.js,React,E-commerce,Luxe",
+    "project13_title": "Luxury Copro",
+    "project13_desc": "Site vitrine pour un syndic de copropriété et gestionnaire immobilier à Marrakech — gestion de biens, location, achat et vente avec un accompagnement professionnel et transparent.",
+    "project13_tags": "Next.js,React,Immobilier,Copropriété",
     "view_case_study": "Voir l'étude de cas",
     "live_site": "Site en ligne"
   },
@@ -526,6 +529,28 @@
     "aylani-parfums_result2_value": "<2s",
     "aylani-parfums_result2_label": "Temps de chargement",
     "aylani-parfums_result3_value": "100%",
-    "aylani-parfums_result3_label": "Optimisé mobile"
+    "aylani-parfums_result3_label": "Optimisé mobile",
+
+    "luxury-copro_title": "Luxury Copro",
+    "luxury-copro_tagline": "Votre patrimoine, notre expertise — gestion de copropriété à Marrakech.",
+    "luxury-copro_meta_desc": "Étude de cas : Comment nous avons conçu le site vitrine de Luxury Copro, syndic de copropriété et gestionnaire immobilier à Marrakech, avec un design premium et une présentation des résidences gérées.",
+    "luxury-copro_client": "Luxury Copro",
+    "luxury-copro_industry": "Immobilier / Copropriété",
+    "luxury-copro_challenge": "Luxury Copro avait besoin d'une présence digitale qui reflète le professionnalisme et le sérieux de leur activité de syndic de copropriété. Ils voulaient un site qui inspire confiance aux propriétaires et copropriétaires, tout en présentant leurs services immobiliers de manière claire et élégante.",
+    "luxury-copro_solution": "Nous avons créé un site corporate haut de gamme avec une esthétique sombre et raffinée qui transmet la solidité et l'expertise. Un hero immersif avec les résidences gérées, des statistiques impressionnantes (150+ biens, 98% satisfaction, 10+ ans d'expérience) et une navigation fluide entre les services de syndic, location et transaction immobilière.",
+    "luxury-copro_step1_title": "Stratégie & Identité",
+    "luxury-copro_step1_desc": "Analyse du positionnement de Luxury Copro sur le marché immobilier de Marrakech. Définition d'une identité visuelle corporate et premium — palette sombre avec typographie serif élégante, inspirée du secteur immobilier haut de gamme.",
+    "luxury-copro_step2_title": "Design & Développement",
+    "luxury-copro_step2_desc": "Construction du site avec Next.js et un design immersif mettant en avant les résidences gérées. Carrousel interactif des propriétés, sections services structurées et formulaire de contact professionnel avec intégration WhatsApp.",
+    "luxury-copro_step3_title": "Déploiement & SEO",
+    "luxury-copro_step3_desc": "Optimisation SEO local pour Marrakech et le secteur immobilier, déploiement performant, version bilingue français/anglais et optimisation mobile pour les propriétaires en déplacement.",
+    "luxury-copro_features": "Présentation des résidences gérées avec carrousel,Section services détaillée (syndic, location, vente),Statistiques clés en temps réel,Formulaire de contact professionnel,Intégration WhatsApp directe,Site bilingue français/anglais",
+    "luxury-copro_tech": "Next.js,React,Tailwind CSS,Framer Motion,Vercel",
+    "luxury-copro_result1_value": "150+",
+    "luxury-copro_result1_label": "Biens gérés",
+    "luxury-copro_result2_value": "98%",
+    "luxury-copro_result2_label": "Clients satisfaits",
+    "luxury-copro_result3_value": "10+",
+    "luxury-copro_result3_label": "Ans d'expérience"
   }
 }

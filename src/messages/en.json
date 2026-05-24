@@ -214,6 +214,9 @@
     "project12_title": "Aylani Parfums",
     "project12_desc": "Luxury fragrance e-commerce platform targeting the Moroccan market with curated perfume collections, WhatsApp ordering and an elegant shopping experience.",
     "project12_tags": "Next.js,React,E-commerce,Luxury",
+    "project13_title": "Luxury Copro",
+    "project13_desc": "Corporate website for a property management and real estate company in Marrakech — co-ownership management, rental, buying and selling with professional and transparent guidance.",
+    "project13_tags": "Next.js,React,Real Estate,Property Management",
     "view_case_study": "View Case Study",
     "live_site": "Live Site"
   },
@@ -526,6 +529,28 @@
     "aylani-parfums_result2_value": "<2s",
     "aylani-parfums_result2_label": "Load time",
     "aylani-parfums_result3_value": "100%",
-    "aylani-parfums_result3_label": "Mobile-optimized"
+    "aylani-parfums_result3_label": "Mobile-optimized",
+
+    "luxury-copro_title": "Luxury Copro",
+    "luxury-copro_tagline": "Your heritage, our expertise — property management in Marrakech.",
+    "luxury-copro_meta_desc": "Case study: How we designed the corporate website for Luxury Copro, a co-ownership management and real estate company in Marrakech, with premium design and managed residences showcase.",
+    "luxury-copro_client": "Luxury Copro",
+    "luxury-copro_industry": "Real Estate / Property Management",
+    "luxury-copro_challenge": "Luxury Copro needed a digital presence that reflects the professionalism and reliability of their co-ownership management business. They wanted a website that inspires trust among property owners while presenting their real estate services in a clear and elegant manner.",
+    "luxury-copro_solution": "We created a premium corporate website with a dark, refined aesthetic that conveys solidity and expertise. An immersive hero showcasing managed residences, impressive statistics (150+ properties, 98% satisfaction, 10+ years of experience), and smooth navigation between co-ownership management, rental, and real estate transaction services.",
+    "luxury-copro_step1_title": "Strategy & Identity",
+    "luxury-copro_step1_desc": "Analyzed Luxury Copro's positioning in the Marrakech real estate market. Defined a corporate, premium visual identity — dark palette with elegant serif typography inspired by the upscale property sector.",
+    "luxury-copro_step2_title": "Design & Development",
+    "luxury-copro_step2_desc": "Built the site with Next.js and an immersive design highlighting managed residences. Interactive property carousel, structured service sections, and professional contact form with WhatsApp integration.",
+    "luxury-copro_step3_title": "Deployment & SEO",
+    "luxury-copro_step3_desc": "Local SEO optimization for Marrakech and the real estate sector, high-performance deployment, bilingual French/English version, and mobile optimization for property owners on the go.",
+    "luxury-copro_features": "Managed residences showcase with carousel,Detailed service sections (management, rental, sales),Key statistics in real time,Professional contact form,Direct WhatsApp integration,Bilingual French/English website",
+    "luxury-copro_tech": "Next.js,React,Tailwind CSS,Framer Motion,Vercel",
+    "luxury-copro_result1_value": "150+",
+    "luxury-copro_result1_label": "Properties managed",
+    "luxury-copro_result2_value": "98%",
+    "luxury-copro_result2_label": "Client satisfaction",
+    "luxury-copro_result3_value": "10+",
+    "luxury-copro_result3_label": "Years of experience"
   }
 }

@@ -73,9 +73,10 @@ src/
 │               ├── [id]/route.ts# GET detail, PATCH status
 │               └── [id]/notes/  # POST add note
 ├── lib/
-│   ├── prisma.ts                # Singleton PrismaClient with better-sqlite3 adapter
+│   ├── prisma.ts                # Singleton PrismaClient with better-sqlite3 adapter (nullable)
 │   ├── auth.ts                  # JWT auth: sign/verify token, session cookies
-│   └── dal.ts                   # Data Access Layer (all DB queries)
+│   ├── dal.ts                   # Data Access Layer (all DB queries + fallback when no DB)
+│   └── fallback-projects.ts     # Hardcoded project data for Vercel (no SQLite)
 ├── components/
 │   ├── PortfolioGrid.tsx        # Client component: filter + animated grid (data from server)
 │   ├── Navbar.tsx               # Sticky nav with mobile menu + CTA button
@@ -104,6 +105,7 @@ src/
 | 4 | Terrene Studio | Web | [Live](https://terrene.webyms.com/) |
 | 5 | Victory Path | App | [Live](https://victory-path-beta.vercel.app/login) |
 | 6 | Aylani Parfums | Web / E-commerce | [Live](https://aylani-parfums.vercel.app) |
+| 7 | Luxury Copro | Web / Real Estate | [Live](https://luxurycopro.webyms.com/) |
 
 ## Commands
 ```bash
@@ -168,6 +170,7 @@ npx tsx prisma/seed.ts         # Seed DB with existing projects + admin user
 - [x] Contact form saves leads to DB alongside EmailJS
 - [x] Sitemap dynamically queries project slugs from DB
 - [x] Drag-and-drop image upload with auto WebP conversion
+- [x] Graceful fallback when DB unavailable (Vercel shows projects from JSON translations)
 - [ ] Create a pitch deck in Claude Design for client meetings
 
 ## Changelog
@@ -304,3 +307,11 @@ npx tsx prisma/seed.ts         # Seed DB with existing projects + admin user
     - Contact form: dual submission (EmailJS + DB lead creation)
   - Fixed Next.js 16 script placement (theme init in body with beforeInteractive)
   - Protected next/image from empty/invalid src paths
+- **2026-05-14** — Vercel fallback system
+  - Created `src/lib/fallback-projects.ts` with hardcoded project data for DB-less deployments
+  - Updated DAL (`src/lib/dal.ts`) with fallback logic:
+    - `getVisibleProjects()` returns fallback projects with next-intl translations when no DB
+    - `getProjectBySlug()` builds full case study data from CaseStudy translation namespace
+    - `getAllProjectSlugs()` returns hardcoded slug list when no DB
+  - Key mapping bridges fallback slugs to translation keys (e.g. `hammam-nour` → `project11`)
+  - Vercel deployment now shows all 6 projects on portfolio + home page without SQLite
