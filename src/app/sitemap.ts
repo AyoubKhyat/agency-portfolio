@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAllProjectSlugs } from "@/lib/dal";
+import { getAllPostSlugs } from "@/lib/blog";
 
 const BASE_URL = "https://ibda3-digital.vercel.app";
 const locales = ["fr", "en", "ar"];
@@ -42,6 +43,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const projectSlugs = await getAllProjectSlugs();
   for (const slug of projectSlugs) {
     entries.push(entry(`/portfolio/${slug}`, "monthly", 0.8));
+  }
+
+  for (const slug of getAllPostSlugs("fr")) {
+    entries.push(entry(`/blog/${slug}`, "monthly", 0.75));
   }
 
   return entries;

@@ -6,6 +6,7 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import LogoCarousel from "@/components/LogoCarousel";
 import Testimonials from "@/components/Testimonials";
+import ClientLogos from "@/components/ClientLogos";
 import { getVisibleProjects } from "@/lib/dal";
 
 const CinematicHero = dynamic(() => import("@/components/CinematicHero"));
@@ -121,9 +122,8 @@ export default async function HomePage({
         subtitle={t("parallax_subtitle")}
       />
 
-      {/* Client Projects — hidden for now
-      <ClientStrip title={t("clients_title")} />
-      */}
+      {/* Client Logos */}
+      <ClientLogos title={t("clients_title")} />
 
       {/* Process */}
       <section className="relative py-24 bg-background overflow-hidden">
