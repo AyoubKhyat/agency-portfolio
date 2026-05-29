@@ -232,11 +232,11 @@ function ProspectingContent() {
       else if (!phone.startsWith("212") && !phone.startsWith("33")) phone = "212" + phone;
       window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
     } else if (p.instagram) {
+      const handle = p.instagram.replace(/^@/, "");
+      window.open(`https://ig.me/m/${handle}`, "_blank");
       try { await navigator.clipboard.writeText(msg); } catch { /* clipboard blocked */ }
       setCopied(p.id);
       setTimeout(() => setCopied(null), 3000);
-      const handle = p.instagram.replace(/^@/, "");
-      window.open(`https://ig.me/m/${handle}`, "_blank");
     } else {
       alert("No phone or Instagram for this prospect.");
       return;
@@ -268,11 +268,11 @@ function ProspectingContent() {
       else if (!phone.startsWith("212") && !phone.startsWith("33")) phone = "212" + phone;
       window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
     } else if (p.instagram) {
+      const handle = p.instagram.replace(/^@/, "");
+      window.open(`https://ig.me/m/${handle}`, "_blank");
       try { await navigator.clipboard.writeText(msg); } catch {}
       setCopied(p.id);
       setTimeout(() => setCopied(null), 3000);
-      const handle = p.instagram.replace(/^@/, "");
-      window.open(`https://ig.me/m/${handle}`, "_blank");
     } else {
       return;
     }
