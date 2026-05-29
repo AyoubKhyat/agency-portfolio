@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
-import pg from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import { PrismaNeon } from "@prisma/adapter-neon";
+
+neonConfig.useSecureWebSocket = true;
 
 let _prisma: PrismaClient | null | undefined;
 
@@ -13,8 +15,9 @@ function getClient(): PrismaClient | null {
     return null;
   }
   try {
-    const pool = new pg.Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
-    const adapter = new PrismaPg(pool);
+    const pool = new Pool({ connectionString: url });
+    // @ts-expect-error PrismaNeon accepts Pool at runtime
+    const adapter = new PrismaNeon(pool);
     _prisma = new PrismaClient({ adapter });
     return _prisma;
   } catch (e) {
