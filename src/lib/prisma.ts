@@ -1,16 +1,15 @@
 import { PrismaClient } from "@prisma/client";
+import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null };
 
 function createClient(): PrismaClient | null {
   const url = process.env.DATABASE_URL;
-  if (!url) {
-    console.error("[prisma] DATABASE_URL not set");
-    return null;
-  }
+  if (!url) return null;
   try {
-    const adapter = new PrismaPg({ connectionString: url });
+    const pool = new Pool({ connectionString: url });
+    const adapter = new PrismaPg(pool);
     return new PrismaClient({ adapter });
   } catch (e) {
     console.error("[prisma] Failed to create client:", e);
