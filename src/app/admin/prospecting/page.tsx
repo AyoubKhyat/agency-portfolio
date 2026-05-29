@@ -70,6 +70,35 @@ const TEMPLATES: Record<string, MsgTemplate[]> = {
     (ig, f) => `Salam !${ig ? ` Belle page @${ig}${f} !` : ""} Je suis développeur web à Marrakech. Les couples qui organisent leur mariage cherchent "traiteur Marrakech" sur Google — un site pro vous positionnerait en premier. Voici notre travail : https://ibda3-digital.vercel.app`,
     (ig, f) => `Bonjour,${ig ? ` j'ai découvert @${ig}${f}, quel savoir-faire !` : ""} Je suis Ayoub d'Ibda3 Digital. Imaginez un site où vos clients parcourent vos formules, voient vos événements passés et demandent un devis en 2 clics. On peut créer ça. Un aperçu : https://ibda3-digital.vercel.app`,
   ],
+  "Spa/Hammam": [
+    (ig, f) => `Bonjour ! Ayoub d'Ibda3 Digital ici.${ig ? ` Votre espace sur @${ig}${f} a l'air sublime !` : ""} Saviez-vous que la majorité des touristes cherchent "hammam Marrakech" ou "spa Marrakech" sur Google ? Un site avec vos soins, photos et réservation en ligne vous placerait en tête. Notre portfolio : https://ibda3-digital.vercel.app`,
+    (ig, f) => `Salam !${ig ? ` J'ai découvert @${ig}${f}, quelle atmosphère !` : ""} Je suis développeur web à Marrakech. Un beau site avec galerie, tarifs et réservation directe pourrait vous amener des clients sans passer par les plateformes. On en discute ? https://ibda3-digital.vercel.app`,
+    (ig, f) => `Hello !${ig ? ` @${ig}${f}, les photos donnent envie d'y aller tout de suite !` : ""} Je suis Ayoub d'Ibda3 Digital. Imaginez vos clients qui réservent leur hammam + massage en 2 clics depuis votre site. On peut créer ça. Voici notre travail : https://ibda3-digital.vercel.app`,
+  ],
+  "Coach Sportif": [
+    (ig, f) => `Salut ! Je suis Ayoub d'Ibda3 Digital.${ig ? ` J'ai vu tes résultats sur @${ig}${f}, impressionnant !` : ""} Un site perso avec tes programmes, témoignages et formulaire de réservation c'est ce qui fait la différence avec les autres coachs. Ça t'intéresse ? https://ibda3-digital.vercel.app`,
+    (ig, f) => `Hey !${ig ? ` @${ig}${f}, tes transformations parlent d'elles-mêmes !` : ""} Je suis développeur web à Marrakech. Un site pro avec tes offres, planning et paiement en ligne pourrait t'amener des clients qui cherchent "coach sportif Marrakech" sur Google. On en parle ? https://ibda3-digital.vercel.app`,
+    (ig, f) => `Salam !${ig ? ` Ton contenu sur @${ig}${f} est top !` : ""} Je suis Ayoub d'Ibda3 Digital. Quand quelqu'un tape "personal trainer Marrakech" sur Google, est-ce qu'il te trouve ? Un site perso règle ça. Voici ce qu'on fait : https://ibda3-digital.vercel.app`,
+  ],
+  "Centre de Formation": [
+    (ig, f) => `Bonjour ! Ayoub d'Ibda3 Digital ici.${ig ? ` J'ai vu votre centre sur @${ig}${f}.` : ""} Un site web avec vos formations, planning, tarifs et inscription en ligne pourrait vous apporter des étudiants qui cherchent sur Google. Notre portfolio : https://ibda3-digital.vercel.app`,
+    (ig, f) => `Salam !${ig ? ` Belle présence sur @${ig}${f} !` : ""} Je suis développeur web à Marrakech. Les parents et étudiants cherchent de plus en plus les formations en ligne — un site pro avec inscription vous démarquerait. On en discute ? https://ibda3-digital.vercel.app`,
+    (ig, f) => `Bonjour,${ig ? ` j'ai découvert @${ig}${f}, super concept !` : ""} Je suis Ayoub d'Ibda3 Digital. Un site avec vos programmes, témoignages et réservation en ligne ferait passer votre centre au niveau supérieur. Voici notre travail : https://ibda3-digital.vercel.app`,
+  ],
+  "Garage Auto": [
+    (ig, f) => `Salam ! Je suis Ayoub d'Ibda3 Digital.${ig ? ` J'ai vu votre garage sur @${ig}${f}, beau travail !` : ""} Un site web avec vos services, tarifs et prise de RDV en ligne pourrait vous ramener des clients qui cherchent "garage Marrakech" sur Google. On en parle ? https://ibda3-digital.vercel.app`,
+    (ig, f) => `Bonjour !${ig ? ` @${ig}${f}, les réalisations sont propres !` : ""} Je suis développeur web à Marrakech. Quand quelqu'un cherche un garage de confiance, il va sur Google. Un site pro vous positionnerait en premier. Voici ce qu'on fait : https://ibda3-digital.vercel.app`,
+  ],
+  "Décoration/Meubles": [
+    (ig, f) => `Bonjour ! Ayoub d'Ibda3 Digital ici.${ig ? ` Votre showroom sur @${ig}${f} est magnifique !` : ""} Un site e-commerce ou catalogue en ligne avec vos créations pourrait attirer des clients au-delà de Marrakech. On en discute ? https://ibda3-digital.vercel.app`,
+    (ig, f) => `Salam !${ig ? ` J'ai vu @${ig}${f}, vos meubles sont superbes !` : ""} Je suis développeur web à Marrakech. Un site avec catalogue, filtres par style et demande de devis pourrait booster vos ventes. Voici notre travail : https://ibda3-digital.vercel.app`,
+    (ig, f) => `Hello !${ig ? ` @${ig}${f}, quel style !` : ""} Je suis Ayoub d'Ibda3 Digital. Les architectes et particuliers cherchent du mobilier en ligne — un site vitrine premium vous donnerait une visibilité nationale. On en parle ? https://ibda3-digital.vercel.app`,
+  ],
+  "Boutique Mode": [
+    (ig, f) => `Salam ! Je suis Ayoub d'Ibda3 Digital.${ig ? ` Votre boutique sur @${ig}${f} a un super style !` : ""} Un site e-commerce avec votre collection, tailles et livraison pourrait multiplier vos ventes au-delà de Marrakech. Ça vous intéresse ? https://ibda3-digital.vercel.app`,
+    (ig, f) => `Bonjour !${ig ? ` J'ai scrollé @${ig}${f}, j'adore le concept !` : ""} Je suis développeur web à Marrakech. Instagram c'est top pour montrer, mais un site e-commerce c'est pour vendre — 24h/24, partout au Maroc. On en parle ? https://ibda3-digital.vercel.app`,
+    (ig, f) => `Hello !${ig ? ` @${ig}${f}, belles pièces !` : ""} Je suis Ayoub d'Ibda3 Digital. Imaginez vos clientes qui commandent en ligne, choisissent la taille et paient directement. Un site e-commerce fait ça. Voici ce qu'on fait : https://ibda3-digital.vercel.app`,
+  ],
 };
 
 const DEFAULT_TEMPLATES: MsgTemplate[] = [
