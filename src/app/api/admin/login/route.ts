@@ -20,16 +20,22 @@ export async function POST(req: Request) {
   }
 
   const { email, password } = parsed.data;
-  const user = await prisma.adminUser.findUnique({ where: { email } });
 
-  if (!user || !(await verifyPassword(password, user.passwordHash))) {
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+  try {
+    const user = await prisma.adminUser.findUnique({ where: { email } });
+
+    if (!user || !(await verifyPassword(password, user.passwordHash))) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+
+    const token = await signToken({ userId: user.id, email: user.email });
+    const cookie = createSessionCookie(token);
+
+    const res = NextResponse.json({ success: true, name: user.name });
+    res.cookies.set(cookie);
+    return res;
+  } catch (e) {
+    console.error("[login] DB error:", e);
+    return NextResponse.json({ error: "Database error", detail: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
-
-  const token = await signToken({ userId: user.id, email: user.email });
-  const cookie = createSessionCookie(token);
-
-  const res = NextResponse.json({ success: true, name: user.name });
-  res.cookies.set(cookie);
-  return res;
 }
