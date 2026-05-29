@@ -243,10 +243,8 @@ function ProspectingContent() {
       openLink(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);
     } else if (p.instagram) {
       const handle = p.instagram.replace(/^@/, "");
+      prompt("Copy this message and paste in Instagram DM:", msg);
       openLink(`https://ig.me/m/${handle}`);
-      try { await navigator.clipboard.writeText(msg); } catch { /* clipboard blocked */ }
-      setCopied(p.id);
-      setTimeout(() => setCopied(null), 3000);
     } else {
       alert("No phone or Instagram for this prospect.");
       return;
@@ -279,10 +277,8 @@ function ProspectingContent() {
       openLink(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);
     } else if (p.instagram) {
       const handle = p.instagram.replace(/^@/, "");
+      prompt("Copy this message and paste in Instagram DM:", msg);
       openLink(`https://ig.me/m/${handle}`);
-      try { await navigator.clipboard.writeText(msg); } catch {}
-      setCopied(p.id);
-      setTimeout(() => setCopied(null), 3000);
     } else {
       return;
     }
