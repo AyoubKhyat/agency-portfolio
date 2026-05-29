@@ -218,6 +218,16 @@ function ProspectingContent() {
 
   const [copied, setCopied] = useState<string | null>(null);
 
+  function openLink(url: string) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
   async function handleSend(p: Prospect) {
     const noteContent = p.notes?.[0]?.content || "";
     const msg = getPersonalizedMessage(p, noteContent);
@@ -230,10 +240,10 @@ function ProspectingContent() {
       let phone = digits;
       if (phone.startsWith("0")) phone = "212" + phone.slice(1);
       else if (!phone.startsWith("212") && !phone.startsWith("33")) phone = "212" + phone;
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+      openLink(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);
     } else if (p.instagram) {
       const handle = p.instagram.replace(/^@/, "");
-      window.open(`https://ig.me/m/${handle}`, "_blank");
+      openLink(`https://ig.me/m/${handle}`);
       try { await navigator.clipboard.writeText(msg); } catch { /* clipboard blocked */ }
       setCopied(p.id);
       setTimeout(() => setCopied(null), 3000);
@@ -266,10 +276,10 @@ function ProspectingContent() {
       let phone = digits;
       if (phone.startsWith("0")) phone = "212" + phone.slice(1);
       else if (!phone.startsWith("212") && !phone.startsWith("33")) phone = "212" + phone;
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+      openLink(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);
     } else if (p.instagram) {
       const handle = p.instagram.replace(/^@/, "");
-      window.open(`https://ig.me/m/${handle}`, "_blank");
+      openLink(`https://ig.me/m/${handle}`);
       try { await navigator.clipboard.writeText(msg); } catch {}
       setCopied(p.id);
       setTimeout(() => setCopied(null), 3000);
