@@ -294,6 +294,17 @@ function ProspectingContent() {
     );
   }
 
+  async function handleMarkReplied(p: Prospect) {
+    await fetch(`/api/admin/prospecting/${p.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "REPONDU" }),
+    });
+    setProspects((prev) =>
+      prev.map((pr) => pr.id === p.id ? { ...pr, status: "REPONDU" } : pr)
+    );
+  }
+
   async function handleMarkNoWhatsApp(p: Prospect) {
     await fetch(`/api/admin/prospecting/${p.id}`, {
       method: "PATCH",
@@ -458,6 +469,15 @@ function ProspectingContent() {
                           {(() => { const d = p.phone?.replace(/\D/g, "") || ""; const land = /^0?5\d{8}$/.test(d) || /^2125\d{8}$/.test(d); return p.phone && !land ? <FaWhatsapp className="w-3.5 h-3.5" /> : <FaInstagram className="w-3.5 h-3.5" />; })()}
                           {copied === p.id ? "Copied! Paste in DM" : p.status === "A_ENVOYER" ? "Send" : "Resend"}
                         </button>
+                        {p.status !== "REPONDU" && p.status !== "CONVERTI" && (
+                          <button
+                            onClick={() => handleMarkReplied(p)}
+                            className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-medium bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20 transition-colors"
+                            title="Mark as Répondu"
+                          >
+                            ✓ Replied
+                          </button>
+                        )}
                         {p.status !== "PAS_DE_WHATSAPP" && (
                           <button
                             onClick={() => handleMarkNoWhatsApp(p)}
