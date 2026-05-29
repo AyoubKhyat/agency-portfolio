@@ -3,18 +3,20 @@
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { HiOutlineFolder, HiOutlineInbox, HiOutlineHome, HiOutlineArrowRightOnRectangle } from "react-icons/hi2";
+import { HiOutlineFolder, HiOutlineInbox, HiOutlineHome, HiOutlineArrowRightOnRectangle, HiOutlineMegaphone } from "react-icons/hi2";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: HiOutlineHome },
   { href: "/admin/projects", label: "Projects", icon: HiOutlineFolder },
   { href: "/admin/leads", label: "Leads", icon: HiOutlineInbox },
+  { href: "/admin/prospecting", label: "Prospecting", icon: HiOutlineMegaphone },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [newLeads, setNewLeads] = useState(0);
+  const [pendingProspects, setPendingProspects] = useState(0);
 
   const isLogin = pathname === "/admin/login";
 
@@ -23,6 +25,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     fetch("/api/admin/leads?status=NEW")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => d && setNewLeads(d.total))
+      .catch(() => {});
+    fetch("/api/admin/prospecting?status=A_ENVOYER")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setPendingProspects(d.total))
       .catch(() => {});
   }, [pathname, isLogin]);
 
@@ -57,6 +63,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {item.label === "Leads" && newLeads > 0 && (
                   <span className="ml-auto bg-violet-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                     {newLeads}
+                  </span>
+                )}
+                {item.label === "Prospecting" && pendingProspects > 0 && (
+                  <span className="ml-auto bg-violet-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    {pendingProspects}
                   </span>
                 )}
               </Link>

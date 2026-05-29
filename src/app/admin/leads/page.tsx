@@ -58,8 +58,9 @@ function LeadsContent() {
           setTotal(data.total);
           setPages(data.pages);
         }
-        setLoading(false);
-      });
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [statusFilter, pageParam, router]);
 
   function navigate(status: string, page = 1) {

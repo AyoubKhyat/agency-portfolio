@@ -1,17 +1,13 @@
 import { PrismaClient } from "@prisma/client";
-import path from "path";
-import fs from "fs";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null };
 
 function createClient(): PrismaClient | null {
+  const url = process.env.DATABASE_URL;
+  if (!url) return null;
   try {
-    const dbPath = path.join(process.cwd(), "dev.db");
-    if (!fs.existsSync(dbPath)) return null;
-
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
-    const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
+    const adapter = new PrismaPg({ connectionString: url });
     return new PrismaClient({ adapter });
   } catch {
     return null;

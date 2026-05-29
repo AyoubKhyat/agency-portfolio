@@ -95,10 +95,10 @@ export default function LeadDetailPage() {
         <select
           value={lead.status}
           onChange={(e) => handleStatusChange(e.target.value)}
-          className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-violet-500"
+          className="px-3 py-1.5 bg-[#1a1a2e] border border-white/10 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-violet-500"
         >
           {STATUSES.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s} className="bg-[#1a1a2e] text-gray-200">{s}</option>
           ))}
         </select>
       </div>

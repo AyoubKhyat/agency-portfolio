@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model AdminUser {
@@ -95,4 +95,35 @@ model LeadNote {
   lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
   @@map("lead_notes")
+}
+
+model Prospect {
+  id           String    @id @default(cuid())
+  name         String
+  phone        String
+  whatsappLink String    @map("whatsapp_link")
+  sector       String
+  neighborhood String    @default("")
+  instagram    String    @default("")
+  hasWebsite   Boolean   @default(false) @map("has_website")
+  priority     Int       @default(2)
+  status       String    @default("A_ENVOYER")
+  sentAt       DateTime? @map("sent_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  notes ProspectNote[]
+
+  @@map("prospects")
+}
+
+model ProspectNote {
+  id         String   @id @default(cuid())
+  prospectId String   @map("prospect_id")
+  content    String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  prospect Prospect @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+
+  @@map("prospect_notes")
 }

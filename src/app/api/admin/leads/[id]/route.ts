@@ -25,7 +25,7 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await req.json();
-  const parsed = z.object({ status: z.enum(["NEW", "READ", "REPLIED", "CONVERTED"]) }).safeParse(body);
+  const parsed = z.object({ status: z.enum(["NEW", "CONTACTED", "QUALIFIED", "CLOSED"]) }).safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
 
   const lead = await updateLeadStatus(id, parsed.data.status);

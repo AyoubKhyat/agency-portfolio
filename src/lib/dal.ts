@@ -299,16 +299,90 @@ export async function addLeadNote(leadId: string, content: string) {
   return db().leadNote.create({ data: { leadId, content } });
 }
 
+// ─── Prospecting ────────────────────────────────────────────────
+
+export async function getProspects(page = 1, status?: string, sector?: string) {
+  const take = 20;
+  const skip = (page - 1) * take;
+  const where: Record<string, unknown> = {};
+  if (status && status !== "ALL") where.status = status;
+  if (sector && sector !== "ALL") where.sector = sector;
+
+  const [prospects, total] = await Promise.all([
+    db().prospect.findMany({ where, orderBy: { createdAt: "desc" }, take, skip, include: { notes: { orderBy: { createdAt: "desc" }, take: 1 } } }),
+    db().prospect.count({ where }),
+  ]);
+
+  return { prospects, total, pages: Math.ceil(total / take) };
+}
+
+export async function getProspectById(id: string) {
+  return db().prospect.findUnique({
+    where: { id },
+    include: { notes: { orderBy: { createdAt: "desc" } } },
+  });
+}
+
+export async function createProspect(data: {
+  name: string;
+  phone: string;
+  whatsappLink?: string;
+  sector: string;
+  neighborhood?: string;
+  instagram?: string;
+  hasWebsite?: boolean;
+  priority?: number;
+  status?: string;
+  sentAt?: Date | null;
+}) {
+  const phone = data.phone.replace(/\D/g, "");
+  const whatsappLink = data.whatsappLink || `https://wa.me/${phone}`;
+  return db().prospect.create({
+    data: {
+      name: data.name,
+      phone: data.phone,
+      whatsappLink,
+      sector: data.sector,
+      neighborhood: data.neighborhood ?? "",
+      instagram: data.instagram ?? "",
+      hasWebsite: data.hasWebsite ?? false,
+      priority: data.priority ?? 2,
+      status: data.status ?? "A_ENVOYER",
+      sentAt: data.sentAt ?? null,
+    },
+  });
+}
+
+export async function updateProspect(id: string, data: Record<string, unknown>) {
+  return db().prospect.update({ where: { id }, data });
+}
+
+export async function deleteProspect(id: string) {
+  return db().prospect.delete({ where: { id } });
+}
+
+export async function updateProspectStatus(id: string, status: string) {
+  const data: Record<string, unknown> = { status };
+  if (status === "ENVOYE") data.sentAt = new Date();
+  return db().prospect.update({ where: { id }, data });
+}
+
+export async function addProspectNote(prospectId: string, content: string) {
+  return db().prospectNote.create({ data: { prospectId, content } });
+}
+
 // ─── Stats ───────────────────────────────────────────────────────
 
 export async function getAdminStats() {
-  const [totalProjects, visibleProjects, totalLeads, newLeads] =
+  const [totalProjects, visibleProjects, totalLeads, newLeads, totalProspects, pendingProspects] =
     await Promise.all([
       db().project.count(),
       db().project.count({ where: { visible: true } }),
       db().lead.count(),
       db().lead.count({ where: { status: "NEW" } }),
+      db().prospect.count(),
+      db().prospect.count({ where: { status: "A_ENVOYER" } }),
     ]);
 
-  return { totalProjects, visibleProjects, totalLeads, newLeads };
+  return { totalProjects, visibleProjects, totalLeads, newLeads, totalProspects, pendingProspects };
 }
