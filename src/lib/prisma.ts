@@ -1,8 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { Pool, neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
-
-neonConfig.useSecureWebSocket = true;
 
 let _prisma: PrismaClient | null | undefined;
 
@@ -15,9 +12,7 @@ function getClient(): PrismaClient | null {
     return null;
   }
   try {
-    const pool = new Pool({ connectionString: url });
-    // @ts-expect-error PrismaNeon accepts Pool at runtime
-    const adapter = new PrismaNeon(pool);
+    const adapter = new PrismaNeon({ connectionString: url });
     _prisma = new PrismaClient({ adapter });
     return _prisma;
   } catch (e) {
