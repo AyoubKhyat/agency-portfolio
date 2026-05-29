@@ -5,11 +5,15 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null }
 
 function createClient(): PrismaClient | null {
   const url = process.env.DATABASE_URL;
-  if (!url) return null;
+  if (!url) {
+    console.error("[prisma] DATABASE_URL not set");
+    return null;
+  }
   try {
     const adapter = new PrismaPg({ connectionString: url });
     return new PrismaClient({ adapter });
-  } catch {
+  } catch (e) {
+    console.error("[prisma] Failed to create client:", e);
     return null;
   }
 }
