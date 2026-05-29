@@ -1,27 +1,37 @@
 import { PrismaClient } from "@prisma/client";
+import pg from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null; initialized: boolean };
+let _prisma: PrismaClient | null | undefined;
 
-function createClient(): PrismaClient | null {
+function getClient(): PrismaClient | null {
+  if (_prisma !== undefined) return _prisma;
+
   const url = process.env.DATABASE_URL;
-  if (!url || url.startsWith("file:")) return null;
+  if (!url || url.startsWith("file:")) {
+    _prisma = null;
+    return null;
+  }
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Pool } = require("pg");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaPg } = require("@prisma/adapter-pg");
-    const pool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
+    const pool = new pg.Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
     const adapter = new PrismaPg(pool);
-    return new PrismaClient({ adapter });
+    _prisma = new PrismaClient({ adapter });
+    return _prisma;
   } catch (e) {
     console.error("[prisma] Failed:", e);
+    _prisma = null;
     return null;
   }
 }
 
-if (!globalForPrisma.initialized) {
-  globalForPrisma.prisma = createClient();
-  globalForPrisma.initialized = true;
-}
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    const client = getClient();
+    if (!client) return undefined;
+    return (client as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});
 
-export const prisma = globalForPrisma.prisma;
+export function hasPrisma(): boolean {
+  return getClient() !== null;
+}

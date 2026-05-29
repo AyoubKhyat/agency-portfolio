@@ -1,9 +1,9 @@
-import { prisma } from "./prisma";
+import { prisma, hasPrisma } from "./prisma";
 import { FALLBACK_PROJECTS, FALLBACK_SLUGS } from "./fallback-projects";
 import { getTranslations } from "next-intl/server";
 
 function db() {
-  if (!prisma) throw new Error("Database not available");
+  if (!hasPrisma()) throw new Error("Database not available");
   return prisma;
 }
 
@@ -47,7 +47,7 @@ function safeT(t: (key: string) => string, key: string): string | null {
 }
 
 export async function getVisibleProjects(locale: string) {
-  if (!prisma) return getFallbackProjects(locale);
+  if (!hasPrisma()) return getFallbackProjects(locale);
   const projects = await prisma.project.findMany({
     where: { visible: true },
     orderBy: { sortOrder: "asc" },
@@ -73,7 +73,7 @@ export async function getVisibleProjects(locale: string) {
 }
 
 export async function getProjectBySlug(slug: string, locale: string) {
-  if (!prisma) return getFallbackSlug(slug, locale);
+  if (!hasPrisma()) return getFallbackSlug(slug, locale);
   const project = await prisma.project.findUnique({
     where: { slug },
     include: {
@@ -135,7 +135,7 @@ async function getFallbackSlug(slug: string, locale: string) {
 }
 
 export async function getAllProjectSlugs() {
-  if (!prisma) return FALLBACK_SLUGS;
+  if (!hasPrisma()) return FALLBACK_SLUGS;
   try {
     const projects = await prisma.project.findMany({
       where: { visible: true },

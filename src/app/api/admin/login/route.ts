@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, hasPrisma } from "@/lib/prisma";
 import { verifyPassword, signToken, createSessionCookie } from "@/lib/auth";
 import { z } from "zod";
 
@@ -9,7 +9,7 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  if (!prisma) {
+  if (!hasPrisma()) {
     return NextResponse.json({ error: "Database not available" }, { status: 503 });
   }
 
