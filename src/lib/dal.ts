@@ -136,12 +136,16 @@ async function getFallbackSlug(slug: string, locale: string) {
 
 export async function getAllProjectSlugs() {
   if (!prisma) return FALLBACK_SLUGS;
-  const projects = await prisma.project.findMany({
-    where: { visible: true },
-    select: { slug: true },
-    orderBy: { sortOrder: "asc" },
-  });
-  return projects.length > 0 ? projects.map((p) => p.slug) : FALLBACK_SLUGS;
+  try {
+    const projects = await prisma.project.findMany({
+      where: { visible: true },
+      select: { slug: true },
+      orderBy: { sortOrder: "asc" },
+    });
+    return projects.length > 0 ? projects.map((p) => p.slug) : FALLBACK_SLUGS;
+  } catch {
+    return FALLBACK_SLUGS;
+  }
 }
 
 export async function getProjectsForAdmin() {

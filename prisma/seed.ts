@@ -1,12 +1,12 @@
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaNeon } from "@prisma/adapter-neon";
 import bcrypt from "bcryptjs";
 import en from "../src/messages/en.json";
 import fr from "../src/messages/fr.json";
 import ar from "../src/messages/ar.json";
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const adapter = new PrismaNeon(process.env.DATABASE_URL!);
 const prisma = new PrismaClient({ adapter });
 
 const PROJECTS = [
