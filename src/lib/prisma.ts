@@ -1,4 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import { Pool } from "@neondatabase/serverless";
+import { PrismaNeon } from "@prisma/adapter-neon";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null; initialized: boolean };
 
@@ -6,12 +8,8 @@ function createClient(): PrismaClient | null {
   const url = process.env.DATABASE_URL;
   if (!url || url.startsWith("file:")) return null;
   try {
-    // Dynamic import to avoid bundling issues - Neon serverless adapter
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Pool } = require("@neondatabase/serverless");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaNeon } = require("@prisma/adapter-neon");
     const pool = new Pool({ connectionString: url });
+    // @ts-expect-error PrismaNeon types expect string but Pool works at runtime
     const adapter = new PrismaNeon(pool);
     return new PrismaClient({ adapter });
   } catch (e) {
