@@ -1,12 +1,12 @@
 "use client";
 
 const COLORS = [
-  "bg-violet-500/20 text-violet-400 border-violet-500/30",
-  "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  "bg-green-500/20 text-green-400 border-green-500/30",
-  "bg-amber-500/20 text-amber-400 border-amber-500/30",
-  "bg-rose-500/20 text-rose-400 border-rose-500/30",
-  "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+  { bg: "bg-violet-100", text: "text-violet-700", border: "border-violet-200" },
+  { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" },
+  { bg: "bg-emerald-100", text: "text-emerald-700", border: "border-emerald-200" },
+  { bg: "bg-amber-100", text: "text-amber-700", border: "border-amber-200" },
+  { bg: "bg-rose-100", text: "text-rose-700", border: "border-rose-200" },
+  { bg: "bg-cyan-100", text: "text-cyan-700", border: "border-cyan-200" },
 ];
 
 function colorForName(name: string) {
@@ -20,21 +20,45 @@ export default function AvatarChip({
   name,
   showName = true,
   size = "sm",
+  onClick,
+  active,
 }: {
   initials: string;
   name: string;
   showName?: boolean;
-  size?: "xs" | "sm" | "md";
+  size?: "xs" | "sm" | "md" | "lg";
+  onClick?: () => void;
+  active?: boolean;
 }) {
   const color = colorForName(name);
-  const sizeClass = size === "xs" ? "w-5 h-5 text-[9px]" : size === "sm" ? "w-6 h-6 text-[10px]" : "w-8 h-8 text-xs";
+  const sizeClasses = {
+    xs: "w-6 h-6 text-[10px]",
+    sm: "w-7 h-7 text-[11px]",
+    md: "w-9 h-9 text-xs",
+    lg: "w-11 h-11 text-sm",
+  };
+
+  const circle = (
+    <span
+      className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-semibold shrink-0 ${color.bg} ${color.text} ${active ? "ring-2 ring-violet-500 ring-offset-2" : ""} ${onClick ? "cursor-pointer hover:scale-110 transition-transform" : ""}`}
+    >
+      {initials}
+    </span>
+  );
+
+  if (onClick) {
+    return (
+      <button onClick={onClick} className="inline-flex items-center gap-2 group" title={name}>
+        {circle}
+        {showName && <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{name}</span>}
+      </button>
+    );
+  }
 
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className={`${sizeClass} rounded-full border flex items-center justify-center font-bold shrink-0 ${color}`}>
-        {initials}
-      </span>
-      {showName && <span className="text-xs text-gray-300 truncate">{name}</span>}
+    <span className="inline-flex items-center gap-2">
+      {circle}
+      {showName && <span className="text-sm text-gray-700">{name}</span>}
     </span>
   );
 }

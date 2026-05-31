@@ -5,26 +5,18 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const STATUSES = ["ALL", "NEW", "CONTACTED", "QUALIFIED", "CLOSED"] as const;
-
 const STATUS_COLORS: Record<string, string> = {
-  NEW: "bg-blue-500/20 text-blue-400",
-  CONTACTED: "bg-yellow-500/20 text-yellow-400",
-  QUALIFIED: "bg-green-500/20 text-green-400",
-  CLOSED: "bg-gray-500/20 text-gray-400",
+  NEW: "bg-blue-50 text-blue-600 border-blue-100",
+  CONTACTED: "bg-amber-50 text-amber-600 border-amber-100",
+  QUALIFIED: "bg-emerald-50 text-emerald-600 border-emerald-100",
+  CLOSED: "bg-gray-100 text-gray-500 border-gray-200",
 };
 
-type Lead = {
-  id: string;
-  fullName: string;
-  email: string;
-  subject: string;
-  status: string;
-  createdAt: string;
-};
+type Lead = { id: string; fullName: string; email: string; subject: string; status: string; createdAt: string };
 
 export default function LeadsPage() {
   return (
-    <Suspense fallback={<div className="text-gray-500 animate-pulse">Loading...</div>}>
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>}>
       <LeadsContent />
     </Suspense>
   );
@@ -46,21 +38,10 @@ function LeadsContent() {
     const qs = new URLSearchParams();
     if (statusFilter !== "ALL") qs.set("status", statusFilter);
     qs.set("page", String(pageParam));
-
-    fetch(`/api/admin/leads?${qs}`)
-      .then((r) => {
-        if (r.status === 401) { router.push("/admin/login"); return null; }
-        return r.json();
-      })
-      .then((data) => {
-        if (data) {
-          setLeads(data.leads);
-          setTotal(data.total);
-          setPages(data.pages);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    fetch(`/api/admin/leads?${qs}`).then((r) => {
+      if (r.status === 401) { router.push("/admin/login"); return null; }
+      return r.json();
+    }).then((data) => { if (data) { setLeads(data.leads); setTotal(data.total); setPages(data.pages); } }).catch(() => {}).finally(() => setLoading(false));
   }, [statusFilter, pageParam, router]);
 
   function navigate(status: string, page = 1) {
@@ -71,86 +52,46 @@ function LeadsContent() {
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-semibold text-gray-100">
-          Leads <span className="text-gray-500 text-lg font-normal">({total})</span>
-        </h1>
+    <div className="max-w-4xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-gray-900">Leads</h1>
+        <p className="text-sm text-gray-400 mt-0.5">{total} total</p>
       </div>
 
-      {/* Status filters */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-1.5 mb-6">
         {STATUSES.map((s) => (
-          <button
-            key={s}
-            onClick={() => navigate(s)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              statusFilter === s
-                ? "bg-violet-500/15 text-violet-400"
-                : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
-            }`}
-          >
-            {s}
+          <button key={s} onClick={() => navigate(s)} className={`px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-all ${statusFilter === s ? "bg-gray-900 text-white" : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300"}`}>
+            {s === "ALL" ? "All" : s.charAt(0) + s.slice(1).toLowerCase()}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div className="text-gray-500 animate-pulse">Loading...</div>
+        <div className="flex items-center justify-center h-40"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>
       ) : leads.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">No leads found.</div>
+        <div className="text-center py-20 text-gray-400 text-sm">No leads found.</div>
       ) : (
         <>
-          <div className="border border-white/10 rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10 bg-white/5">
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Name</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Email</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Status</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leads.map((lead) => (
-                  <tr key={lead.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-3">
-                      <Link href={`/admin/leads/${lead.id}`} className="text-gray-200 font-medium hover:text-violet-400 transition-colors">
-                        {lead.fullName}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-gray-400">{lead.email}</td>
-                    <td className="px-4 py-3 text-gray-400 max-w-xs truncate">{lead.subject}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${STATUS_COLORS[lead.status] ?? STATUS_COLORS.NEW}`}>
-                        {lead.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
-                      {new Date(lead.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+            {leads.map((lead) => (
+              <Link key={lead.id} href={`/admin/leads/${lead.id}`} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50/50 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-medium text-gray-900">{lead.fullName}</p>
+                  <p className="text-[12px] text-gray-400 truncate">{lead.subject}</p>
+                </div>
+                <p className="text-[12px] text-gray-400 hidden sm:block">{lead.email}</p>
+                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold uppercase border shrink-0 ${STATUS_COLORS[lead.status] ?? STATUS_COLORS.NEW}`}>
+                  {lead.status}
+                </span>
+                <p className="text-[12px] text-gray-400 shrink-0">{new Date(lead.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</p>
+              </Link>
+            ))}
           </div>
 
-          {/* Pagination */}
           {pages > 1 && (
-            <div className="flex justify-center gap-2 mt-6">
+            <div className="flex justify-center gap-1.5 mt-8">
               {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => navigate(statusFilter, p)}
-                  className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${
-                    p === pageParam
-                      ? "bg-violet-500 text-white"
-                      : "text-gray-500 hover:bg-white/10"
-                  }`}
-                >
-                  {p}
-                </button>
+                <button key={p} onClick={() => navigate(statusFilter, p)} className={`w-9 h-9 rounded-xl text-[13px] font-medium transition-all ${p === pageParam ? "bg-gray-900 text-white" : "bg-white text-gray-500 border border-gray-100 hover:border-gray-300"}`}>{p}</button>
               ))}
             </div>
           )}
