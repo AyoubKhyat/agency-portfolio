@@ -1,30 +1,36 @@
 import { NextResponse } from "next/server";
+import { prisma, hasPrisma } from "@/lib/prisma";
 
 export async function GET() {
-  const url = process.env.DATABASE_URL;
-  const hasUrl = !!url;
-  const urlPrefix = url ? url.substring(0, 20) + "..." : "NOT SET";
+  const info: Record<string, unknown> = {
+    hasPrisma: hasPrisma(),
+    userModelType: typeof (prisma as Record<string, unknown>).user,
+    adminUserModelType: typeof (prisma as Record<string, unknown>).adminUser,
+  };
 
-  let dbError = null;
-  let dbOk = false;
-
-  if (url) {
+  if (hasPrisma()) {
     try {
-      const { Pool } = await import("@neondatabase/serverless");
-      const pool = new Pool({ connectionString: url });
-      const result = await pool.query("SELECT 1 as test");
-      dbOk = result.rows[0]?.test === 1;
-      await pool.end();
+      const userCount = await prisma.user.count();
+      info.userCount = userCount;
     } catch (e) {
-      dbError = e instanceof Error ? e.message : String(e);
+      info.userError = e instanceof Error ? e.message : String(e);
+    }
+
+    try {
+      const adminCount = await prisma.adminUser.count();
+      info.adminCount = adminCount;
+    } catch (e) {
+      info.adminError = e instanceof Error ? e.message : String(e);
+    }
+
+    try {
+      const ayoub = await prisma.user.findUnique({ where: { email: "ayoubkhyat@gmail.com" } });
+      info.ayoubFound = !!ayoub;
+      info.ayoubId = ayoub?.id;
+    } catch (e) {
+      info.ayoubError = e instanceof Error ? e.message : String(e);
     }
   }
 
-  return NextResponse.json({
-    hasUrl,
-    urlPrefix,
-    dbOk,
-    dbError,
-    nodeEnv: process.env.NODE_ENV,
-  });
+  return NextResponse.json(info);
 }
