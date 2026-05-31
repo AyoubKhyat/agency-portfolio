@@ -1,34 +1,35 @@
 import { NextResponse } from "next/server";
 import { prisma, hasPrisma } from "@/lib/prisma";
+import { verifyPassword } from "@/lib/auth";
 
-export async function GET() {
-  const info: Record<string, unknown> = {
-    hasPrisma: hasPrisma(),
-    userModelType: typeof (prisma as Record<string, unknown>).user,
-    adminUserModelType: typeof (prisma as Record<string, unknown>).adminUser,
-  };
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const testEmail = url.searchParams.get("email") || "ayoubkhyat@gmail.com";
+
+  const info: Record<string, unknown> = { hasPrisma: hasPrisma() };
 
   if (hasPrisma()) {
     try {
-      const userCount = await prisma.user.count();
-      info.userCount = userCount;
+      info.userCount = await prisma.user.count();
+      const user = await prisma.user.findUnique({ where: { email: testEmail } });
+      info.userFound = !!user;
+      if (user) {
+        info.userId = user.id;
+        info.hashPrefix = user.passwordHash.substring(0, 10);
+        info.isActive = user.isActive;
+        const testPw = url.searchParams.get("pw");
+        if (testPw) {
+          info.passwordMatch = await verifyPassword(testPw, user.passwordHash);
+        }
+      }
     } catch (e) {
       info.userError = e instanceof Error ? e.message : String(e);
     }
 
     try {
-      const adminCount = await prisma.adminUser.count();
-      info.adminCount = adminCount;
+      info.adminCount = await prisma.adminUser.count();
     } catch (e) {
       info.adminError = e instanceof Error ? e.message : String(e);
-    }
-
-    try {
-      const ayoub = await prisma.user.findUnique({ where: { email: "ayoubkhyat@gmail.com" } });
-      info.ayoubFound = !!ayoub;
-      info.ayoubId = ayoub?.id;
-    } catch (e) {
-      info.ayoubError = e instanceof Error ? e.message : String(e);
     }
   }
 
