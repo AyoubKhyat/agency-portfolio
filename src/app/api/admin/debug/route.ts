@@ -6,7 +6,8 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const testEmail = url.searchParams.get("email") || "ayoubkhyat@gmail.com";
 
-  const info: Record<string, unknown> = { hasPrisma: hasPrisma() };
+  const dbUrl = process.env.DATABASE_URL || "";
+  const info: Record<string, unknown> = { hasPrisma: hasPrisma(), dbHost: dbUrl.split("@")[1]?.split("/")[0] ?? "unknown" };
 
   if (hasPrisma()) {
     try {
