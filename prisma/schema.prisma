@@ -29,6 +29,7 @@ model User {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   ownedProspects      Prospect[]          @relation("ProspectOwner")
+  sentProspects       Prospect[]          @relation("ProspectSentBy")
   contactedProspects  Prospect[]          @relation("ProspectContactedBy")
   lastActionProspects Prospect[]          @relation("ProspectLastActionBy")
   activities          ProspectActivity[]
@@ -132,6 +133,8 @@ model Prospect {
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
   ownerUserId         String?   @map("owner_user_id")
+  sentByUserId        String?   @map("sent_by_user_id")
+  sentByName          String?   @map("sent_by_name")
   contactedByUserId   String?   @map("contacted_by_user_id")
   contactedByName     String?   @map("contacted_by_name")
   contactedAt         DateTime? @map("contacted_at")
@@ -140,6 +143,7 @@ model Prospect {
   lastActionAt        DateTime? @map("last_action_at")
 
   owner           User?  @relation("ProspectOwner", fields: [ownerUserId], references: [id])
+  sentByUser      User?  @relation("ProspectSentBy", fields: [sentByUserId], references: [id])
   contactedByUser User?  @relation("ProspectContactedBy", fields: [contactedByUserId], references: [id])
   lastActionByUser User? @relation("ProspectLastActionBy", fields: [lastActionByUserId], references: [id])
 

@@ -8,7 +8,7 @@ import { HiOutlinePlus } from "react-icons/hi2";
 type User = { id: string; fullName: string; email: string; role: string; avatarInitials: string; isActive: boolean; createdAt: string };
 type TeamStat = {
   user: { id: string; fullName: string; avatarInitials: string; role: string };
-  assigned: number; contacted: number; replied: number; converted: number;
+  assigned: number; sent: number; contacted: number; replied: number; converted: number;
   replyRate: number; conversionRate: number; lastActivity: string | null; lastActionType: string | null;
 };
 
@@ -119,8 +119,9 @@ export default function TeamPage() {
               <AvatarChip initials={s.user.avatarInitials} name={s.user.fullName} size="md" />
               <span className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold uppercase ${ROLE_COLORS[s.user.role] ?? ""}`}>{s.user.role}</span>
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-3 gap-3 mb-4">
               <div><p className="text-2xl font-semibold text-gray-900">{s.assigned}</p><p className="text-[11px] text-gray-400 uppercase tracking-wide">Assigned</p></div>
+              <div><p className="text-2xl font-semibold text-blue-600">{s.sent}</p><p className="text-[11px] text-gray-400 uppercase tracking-wide">Sent</p></div>
               <div><p className="text-2xl font-semibold text-gray-900">{s.contacted}</p><p className="text-[11px] text-gray-400 uppercase tracking-wide">Contacted</p></div>
               <div><p className="text-2xl font-semibold text-emerald-600">{s.replied}</p><p className="text-[11px] text-gray-400 uppercase tracking-wide">Replies</p></div>
               <div><p className="text-2xl font-semibold text-violet-600">{s.converted}</p><p className="text-[11px] text-gray-400 uppercase tracking-wide">Converted</p></div>

@@ -99,13 +99,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-3 mt-auto">
           {user && (
             <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-gray-50/80">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-[11px] font-semibold text-white shrink-0">
-                {user.avatarInitials}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium text-gray-800 truncate">{user.fullName}</p>
-                <p className="text-[11px] text-gray-400 capitalize">{user.role}</p>
-              </div>
+              <Link href="/admin/profile" className="flex items-center gap-3 min-w-0 flex-1 group">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-[11px] font-semibold text-white shrink-0 group-hover:scale-105 transition-transform">
+                  {user.avatarInitials}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-gray-800 truncate group-hover:text-violet-600 transition-colors">{user.fullName}</p>
+                  <p className="text-[11px] text-gray-400 capitalize">{user.role}</p>
+                </div>
+              </Link>
               <button
                 onClick={handleLogout}
                 className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-white transition-colors"

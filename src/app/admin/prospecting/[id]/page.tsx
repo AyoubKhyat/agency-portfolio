@@ -28,9 +28,11 @@ type Note = { id: string; content: string; createdAt: string };
 type Activity = { id: string; userId: string; userName: string; actionType: string; previousStatus: string | null; newStatus: string | null; details: string | null; createdAt: string };
 type Owner = { id: string; fullName: string; avatarInitials: string };
 type TeamUser = { id: string; fullName: string; avatarInitials: string };
+type SentBy = { id: string; fullName: string; avatarInitials: string } | null;
 type Prospect = {
   id: string; name: string; phone: string; whatsappLink: string; sector: string; neighborhood: string; instagram: string;
   hasWebsite: boolean; priority: number; status: string; sentAt: string | null; createdAt: string; owner: Owner | null;
+  sentByUser: SentBy; sentByName: string | null;
   contactedByName: string | null; contactedAt: string | null; lastActionByName: string | null; lastActionAt: string | null;
   notes: Note[]; activities: Activity[];
 };
@@ -154,7 +156,7 @@ export default function ProspectDetailPage() {
       </div>
 
       {/* Owner + Contact info cards */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <div className="bg-white rounded-2xl border border-gray-100 p-4">
           <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">Owner</p>
           <div className="flex gap-1.5">
@@ -162,6 +164,15 @@ export default function ProspectDetailPage() {
               <AvatarChip key={u.id} initials={u.avatarInitials} name={u.fullName} showName={false} size="md" onClick={() => handleOwnerChange(u.id)} active={prospect.owner?.id === u.id} />
             ))}
           </div>
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-100 p-4">
+          <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">Sent By</p>
+          {prospect.sentByUser ? (
+            <div className="flex items-center gap-2">
+              <AvatarChip initials={prospect.sentByUser.avatarInitials} name={prospect.sentByUser.fullName} size="sm" />
+            </div>
+          ) : <p className="text-[13px] text-gray-400">Not sent yet</p>}
+          {prospect.sentAt && <p className="text-[11px] text-gray-400 mt-1">{new Date(prospect.sentAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>}
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 p-4">
           <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">First Contact</p>

@@ -416,6 +416,7 @@ export async function getProspects(page = 1, status?: string, sector?: string, o
       include: {
         notes: { orderBy: { createdAt: "desc" }, take: 1 },
         owner: { select: { id: true, fullName: true, avatarInitials: true } },
+        sentByUser: { select: { id: true, fullName: true, avatarInitials: true } },
       },
     }),
     db().prospect.count({ where }),
@@ -430,6 +431,7 @@ export async function getProspectById(id: string) {
     include: {
       notes: { orderBy: { createdAt: "desc" } },
       owner: { select: { id: true, fullName: true, avatarInitials: true } },
+      sentByUser: { select: { id: true, fullName: true, avatarInitials: true } },
       activities: {
         orderBy: { createdAt: "desc" },
         take: 50,
@@ -527,6 +529,25 @@ export async function logProspectActivity(data: {
   return activity;
 }
 
+export async function setProspectSentBy(prospectId: string, userId: string, userName: string) {
+  const prospect = await db().prospect.findUnique({ where: { id: prospectId } });
+  if (prospect && !prospect.sentByUserId) {
+    await db().prospect.update({
+      where: { id: prospectId },
+      data: { sentByUserId: userId, sentByName: userName },
+    });
+  }
+}
+
+export async function bulkUpdateStatus(prospectIds: string[], status: string) {
+  const data: Record<string, unknown> = { status };
+  if (status === "ENVOYE") data.sentAt = new Date();
+  return db().prospect.updateMany({
+    where: { id: { in: prospectIds } },
+    data,
+  });
+}
+
 export async function setProspectFirstContact(prospectId: string, userId: string, userName: string) {
   const prospect = await db().prospect.findUnique({ where: { id: prospectId } });
   if (prospect && !prospect.contactedByUserId) {
@@ -570,8 +591,9 @@ export async function getTeamStats() {
 
   const stats = await Promise.all(
     users.map(async (user) => {
-      const [assigned, contacted, replied, converted] = await Promise.all([
+      const [assigned, sent, contacted, replied, converted] = await Promise.all([
         db().prospect.count({ where: { ownerUserId: user.id } }),
+        db().prospect.count({ where: { sentByUserId: user.id } }),
         db().prospect.count({ where: { contactedByUserId: user.id } }),
         db().prospect.count({ where: { contactedByUserId: user.id, status: "REPONDU" } }),
         db().prospect.count({ where: { contactedByUserId: user.id, status: "CONVERTI" } }),
@@ -586,6 +608,7 @@ export async function getTeamStats() {
       return {
         user,
         assigned,
+        sent,
         contacted,
         replied,
         converted,

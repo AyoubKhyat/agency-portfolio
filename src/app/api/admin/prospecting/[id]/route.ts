@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getProspectById, updateProspectStatus, updateProspect, deleteProspect, assignProspectOwner, logProspectActivity, setProspectFirstContact } from "@/lib/dal";
+import { getProspectById, updateProspectStatus, updateProspect, deleteProspect, assignProspectOwner, logProspectActivity, setProspectFirstContact, setProspectSentBy } from "@/lib/dal";
 import { z } from "zod";
 
 export async function GET(
@@ -69,6 +69,10 @@ export async function PATCH(
 
     if (parsed.data.status === "ENVOYE" || parsed.data.status === "REPONDU") {
       await setProspectFirstContact(id, session.userId, session.fullName);
+    }
+
+    if (parsed.data.status === "ENVOYE") {
+      await setProspectSentBy(id, session.userId, session.fullName);
     }
 
     return NextResponse.json(prospect);
