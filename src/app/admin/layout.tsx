@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Target, Building2, FolderKanban,
   BarChart3, Settings, LogOut, PanelLeftClose, PanelLeft, Menu, X,
+  Activity, UsersRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,13 @@ const SECTIONS = [
       { href: "/admin/leads", label: "Leads", icon: Users, badgeKey: "leads" as const },
       { href: "/admin/prospecting", label: "Prospecting", icon: Target, badgeKey: "prospects" as const },
       { href: "/admin/clients", label: "Clients", icon: Building2 },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { href: "/admin/activity", label: "Activity Feed", icon: Activity, badgeKey: "activities" as const },
+      { href: "/admin/team", label: "Team", icon: UsersRound, badgeKey: "team" as const },
     ],
   },
   { label: "Portfolio", items: [{ href: "/admin/projects", label: "Projects", icon: FolderKanban }] },
@@ -38,7 +46,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [badges, setBadges] = useState({ leads: 0, prospects: 0 });
+  const [badges, setBadges] = useState({ leads: 0, prospects: 0, activities: 0, team: 0 });
   const isLogin = pathname === "/admin/login";
 
   useEffect(() => {
@@ -57,8 +65,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     Promise.all([
       fetch("/api/admin/leads?status=NEW").then((r) => r.ok ? r.json() : null),
       fetch("/api/admin/prospecting?status=A_ENVOYER").then((r) => r.ok ? r.json() : null),
-    ]).then(([ld, pd]) => {
-      setBadges({ leads: ld?.total || 0, prospects: pd?.total || 0 });
+      fetch("/api/admin/activity?limit=20").then((r) => r.ok ? r.json() : []),
+      fetch("/api/admin/users").then((r) => r.ok ? r.json() : []),
+    ]).then(([ld, pd, acts, users]) => {
+      const today = new Date().toDateString();
+      const todayCount = Array.isArray(acts) ? acts.filter((a: { createdAt: string }) => new Date(a.createdAt).toDateString() === today).length : 0;
+      setBadges({ leads: ld?.total || 0, prospects: pd?.total || 0, activities: todayCount, team: Array.isArray(users) ? users.length : 0 });
     }).catch(() => {});
   }, [pathname, isLogin]);
 

@@ -104,8 +104,15 @@ type Prospect = {
   sector: string; neighborhood: string; instagram: string;
   hasWebsite: boolean; priority: number; status: string;
   sentAt: string | null; createdAt: string;
+  ownerUserId: string | null;
+  sentByName: string | null;
+  lastActionByName: string | null;
+  lastActionAt: string | null;
+  owner?: { id: string; fullName: string; avatarInitials: string } | null;
   notes: { id: string; content: string; createdAt: string }[];
 };
+
+type OwnerStat = { id: string; fullName: string; avatarInitials: string; count: number };
 
 function getPersonalizedMessage(p: Prospect, noteContent: string): string {
   const templates = TEMPLATES[p.sector] || DEFAULT_TEMPLATES;
@@ -151,6 +158,7 @@ function ProspectingContent() {
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status") ?? "ALL";
   const sectorFilter = searchParams.get("sector") ?? "ALL";
+  const ownerFilter = searchParams.get("owner") ?? "ALL";
   const pageParam = parseInt(searchParams.get("page") ?? "1", 10);
 
   const [prospects, setProspects] = useState<Prospect[]>([]);
@@ -160,23 +168,33 @@ function ProspectingContent() {
   const [importing, setImporting] = useState(false);
   const [view, setView] = useState<"list" | "grid">("list");
   const [copied, setCopied] = useState<string | null>(null);
+  const [ownerStats, setOwnerStats] = useState<OwnerStat[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/team-stats").then((r) => r.ok ? r.json() : []).then((stats: { user: { id: string; fullName: string; avatarInitials: string }; assigned: number }[]) => {
+      setOwnerStats(stats.map((s) => ({ id: s.user.id, fullName: s.user.fullName, avatarInitials: s.user.avatarInitials, count: s.assigned })));
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     setLoading(true);
     const qs = new URLSearchParams();
     if (statusFilter !== "ALL") qs.set("status", statusFilter);
     if (sectorFilter !== "ALL") qs.set("sector", sectorFilter);
+    if (ownerFilter !== "ALL" && ownerFilter !== "UNASSIGNED") qs.set("owner", ownerFilter);
+    if (ownerFilter === "UNASSIGNED") qs.set("unassigned", "true");
     qs.set("page", String(pageParam));
     fetch(`/api/admin/prospecting?${qs}`)
       .then((r) => { if (r.status === 401) { router.push("/admin/login"); return null; } return r.json(); })
       .then((data) => { if (data) { setProspects(data.prospects); setTotal(data.total); setPages(data.pages); } setLoading(false); });
-  }, [statusFilter, sectorFilter, pageParam, router]);
+  }, [statusFilter, sectorFilter, ownerFilter, pageParam, router]);
 
-  function navigate(status: string, sector: string, page = 1) {
+  function navigate(status: string, sector: string, page = 1, owner = ownerFilter) {
     const qs = new URLSearchParams();
     if (status !== "ALL") qs.set("status", status);
     if (sector !== "ALL") qs.set("sector", sector);
+    if (owner !== "ALL") qs.set("owner", owner);
     if (page > 1) qs.set("page", String(page));
     router.push(`/admin/prospecting${qs.toString() ? `?${qs}` : ""}`);
   }
@@ -308,16 +326,43 @@ function ProspectingContent() {
       <FilterTabs
         items={STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] || s }))}
         active={statusFilter}
-        onChange={(v) => navigate(v, sectorFilter)}
+        onChange={(v) => navigate(v, sectorFilter, 1, ownerFilter)}
         className="mb-2"
       />
       <FilterTabs
         items={SECTORS.map((s) => ({ value: s, label: s === "ALL" ? "All sectors" : s }))}
         active={sectorFilter}
-        onChange={(v) => navigate(statusFilter, v)}
-        className="mb-6"
+        onChange={(v) => navigate(statusFilter, v, 1, ownerFilter)}
+        className="mb-2"
         scrollable
       />
+
+      {/* Owner filter chips */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-6">
+        {[
+          { id: "ALL", label: "All", count: total },
+          { id: "UNASSIGNED", label: "Unassigned", count: 0 },
+          ...ownerStats.map((o) => ({ id: o.id, label: o.avatarInitials, count: o.count })),
+        ].map((item) => (
+          <button
+            key={item.id}
+            onClick={() => navigate(statusFilter, sectorFilter, 1, item.id)}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all shrink-0",
+              ownerFilter === item.id
+                ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
+                : "bg-white text-[#475569] border border-[#E2E8F0] hover:border-[#CBD5E1]"
+            )}
+          >
+            {item.label}
+            {item.count > 0 && (
+              <span className={cn("text-[10px] font-bold px-1 rounded-full", ownerFilter === item.id ? "bg-white/25" : "bg-[#F1F5F9]")}>
+                {item.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
 
       {loading ? (
         <div className="space-y-2">{[...Array(8)].map((_, i) => <div key={i} className="os-skeleton h-14 rounded-lg" />)}</div>
@@ -340,8 +385,13 @@ function ProspectingContent() {
                   <Badge variant="default" size="sm">{p.sector}</Badge>
                   <Badge variant={PRIORITY_BADGE[p.priority] as "green" | "amber" | "default"} size="sm">{PRIORITY_LABELS[p.priority]}</Badge>
                   {p.neighborhood && <span className="text-[11px] text-[#64748B]">{p.neighborhood}</span>}
-                  {p.sentAt && <span className="text-[10px] text-[#64748B]">{new Date(p.sentAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</span>}
                 </div>
+                {p.lastActionByName && (
+                  <div className="flex items-center gap-2 text-[10px] text-[#64748B] mb-2">
+                    <span className="font-medium text-[#475569]">{p.lastActionByName}</span>
+                    {p.lastActionAt && <span>{new Date(p.lastActionAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>}
+                  </div>
+                )}
                 <div className="flex items-center gap-1 flex-wrap pt-2 border-t border-[var(--os-border)]">
                   {canFollowUp(p) && (
                     <button onClick={() => handleFollowUp(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
@@ -495,6 +545,12 @@ function ProspectingContent() {
                     {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
                     {p.instagram && <span className="flex items-center gap-1"><FaInstagram className="w-3 h-3" />@{p.instagram.replace(/^@/, "")}</span>}
                   </div>
+                  {p.lastActionByName && (
+                    <div className="flex items-center gap-2 text-[10px] text-[#64748B] mb-3 bg-[#F8FAFC] rounded-lg px-2.5 py-1.5 border border-[#F1F5F9]">
+                      <span className="font-medium text-[#475569]">{p.lastActionByName}</span>
+                      {p.lastActionAt && <span>{new Date(p.lastActionAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>}
+                    </div>
+                  )}
                   <div className="flex items-center gap-1 pt-2 border-t border-[var(--os-border)]">
                     {canFollowUp(p) && (
                       <button onClick={() => handleFollowUp(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
