@@ -10,11 +10,11 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 const TEAM_MEMBERS = [
-  { fullName: "Ayoub Khyat", email: "ayoubkhyat@gmail.com", role: "admin", avatarInitials: "AK", password: "ibda3admin2026" },
-  { fullName: "Mohammed Yousfi", email: "mohammed.yousfi@ibda3digital.com", role: "sales", avatarInitials: "MY", password: "ibda3sales2026" },
-  { fullName: "Ismail Sarhir", email: "ismail.sarhir@ibda3digital.com", role: "sales", avatarInitials: "IS", password: "ibda3sales2026" },
-  { fullName: "Soufiane El Kaabaoui", email: "soufiane.elkaabaoui@ibda3digital.com", role: "sales", avatarInitials: "SE", password: "ibda3sales2026" },
-  { fullName: "Abderrahmane Ait Taleb", email: "abderrahmane.aittaleb@ibda3digital.com", role: "developer", avatarInitials: "AA", password: "ibda3dev2026" },
+  { fullName: "Ayoub Khyat", email: "ayoubkhyat@gmail.com", role: "admin", avatarInitials: "AK", password: "AyoubKhyat2026" },
+  { fullName: "Mohammed Yousfi", email: "mohammed.yousfi@ibda3digital.com", role: "sales", avatarInitials: "MY", password: "MohammedYousfi2026" },
+  { fullName: "Ismail Sarhir", email: "ismail.sarhir@ibda3digital.com", role: "sales", avatarInitials: "IS", password: "IsmailSarhir2026" },
+  { fullName: "Soufiane El Kaabaoui", email: "soufiane.elkaabaoui@ibda3digital.com", role: "sales", avatarInitials: "SE", password: "SoufianeElKaabaoui2026" },
+  { fullName: "Abderrahmane Ait Taleb", email: "abderrahmane.aittaleb@ibda3digital.com", role: "developer", avatarInitials: "AA", password: "AbderrahmaneAitTaleb2026" },
 ];
 
 const PROJECTS = [
