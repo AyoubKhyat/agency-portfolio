@@ -7,7 +7,11 @@ const SECTORS = [
   "Dentiste", "Salon Beauté", "Salle de Sport", "Avocat",
   "Architecte/Décorateur", "Immobilier", "Restaurant/Café",
   "Patisserie", "Boulangerie", "Riad/Maison d'hôtes",
-  "Photographe/Vidéaste", "Traiteur",
+  "Photographe/Vidéaste", "Traiteur", "Spa/Hammam",
+  "Coach Sportif", "Centre de Formation", "Garage Auto",
+  "Décoration / Meubles", "Boutique Mode", "Bijouterie",
+  "Agence de Voyage", "Clinique / Cabinet Médical",
+  "Centre de Langues",
 ];
 
 const PRIORITIES = [

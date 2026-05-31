@@ -638,3 +638,75 @@ export async function getAdminStats() {
 
   return { totalProjects, visibleProjects, totalLeads, newLeads, totalProspects, pendingProspects };
 }
+
+export async function getDashboardStats() {
+  const [
+    leadsByStatus,
+    prospectsByStatus,
+    prospectsBySector,
+    followUpCandidates,
+    totalProjects,
+    recentLeads,
+  ] = await Promise.all([
+    db().lead.groupBy({ by: ["status"], _count: true }),
+    db().prospect.groupBy({ by: ["status"], _count: true }),
+    db().prospect.groupBy({ by: ["sector"], _count: { sector: true }, orderBy: { _count: { sector: "desc" } }, take: 10 }),
+    db().prospect.count({ where: { status: "ENVOYE", sentAt: { lt: new Date(Date.now() - 3 * 86400000) } } }),
+    db().project.count({ where: { visible: true } }),
+    db().lead.findMany({ orderBy: { createdAt: "desc" }, take: 5, select: { id: true, fullName: true, status: true, createdAt: true, subject: true } }),
+  ]);
+
+  return { leadsByStatus, prospectsByStatus, prospectsBySector, followUpCandidates, totalProjects, recentLeads };
+}
+
+export async function getAnalyticsData() {
+  const [
+    prospectsByStatus,
+    prospectsBySector,
+    leadsByStatus,
+    allProspects,
+    allLeads,
+  ] = await Promise.all([
+    db().prospect.groupBy({ by: ["status"], _count: true }),
+    db().prospect.groupBy({ by: ["sector"], _count: { sector: true }, orderBy: { _count: { sector: "desc" } } }),
+    db().lead.groupBy({ by: ["status"], _count: true }),
+    db().prospect.findMany({ select: { sector: true, status: true, sentAt: true, createdAt: true, hasWebsite: true, instagram: true, phone: true } }),
+    db().lead.findMany({ select: { status: true, createdAt: true } }),
+  ]);
+
+  const sectorPerformance = prospectsBySector.map((s) => {
+    const sectorProspects = allProspects.filter((p) => p.sector === s.sector);
+    const total = sectorProspects.length;
+    const sent = sectorProspects.filter((p) => p.status !== "A_ENVOYER").length;
+    const replied = sectorProspects.filter((p) => p.status === "REPONDU" || p.status === "CONVERTI").length;
+    const converted = sectorProspects.filter((p) => p.status === "CONVERTI").length;
+    return {
+      sector: s.sector,
+      total,
+      sent,
+      replied,
+      converted,
+      sentRate: total > 0 ? Math.round((sent / total) * 100) : 0,
+      replyRate: sent > 0 ? Math.round((replied / sent) * 100) : 0,
+      conversionRate: sent > 0 ? Math.round((converted / sent) * 100) : 0,
+    };
+  });
+
+  return { prospectsByStatus, prospectsBySector, leadsByStatus, sectorPerformance };
+}
+
+export async function getClients() {
+  const [convertedProspects, qualifiedLeads] = await Promise.all([
+    db().prospect.findMany({
+      where: { status: "CONVERTI" },
+      orderBy: { updatedAt: "desc" },
+      include: { notes: { orderBy: { createdAt: "desc" }, take: 1 } },
+    }),
+    db().lead.findMany({
+      where: { status: { in: ["QUALIFIED", "CLOSED"] } },
+      orderBy: { updatedAt: "desc" },
+      include: { notes: { orderBy: { createdAt: "desc" }, take: 1 } },
+    }),
+  ]);
+  return { convertedProspects, qualifiedLeads };
+}

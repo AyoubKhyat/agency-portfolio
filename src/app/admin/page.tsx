@@ -2,96 +2,252 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Target, Users, FolderKanban, Clock, ArrowRight, MessageCircle, Reply } from "lucide-react";
+import { StatCard } from "@/components/admin/stat-card";
+import { GlassCard } from "@/components/admin/glass-card";
+import { Badge } from "@/components/admin/badge";
+import { PageHeader } from "@/components/admin/page-header";
 import Link from "next/link";
-import {
-  HiOutlineMegaphone,
-  HiOutlineInbox,
-  HiOutlineFolder,
-  HiOutlineEye,
-  HiOutlineChatBubbleLeft,
-  HiOutlineCheckCircle,
-} from "react-icons/hi2";
 
-type Stats = {
+type StatusCount = { status: string; _count: number };
+type SectorCount = { sector: string; _count: { sector: number } };
+type RecentLead = { id: string; fullName: string; status: string; createdAt: string; subject: string };
+
+type DashboardData = {
+  leadsByStatus: StatusCount[];
+  prospectsByStatus: StatusCount[];
+  prospectsBySector: SectorCount[];
+  followUpCandidates: number;
   totalProjects: number;
-  visibleProjects: number;
-  totalLeads: number;
-  newLeads: number;
-  totalProspects: number;
-  pendingProspects: number;
+  recentLeads: RecentLead[];
 };
 
-export default function AdminDashboard() {
+const STATUS_VARIANT: Record<string, string> = {
+  NEW: "blue", CONTACTED: "amber", QUALIFIED: "green", CLOSED: "default",
+};
+
+export default function DashboardPage() {
   const router = useRouter();
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/admin/projects").then((r) => {
-        if (r.status === 401) { router.push("/admin/login"); return null; }
-        return r.json();
-      }),
-      fetch("/api/admin/leads").then((r) => r.ok ? r.json() : null),
-      fetch("/api/admin/leads?status=NEW").then((r) => r.ok ? r.json() : null),
-      fetch("/api/admin/prospecting").then((r) => r.ok ? r.json() : null),
-      fetch("/api/admin/prospecting?status=A_ENVOYER").then((r) => r.ok ? r.json() : null),
-    ]).then(([projects, leads, newLeads, prospects, pendingProspects]) => {
-      if (!projects) return;
-      setStats({
-        totalProjects: projects.length,
-        visibleProjects: projects.filter((p: { visible: boolean }) => p.visible).length,
-        totalLeads: leads?.total ?? 0,
-        newLeads: newLeads?.total ?? 0,
-        totalProspects: prospects?.total ?? 0,
-        pendingProspects: pendingProspects?.total ?? 0,
-      });
-    });
+    fetch("/api/admin/stats")
+      .then((r) => { if (r.status === 401) { router.push("/admin/login"); return null; } return r.json(); })
+      .then((d) => d && setData(d))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [router]);
 
-  if (!stats) {
+  function getCount(arr: StatusCount[] | undefined, status: string) {
+    return arr?.find((s) => s.status === status)?._count || 0;
+  }
+  function getTotal(arr: StatusCount[] | undefined) {
+    return arr?.reduce((sum, s) => sum + s._count, 0) || 0;
+  }
+
+  const totalProspects = getTotal(data?.prospectsByStatus);
+  const contacted = getCount(data?.prospectsByStatus, "ENVOYE");
+  const replied = getCount(data?.prospectsByStatus, "REPONDU");
+  const converted = getCount(data?.prospectsByStatus, "CONVERTI");
+  const pending = getCount(data?.prospectsByStatus, "A_ENVOYER");
+  const totalLeads = getTotal(data?.leadsByStatus);
+  const newLeads = getCount(data?.leadsByStatus, "NEW");
+
+  const pipeline = [
+    { label: "Prospects", count: totalProspects, color: "bg-zinc-500" },
+    { label: "Contacted", count: contacted, color: "bg-amber-500" },
+    { label: "Replied", count: replied, color: "bg-emerald-500" },
+    { label: "Converted", count: converted, color: "bg-purple-500" },
+  ];
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" />
+      <div>
+        <PageHeader title="Dashboard" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => <div key={i} className="os-skeleton h-28 rounded-xl" />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+          <div className="os-skeleton h-64 rounded-xl lg:col-span-2" />
+          <div className="os-skeleton h-64 rounded-xl" />
+        </div>
       </div>
     );
   }
 
-  const cards = [
-    { label: "Total Prospects", value: stats.totalProspects, icon: HiOutlineMegaphone, href: "/admin/prospecting", gradient: "from-violet-500 to-purple-600", shadow: "shadow-violet-100" },
-    { label: "Pending", value: stats.pendingProspects, icon: HiOutlineChatBubbleLeft, href: "/admin/prospecting?status=A_ENVOYER", gradient: "from-blue-500 to-cyan-500", shadow: "shadow-blue-100" },
-    { label: "New Leads", value: stats.newLeads, icon: HiOutlineCheckCircle, href: "/admin/leads?status=NEW", gradient: "from-emerald-500 to-teal-500", shadow: "shadow-emerald-100" },
-    { label: "Total Leads", value: stats.totalLeads, icon: HiOutlineInbox, href: "/admin/leads" },
-    { label: "Projects", value: stats.totalProjects, icon: HiOutlineFolder, href: "/admin/projects" },
-    { label: "Live", value: stats.visibleProjects, icon: HiOutlineEye, href: "/admin/projects" },
-  ];
-
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Overview</h1>
-        <p className="text-sm text-gray-400 mt-1">Your workspace at a glance</p>
+    <div>
+      <PageHeader title="Dashboard" subtitle="Welcome back, Ayoub" />
+
+      {/* Hero Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard value={totalProspects} label="Total Prospects" icon={<Target className="w-5 h-5" />} href="/admin/prospecting" index={0} />
+        <StatCard value={pending} label="To Contact" icon={<MessageCircle className="w-5 h-5" />} href="/admin/prospecting?status=A_ENVOYER" accent index={1} />
+        <StatCard value={totalLeads} label="Active Leads" icon={<Users className="w-5 h-5" />} href="/admin/leads" index={2} />
+        <StatCard value={data?.totalProjects || 0} label="Portfolio Projects" icon={<FolderKanban className="w-5 h-5" />} href="/admin/projects" index={3} />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {cards.map((card) => (
-          <Link
-            key={card.label}
-            href={card.href}
-            className="group relative overflow-hidden p-6 bg-white rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200 hover:shadow-lg hover:shadow-gray-100/50"
-          >
-            {card.gradient && (
-              <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${card.gradient} opacity-[0.07] rounded-full -translate-y-6 translate-x-6 group-hover:scale-150 transition-transform duration-500`} />
-            )}
-            <div className="relative">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${card.gradient ? `bg-gradient-to-br ${card.gradient} ${card.shadow} shadow-sm` : "bg-gray-100"}`}>
-                <card.icon className={`w-5 h-5 ${card.gradient ? "text-white" : "text-gray-500"}`} />
+      {/* Pipeline + Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+        <GlassCard padding="lg" className="lg:col-span-2" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.4 }}>
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-sm font-semibold text-gray-900">Sales Pipeline</h3>
+            <Link href="/admin/prospecting" className="text-xs text-purple-600 hover:text-purple-700 flex items-center gap-1">
+              View all <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {pipeline.map((stage, i) => {
+              const maxCount = Math.max(...pipeline.map((p) => p.count), 1);
+              const pct = (stage.count / maxCount) * 100;
+              const convRate = i > 0 && pipeline[i - 1].count > 0
+                ? ((stage.count / pipeline[i - 1].count) * 100).toFixed(0) + "%"
+                : null;
+              return (
+                <div key={stage.label}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs text-gray-500">{stage.label}</span>
+                    <div className="flex items-center gap-2">
+                      {convRate && <span className="text-[10px] text-gray-400">{convRate}</span>}
+                      <span className="text-sm font-semibold text-gray-900">{stage.count}</span>
+                    </div>
+                  </div>
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <motion.div
+                      className={`h-full rounded-full ${stage.color}`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.max(pct, 2)}%` }}
+                      transition={{ duration: 0.8, delay: 0.4 + i * 0.1, ease: "easeOut" }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </GlassCard>
+
+        <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45, duration: 0.4 }}>
+          <h3 className="text-sm font-semibold text-gray-900 mb-4">Quick Actions</h3>
+          <div className="space-y-2">
+            <Link href="/admin/prospecting?status=A_ENVOYER" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/80 hover:bg-purple-500/[0.06] border border-transparent hover:border-purple-500/20 transition-all group">
+              <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                <MessageCircle className="w-4 h-4 text-purple-600" />
               </div>
-              <p className="text-3xl font-semibold text-gray-900">{card.value}</p>
-              <p className="text-[13px] text-gray-400 mt-1">{card.label}</p>
-            </div>
-          </Link>
-        ))}
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-medium text-gray-800 group-hover:text-gray-900">{pending} prospects to send</div>
+                <div className="text-[11px] text-gray-400">Start outreach</div>
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-purple-600 transition-colors" />
+            </Link>
+
+            <Link href="/admin/prospecting?status=ENVOYE" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/80 hover:bg-amber-500/[0.06] border border-transparent hover:border-amber-500/20 transition-all group">
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                <Clock className="w-4 h-4 text-amber-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-medium text-gray-800 group-hover:text-gray-900">{data?.followUpCandidates || 0} follow-ups due</div>
+                <div className="text-[11px] text-gray-400">Sent 3+ days ago</div>
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-amber-600 transition-colors" />
+            </Link>
+
+            <Link href="/admin/leads?status=NEW" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/80 hover:bg-blue-500/[0.06] border border-transparent hover:border-blue-500/20 transition-all group">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                <Users className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-medium text-gray-800 group-hover:text-gray-900">{newLeads} new leads</div>
+                <div className="text-[11px] text-gray-400">Waiting for review</div>
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-600 transition-colors" />
+            </Link>
+          </div>
+        </GlassCard>
       </div>
+
+      {/* Sector Performance + Recent Leads */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+        <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55, duration: 0.4 }}>
+          <h3 className="text-sm font-semibold text-gray-900 mb-4">Top Sectors</h3>
+          <div className="space-y-2.5">
+            {data?.prospectsBySector?.slice(0, 8).map((s, i) => {
+              const max = data.prospectsBySector[0]?._count?.sector || 1;
+              const pct = (s._count.sector / max) * 100;
+              return (
+                <div key={s.sector} className="flex items-center gap-3">
+                  <span className="text-xs text-gray-500 w-32 truncate">{s.sector}</span>
+                  <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full bg-purple-500/60"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct}%` }}
+                      transition={{ duration: 0.6, delay: 0.6 + i * 0.05 }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium text-gray-500 w-6 text-right">{s._count.sector}</span>
+                </div>
+              );
+            })}
+          </div>
+        </GlassCard>
+
+        <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.4 }}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-gray-900">Recent Leads</h3>
+            <Link href="/admin/leads" className="text-xs text-purple-600 hover:text-purple-700 flex items-center gap-1">
+              View all <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div className="space-y-1">
+            {data?.recentLeads?.map((lead) => (
+              <Link
+                key={lead.id}
+                href={`/admin/leads/${lead.id}`}
+                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-xs font-semibold text-purple-700">
+                  {lead.fullName.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-medium text-gray-800 truncate">{lead.fullName}</div>
+                  <div className="text-[11px] text-gray-400 truncate">{lead.subject}</div>
+                </div>
+                <Badge variant={(STATUS_VARIANT[lead.status] || "default") as "blue" | "amber" | "green" | "default"} size="sm">{lead.status}</Badge>
+              </Link>
+            ))}
+            {(!data?.recentLeads || data.recentLeads.length === 0) && (
+              <div className="text-center py-8 text-xs text-gray-400">No leads yet</div>
+            )}
+          </div>
+        </GlassCard>
+      </div>
+
+      {/* Insights */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7, duration: 0.4 }} className="mt-6">
+        <GlassCard padding="lg" className="border-purple-200/50 bg-gradient-to-r from-purple-50/80 to-transparent">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
+              <Reply className="w-4 h-4 text-purple-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1.5">Insights</h3>
+              <div className="space-y-1.5 text-[13px] text-gray-500">
+                {replied > 0 && contacted > 0 && (
+                  <p>Reply rate: <span className="text-emerald-600 font-medium">{((replied / contacted) * 100).toFixed(1)}%</span> — {replied} replied out of {contacted} contacted.</p>
+                )}
+                {data?.followUpCandidates && data.followUpCandidates > 0 && (
+                  <p><span className="text-amber-600 font-medium">{data.followUpCandidates}</span> prospects sent 3+ days ago without reply — follow up today.</p>
+                )}
+                {data?.prospectsBySector?.[0] && (
+                  <p>Top sector: <span className="text-purple-600 font-medium">{data.prospectsBySector[0].sector}</span> with {data.prospectsBySector[0]._count.sector} prospects.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </GlassCard>
+      </motion.div>
     </div>
   );
 }
