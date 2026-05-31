@@ -22,37 +22,44 @@ export async function POST(req: Request) {
   const { email, password } = parsed.data;
 
   try {
-    // Try User table first (team accounts)
-    const user = await prisma.user.findUnique({ where: { email } });
-
-    if (user && user.isActive && await verifyPassword(password, user.passwordHash)) {
-      const token = await signToken({
-        userId: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        role: user.role,
-        avatarInitials: user.avatarInitials,
-      });
-      const cookie = createSessionCookie(token);
-      const res = NextResponse.json({ success: true, name: user.fullName, role: user.role });
-      res.cookies.set(cookie);
-      return res;
+    // Try User table (team accounts)
+    try {
+      const user = await prisma.user?.findUnique({ where: { email } });
+      if (user && user.isActive && await verifyPassword(password, user.passwordHash)) {
+        const token = await signToken({
+          userId: user.id,
+          email: user.email,
+          fullName: user.fullName,
+          role: user.role,
+          avatarInitials: user.avatarInitials,
+        });
+        const cookie = createSessionCookie(token);
+        const res = NextResponse.json({ success: true, name: user.fullName, role: user.role });
+        res.cookies.set(cookie);
+        return res;
+      }
+    } catch {
+      // User model might not be available yet, continue to fallback
     }
 
     // Fallback to AdminUser table (legacy)
-    const admin = await prisma.adminUser.findUnique({ where: { email } });
-    if (admin && await verifyPassword(password, admin.passwordHash)) {
-      const token = await signToken({
-        userId: admin.id,
-        email: admin.email,
-        fullName: admin.name,
-        role: "admin",
-        avatarInitials: admin.name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2),
-      });
-      const cookie = createSessionCookie(token);
-      const res = NextResponse.json({ success: true, name: admin.name, role: "admin" });
-      res.cookies.set(cookie);
-      return res;
+    try {
+      const admin = await prisma.adminUser?.findUnique({ where: { email } });
+      if (admin && await verifyPassword(password, admin.passwordHash)) {
+        const token = await signToken({
+          userId: admin.id,
+          email: admin.email,
+          fullName: admin.name,
+          role: "admin",
+          avatarInitials: admin.name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2),
+        });
+        const cookie = createSessionCookie(token);
+        const res = NextResponse.json({ success: true, name: admin.name, role: "admin" });
+        res.cookies.set(cookie);
+        return res;
+      }
+    } catch {
+      // AdminUser model might not be available
     }
 
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
