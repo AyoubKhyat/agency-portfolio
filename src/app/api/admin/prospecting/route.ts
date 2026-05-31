@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getProspects, createProspect } from "@/lib/dal";
+import { getProspects, createProspect, logProspectActivity } from "@/lib/dal";
 import { z } from "zod";
 
 export async function GET(req: Request) {
@@ -11,8 +11,9 @@ export async function GET(req: Request) {
   const page = parseInt(url.searchParams.get("page") || "1");
   const status = url.searchParams.get("status") || undefined;
   const sector = url.searchParams.get("sector") || undefined;
+  const owner = url.searchParams.get("owner") || undefined;
 
-  const result = await getProspects(page, status, sector);
+  const result = await getProspects(page, status, sector, owner);
   return NextResponse.json(result);
 }
 
@@ -26,6 +27,7 @@ const createSchema = z.object({
   hasWebsite: z.boolean().optional().default(false),
   priority: z.number().int().min(1).max(3).optional().default(2),
   status: z.string().optional().default("A_ENVOYER"),
+  ownerUserId: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -41,5 +43,14 @@ export async function POST(req: Request) {
   }
 
   const prospect = await createProspect(parsed.data);
+
+  await logProspectActivity({
+    prospectId: prospect.id,
+    userId: session.userId,
+    userName: session.fullName,
+    actionType: "CREATED",
+    details: `Created prospect "${prospect.name}"`,
+  });
+
   return NextResponse.json(prospect, { status: 201 });
 }

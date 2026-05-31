@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { z } from "zod";
-import { getProspectById, updateProspectStatus, createLead } from "@/lib/dal";
+import { getProspectById, updateProspectStatus, createLead, logProspectActivity } from "@/lib/dal";
 
 export async function POST(req: Request) {
   const session = await getSession();
@@ -24,6 +24,16 @@ export async function POST(req: Request) {
     });
 
     await updateProspectStatus(parsed.data.prospectId, "CONVERTI");
+
+    await logProspectActivity({
+      prospectId: parsed.data.prospectId,
+      userId: session.userId,
+      userName: session.fullName,
+      actionType: "STATUS_CONVERTI",
+      previousStatus: prospect.status,
+      newStatus: "CONVERTI",
+      details: `Converted to lead #${lead.id}`,
+    });
 
     return NextResponse.json({ leadId: lead.id }, { status: 201 });
   } catch (err) {

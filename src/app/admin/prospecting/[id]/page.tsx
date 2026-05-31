@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { HiOutlineArrowLeft, HiOutlineChatBubbleLeft } from "react-icons/hi2";
+import AvatarChip from "@/components/AvatarChip";
 
 const STATUSES = ["A_ENVOYER", "ENVOYE", "REPONDU", "PAS_DE_WHATSAPP", "CONVERTI"];
 const STATUS_LABELS: Record<string, string> = {
@@ -31,7 +32,34 @@ const PRIORITY_LABELS: Record<number, string> = {
   3: "3 — A un site",
 };
 
+const ACTION_LABELS: Record<string, string> = {
+  CREATED: "created prospect",
+  ASSIGNED: "assigned prospect",
+  SENT_WHATSAPP: "sent WhatsApp message",
+  SENT_INSTAGRAM: "sent Instagram DM",
+  FOLLOW_UP: "sent follow-up",
+  MARKED_REPLIED: "marked as replied",
+  MARKED_NO_WHATSAPP: "marked as no WhatsApp",
+  STATUS_ENVOYE: "changed status to Envoyé",
+  STATUS_REPONDU: "changed status to Répondu",
+  STATUS_CONVERTI: "converted to lead",
+  NOTE_ADDED: "added a note",
+  UPDATED: "updated details",
+};
+
 type Note = { id: string; content: string; createdAt: string };
+type Activity = {
+  id: string;
+  userId: string;
+  userName: string;
+  actionType: string;
+  previousStatus: string | null;
+  newStatus: string | null;
+  details: string | null;
+  createdAt: string;
+};
+type Owner = { id: string; fullName: string; avatarInitials: string };
+type TeamUser = { id: string; fullName: string; avatarInitials: string };
 type Prospect = {
   id: string;
   name: string;
@@ -45,7 +73,13 @@ type Prospect = {
   status: string;
   sentAt: string | null;
   createdAt: string;
+  owner: Owner | null;
+  contactedByName: string | null;
+  contactedAt: string | null;
+  lastActionByName: string | null;
+  lastActionAt: string | null;
   notes: Note[];
+  activities: Activity[];
 };
 
 export default function ProspectDetailPage() {
@@ -57,6 +91,7 @@ export default function ProspectDetailPage() {
   const [loading, setLoading] = useState(true);
   const [noteText, setNoteText] = useState("");
   const [saving, setSaving] = useState(false);
+  const [teamUsers, setTeamUsers] = useState<TeamUser[]>([]);
 
   useEffect(() => {
     fetch(`/api/admin/prospecting/${id}`)
@@ -66,18 +101,35 @@ export default function ProspectDetailPage() {
         return r.json();
       })
       .then((data) => { if (data) setProspect(data); setLoading(false); });
+    fetch("/api/admin/users")
+      .then((r) => r.ok ? r.json() : [])
+      .then((users) => setTeamUsers(users.filter((u: { isActive: boolean }) => u.isActive)))
+      .catch(() => {});
   }, [id, router]);
 
   async function handleStatusChange(newStatus: string) {
     const res = await fetch(`/api/admin/prospecting/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
+      body: JSON.stringify({ status: newStatus, actionType: `STATUS_${newStatus}` }),
     });
     if (res.ok) {
       const updated = await res.json();
       setProspect((prev) => prev ? { ...prev, status: newStatus, sentAt: updated.sentAt } : prev);
+      refreshActivities();
     }
+  }
+
+  async function handleOwnerChange(ownerUserId: string) {
+    const value = ownerUserId === "UNASSIGN" ? null : ownerUserId;
+    await fetch(`/api/admin/prospecting/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ownerUserId: value }),
+    });
+    const owner = value ? teamUsers.find((u) => u.id === value) || null : null;
+    setProspect((prev) => prev ? { ...prev, owner } : prev);
+    refreshActivities();
   }
 
   async function handleConvertToLead() {
@@ -108,8 +160,24 @@ export default function ProspectDetailPage() {
       const note = await res.json();
       setProspect((prev) => prev ? { ...prev, notes: [note, ...prev.notes] } : prev);
       setNoteText("");
+      refreshActivities();
     }
     setSaving(false);
+  }
+
+  async function refreshActivities() {
+    const res = await fetch(`/api/admin/prospecting/${id}`);
+    if (res.ok) {
+      const data = await res.json();
+      setProspect((prev) => prev ? {
+        ...prev,
+        activities: data.activities,
+        contactedByName: data.contactedByName,
+        contactedAt: data.contactedAt,
+        lastActionByName: data.lastActionByName,
+        lastActionAt: data.lastActionAt,
+      } : prev);
+    }
   }
 
   if (loading) return <div className="text-gray-500 animate-pulse">Loading...</div>;
@@ -138,6 +206,49 @@ export default function ProspectDetailPage() {
             <option key={s} value={s} className="bg-[#1a1a2e] text-gray-200">{STATUS_LABELS[s]}</option>
           ))}
         </select>
+      </div>
+
+      {/* Owner & Contact Info */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+        <div className="border border-white/10 rounded-xl p-4">
+          <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">Owner</p>
+          <select
+            value={prospect.owner?.id ?? "UNASSIGN"}
+            onChange={(e) => handleOwnerChange(e.target.value)}
+            className="w-full px-2 py-1.5 bg-[#1a1a2e] border border-white/10 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-violet-500"
+          >
+            <option value="UNASSIGN">Unassigned</option>
+            {teamUsers.map((u) => (
+              <option key={u.id} value={u.id}>{u.fullName}</option>
+            ))}
+          </select>
+        </div>
+        <div className="border border-white/10 rounded-xl p-4">
+          <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">First Contact</p>
+          {prospect.contactedByName ? (
+            <div>
+              <p className="text-sm text-gray-200">{prospect.contactedByName}</p>
+              <p className="text-xs text-gray-500">
+                {prospect.contactedAt && new Date(prospect.contactedAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">Not contacted yet</p>
+          )}
+        </div>
+        <div className="border border-white/10 rounded-xl p-4">
+          <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">Last Action</p>
+          {prospect.lastActionByName ? (
+            <div>
+              <p className="text-sm text-gray-200">{prospect.lastActionByName}</p>
+              <p className="text-xs text-gray-500">
+                {prospect.lastActionAt && new Date(prospect.lastActionAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">No actions yet</p>
+          )}
+        </div>
       </div>
 
       {/* Prospect info */}
@@ -218,6 +329,35 @@ export default function ProspectDetailPage() {
           <HiOutlineArrowLeft className="w-4 h-4 rotate-180" />
           Convert to Lead
         </button>
+      )}
+
+      {/* Activity Timeline */}
+      {prospect.activities && prospect.activities.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-medium text-gray-200 mb-4">Activity Timeline</h2>
+          <div className="space-y-0 border-l-2 border-white/10 ml-3">
+            {prospect.activities.map((activity) => (
+              <div key={activity.id} className="relative pl-6 pb-4">
+                <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-violet-500" />
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-gray-300">
+                      <span className="font-medium text-gray-200">{activity.userName}</span>
+                      {" "}
+                      {ACTION_LABELS[activity.actionType] ?? activity.actionType}
+                    </p>
+                    {activity.details && activity.actionType === "NOTE_ADDED" && (
+                      <p className="text-xs text-gray-500 mt-0.5 truncate">&ldquo;{activity.details}&rdquo;</p>
+                    )}
+                    <p className="text-[10px] text-gray-600 mt-0.5">
+                      {new Date(activity.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Notes */}

@@ -22,16 +22,22 @@ export async function POST(req: Request) {
   const { email, password } = parsed.data;
 
   try {
-    const user = await prisma.adminUser.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user || !(await verifyPassword(password, user.passwordHash))) {
+    if (!user || !user.isActive || !(await verifyPassword(password, user.passwordHash))) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    const token = await signToken({ userId: user.id, email: user.email });
+    const token = await signToken({
+      userId: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      avatarInitials: user.avatarInitials,
+    });
     const cookie = createSessionCookie(token);
 
-    const res = NextResponse.json({ success: true, name: user.name });
+    const res = NextResponse.json({ success: true, name: user.fullName, role: user.role });
     res.cookies.set(cookie);
     return res;
   } catch (e) {

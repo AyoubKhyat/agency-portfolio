@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { addProspectNote } from "@/lib/dal";
+import { addProspectNote, logProspectActivity } from "@/lib/dal";
 import { z } from "zod";
 
 export async function POST(
@@ -16,5 +16,14 @@ export async function POST(
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
   const note = await addProspectNote(id, parsed.data.content);
+
+  await logProspectActivity({
+    prospectId: id,
+    userId: session.userId,
+    userName: session.fullName,
+    actionType: "NOTE_ADDED",
+    details: parsed.data.content.slice(0, 200),
+  });
+
   return NextResponse.json(note, { status: 201 });
 }

@@ -8,6 +8,14 @@ const SECRET = new TextEncoder().encode(
 
 const COOKIE_NAME = "admin_token";
 
+export type SessionUser = {
+  userId: string;
+  email: string;
+  fullName: string;
+  role: string;
+  avatarInitials: string;
+};
+
 export async function hashPassword(plain: string) {
   return bcrypt.hash(plain, 12);
 }
@@ -16,24 +24,24 @@ export async function verifyPassword(plain: string, hash: string) {
   return bcrypt.compare(plain, hash);
 }
 
-export async function signToken(payload: { userId: string; email: string }) {
-  return new SignJWT(payload)
+export async function signToken(payload: SessionUser) {
+  return new SignJWT(payload as unknown as Record<string, unknown>)
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("7d")
     .setIssuedAt()
     .sign(SECRET);
 }
 
-export async function verifyToken(token: string) {
+export async function verifyToken(token: string): Promise<SessionUser | null> {
   try {
     const { payload } = await jwtVerify(token, SECRET);
-    return payload as { userId: string; email: string };
+    return payload as unknown as SessionUser;
   } catch {
     return null;
   }
 }
 
-export async function getSession() {
+export async function getSession(): Promise<SessionUser | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;

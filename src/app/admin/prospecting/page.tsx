@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { HiOutlinePlus, HiOutlineArrowUpTray, HiOutlinePaperAirplane, HiOutlinePencilSquare, HiOutlineTrash } from "react-icons/hi2";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
+import AvatarChip from "@/components/AvatarChip";
 
 type MsgTemplate = (ig: string, followers: string) => string;
 
@@ -120,14 +121,12 @@ function getPersonalizedMessage(p: Prospect, noteContent: string): string {
   const templates = TEMPLATES[p.sector] || DEFAULT_TEMPLATES;
   const idx = sendCounter % templates.length;
   sendCounter++;
-
   const ig = p.instagram?.replace(/^@/, "") || "";
   let followers = "";
   if (noteContent) {
     const match = noteContent.match(/(\d+K?\+?)\s*followers/i);
     if (match) followers = `, ${match[1]} abonnés — bravo`;
   }
-
   return templates[idx](ig, followers);
 }
 
@@ -171,6 +170,7 @@ const SECTORS = [
   "Photographe/Vidéaste", "Traiteur",
 ];
 
+type Owner = { id: string; fullName: string; avatarInitials: string };
 type Prospect = {
   id: string;
   name: string;
@@ -184,8 +184,10 @@ type Prospect = {
   status: string;
   sentAt: string | null;
   createdAt: string;
+  owner: Owner | null;
   notes: { id: string; content: string; createdAt: string }[];
 };
+type TeamUser = { id: string; fullName: string; avatarInitials: string };
 
 export default function ProspectingPage() {
   return (
@@ -200,6 +202,7 @@ function ProspectingContent() {
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status") ?? "ALL";
   const sectorFilter = searchParams.get("sector") ?? "ALL";
+  const ownerFilter = searchParams.get("owner") ?? "ALL";
   const pageParam = parseInt(searchParams.get("page") ?? "1", 10);
 
   const [prospects, setProspects] = useState<Prospect[]>([]);
@@ -207,13 +210,25 @@ function ProspectingContent() {
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
+  const [teamUsers, setTeamUsers] = useState<TeamUser[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkAssigning, setBulkAssigning] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    fetch("/api/admin/users")
+      .then((r) => r.ok ? r.json() : [])
+      .then((users) => setTeamUsers(users.filter((u: { isActive: boolean }) => u.isActive)))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     setLoading(true);
+    setSelected(new Set());
     const qs = new URLSearchParams();
     if (statusFilter !== "ALL") qs.set("status", statusFilter);
     if (sectorFilter !== "ALL") qs.set("sector", sectorFilter);
+    if (ownerFilter !== "ALL") qs.set("owner", ownerFilter);
     qs.set("page", String(pageParam));
 
     fetch(`/api/admin/prospecting?${qs}`)
@@ -229,12 +244,13 @@ function ProspectingContent() {
         }
         setLoading(false);
       });
-  }, [statusFilter, sectorFilter, pageParam, router]);
+  }, [statusFilter, sectorFilter, ownerFilter, pageParam, router]);
 
-  function navigate(status: string, sector: string, page = 1) {
+  function navigate(status: string, sector: string, owner: string, page = 1) {
     const qs = new URLSearchParams();
     if (status !== "ALL") qs.set("status", status);
     if (sector !== "ALL") qs.set("sector", sector);
+    if (owner !== "ALL") qs.set("owner", owner);
     if (page > 1) qs.set("page", String(page));
     router.push(`/admin/prospecting${qs.toString() ? `?${qs}` : ""}`);
   }
@@ -260,7 +276,6 @@ function ProspectingContent() {
   async function handleSend(p: Prospect) {
     const noteContent = p.notes?.[0]?.content || "";
     const msg = getPersonalizedMessage(p, noteContent);
-
     const digits = p.phone?.replace(/\D/g, "") || "";
     const isLandline = /^0?5\d{8}$/.test(digits) || /^2125\d{8}$/.test(digits);
     const hasMobile = p.phone && !isLandline;
@@ -280,10 +295,11 @@ function ProspectingContent() {
     }
 
     if (p.status === "A_ENVOYER" || p.status === "PAS_DE_WHATSAPP") {
+      const actionType = hasMobile ? "SENT_WHATSAPP" : "SENT_INSTAGRAM";
       const res = await fetch(`/api/admin/prospecting/${p.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "ENVOYE" }),
+        body: JSON.stringify({ status: "ENVOYE", actionType, details: hasMobile ? "Sent WhatsApp message" : "Sent Instagram DM" }),
       });
       if (res.ok) {
         setProspects((prev) =>
@@ -312,11 +328,10 @@ function ProspectingContent() {
       return;
     }
 
-    // Re-mark as ENVOYE with fresh sentAt so follow-up button resets
     await fetch(`/api/admin/prospecting/${p.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "ENVOYE" }),
+      body: JSON.stringify({ status: "ENVOYE", actionType: "FOLLOW_UP", details: "Sent follow-up message" }),
     }).catch(() => {});
     setProspects((prev) =>
       prev.map((pr) => pr.id === p.id ? { ...pr, status: "ENVOYE", sentAt: new Date().toISOString() } : pr)
@@ -327,7 +342,7 @@ function ProspectingContent() {
     await fetch(`/api/admin/prospecting/${p.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "REPONDU" }),
+      body: JSON.stringify({ status: "REPONDU", actionType: "MARKED_REPLIED" }),
     });
     setProspects((prev) =>
       prev.map((pr) => pr.id === p.id ? { ...pr, status: "REPONDU" } : pr)
@@ -338,11 +353,55 @@ function ProspectingContent() {
     await fetch(`/api/admin/prospecting/${p.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "PAS_DE_WHATSAPP" }),
+      body: JSON.stringify({ status: "PAS_DE_WHATSAPP", actionType: "MARKED_NO_WHATSAPP" }),
     });
     setProspects((prev) =>
       prev.map((pr) => pr.id === p.id ? { ...pr, status: "PAS_DE_WHATSAPP" } : pr)
     );
+  }
+
+  async function handleAssign(prospectId: string, ownerUserId: string | null) {
+    await fetch(`/api/admin/prospecting/${prospectId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ownerUserId }),
+    });
+    const owner = ownerUserId ? teamUsers.find((u) => u.id === ownerUserId) || null : null;
+    setProspects((prev) =>
+      prev.map((pr) => pr.id === prospectId ? { ...pr, owner } : pr)
+    );
+  }
+
+  async function handleBulkAssign(ownerUserId: string | null) {
+    if (selected.size === 0) return;
+    setBulkAssigning(true);
+    await fetch("/api/admin/prospecting/bulk-assign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prospectIds: Array.from(selected), ownerUserId }),
+    });
+    const owner = ownerUserId ? teamUsers.find((u) => u.id === ownerUserId) || null : null;
+    setProspects((prev) =>
+      prev.map((pr) => selected.has(pr.id) ? { ...pr, owner } : pr)
+    );
+    setSelected(new Set());
+    setBulkAssigning(false);
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selected.size === prospects.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(prospects.map((p) => p.id)));
+    }
   }
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -357,7 +416,7 @@ function ProspectingContent() {
     if (fileRef.current) fileRef.current.value = "";
     if (res.ok) {
       alert(`Imported ${data.imported} prospects.${data.errors?.length ? `\n\nErrors:\n${data.errors.join("\n")}` : ""}`);
-      navigate(statusFilter, sectorFilter, 1);
+      navigate(statusFilter, sectorFilter, ownerFilter, 1);
     } else {
       alert(`Import failed: ${data.error}`);
     }
@@ -394,7 +453,7 @@ function ProspectingContent() {
         {STATUSES.map((s) => (
           <button
             key={s}
-            onClick={() => navigate(s, sectorFilter)}
+            onClick={() => navigate(s, sectorFilter, ownerFilter)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               statusFilter === s
                 ? "bg-violet-500/15 text-violet-400"
@@ -407,11 +466,11 @@ function ProspectingContent() {
       </div>
 
       {/* Sector filters */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-3">
         {SECTORS.map((s) => (
           <button
             key={s}
-            onClick={() => navigate(statusFilter, s)}
+            onClick={() => navigate(statusFilter, s, ownerFilter)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               sectorFilter === s
                 ? "bg-violet-500/15 text-violet-400"
@@ -423,6 +482,70 @@ function ProspectingContent() {
         ))}
       </div>
 
+      {/* Owner filters */}
+      {teamUsers.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          <button
+            onClick={() => navigate(statusFilter, sectorFilter, "ALL")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              ownerFilter === "ALL" ? "bg-violet-500/15 text-violet-400" : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+            }`}
+          >
+            All owners
+          </button>
+          <button
+            onClick={() => navigate(statusFilter, sectorFilter, "UNASSIGNED")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              ownerFilter === "UNASSIGNED" ? "bg-violet-500/15 text-violet-400" : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+            }`}
+          >
+            Unassigned
+          </button>
+          {teamUsers.map((u) => (
+            <button
+              key={u.id}
+              onClick={() => navigate(statusFilter, sectorFilter, u.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors inline-flex items-center gap-1.5 ${
+                ownerFilter === u.id ? "bg-violet-500/15 text-violet-400" : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+              }`}
+            >
+              <AvatarChip initials={u.avatarInitials} name={u.fullName} showName={false} size="xs" />
+              {u.fullName.split(" ")[0]}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Bulk action toolbar */}
+      {selected.size > 0 && (
+        <div className="flex items-center gap-3 mb-4 p-3 bg-violet-500/10 border border-violet-500/20 rounded-xl">
+          <span className="text-sm text-violet-400 font-medium">{selected.size} selected</span>
+          <select
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "") return;
+              handleBulkAssign(val === "UNASSIGN" ? null : val);
+              e.target.value = "";
+            }}
+            disabled={bulkAssigning}
+            className="px-3 py-1.5 bg-[#1a1a2e] border border-white/10 rounded-lg text-xs text-gray-200 focus:outline-none focus:border-violet-500"
+            defaultValue=""
+          >
+            <option value="" disabled>Assign to...</option>
+            <option value="UNASSIGN">Unassign</option>
+            {teamUsers.map((u) => (
+              <option key={u.id} value={u.id}>{u.fullName}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => setSelected(new Set())}
+            className="text-xs text-gray-500 hover:text-gray-300"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="text-gray-500 animate-pulse">Loading...</div>
       ) : prospects.length === 0 ? (
@@ -433,9 +556,17 @@ function ProspectingContent() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/10 bg-white/5">
+                  <th className="px-3 py-3 w-8">
+                    <input
+                      type="checkbox"
+                      checked={selected.size === prospects.length && prospects.length > 0}
+                      onChange={toggleSelectAll}
+                      className="rounded border-white/20 bg-white/5"
+                    />
+                  </th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Name</th>
+                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Owner</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Sector</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Quartier</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Priority</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Status</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Sent</th>
@@ -444,7 +575,15 @@ function ProspectingContent() {
               </thead>
               <tbody>
                 {prospects.map((p) => (
-                  <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <tr key={p.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${selected.has(p.id) ? "bg-violet-500/5" : ""}`}>
+                    <td className="px-3 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(p.id)}
+                        onChange={() => toggleSelect(p.id)}
+                        className="rounded border-white/20 bg-white/5"
+                      />
+                    </td>
                     <td className="px-4 py-3">
                       <Link href={`/admin/prospecting/${p.id}`} className="text-gray-200 font-medium hover:text-violet-400 transition-colors">
                         {p.name}
@@ -453,8 +592,23 @@ function ProspectingContent() {
                         <span className="ml-2 text-xs text-gray-500">@{p.instagram.replace(/^@/, "")}</span>
                       )}
                     </td>
+                    <td className="px-4 py-3">
+                      {p.owner ? (
+                        <AvatarChip initials={p.owner.avatarInitials} name={p.owner.fullName} size="xs" />
+                      ) : (
+                        <select
+                          onChange={(e) => { if (e.target.value) handleAssign(p.id, e.target.value); e.target.value = ""; }}
+                          className="px-1.5 py-1 bg-transparent border border-white/10 rounded text-[10px] text-gray-500 focus:outline-none focus:border-violet-500 cursor-pointer"
+                          defaultValue=""
+                        >
+                          <option value="" disabled>Assign</option>
+                          {teamUsers.map((u) => (
+                            <option key={u.id} value={u.id}>{u.fullName}</option>
+                          ))}
+                        </select>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-gray-400 text-xs">{p.sector}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs">{p.neighborhood || "—"}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${PRIORITY_COLORS[p.priority] ?? PRIORITY_COLORS[2]}`}>
                         {PRIORITY_LABELS[p.priority] ?? `P${p.priority}`}
@@ -544,7 +698,7 @@ function ProspectingContent() {
               {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
                 <button
                   key={p}
-                  onClick={() => navigate(statusFilter, sectorFilter, p)}
+                  onClick={() => navigate(statusFilter, sectorFilter, ownerFilter, p)}
                   className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${
                     p === pageParam
                       ? "bg-violet-500 text-white"

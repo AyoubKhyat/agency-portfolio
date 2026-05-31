@@ -1,6 +1,7 @@
 import { prisma, hasPrisma } from "./prisma";
 import { FALLBACK_PROJECTS, FALLBACK_SLUGS } from "./fallback-projects";
 import { getTranslations } from "next-intl/server";
+import { hashPassword } from "./auth";
 
 function db() {
   if (!hasPrisma()) throw new Error("Database not available");
@@ -11,10 +12,8 @@ function db() {
 
 async function getFallbackProjects(locale: string) {
   let t: Awaited<ReturnType<typeof getTranslations>>;
-  let cs: Awaited<ReturnType<typeof getTranslations>>;
   try {
     t = await getTranslations({ locale, namespace: "Portfolio" });
-    cs = await getTranslations({ locale, namespace: "CaseStudy" });
   } catch {
     return FALLBACK_PROJECTS.map((p) => ({
       ...p, title: p.slug, desc: "", tags: "",
@@ -303,17 +302,122 @@ export async function addLeadNote(leadId: string, content: string) {
   return db().leadNote.create({ data: { leadId, content } });
 }
 
+// ─── Users ──────────────────────────────────────────────────────
+
+export async function getUsers() {
+  return db().user.findMany({
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      role: true,
+      avatarInitials: true,
+      isActive: true,
+      createdAt: true,
+    },
+  });
+}
+
+export async function getUserById(id: string) {
+  return db().user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      role: true,
+      avatarInitials: true,
+      isActive: true,
+      createdAt: true,
+    },
+  });
+}
+
+export async function createUser(data: {
+  fullName: string;
+  email: string;
+  password: string;
+  role: string;
+  avatarInitials: string;
+}) {
+  const passwordHash = await hashPassword(data.password);
+  return db().user.create({
+    data: {
+      fullName: data.fullName,
+      email: data.email,
+      passwordHash,
+      role: data.role,
+      avatarInitials: data.avatarInitials,
+    },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      role: true,
+      avatarInitials: true,
+      isActive: true,
+      createdAt: true,
+    },
+  });
+}
+
+export async function updateUser(id: string, data: {
+  fullName?: string;
+  email?: string;
+  role?: string;
+  avatarInitials?: string;
+  isActive?: boolean;
+  password?: string;
+}) {
+  const updateData: Record<string, unknown> = {};
+  if (data.fullName !== undefined) updateData.fullName = data.fullName;
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.role !== undefined) updateData.role = data.role;
+  if (data.avatarInitials !== undefined) updateData.avatarInitials = data.avatarInitials;
+  if (data.isActive !== undefined) updateData.isActive = data.isActive;
+  if (data.password) updateData.passwordHash = await hashPassword(data.password);
+
+  return db().user.update({
+    where: { id },
+    data: updateData,
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      role: true,
+      avatarInitials: true,
+      isActive: true,
+      createdAt: true,
+    },
+  });
+}
+
 // ─── Prospecting ────────────────────────────────────────────────
 
-export async function getProspects(page = 1, status?: string, sector?: string) {
+export async function getProspects(page = 1, status?: string, sector?: string, ownerUserId?: string) {
   const take = 20;
   const skip = (page - 1) * take;
   const where: Record<string, unknown> = {};
   if (status && status !== "ALL") where.status = status;
   if (sector && sector !== "ALL") where.sector = sector;
+  if (ownerUserId === "UNASSIGNED") {
+    where.ownerUserId = null;
+  } else if (ownerUserId && ownerUserId !== "ALL") {
+    where.ownerUserId = ownerUserId;
+  }
 
   const [prospects, total] = await Promise.all([
-    db().prospect.findMany({ where, orderBy: { createdAt: "desc" }, take, skip, include: { notes: { orderBy: { createdAt: "desc" }, take: 1 } } }),
+    db().prospect.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take,
+      skip,
+      include: {
+        notes: { orderBy: { createdAt: "desc" }, take: 1 },
+        owner: { select: { id: true, fullName: true, avatarInitials: true } },
+      },
+    }),
     db().prospect.count({ where }),
   ]);
 
@@ -323,7 +427,14 @@ export async function getProspects(page = 1, status?: string, sector?: string) {
 export async function getProspectById(id: string) {
   return db().prospect.findUnique({
     where: { id },
-    include: { notes: { orderBy: { createdAt: "desc" } } },
+    include: {
+      notes: { orderBy: { createdAt: "desc" } },
+      owner: { select: { id: true, fullName: true, avatarInitials: true } },
+      activities: {
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      },
+    },
   });
 }
 
@@ -338,6 +449,7 @@ export async function createProspect(data: {
   priority?: number;
   status?: string;
   sentAt?: Date | null;
+  ownerUserId?: string;
 }) {
   const phone = data.phone.replace(/\D/g, "");
   const whatsappLink = data.whatsappLink || `https://wa.me/${phone}`;
@@ -353,6 +465,7 @@ export async function createProspect(data: {
       priority: data.priority ?? 2,
       status: data.status ?? "A_ENVOYER",
       sentAt: data.sentAt ?? null,
+      ownerUserId: data.ownerUserId ?? null,
     },
   });
 }
@@ -371,8 +484,120 @@ export async function updateProspectStatus(id: string, status: string) {
   return db().prospect.update({ where: { id }, data });
 }
 
+export async function assignProspectOwner(id: string, ownerUserId: string | null) {
+  return db().prospect.update({
+    where: { id },
+    data: { ownerUserId },
+  });
+}
+
+export async function bulkAssignOwner(prospectIds: string[], ownerUserId: string | null) {
+  return db().prospect.updateMany({
+    where: { id: { in: prospectIds } },
+    data: { ownerUserId },
+  });
+}
+
 export async function addProspectNote(prospectId: string, content: string) {
   return db().prospectNote.create({ data: { prospectId, content } });
+}
+
+// ─── Prospect Activities ────────────────────────────────────────
+
+export async function logProspectActivity(data: {
+  prospectId: string;
+  userId: string;
+  userName: string;
+  actionType: string;
+  previousStatus?: string;
+  newStatus?: string;
+  details?: string;
+}) {
+  const activity = await db().prospectActivity.create({ data });
+
+  await db().prospect.update({
+    where: { id: data.prospectId },
+    data: {
+      lastActionByUserId: data.userId,
+      lastActionByName: data.userName,
+      lastActionAt: new Date(),
+    },
+  });
+
+  return activity;
+}
+
+export async function setProspectFirstContact(prospectId: string, userId: string, userName: string) {
+  const prospect = await db().prospect.findUnique({ where: { id: prospectId } });
+  if (prospect && !prospect.contactedByUserId) {
+    await db().prospect.update({
+      where: { id: prospectId },
+      data: {
+        contactedByUserId: userId,
+        contactedByName: userName,
+        contactedAt: new Date(),
+      },
+    });
+  }
+}
+
+export async function getProspectActivities(prospectId: string) {
+  return db().prospectActivity.findMany({
+    where: { prospectId },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export async function getRecentActivities(limit = 50, userId?: string) {
+  const where = userId ? { userId } : {};
+  return db().prospectActivity.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    include: {
+      prospect: { select: { id: true, name: true, sector: true } },
+    },
+  });
+}
+
+// ─── Team Stats ─────────────────────────────────────────────────
+
+export async function getTeamStats() {
+  const users = await db().user.findMany({
+    where: { isActive: true },
+    select: { id: true, fullName: true, avatarInitials: true, role: true },
+  });
+
+  const stats = await Promise.all(
+    users.map(async (user) => {
+      const [assigned, contacted, replied, converted] = await Promise.all([
+        db().prospect.count({ where: { ownerUserId: user.id } }),
+        db().prospect.count({ where: { contactedByUserId: user.id } }),
+        db().prospect.count({ where: { contactedByUserId: user.id, status: "REPONDU" } }),
+        db().prospect.count({ where: { contactedByUserId: user.id, status: "CONVERTI" } }),
+      ]);
+
+      const lastActivity = await db().prospectActivity.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true, actionType: true },
+      });
+
+      return {
+        user,
+        assigned,
+        contacted,
+        replied,
+        converted,
+        replyRate: contacted > 0 ? Math.round((replied / contacted) * 100) : 0,
+        conversionRate: contacted > 0 ? Math.round((converted / contacted) * 100) : 0,
+        lastActivity: lastActivity?.createdAt ?? null,
+        lastActionType: lastActivity?.actionType ?? null,
+      };
+    })
+  );
+
+  return stats;
 }
 
 // ─── Stats ───────────────────────────────────────────────────────

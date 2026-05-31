@@ -93,7 +93,7 @@ export async function POST(req: Request) {
 
       if (noteContent) {
         const { addProspectNote } = await import("@/lib/dal");
-        const prospects = await (await import("@/lib/dal")).getProspects(1, undefined, undefined);
+        const prospects = await (await import("@/lib/dal")).getProspects(1, undefined, undefined, undefined);
         const latest = prospects.prospects.find((p) => p.name === name);
         if (latest) await addProspectNote(latest.id, noteContent);
       }

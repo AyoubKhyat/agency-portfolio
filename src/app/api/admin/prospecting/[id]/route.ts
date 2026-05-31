@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getProspectById, updateProspectStatus, updateProspect, deleteProspect } from "@/lib/dal";
+import { getProspectById, updateProspectStatus, updateProspect, deleteProspect, assignProspectOwner, logProspectActivity, setProspectFirstContact } from "@/lib/dal";
 import { z } from "zod";
 
 export async function GET(
@@ -16,6 +16,13 @@ export async function GET(
   return NextResponse.json(prospect);
 }
 
+const patchSchema = z.object({
+  status: z.enum(["A_ENVOYER", "ENVOYE", "REPONDU", "PAS_DE_WHATSAPP", "CONVERTI"]).optional(),
+  ownerUserId: z.string().nullable().optional(),
+  actionType: z.string().optional(),
+  details: z.string().optional(),
+});
+
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -25,13 +32,50 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await req.json();
-  const parsed = z.object({
-    status: z.enum(["A_ENVOYER", "ENVOYE", "REPONDU", "PAS_DE_WHATSAPP", "CONVERTI"]),
-  }).safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  const parsed = patchSchema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
-  const prospect = await updateProspectStatus(id, parsed.data.status);
-  return NextResponse.json(prospect);
+  const current = await getProspectById(id);
+  if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  if (parsed.data.ownerUserId !== undefined) {
+    await assignProspectOwner(id, parsed.data.ownerUserId);
+    await logProspectActivity({
+      prospectId: id,
+      userId: session.userId,
+      userName: session.fullName,
+      actionType: "ASSIGNED",
+      details: parsed.data.ownerUserId
+        ? `Assigned prospect`
+        : "Unassigned prospect",
+    });
+  }
+
+  if (parsed.data.status) {
+    const previousStatus = current.status;
+    const prospect = await updateProspectStatus(id, parsed.data.status);
+
+    const actionType = parsed.data.actionType || `STATUS_${parsed.data.status}`;
+
+    await logProspectActivity({
+      prospectId: id,
+      userId: session.userId,
+      userName: session.fullName,
+      actionType,
+      previousStatus,
+      newStatus: parsed.data.status,
+      details: parsed.data.details,
+    });
+
+    if (parsed.data.status === "ENVOYE" || parsed.data.status === "REPONDU") {
+      await setProspectFirstContact(id, session.userId, session.fullName);
+    }
+
+    return NextResponse.json(prospect);
+  }
+
+  const updated = await getProspectById(id);
+  return NextResponse.json(updated);
 }
 
 const updateSchema = z.object({
@@ -44,6 +88,7 @@ const updateSchema = z.object({
   hasWebsite: z.boolean().optional().default(false),
   priority: z.number().int().min(1).max(3).optional().default(2),
   status: z.string().optional(),
+  ownerUserId: z.string().nullable().optional(),
 });
 
 export async function PUT(
@@ -66,6 +111,15 @@ export async function PUT(
   const whatsappLink = parsed.data.whatsappLink || `https://wa.me/${phone}`;
 
   const prospect = await updateProspect(id, { ...parsed.data, whatsappLink });
+
+  await logProspectActivity({
+    prospectId: id,
+    userId: session.userId,
+    userName: session.fullName,
+    actionType: "UPDATED",
+    details: "Updated prospect details",
+  });
+
   return NextResponse.json(prospect);
 }
 

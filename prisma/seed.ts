@@ -9,6 +9,14 @@ import ar from "../src/messages/ar.json";
 const adapter = new PrismaNeon(process.env.DATABASE_URL!);
 const prisma = new PrismaClient({ adapter });
 
+const TEAM_MEMBERS = [
+  { fullName: "Ayoub Khyat", email: "ayoubkhyat@gmail.com", role: "admin", avatarInitials: "AK", password: "ibda3admin2026" },
+  { fullName: "Mohammed Yousfi", email: "mohammed.yousfi@ibda3digital.com", role: "sales", avatarInitials: "MY", password: "ibda3sales2026" },
+  { fullName: "Ismail Sarhir", email: "ismail.sarhir@ibda3digital.com", role: "sales", avatarInitials: "IS", password: "ibda3sales2026" },
+  { fullName: "Soufiane El Kaabaoui", email: "soufiane.elkaabaoui@ibda3digital.com", role: "sales", avatarInitials: "SE", password: "ibda3sales2026" },
+  { fullName: "Abderrahmane Ait Taleb", email: "abderrahmane.aittaleb@ibda3digital.com", role: "developer", avatarInitials: "AA", password: "ibda3dev2026" },
+];
+
 const PROJECTS = [
   { slug: "hammam-nour", category: "web", url: "https://hammam-nour.vercel.app/", image: "/projects/hammam-nour.webp", tag: "Spa & Wellness", key: "project11" },
   { slug: "goudoukh", category: "web", url: "https://goudoukh-luxury-cars.vercel.app/", image: "/projects/goudoukh.webp", tag: "Luxury car rental", key: "project9" },
@@ -55,17 +63,32 @@ function getTranslation(
 async function main() {
   console.log("Seeding database...");
 
-  // Admin user
-  const email = process.env.ADMIN_EMAIL || "ayoubkhyat@gmail.com";
-  const password = process.env.ADMIN_PASSWORD || "admin123";
-  const hash = await bcrypt.hash(password, 12);
+  // Team members (new User model)
+  for (const member of TEAM_MEMBERS) {
+    const hash = await bcrypt.hash(member.password, 12);
+    await prisma.user.upsert({
+      where: { email: member.email },
+      update: { passwordHash: hash, fullName: member.fullName, role: member.role, avatarInitials: member.avatarInitials },
+      create: {
+        fullName: member.fullName,
+        email: member.email,
+        passwordHash: hash,
+        role: member.role,
+        avatarInitials: member.avatarInitials,
+      },
+    });
+    console.log(`  User: ${member.fullName} (${member.email}) — role: ${member.role}`);
+  }
 
+  // Legacy admin user (keep for backward compat)
+  const adminEmail = process.env.ADMIN_EMAIL || "ayoubkhyat@gmail.com";
+  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+  const adminHash = await bcrypt.hash(adminPassword, 12);
   await prisma.adminUser.upsert({
-    where: { email },
-    update: { passwordHash: hash },
-    create: { email, passwordHash: hash, name: "Ayoub Khyat" },
+    where: { email: adminEmail },
+    update: { passwordHash: adminHash },
+    create: { email: adminEmail, passwordHash: adminHash, name: "Ayoub Khyat" },
   });
-  console.log(`Admin user: ${email}`);
 
   // Projects
   for (let i = 0; i < PROJECTS.length; i++) {
@@ -96,6 +119,15 @@ async function main() {
       },
     });
     console.log(`  Created: ${p.slug}`);
+  }
+
+  console.log("\n=== TEAM CREDENTIALS ===");
+  console.log("Change these passwords after first login!\n");
+  for (const m of TEAM_MEMBERS) {
+    console.log(`  ${m.fullName}`);
+    console.log(`    Email:    ${m.email}`);
+    console.log(`    Password: ${m.password}`);
+    console.log(`    Role:     ${m.role}\n`);
   }
 
   console.log("Seed complete.");
