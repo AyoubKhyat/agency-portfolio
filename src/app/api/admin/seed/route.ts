@@ -4,10 +4,10 @@ import bcrypt from "bcryptjs";
 
 const TEAM = [
   { name: "Ayoub Khyat", email: "ayoubkhyat@gmail.com", password: "AyoubKhyat2026", role: "admin", initials: "AK" },
-  { name: "Mohammed Yousfi", email: "mohammed.yousfi@ibda3digital.com", password: "MohammedYousfi2026", role: "sales", initials: "MY" },
-  { name: "Ismail Sarhir", email: "ismail.sarhir@ibda3digital.com", password: "IsmailSarhir2026", role: "sales", initials: "IS" },
-  { name: "Soufiane El Kaabaoui", email: "soufiane.elkaabaoui@ibda3digital.com", password: "SoufianeElKaabaoui2026", role: "sales", initials: "SE" },
-  { name: "Abderrahmane Ait Taleb", email: "abderrahmane.aittaleb@ibda3digital.com", password: "AbderrahmaneAitTaleb2026", role: "developer", initials: "AA" },
+  { name: "Mohammed Yousfi", email: "mohammed.yousfi@ibda3digital.com", password: "MohammedYousfi2026", role: "admin", initials: "MY" },
+  { name: "Ismail Sarhir", email: "ismail.sarhir@ibda3digital.com", password: "IsmailSarhir2026", role: "admin", initials: "IS" },
+  { name: "Soufiane El Kaabaoui", email: "soufiane.elkaabaoui@ibda3digital.com", password: "SoufianeElKaabaoui2026", role: "admin", initials: "SE" },
+  { name: "Abderrahmane Ait Taleb", email: "abderrahmane.aittaleb@ibda3digital.com", password: "AbderrahmaneAitTaleb2026", role: "admin", initials: "AA" },
 ];
 
 export async function POST(req: Request) {

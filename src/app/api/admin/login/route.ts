@@ -10,10 +10,10 @@ const schema = z.object({
 
 const ROLE_MAP: Record<string, string> = {
   "ayoubkhyat@gmail.com": "admin",
-  "mohammed.yousfi@ibda3digital.com": "sales",
-  "ismail.sarhir@ibda3digital.com": "sales",
-  "soufiane.elkaabaoui@ibda3digital.com": "sales",
-  "abderrahmane.aittaleb@ibda3digital.com": "developer",
+  "mohammed.yousfi@ibda3digital.com": "admin",
+  "ismail.sarhir@ibda3digital.com": "admin",
+  "soufiane.elkaabaoui@ibda3digital.com": "admin",
+  "abderrahmane.aittaleb@ibda3digital.com": "admin",
 };
 
 function getInitials(name: string) {
