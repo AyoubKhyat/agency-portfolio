@@ -22,29 +22,32 @@ export async function POST(req: Request) {
   const { email, password } = parsed.data;
 
   try {
-    // Try User table (team accounts)
-    try {
-      const user = await prisma.user?.findUnique({ where: { email } });
-      if (user && user.isActive && await verifyPassword(password, user.passwordHash)) {
+    // Try User table via raw query (bypasses Prisma model cache issues)
+    const users = await prisma.$queryRawUnsafe(
+      `SELECT id, email, full_name, password_hash, role, avatar_initials, is_active FROM users WHERE email = $1 LIMIT 1`,
+      email
+    ) as Array<{ id: string; email: string; full_name: string; password_hash: string; role: string; avatar_initials: string; is_active: boolean }>;
+
+    if (users.length > 0) {
+      const user = users[0];
+      if (user.is_active && await verifyPassword(password, user.password_hash)) {
         const token = await signToken({
           userId: user.id,
           email: user.email,
-          fullName: user.fullName,
+          fullName: user.full_name,
           role: user.role,
-          avatarInitials: user.avatarInitials,
+          avatarInitials: user.avatar_initials,
         });
         const cookie = createSessionCookie(token);
-        const res = NextResponse.json({ success: true, name: user.fullName, role: user.role });
+        const res = NextResponse.json({ success: true, name: user.full_name, role: user.role });
         res.cookies.set(cookie);
         return res;
       }
-    } catch {
-      // User model might not be available yet, continue to fallback
     }
 
-    // Fallback to AdminUser table (legacy)
+    // Fallback to AdminUser table
     try {
-      const admin = await prisma.adminUser?.findUnique({ where: { email } });
+      const admin = await prisma.adminUser.findUnique({ where: { email } });
       if (admin && await verifyPassword(password, admin.passwordHash)) {
         const token = await signToken({
           userId: admin.id,
@@ -58,9 +61,7 @@ export async function POST(req: Request) {
         res.cookies.set(cookie);
         return res;
       }
-    } catch {
-      // AdminUser model might not be available
-    }
+    } catch { /* AdminUser fallback failed */ }
 
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   } catch (e) {
