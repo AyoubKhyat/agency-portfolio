@@ -97,26 +97,50 @@ body {
   font-family: var(--font-serif), Georgia, serif;
 }
 
-/* ─── IBDA3 OS Admin Design System (Light) ─── */
+/* ─── IBDA3 OS Admin Design System (Light Premium) ─── */
 .admin-os {
-  --os-bg: #F7F7FB;
-  --os-surface: rgba(255, 255, 255, 0.78);
-  --os-surface-2: rgba(255, 255, 255, 0.92);
+  --os-bg: #F7F4FF;
+  --os-surface: #ffffff;
+  --os-surface-2: #FAFAFE;
   --os-surface-3: #ffffff;
-  --os-border: rgba(120, 120, 180, 0.12);
-  --os-border-hover: rgba(120, 120, 180, 0.22);
-  --os-text: #111827;
-  --os-text-muted: #6B7280;
-  --os-text-dim: #9CA3AF;
-  --os-purple: #8b5cf6;
-  --os-purple-glow: rgba(139, 92, 246, 0.10);
-  --os-purple-subtle: rgba(139, 92, 246, 0.05);
+  --os-border: #E5E7EB;
+  --os-border-hover: #D1D5DB;
+  --os-text: #0F172A;
+  --os-text-muted: #475569;
+  --os-text-dim: #64748B;
+  --os-purple: #8B00FF;
+  --os-purple-glow: rgba(139, 0, 255, 0.12);
+  --os-purple-subtle: rgba(139, 0, 255, 0.05);
   --os-green: #10b981;
   --os-blue: #3b82f6;
   --os-amber: #f59e0b;
   --os-red: #ef4444;
   color: var(--os-text);
   background: var(--os-bg);
+}
+
+.admin-os .os-gradient-blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.admin-os .os-gradient-blob-1 {
+  top: -10%;
+  right: -5%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(139,0,255,0.06), transparent 70%);
+}
+
+.admin-os .os-gradient-blob-2 {
+  bottom: -15%;
+  left: 10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(37,99,235,0.04), transparent 70%);
 }
 
 @keyframes os-fade-in {

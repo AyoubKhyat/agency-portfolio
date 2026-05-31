@@ -36,7 +36,7 @@ export default function AdminLoginPage() {
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="relative w-full max-w-sm"
+        className="relative w-full max-w-sm mx-4 sm:mx-auto"
       >
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">

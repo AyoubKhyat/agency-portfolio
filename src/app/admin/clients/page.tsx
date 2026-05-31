@@ -118,7 +118,7 @@ export default function ClientsPage() {
                       {p.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <Link href={`/admin/prospecting/${p.id}`} className="text-[14px] font-semibold text-gray-900 hover:text-purple-600 transition-colors">
+                      <Link href={`/admin/prospecting/${p.id}`} className="text-[14px] font-semibold text-[#0F172A] hover:text-purple-600 transition-colors">
                         {p.name}
                       </Link>
                       <div className="flex items-center gap-2 mt-0.5">
@@ -129,7 +129,7 @@ export default function ClientsPage() {
                   </div>
                 </div>
 
-                <div className="space-y-1.5 text-[12px] text-gray-500 mb-3">
+                <div className="space-y-1.5 text-[12px] text-[#475569] mb-3">
                   {p.phone && (
                     <div className="flex items-center gap-2">
                       <Phone className="w-3 h-3" />
@@ -151,13 +151,13 @@ export default function ClientsPage() {
                 </div>
 
                 {p.notes?.[0] && (
-                  <div className="text-[11px] text-gray-400 bg-gray-50/80 rounded-lg p-2 border border-[var(--os-border)]">
-                    <span className="text-gray-500">{p.notes[0].content.slice(0, 100)}{p.notes[0].content.length > 100 ? "..." : ""}</span>
+                  <div className="text-[11px] text-[#64748B] bg-gray-50/80 rounded-lg p-2 border border-[var(--os-border)]">
+                    <span className="text-[#475569]">{p.notes[0].content.slice(0, 100)}{p.notes[0].content.length > 100 ? "..." : ""}</span>
                   </div>
                 )}
 
                 <div className="flex items-center justify-between mt-3 pt-2 border-t border-[var(--os-border)]">
-                  <span className="text-[10px] text-gray-400 flex items-center gap-1"><Calendar className="w-3 h-3" /> Converted {relativeDate(p.updatedAt)}</span>
+                  <span className="text-[10px] text-[#64748B] flex items-center gap-1"><Calendar className="w-3 h-3" /> Converted {relativeDate(p.updatedAt)}</span>
                 </div>
               </GlassCard>
             </motion.div>
@@ -173,7 +173,7 @@ export default function ClientsPage() {
                       {l.fullName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <Link href={`/admin/leads/${l.id}`} className="text-[14px] font-semibold text-gray-900 hover:text-purple-600 transition-colors">
+                      <Link href={`/admin/leads/${l.id}`} className="text-[14px] font-semibold text-[#0F172A] hover:text-purple-600 transition-colors">
                         {l.fullName}
                       </Link>
                       <div className="flex items-center gap-2 mt-0.5">
@@ -184,19 +184,19 @@ export default function ClientsPage() {
                   </div>
                 </div>
 
-                <div className="space-y-1.5 text-[12px] text-gray-500 mb-3">
+                <div className="space-y-1.5 text-[12px] text-[#475569] mb-3">
                   <div className="flex items-center gap-2"><Mail className="w-3 h-3" /><span>{l.email}</span></div>
                   {l.phone && <div className="flex items-center gap-2"><Phone className="w-3 h-3" /><span>{l.phone}</span></div>}
                   <div className="flex items-center gap-2"><Tag className="w-3 h-3" /><span className="truncate">{l.subject}</span></div>
                 </div>
 
-                <div className="text-[11px] text-gray-400 bg-gray-50/80 rounded-lg p-2 border border-[var(--os-border)]">
-                  <span className="text-gray-500">{l.message.slice(0, 120)}{l.message.length > 120 ? "..." : ""}</span>
+                <div className="text-[11px] text-[#64748B] bg-gray-50/80 rounded-lg p-2 border border-[var(--os-border)]">
+                  <span className="text-[#475569]">{l.message.slice(0, 120)}{l.message.length > 120 ? "..." : ""}</span>
                 </div>
 
                 <div className="flex items-center justify-between mt-3 pt-2 border-t border-[var(--os-border)]">
-                  <span className="text-[10px] text-gray-400 flex items-center gap-1"><Calendar className="w-3 h-3" /> {relativeDate(l.createdAt)}</span>
-                  {l.notes?.length > 0 && <span className="text-[10px] text-gray-400 flex items-center gap-1"><MessageCircle className="w-3 h-3" /> {l.notes.length} note{l.notes.length > 1 ? "s" : ""}</span>}
+                  <span className="text-[10px] text-[#64748B] flex items-center gap-1"><Calendar className="w-3 h-3" /> {relativeDate(l.createdAt)}</span>
+                  {l.notes?.length > 0 && <span className="text-[10px] text-[#64748B] flex items-center gap-1"><MessageCircle className="w-3 h-3" /> {l.notes.length} note{l.notes.length > 1 ? "s" : ""}</span>}
                 </div>
               </GlassCard>
             </motion.div>

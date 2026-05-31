@@ -140,7 +140,7 @@ function openLink(url: string) {
 
 export default function ProspectingPage() {
   return (
-    <Suspense fallback={<div className="grid grid-cols-4 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="os-skeleton h-20 rounded-xl" />)}</div>}>
+    <Suspense fallback={<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">{[...Array(4)].map((_, i) => <div key={i} className="os-skeleton h-20 rounded-xl" />)}</div>}>
       <ProspectingContent />
     </Suspense>
   );
@@ -181,34 +181,45 @@ function ProspectingContent() {
     router.push(`/admin/prospecting${qs.toString() ? `?${qs}` : ""}`);
   }
 
-  async function handleSend(p: Prospect) {
-    const noteContent = p.notes?.[0]?.content || "";
-    const msg = getPersonalizedMessage(p, noteContent);
-    const digits = p.phone?.replace(/\D/g, "") || "";
-    const landline = isLandline(p.phone);
-
-    if (digits && !landline) {
-      let phone = digits;
-      if (phone.startsWith("0")) phone = "212" + phone.slice(1);
-      else if (!phone.startsWith("212") && !phone.startsWith("33")) phone = "212" + phone;
-      openLink(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);
-    } else if (p.instagram) {
-      const handle = p.instagram.replace(/^@/, "");
-      navigator.clipboard.writeText(msg).catch(() => {});
-      setCopied(p.id); setTimeout(() => setCopied(null), 3000);
-      openLink(`https://ig.me/m/${handle}`);
-    } else if (digits && landline) {
-      navigator.clipboard.writeText(msg).catch(() => {});
-      alert("Numéro fixe — message copié ! Appelez le " + p.phone);
-      return;
-    } else {
-      alert("No phone or Instagram for this prospect."); return;
-    }
-
+  async function markSent(p: Prospect) {
     if (p.status === "A_ENVOYER" || p.status === "PAS_DE_WHATSAPP") {
       const res = await fetch(`/api/admin/prospecting/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "ENVOYE" }) });
       if (res.ok) setProspects((prev) => prev.map((pr) => pr.id === p.id ? { ...pr, status: "ENVOYE", sentAt: new Date().toISOString() } : pr));
     }
+  }
+
+  async function handleSendWA(p: Prospect) {
+    const noteContent = p.notes?.[0]?.content || "";
+    const msg = getPersonalizedMessage(p, noteContent);
+    const digits = p.phone?.replace(/\D/g, "") || "";
+    if (!digits) { alert("No phone number."); return; }
+    const landline = isLandline(p.phone);
+    if (landline) { navigator.clipboard.writeText(msg).catch(() => {}); alert("Numéro fixe — message copié ! Appelez le " + p.phone); return; }
+    let phone = digits;
+    if (phone.startsWith("0")) phone = "212" + phone.slice(1);
+    else if (!phone.startsWith("212") && !phone.startsWith("33")) phone = "212" + phone;
+    openLink(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);
+    await markSent(p);
+  }
+
+  async function handleSendIG(p: Prospect) {
+    const noteContent = p.notes?.[0]?.content || "";
+    const msg = getPersonalizedMessage(p, noteContent);
+    if (!p.instagram) { alert("No Instagram."); return; }
+    const handle = p.instagram.replace(/^@/, "");
+    navigator.clipboard.writeText(msg).catch(() => {});
+    setCopied(p.id); setTimeout(() => setCopied(null), 3000);
+    openLink(`https://ig.me/m/${handle}`);
+    await markSent(p);
+  }
+
+  async function handleSend(p: Prospect) {
+    const digits = p.phone?.replace(/\D/g, "") || "";
+    const landline = isLandline(p.phone);
+    if (digits && !landline) { await handleSendWA(p); }
+    else if (p.instagram) { await handleSendIG(p); }
+    else if (digits && landline) { await handleSendWA(p); }
+    else { alert("No phone or Instagram for this prospect."); }
   }
 
   async function handleFollowUp(p: Prospect) {
@@ -262,7 +273,7 @@ function ProspectingContent() {
     if (d && !land) return { color: "bg-emerald-50 text-emerald-600 hover:bg-emerald-100", icon: <FaWhatsapp className="w-3.5 h-3.5" />, label: "WA" };
     if (p.instagram) return { color: "bg-purple-50 text-purple-600 hover:bg-purple-100", icon: <FaInstagram className="w-3.5 h-3.5" />, label: "IG" };
     if (d && land) return { color: "bg-amber-50 text-amber-600 hover:bg-amber-100", icon: <Phone className="w-3.5 h-3.5" />, label: "Call" };
-    return { color: "bg-zinc-500/15 text-gray-400", icon: <Send className="w-3.5 h-3.5" />, label: "—" };
+    return { color: "bg-zinc-500/15 text-[#64748B]", icon: <Send className="w-3.5 h-3.5" />, label: "—" };
   }
 
   const canFollowUp = (p: Prospect) => p.status === "ENVOYE" && p.sentAt && (Date.now() - new Date(p.sentAt).getTime()) > 3 * 86400000;
@@ -273,21 +284,21 @@ function ProspectingContent() {
         title="Prospecting"
         count={total}
         actions={
-          <div className="flex items-center gap-2">
-            <div className="flex items-center bg-gray-50 border border-[var(--os-border)] rounded-lg p-0.5">
-              <button onClick={() => setView("list")} className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-purple-50 text-purple-600" : "text-gray-500 hover:text-gray-800")}>
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <div className="flex items-center bg-white border border-[var(--os-border)] rounded-lg p-0.5">
+              <button onClick={() => setView("list")} className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "text-[#475569] hover:text-[#0F172A]")}>
                 <List className="w-4 h-4" />
               </button>
-              <button onClick={() => setView("grid")} className={cn("p-1.5 rounded-md transition-colors", view === "grid" ? "bg-purple-50 text-purple-600" : "text-gray-500 hover:text-gray-800")}>
+              <button onClick={() => setView("grid")} className={cn("p-1.5 rounded-md transition-colors", view === "grid" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "text-[#475569] hover:text-[#0F172A]")}>
                 <LayoutGrid className="w-4 h-4" />
               </button>
             </div>
             <input ref={fileRef} type="file" accept=".csv" onChange={handleImport} className="hidden" />
-            <button onClick={() => fileRef.current?.click()} disabled={importing} className="flex items-center gap-2 px-3 py-2 border border-[var(--os-border)] hover:border-[var(--os-border-hover)] rounded-lg text-sm text-gray-600 hover:text-gray-900 transition-all disabled:opacity-50">
-              <Upload className="w-4 h-4" /> {importing ? "..." : "CSV"}
+            <button onClick={() => fileRef.current?.click()} disabled={importing} className="flex items-center gap-1.5 px-2.5 py-2 border border-[var(--os-border)] hover:border-[var(--os-border-hover)] rounded-lg text-xs sm:text-sm text-gray-600 hover:text-[#0F172A] transition-all disabled:opacity-50">
+              <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {importing ? "..." : "CSV"}
             </button>
-            <Link href="/admin/prospecting/new" className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors">
-              <Plus className="w-4 h-4" /> New
+            <Link href="/admin/prospecting/new" className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:opacity-90 text-white rounded-lg text-xs sm:text-sm font-medium transition-all shadow-md shadow-purple-500/20">
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> New
             </Link>
           </div>
         }
@@ -314,17 +325,74 @@ function ProspectingContent() {
         <EmptyState icon={<Target className="w-6 h-6" />} title="No prospects found" description="Try changing filters or add new prospects." />
       ) : view === "list" ? (
         <>
-          <div className="border border-[var(--os-border)] rounded-xl overflow-hidden">
+          {/* Mobile card list */}
+          <div className="md:hidden space-y-3">
+            {prospects.map((p) => (
+              <div key={p.id} className="rounded-xl border border-[var(--os-border)] bg-white/80 p-3.5">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="min-w-0">
+                    <Link href={`/admin/prospecting/${p.id}`} className="text-[14px] font-semibold text-[#0F172A] hover:text-purple-600 transition-colors">{p.name}</Link>
+                    {p.instagram && <span className="ml-1.5 text-[11px] text-[#64748B]">@{p.instagram.replace(/^@/, "")}</span>}
+                  </div>
+                  <Badge variant={STATUS_BADGE[p.status] as "blue" | "amber" | "green" | "red" | "purple"} size="sm" dot>{STATUS_LABELS[p.status]}</Badge>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap mb-2.5">
+                  <Badge variant="default" size="sm">{p.sector}</Badge>
+                  <Badge variant={PRIORITY_BADGE[p.priority] as "green" | "amber" | "default"} size="sm">{PRIORITY_LABELS[p.priority]}</Badge>
+                  {p.neighborhood && <span className="text-[11px] text-[#64748B]">{p.neighborhood}</span>}
+                  {p.sentAt && <span className="text-[10px] text-[#64748B]">{new Date(p.sentAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</span>}
+                </div>
+                <div className="flex items-center gap-1 flex-wrap pt-2 border-t border-[var(--os-border)]">
+                  {canFollowUp(p) && (
+                    <button onClick={() => handleFollowUp(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
+                      <Send className="w-3 h-3" /> Follow up
+                    </button>
+                  )}
+                  {(() => {
+                    const digits = p.phone?.replace(/\D/g, "") || "";
+                    const land = isLandline(p.phone);
+                    const hasWA = digits && !land;
+                    const hasCall = digits && land;
+                    const hasIG = !!p.instagram;
+                    return (
+                      <>
+                        {hasWA && (
+                          <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"><FaWhatsapp className="w-3.5 h-3.5" /> WA</button>
+                        )}
+                        {hasIG && (
+                          <button onClick={() => handleSendIG(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors"><FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "IG"}</button>
+                        )}
+                        {hasCall && !hasIG && (
+                          <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"><Phone className="w-3.5 h-3.5" /> Call</button>
+                        )}
+                      </>
+                    );
+                  })()}
+                  {p.status !== "REPONDU" && p.status !== "CONVERTI" && (
+                    <button onClick={() => handleMarkReplied(p)} className="p-1 rounded-md text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Replied"><CheckCircle className="w-3.5 h-3.5" /></button>
+                  )}
+                  <div className="ml-auto flex gap-0.5">
+                    <Link href={`/admin/prospecting/${p.id}/edit`} className="p-1 rounded-md text-[#64748B] hover:text-[#1E293B] hover:bg-gray-100 transition-colors"><Pencil className="w-3.5 h-3.5" /></Link>
+                    <button onClick={() => handleDelete(p.id, p.name)} className="p-1 rounded-md text-[#64748B] hover:text-red-600 hover:bg-red-50 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block border border-[var(--os-border)] rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--os-border)] bg-gray-50">
-                  <th className="text-left px-4 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Name</th>
-                  <th className="text-left px-4 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Sector</th>
-                  <th className="text-left px-4 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Location</th>
-                  <th className="text-left px-4 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Priority</th>
-                  <th className="text-left px-4 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Status</th>
-                  <th className="text-left px-4 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Sent</th>
-                  <th className="text-right px-4 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Actions</th>
+                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Name</th>
+                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Sector</th>
+                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider hidden lg:table-cell">Location</th>
+                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Priority</th>
+                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Status</th>
+                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider hidden lg:table-cell">Sent</th>
+                  <th className="text-right px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -333,14 +401,14 @@ function ProspectingContent() {
                   return (
                     <tr key={p.id} className="border-b border-[var(--os-border)] hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-2.5">
-                        <Link href={`/admin/prospecting/${p.id}`} className="text-gray-900 font-medium text-[13px] hover:text-purple-600 transition-colors">{p.name}</Link>
-                        {p.instagram && <span className="ml-1.5 text-[11px] text-gray-400">@{p.instagram.replace(/^@/, "")}</span>}
+                        <Link href={`/admin/prospecting/${p.id}`} className="text-[#0F172A] font-medium text-[13px] hover:text-purple-600 transition-colors">{p.name}</Link>
+                        {p.instagram && <span className="ml-1.5 text-[11px] text-[#64748B]">@{p.instagram.replace(/^@/, "")}</span>}
                       </td>
-                      <td className="px-4 py-2.5 text-gray-500 text-xs">{p.sector}</td>
-                      <td className="px-4 py-2.5 text-gray-500 text-xs">{p.neighborhood || "—"}</td>
+                      <td className="px-4 py-2.5 text-[#475569] text-xs">{p.sector}</td>
+                      <td className="px-4 py-2.5 text-[#475569] text-xs hidden lg:table-cell">{p.neighborhood || "—"}</td>
                       <td className="px-4 py-2.5"><Badge variant={PRIORITY_BADGE[p.priority] as "green" | "amber" | "default"} size="sm">{PRIORITY_LABELS[p.priority]}</Badge></td>
                       <td className="px-4 py-2.5"><Badge variant={STATUS_BADGE[p.status] as "blue" | "amber" | "green" | "red" | "purple"} size="sm" dot>{STATUS_LABELS[p.status]}</Badge></td>
-                      <td className="px-4 py-2.5 text-gray-400 text-xs">{p.sentAt ? new Date(p.sentAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) : "—"}</td>
+                      <td className="px-4 py-2.5 text-[#64748B] text-xs hidden lg:table-cell">{p.sentAt ? new Date(p.sentAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) : "—"}</td>
                       <td className="px-4 py-2.5">
                         <div className="flex items-center justify-end gap-1">
                           {canFollowUp(p) && (
@@ -348,9 +416,35 @@ function ProspectingContent() {
                               <Send className="w-3 h-3" /> Follow up
                             </button>
                           )}
-                          <button onClick={() => handleSend(p)} className={cn("flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors", ss.color)} title="Send">
-                            {ss.icon} {copied === p.id ? "Copied!" : ss.label}
-                          </button>
+                          {(() => {
+                            const digits = p.phone?.replace(/\D/g, "") || "";
+                            const land = isLandline(p.phone);
+                            const hasWA = digits && !land;
+                            const hasCall = digits && land;
+                            const hasIG = !!p.instagram;
+                            return (
+                              <>
+                                {hasWA && (
+                                  <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors" title="Send WhatsApp">
+                                    <FaWhatsapp className="w-3.5 h-3.5" /> WA
+                                  </button>
+                                )}
+                                {hasIG && (
+                                  <button onClick={() => handleSendIG(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors" title="Send Instagram DM">
+                                    <FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "IG"}
+                                  </button>
+                                )}
+                                {hasCall && !hasIG && (
+                                  <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title="Landline — copy message">
+                                    <Phone className="w-3.5 h-3.5" /> Call
+                                  </button>
+                                )}
+                                {!hasWA && !hasIG && !hasCall && (
+                                  <span className="text-[11px] text-[#64748B] px-2">—</span>
+                                )}
+                              </>
+                            );
+                          })()}
                           {p.status !== "REPONDU" && p.status !== "CONVERTI" && (
                             <button onClick={() => handleMarkReplied(p)} className="p-1 rounded-md text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Replied">
                               <CheckCircle className="w-3.5 h-3.5" />
@@ -361,8 +455,8 @@ function ProspectingContent() {
                               <PhoneOff className="w-3.5 h-3.5" />
                             </button>
                           )}
-                          <Link href={`/admin/prospecting/${p.id}/edit`} className="p-1 rounded-md text-gray-400 hover:text-gray-800 hover:bg-gray-100 transition-colors"><Pencil className="w-3.5 h-3.5" /></Link>
-                          <button onClick={() => handleDelete(p.id, p.name)} className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                          <Link href={`/admin/prospecting/${p.id}/edit`} className="p-1 rounded-md text-[#64748B] hover:text-[#1E293B] hover:bg-gray-100 transition-colors"><Pencil className="w-3.5 h-3.5" /></Link>
+                          <button onClick={() => handleDelete(p.id, p.name)} className="p-1 rounded-md text-[#64748B] hover:text-red-600 hover:bg-red-50 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
                       </td>
                     </tr>
@@ -370,11 +464,12 @@ function ProspectingContent() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
           {pages > 1 && (
             <div className="flex justify-center gap-1.5 mt-6">
               {Array.from({ length: pages }, (_, i) => i + 1).map((pg) => (
-                <button key={pg} onClick={() => navigate(statusFilter, sectorFilter, pg)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", pg === pageParam ? "bg-purple-500 text-white" : "text-gray-500 hover:bg-gray-100")}>{pg}</button>
+                <button key={pg} onClick={() => navigate(statusFilter, sectorFilter, pg)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", pg === pageParam ? "bg-purple-500 text-white" : "text-[#475569] hover:bg-gray-100")}>{pg}</button>
               ))}
             </div>
           )}
@@ -389,14 +484,14 @@ function ProspectingContent() {
                 <motion.div key={p.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: i * 0.02 }}
                   className="group rounded-xl border border-[var(--os-border)] bg-white/80 p-4 hover:border-[var(--os-border-hover)] hover:bg-white/80 transition-all">
                   <div className="flex items-start justify-between mb-2">
-                    <Link href={`/admin/prospecting/${p.id}`} className="text-[14px] font-semibold text-gray-900 hover:text-purple-600 transition-colors truncate">{p.name}</Link>
+                    <Link href={`/admin/prospecting/${p.id}`} className="text-[14px] font-semibold text-[#0F172A] hover:text-purple-600 transition-colors truncate">{p.name}</Link>
                     <Badge variant={STATUS_BADGE[p.status] as "blue" | "amber" | "green" | "red" | "purple"} size="sm" dot>{STATUS_LABELS[p.status]}</Badge>
                   </div>
                   <div className="flex items-center gap-2 mb-3">
                     <Badge variant="default" size="sm">{p.sector}</Badge>
-                    {p.neighborhood && <span className="text-[11px] text-gray-400">{p.neighborhood}</span>}
+                    {p.neighborhood && <span className="text-[11px] text-[#64748B]">{p.neighborhood}</span>}
                   </div>
-                  <div className="flex items-center gap-3 text-[11px] text-gray-500 mb-3">
+                  <div className="flex items-center gap-3 text-[11px] text-[#475569] mb-3">
                     {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
                     {p.instagram && <span className="flex items-center gap-1"><FaInstagram className="w-3 h-3" />@{p.instagram.replace(/^@/, "")}</span>}
                   </div>
@@ -406,15 +501,38 @@ function ProspectingContent() {
                         <Send className="w-3 h-3" /> Follow up
                       </button>
                     )}
-                    <button onClick={() => handleSend(p)} className={cn("flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors", ss.color)}>
-                      {ss.icon} {copied === p.id ? "Copied!" : ss.label}
-                    </button>
+                    {(() => {
+                      const digits = p.phone?.replace(/\D/g, "") || "";
+                      const land = isLandline(p.phone);
+                      const hasWA = digits && !land;
+                      const hasCall = digits && land;
+                      const hasIG = !!p.instagram;
+                      return (
+                        <>
+                          {hasWA && (
+                            <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors" title="WhatsApp">
+                              <FaWhatsapp className="w-3.5 h-3.5" /> WA
+                            </button>
+                          )}
+                          {hasIG && (
+                            <button onClick={() => handleSendIG(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors" title="Instagram DM">
+                              <FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "IG"}
+                            </button>
+                          )}
+                          {hasCall && !hasIG && (
+                            <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title="Call">
+                              <Phone className="w-3.5 h-3.5" /> Call
+                            </button>
+                          )}
+                        </>
+                      );
+                    })()}
                     {p.status !== "REPONDU" && p.status !== "CONVERTI" && (
                       <button onClick={() => handleMarkReplied(p)} className="p-1 rounded-md text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Replied"><CheckCircle className="w-3.5 h-3.5" /></button>
                     )}
                     <div className="ml-auto flex gap-0.5">
-                      <Link href={`/admin/prospecting/${p.id}/edit`} className="p-1 rounded-md text-gray-400 hover:text-gray-800 hover:bg-gray-100 transition-colors"><Pencil className="w-3.5 h-3.5" /></Link>
-                      <button onClick={() => handleDelete(p.id, p.name)} className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <Link href={`/admin/prospecting/${p.id}/edit`} className="p-1 rounded-md text-[#64748B] hover:text-[#1E293B] hover:bg-gray-100 transition-colors"><Pencil className="w-3.5 h-3.5" /></Link>
+                      <button onClick={() => handleDelete(p.id, p.name)} className="p-1 rounded-md text-[#64748B] hover:text-red-600 hover:bg-red-50 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </div>
                 </motion.div>
@@ -424,7 +542,7 @@ function ProspectingContent() {
           {pages > 1 && (
             <div className="flex justify-center gap-1.5 mt-6">
               {Array.from({ length: pages }, (_, i) => i + 1).map((pg) => (
-                <button key={pg} onClick={() => navigate(statusFilter, sectorFilter, pg)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", pg === pageParam ? "bg-purple-500 text-white" : "text-gray-500 hover:bg-gray-100")}>{pg}</button>
+                <button key={pg} onClick={() => navigate(statusFilter, sectorFilter, pg)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", pg === pageParam ? "bg-purple-500 text-white" : "text-[#475569] hover:bg-gray-100")}>{pg}</button>
               ))}
             </div>
           )}

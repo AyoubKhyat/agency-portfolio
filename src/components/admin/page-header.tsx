@@ -18,18 +18,18 @@ export function PageHeader({ title, subtitle, count, actions, className }: PageH
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={cn("flex items-center justify-between mb-8", className)}
+      className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8", className)}
     >
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900 tracking-tight flex items-center gap-3">
+      <div className="min-w-0">
+        <h1 className="text-xl sm:text-2xl font-semibold text-[#0F172A] tracking-tight flex items-center gap-3">
           {title}
           {typeof count === "number" && (
-            <span className="text-base font-normal text-gray-400">({count})</span>
+            <span className="text-sm sm:text-base font-normal text-[#64748B]">({count})</span>
           )}
         </h1>
-        {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+        {subtitle && <p className="text-xs sm:text-sm text-[#475569] mt-1">{subtitle}</p>}
       </div>
-      {actions && <div className="flex items-center gap-3">{actions}</div>}
+      {actions && <div className="flex items-center gap-2 sm:gap-3 shrink-0">{actions}</div>}
     </motion.div>
   );
 }

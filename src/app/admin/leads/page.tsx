@@ -23,7 +23,7 @@ type Lead = { id: string; fullName: string; email: string; subject: string; stat
 
 export default function LeadsPage() {
   return (
-    <Suspense fallback={<div className="grid grid-cols-4 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="os-skeleton h-96 rounded-xl" />)}</div>}>
+    <Suspense fallback={<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="os-skeleton h-96 rounded-xl" />)}</div>}>
       <LeadsContent />
     </Suspense>
   );
@@ -101,10 +101,10 @@ function LeadsContent() {
         count={total}
         actions={
           <div className="flex items-center bg-gray-50/80 border border-[var(--os-border)] rounded-lg p-0.5">
-            <button onClick={() => setView("kanban")} className={cn("p-1.5 rounded-md transition-colors", view === "kanban" ? "bg-purple-50 text-purple-600" : "text-gray-500 hover:text-gray-800")}>
+            <button onClick={() => setView("kanban")} className={cn("p-1.5 rounded-md transition-colors", view === "kanban" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "text-[#475569] hover:text-[#1E293B]")}>
               <Kanban className="w-4 h-4" />
             </button>
-            <button onClick={() => setView("list")} className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-purple-50 text-purple-600" : "text-gray-500 hover:text-gray-800")}>
+            <button onClick={() => setView("list")} className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "text-[#475569] hover:text-[#1E293B]")}>
               <List className="w-4 h-4" />
             </button>
           </div>
@@ -133,9 +133,9 @@ function LeadsContent() {
                   <div className="flex items-center justify-between mb-3 px-1">
                     <div className="flex items-center gap-2">
                       <span className={cn("w-2 h-2 rounded-full", colors.dot)} />
-                      <span className="text-xs font-semibold text-gray-800 uppercase tracking-wide">{col}</span>
+                      <span className="text-xs font-semibold text-[#1E293B] uppercase tracking-wide">{col}</span>
                     </div>
-                    <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">{colLeads.length}</span>
+                    <span className="text-[10px] font-bold text-[#475569] bg-gray-100 px-1.5 py-0.5 rounded-full">{colLeads.length}</span>
                   </div>
 
                   {/* Cards */}
@@ -147,10 +147,10 @@ function LeadsContent() {
                         className="block p-3 rounded-lg bg-white/80 border border-[var(--os-border)] hover:border-[var(--os-border-hover)] hover:bg-white/90 transition-all group"
                       >
                         <div className="flex items-start justify-between gap-2 mb-1.5">
-                          <span className="text-[13px] font-medium text-gray-900 group-hover:text-purple-600 transition-colors truncate">{lead.fullName}</span>
+                          <span className="text-[13px] font-medium text-[#0F172A] group-hover:text-purple-600 transition-colors truncate">{lead.fullName}</span>
                         </div>
-                        <p className="text-[11px] text-gray-500 truncate mb-2">{lead.subject}</p>
-                        <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                        <p className="text-[11px] text-[#475569] truncate mb-2">{lead.subject}</p>
+                        <div className="flex items-center gap-2 text-[10px] text-[#64748B]">
                           <Mail className="w-3 h-3" />
                           <span className="truncate">{lead.email}</span>
                           <span className="ml-auto flex items-center gap-1">
@@ -161,19 +161,19 @@ function LeadsContent() {
                       </Link>
                     ))}
                     {colLeads.length === 0 && (
-                      <div className="text-center py-8 text-[11px] text-gray-400">No leads</div>
+                      <div className="text-center py-8 text-[11px] text-[#64748B]">No leads</div>
                     )}
                   </div>
 
                   {/* Quick move buttons at bottom for each card */}
                   {colLeads.length > 0 && col !== "CLOSED" && (
                     <div className="mt-3 pt-2 border-t border-[var(--os-border)]">
-                      <p className="text-[10px] text-gray-400 px-1 mb-1">Move selected to:</p>
-                      <div className="flex gap-1">
+                      <p className="text-[10px] text-[#64748B] px-1 mb-1">Move selected to:</p>
+                      <div className="flex gap-1 flex-wrap">
                         {COLUMNS.filter((c) => c !== col).map((targetCol) => (
                           <button
                             key={targetCol}
-                            className="text-[10px] px-2 py-1 rounded bg-gray-50/80 text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
+                            className="text-[10px] px-2 py-1 rounded bg-gray-50/80 text-[#475569] hover:text-[#1E293B] hover:bg-gray-100 transition-colors"
                             onClick={(e) => { e.preventDefault(); }}
                             title={`Drag leads to ${targetCol} or use lead detail page`}
                           >
@@ -204,38 +204,59 @@ function LeadsContent() {
             <EmptyState icon={<Users className="w-6 h-6" />} title="No leads found" />
           ) : (
             <>
-              <div className="border border-[var(--os-border)] rounded-2xl overflow-hidden">
+              {/* Mobile card list */}
+              <div className="md:hidden space-y-3">
+                {filteredLeads.map((lead) => (
+                  <Link key={lead.id} href={`/admin/leads/${lead.id}`} className="block p-3.5 rounded-xl border border-[var(--os-border)] bg-white/80 hover:border-[var(--os-border-hover)] transition-all">
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <span className="text-[13px] font-medium text-[#0F172A] truncate">{lead.fullName}</span>
+                      <Badge variant={COL_COLORS[lead.status]?.badge as "blue" | "amber" | "green" | "default" || "default"} size="sm">{lead.status}</Badge>
+                    </div>
+                    <p className="text-[11px] text-[#475569] truncate mb-1">{lead.subject}</p>
+                    <div className="flex items-center gap-2 text-[10px] text-[#64748B]">
+                      <Mail className="w-3 h-3" />
+                      <span className="truncate">{lead.email}</span>
+                      <span className="ml-auto">{relativeDate(lead.createdAt)}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden md:block border border-[var(--os-border)] rounded-2xl overflow-hidden">
+                <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-[var(--os-border)] bg-gray-50/80">
-                      <th className="text-left px-4 py-3 text-gray-500 font-medium text-xs">Name</th>
-                      <th className="text-left px-4 py-3 text-gray-500 font-medium text-xs">Email</th>
-                      <th className="text-left px-4 py-3 text-gray-500 font-medium text-xs">Subject</th>
-                      <th className="text-left px-4 py-3 text-gray-500 font-medium text-xs">Status</th>
-                      <th className="text-left px-4 py-3 text-gray-500 font-medium text-xs">Date</th>
+                      <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Name</th>
+                      <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Email</th>
+                      <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs hidden lg:table-cell">Subject</th>
+                      <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Status</th>
+                      <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Date</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredLeads.map((lead) => (
                       <tr key={lead.id} className="border-b border-[var(--os-border)] hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
-                          <Link href={`/admin/leads/${lead.id}`} className="text-gray-900 font-medium hover:text-purple-600 transition-colors">{lead.fullName}</Link>
+                          <Link href={`/admin/leads/${lead.id}`} className="text-[#0F172A] font-medium hover:text-purple-600 transition-colors">{lead.fullName}</Link>
                         </td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">{lead.email}</td>
-                        <td className="px-4 py-3 text-gray-500 text-xs max-w-xs truncate">{lead.subject}</td>
+                        <td className="px-4 py-3 text-[#475569] text-xs">{lead.email}</td>
+                        <td className="px-4 py-3 text-[#475569] text-xs max-w-xs truncate hidden lg:table-cell">{lead.subject}</td>
                         <td className="px-4 py-3">
                           <Badge variant={COL_COLORS[lead.status]?.badge as "blue" | "amber" | "green" | "default" || "default"} size="sm">{lead.status}</Badge>
                         </td>
-                        <td className="px-4 py-3 text-gray-400 text-xs">{relativeDate(lead.createdAt)}</td>
+                        <td className="px-4 py-3 text-[#64748B] text-xs">{relativeDate(lead.createdAt)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
               {pages > 1 && (
                 <div className="flex justify-center gap-2 mt-6">
                   {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-                    <button key={p} onClick={() => navigate(statusFilter, p)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", p === pageParam ? "bg-purple-500 text-white" : "text-gray-500 hover:bg-gray-100")}>{p}</button>
+                    <button key={p} onClick={() => navigate(statusFilter, p)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", p === pageParam ? "bg-purple-500 text-white" : "text-[#475569] hover:bg-gray-100")}>{p}</button>
                   ))}
                 </div>
               )}

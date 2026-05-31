@@ -14,11 +14,11 @@ export default function SettingsPage() {
             <Settings className="w-5 h-5 text-purple-600" />
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-900">Ayoub Khyat</div>
-            <div className="text-xs text-gray-500">Admin</div>
+            <div className="text-sm font-medium text-[#0F172A]">Ayoub Khyat</div>
+            <div className="text-xs text-[#475569]">Admin</div>
           </div>
         </div>
-        <p className="text-sm text-gray-500">More settings coming soon.</p>
+        <p className="text-sm text-[#475569]">More settings coming soon.</p>
       </GlassCard>
     </div>
   );

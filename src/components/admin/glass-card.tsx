@@ -15,9 +15,9 @@ export function GlassCard({ className, hover, padding = "md", glow, children, ..
   return (
     <motion.div
       className={cn(
-        "rounded-2xl border border-[var(--os-border)] bg-white/75 backdrop-blur-xl shadow-sm",
+        "rounded-2xl border border-[var(--os-border)] bg-white shadow-sm",
         paddings[padding],
-        hover && "transition-all duration-200 hover:border-[var(--os-border-hover)] hover:shadow-md hover:shadow-purple-500/[0.04]",
+        hover && "transition-all duration-200 hover:border-[var(--os-border-hover)] hover:shadow-md hover:shadow-purple-900/[0.06] hover:-translate-y-0.5",
         glow && "hover:shadow-lg hover:shadow-purple-500/[0.08]",
         className
       )}

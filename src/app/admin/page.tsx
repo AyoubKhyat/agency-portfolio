@@ -79,7 +79,16 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <PageHeader title="Dashboard" subtitle="Welcome back, Ayoub" />
+      {/* Hero welcome card */}
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#8B00FF] via-[#C026D3] to-[#2563EB] p-5 sm:p-7 mb-6 shadow-xl shadow-purple-500/15">
+        <div className="absolute top-0 right-0 w-60 h-60 rounded-full bg-white/10 blur-3xl -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-1/3 w-40 h-40 rounded-full bg-white/5 blur-2xl translate-y-1/2" />
+        <div className="relative z-10">
+          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Welcome back, Ayoub</h1>
+          <p className="text-white/70 text-sm mt-1">Here&apos;s what&apos;s happening with your business today.</p>
+        </div>
+      </motion.div>
 
       {/* Hero Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -93,7 +102,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
         <GlassCard padding="lg" className="lg:col-span-2" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.4 }}>
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-sm font-semibold text-gray-900">Sales Pipeline</h3>
+            <h3 className="text-sm font-semibold text-[#0F172A]">Sales Pipeline</h3>
             <Link href="/admin/prospecting" className="text-xs text-purple-600 hover:text-purple-700 flex items-center gap-1">
               View all <ArrowRight className="w-3 h-3" />
             </Link>
@@ -108,10 +117,10 @@ export default function DashboardPage() {
               return (
                 <div key={stage.label}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs text-gray-500">{stage.label}</span>
+                    <span className="text-xs text-[#475569]">{stage.label}</span>
                     <div className="flex items-center gap-2">
-                      {convRate && <span className="text-[10px] text-gray-400">{convRate}</span>}
-                      <span className="text-sm font-semibold text-gray-900">{stage.count}</span>
+                      {convRate && <span className="text-[10px] text-[#64748B]">{convRate}</span>}
+                      <span className="text-sm font-semibold text-[#0F172A]">{stage.count}</span>
                     </div>
                   </div>
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -129,17 +138,17 @@ export default function DashboardPage() {
         </GlassCard>
 
         <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45, duration: 0.4 }}>
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Quick Actions</h3>
+          <h3 className="text-sm font-semibold text-[#0F172A] mb-4">Quick Actions</h3>
           <div className="space-y-2">
             <Link href="/admin/prospecting?status=A_ENVOYER" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/80 hover:bg-purple-500/[0.06] border border-transparent hover:border-purple-500/20 transition-all group">
               <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
                 <MessageCircle className="w-4 h-4 text-purple-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-medium text-gray-800 group-hover:text-gray-900">{pending} prospects to send</div>
-                <div className="text-[11px] text-gray-400">Start outreach</div>
+                <div className="text-[13px] font-medium text-[#1E293B] group-hover:text-[#0F172A]">{pending} prospects to send</div>
+                <div className="text-[11px] text-[#64748B]">Start outreach</div>
               </div>
-              <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-purple-600 transition-colors" />
+              <ArrowRight className="w-3.5 h-3.5 text-[#64748B] group-hover:text-purple-600 transition-colors" />
             </Link>
 
             <Link href="/admin/prospecting?status=ENVOYE" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/80 hover:bg-amber-500/[0.06] border border-transparent hover:border-amber-500/20 transition-all group">
@@ -147,10 +156,10 @@ export default function DashboardPage() {
                 <Clock className="w-4 h-4 text-amber-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-medium text-gray-800 group-hover:text-gray-900">{data?.followUpCandidates || 0} follow-ups due</div>
-                <div className="text-[11px] text-gray-400">Sent 3+ days ago</div>
+                <div className="text-[13px] font-medium text-[#1E293B] group-hover:text-[#0F172A]">{data?.followUpCandidates || 0} follow-ups due</div>
+                <div className="text-[11px] text-[#64748B]">Sent 3+ days ago</div>
               </div>
-              <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-amber-600 transition-colors" />
+              <ArrowRight className="w-3.5 h-3.5 text-[#64748B] group-hover:text-amber-600 transition-colors" />
             </Link>
 
             <Link href="/admin/leads?status=NEW" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/80 hover:bg-blue-500/[0.06] border border-transparent hover:border-blue-500/20 transition-all group">
@@ -158,10 +167,10 @@ export default function DashboardPage() {
                 <Users className="w-4 h-4 text-blue-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-medium text-gray-800 group-hover:text-gray-900">{newLeads} new leads</div>
-                <div className="text-[11px] text-gray-400">Waiting for review</div>
+                <div className="text-[13px] font-medium text-[#1E293B] group-hover:text-[#0F172A]">{newLeads} new leads</div>
+                <div className="text-[11px] text-[#64748B]">Waiting for review</div>
               </div>
-              <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-600 transition-colors" />
+              <ArrowRight className="w-3.5 h-3.5 text-[#64748B] group-hover:text-blue-600 transition-colors" />
             </Link>
           </div>
         </GlassCard>
@@ -170,14 +179,14 @@ export default function DashboardPage() {
       {/* Sector Performance + Recent Leads */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
         <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55, duration: 0.4 }}>
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Top Sectors</h3>
+          <h3 className="text-sm font-semibold text-[#0F172A] mb-4">Top Sectors</h3>
           <div className="space-y-2.5">
             {data?.prospectsBySector?.slice(0, 8).map((s, i) => {
               const max = data.prospectsBySector[0]?._count?.sector || 1;
               const pct = (s._count.sector / max) * 100;
               return (
                 <div key={s.sector} className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500 w-32 truncate">{s.sector}</span>
+                  <span className="text-xs text-[#475569] w-32 truncate">{s.sector}</span>
                   <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <motion.div
                       className="h-full rounded-full bg-purple-500/60"
@@ -186,7 +195,7 @@ export default function DashboardPage() {
                       transition={{ duration: 0.6, delay: 0.6 + i * 0.05 }}
                     />
                   </div>
-                  <span className="text-xs font-medium text-gray-500 w-6 text-right">{s._count.sector}</span>
+                  <span className="text-xs font-medium text-[#475569] w-6 text-right">{s._count.sector}</span>
                 </div>
               );
             })}
@@ -195,7 +204,7 @@ export default function DashboardPage() {
 
         <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.4 }}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-900">Recent Leads</h3>
+            <h3 className="text-sm font-semibold text-[#0F172A]">Recent Leads</h3>
             <Link href="/admin/leads" className="text-xs text-purple-600 hover:text-purple-700 flex items-center gap-1">
               View all <ArrowRight className="w-3 h-3" />
             </Link>
@@ -211,14 +220,14 @@ export default function DashboardPage() {
                   {lead.fullName.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-medium text-gray-800 truncate">{lead.fullName}</div>
-                  <div className="text-[11px] text-gray-400 truncate">{lead.subject}</div>
+                  <div className="text-[13px] font-medium text-[#1E293B] truncate">{lead.fullName}</div>
+                  <div className="text-[11px] text-[#64748B] truncate">{lead.subject}</div>
                 </div>
                 <Badge variant={(STATUS_VARIANT[lead.status] || "default") as "blue" | "amber" | "green" | "default"} size="sm">{lead.status}</Badge>
               </Link>
             ))}
             {(!data?.recentLeads || data.recentLeads.length === 0) && (
-              <div className="text-center py-8 text-xs text-gray-400">No leads yet</div>
+              <div className="text-center py-8 text-xs text-[#64748B]">No leads yet</div>
             )}
           </div>
         </GlassCard>
@@ -226,14 +235,14 @@ export default function DashboardPage() {
 
       {/* Insights */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7, duration: 0.4 }} className="mt-6">
-        <GlassCard padding="lg" className="border-purple-200/50 bg-gradient-to-r from-purple-50/80 to-transparent">
+        <GlassCard padding="lg" className="border-purple-200 bg-gradient-to-r from-purple-50 to-white">
           <div className="flex items-start gap-3">
             <div className="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
               <Reply className="w-4 h-4 text-purple-600" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-1.5">Insights</h3>
-              <div className="space-y-1.5 text-[13px] text-gray-500">
+              <h3 className="text-sm font-semibold text-[#0F172A] mb-1.5">Insights</h3>
+              <div className="space-y-1.5 text-[13px] text-[#475569]">
                 {replied > 0 && contacted > 0 && (
                   <p>Reply rate: <span className="text-emerald-600 font-medium">{((replied / contacted) * 100).toFixed(1)}%</span> — {replied} replied out of {contacted} contacted.</p>
                 )}

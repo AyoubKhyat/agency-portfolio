@@ -106,7 +106,7 @@ export default function AnalyticsPage() {
             </div>
             <div>
               <div className="text-2xl font-bold text-emerald-600">{replyRate}%</div>
-              <div className="text-xs text-gray-500">Reply Rate</div>
+              <div className="text-xs text-[#475569]">Reply Rate</div>
             </div>
           </div>
         </GlassCard>
@@ -117,7 +117,7 @@ export default function AnalyticsPage() {
             </div>
             <div>
               <div className="text-2xl font-bold text-purple-600">{conversionRate}%</div>
-              <div className="text-xs text-gray-500">Conversion Rate</div>
+              <div className="text-xs text-[#475569]">Conversion Rate</div>
             </div>
           </div>
         </GlassCard>
@@ -127,7 +127,7 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
         {/* Pipeline Distribution */}
         <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Pipeline Distribution</h3>
+          <h3 className="text-sm font-semibold text-[#0F172A] mb-4">Pipeline Distribution</h3>
           <div className="flex items-center justify-center">
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
@@ -147,7 +147,7 @@ export default function AnalyticsPage() {
             {pieData.map((entry, i) => (
               <div key={i} className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: entry.color }} />
-                <span className="text-[11px] text-gray-500">{entry.name} ({entry.value})</span>
+                <span className="text-[11px] text-[#475569]">{entry.name} ({entry.value})</span>
               </div>
             ))}
           </div>
@@ -155,7 +155,7 @@ export default function AnalyticsPage() {
 
         {/* Top Sectors */}
         <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Prospects by Sector</h3>
+          <h3 className="text-sm font-semibold text-[#0F172A] mb-4">Prospects by Sector</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={sectorChartData} layout="vertical" margin={{ left: 10, right: 10 }}>
               <XAxis type="number" tick={{ fill: "#9CA3AF", fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -174,35 +174,35 @@ export default function AnalyticsPage() {
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="mt-6">
         <GlassCard padding="none">
           <div className="px-5 py-4 border-b border-[var(--os-border)]">
-            <h3 className="text-sm font-semibold text-gray-900">Sector Performance</h3>
+            <h3 className="text-sm font-semibold text-[#0F172A]">Sector Performance</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--os-border)] bg-gray-50/50">
-                  <th className="text-left px-5 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Sector</th>
-                  <th className="text-center px-3 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Total</th>
-                  <th className="text-center px-3 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Sent</th>
-                  <th className="text-center px-3 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Replied</th>
-                  <th className="text-center px-3 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Converted</th>
-                  <th className="text-center px-3 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Sent %</th>
-                  <th className="text-center px-3 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Reply %</th>
-                  <th className="text-center px-3 py-2.5 text-gray-500 font-medium text-[11px] uppercase tracking-wider">Conv %</th>
+                  <th className="text-left px-5 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Sector</th>
+                  <th className="text-center px-3 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Total</th>
+                  <th className="text-center px-3 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Sent</th>
+                  <th className="text-center px-3 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Replied</th>
+                  <th className="text-center px-3 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Converted</th>
+                  <th className="text-center px-3 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Sent %</th>
+                  <th className="text-center px-3 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Reply %</th>
+                  <th className="text-center px-3 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Conv %</th>
                 </tr>
               </thead>
               <tbody>
                 {data?.sectorPerformance?.map((s) => (
                   <tr key={s.sector} className="border-b border-[var(--os-border)] hover:bg-gray-50 transition-colors">
-                    <td className="px-5 py-2.5 text-gray-800 text-[13px] font-medium">{s.sector}</td>
+                    <td className="px-5 py-2.5 text-[#1E293B] text-[13px] font-medium">{s.sector}</td>
                     <td className="text-center px-3 py-2.5 text-gray-600">{s.total}</td>
                     <td className="text-center px-3 py-2.5 text-gray-600">{s.sent}</td>
                     <td className="text-center px-3 py-2.5">
-                      <span className={s.replied > 0 ? "text-emerald-600 font-medium" : "text-gray-400"}>{s.replied}</span>
+                      <span className={s.replied > 0 ? "text-emerald-600 font-medium" : "text-[#64748B]"}>{s.replied}</span>
                     </td>
                     <td className="text-center px-3 py-2.5">
-                      <span className={s.converted > 0 ? "text-purple-600 font-medium" : "text-gray-400"}>{s.converted}</span>
+                      <span className={s.converted > 0 ? "text-purple-600 font-medium" : "text-[#64748B]"}>{s.converted}</span>
                     </td>
-                    <td className="text-center px-3 py-2.5 text-gray-500">{s.sentRate}%</td>
+                    <td className="text-center px-3 py-2.5 text-[#475569]">{s.sentRate}%</td>
                     <td className="text-center px-3 py-2.5">
                       <Badge variant={s.replyRate > 5 ? "green" : s.replyRate > 0 ? "amber" : "default"} size="sm">{s.replyRate}%</Badge>
                     </td>
