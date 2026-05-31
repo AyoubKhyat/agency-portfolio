@@ -1,13 +1,24 @@
 import { NextResponse } from "next/server";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { verifyPassword, signToken, createSessionCookie } from "@/lib/auth";
-import { neon } from "@neondatabase/serverless";
 import { z } from "zod";
 
 const schema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
+
+const ROLE_MAP: Record<string, string> = {
+  "ayoubkhyat@gmail.com": "admin",
+  "mohammed.yousfi@ibda3digital.com": "sales",
+  "ismail.sarhir@ibda3digital.com": "sales",
+  "soufiane.elkaabaoui@ibda3digital.com": "sales",
+  "abderrahmane.aittaleb@ibda3digital.com": "developer",
+};
+
+function getInitials(name: string) {
+  return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+}
 
 export async function POST(req: Request) {
   if (!hasPrisma()) {
@@ -23,47 +34,24 @@ export async function POST(req: Request) {
   const { email, password } = parsed.data;
 
   try {
-    // Query users table directly via Neon HTTP SQL
-    const dbUrl = process.env.DATABASE_URL;
-    if (dbUrl) {
-      const sql = neon(dbUrl);
-      const users = await sql`SELECT id, email, full_name, password_hash, role, avatar_initials, is_active FROM users WHERE email = ${email} LIMIT 1`;
-
-      if (users.length > 0) {
-        const user = users[0];
-        if (user.is_active && await verifyPassword(password, user.password_hash)) {
-          const token = await signToken({
-            userId: user.id,
-            email: user.email,
-            fullName: user.full_name,
-            role: user.role,
-            avatarInitials: user.avatar_initials,
-          });
-          const cookie = createSessionCookie(token);
-          const res = NextResponse.json({ success: true, name: user.full_name, role: user.role });
-          res.cookies.set(cookie);
-          return res;
-        }
-      }
-    }
-
-    // Fallback to AdminUser via Prisma
     const admin = await prisma.adminUser.findUnique({ where: { email } });
-    if (admin && await verifyPassword(password, admin.passwordHash)) {
-      const token = await signToken({
-        userId: admin.id,
-        email: admin.email,
-        fullName: admin.name,
-        role: "admin",
-        avatarInitials: admin.name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2),
-      });
-      const cookie = createSessionCookie(token);
-      const res = NextResponse.json({ success: true, name: admin.name, role: "admin" });
-      res.cookies.set(cookie);
-      return res;
+    if (!admin || !(await verifyPassword(password, admin.passwordHash))) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    const role = ROLE_MAP[email] ?? "sales";
+    const token = await signToken({
+      userId: admin.id,
+      email: admin.email,
+      fullName: admin.name,
+      role,
+      avatarInitials: getInitials(admin.name),
+    });
+    const cookie = createSessionCookie(token);
+
+    const res = NextResponse.json({ success: true, name: admin.name, role });
+    res.cookies.set(cookie);
+    return res;
   } catch (e) {
     console.error("[login] error:", e);
     return NextResponse.json({ error: "Login error", detail: e instanceof Error ? e.message : String(e) }, { status: 500 });
