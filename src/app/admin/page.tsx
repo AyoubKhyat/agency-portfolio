@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Target, Users, FolderKanban, Clock, ArrowRight, MessageCircle, Reply } from "lucide-react";
+import { Target, Users, FolderKanban, Clock, ArrowRight, MessageCircle, Reply, CalendarClock, AlertTriangle, CalendarDays } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 import { GlassCard } from "@/components/admin/glass-card";
 import { Badge } from "@/components/admin/badge";
@@ -21,6 +21,9 @@ type DashboardData = {
   followUpCandidates: number;
   totalProjects: number;
   recentLeads: RecentLead[];
+  followUpsDueToday: number;
+  followUpsOverdue: number;
+  followUpsUpcoming: number;
 };
 
 const STATUS_VARIANT: Record<string, string> = {
@@ -175,6 +178,45 @@ export default function DashboardPage() {
           </div>
         </GlassCard>
       </div>
+
+      {/* Follow-up Management */}
+      {(data?.followUpsDueToday || data?.followUpsOverdue || data?.followUpsUpcoming) ? (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+          <GlassCard padding="lg" hover className={data.followUpsOverdue ? "border-red-200 bg-red-50/30" : ""} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${data.followUpsOverdue ? "bg-red-100" : "bg-gray-100"}`}>
+                <AlertTriangle className={`w-5 h-5 ${data.followUpsOverdue ? "text-red-600" : "text-[#64748B]"}`} />
+              </div>
+              <div>
+                <div className={`text-2xl font-bold ${data.followUpsOverdue ? "text-red-600" : "text-[#0F172A]"}`}>{data.followUpsOverdue}</div>
+                <div className="text-xs text-[#64748B]">Overdue</div>
+              </div>
+            </div>
+          </GlassCard>
+          <GlassCard padding="lg" hover className={data.followUpsDueToday ? "border-amber-200 bg-amber-50/30" : ""} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${data.followUpsDueToday ? "bg-amber-100" : "bg-gray-100"}`}>
+                <CalendarClock className={`w-5 h-5 ${data.followUpsDueToday ? "text-amber-600" : "text-[#64748B]"}`} />
+              </div>
+              <div>
+                <div className={`text-2xl font-bold ${data.followUpsDueToday ? "text-amber-600" : "text-[#0F172A]"}`}>{data.followUpsDueToday}</div>
+                <div className="text-xs text-[#64748B]">Due Today</div>
+              </div>
+            </div>
+          </GlassCard>
+          <GlassCard padding="lg" hover initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                <CalendarDays className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-[#0F172A]">{data.followUpsUpcoming}</div>
+                <div className="text-xs text-[#64748B]">Upcoming (7d)</div>
+              </div>
+            </div>
+          </GlassCard>
+        </div>
+      ) : null}
 
       {/* Sector Performance + Recent Leads */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">

@@ -508,8 +508,8 @@ export async function bulkAssignOwner(prospectIds: string[], ownerUserId: string
   });
 }
 
-export async function addProspectNote(prospectId: string, content: string) {
-  return db().prospectNote.create({ data: { prospectId, content } });
+export async function addProspectNote(prospectId: string, content: string, authorId?: string, authorName?: string) {
+  return db().prospectNote.create({ data: { prospectId, content, authorId: authorId ?? null, authorName: authorName ?? null } });
 }
 
 // ─── Prospect Activities ────────────────────────────────────────
@@ -538,13 +538,10 @@ export async function logProspectActivity(data: {
 }
 
 export async function setProspectSentBy(prospectId: string, userId: string, userName: string) {
-  const prospect = await db().prospect.findUnique({ where: { id: prospectId } });
-  if (prospect && !prospect.sentByUserId) {
-    await db().prospect.update({
-      where: { id: prospectId },
-      data: { sentByUserId: userId, sentByName: userName },
-    });
-  }
+  await db().prospect.update({
+    where: { id: prospectId },
+    data: { sentByUserId: userId, sentByName: userName, sentAt: new Date() },
+  });
 }
 
 export async function bulkUpdateStatus(prospectIds: string[], status: string) {
@@ -648,6 +645,11 @@ export async function getAdminStats() {
 }
 
 export async function getDashboardStats() {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrowStart = new Date(todayStart.getTime() + 86400000);
+  const weekFromNow = new Date(todayStart.getTime() + 7 * 86400000);
+
   const [
     leadsByStatus,
     prospectsByStatus,
@@ -655,6 +657,9 @@ export async function getDashboardStats() {
     followUpCandidates,
     totalProjects,
     recentLeads,
+    followUpsDueToday,
+    followUpsOverdue,
+    followUpsUpcoming,
   ] = await Promise.all([
     db().lead.groupBy({ by: ["status"], _count: true }),
     db().prospect.groupBy({ by: ["status"], _count: true }),
@@ -662,9 +667,12 @@ export async function getDashboardStats() {
     db().prospect.count({ where: { status: "ENVOYE", sentAt: { lt: new Date(Date.now() - 3 * 86400000) } } }),
     db().project.count({ where: { visible: true } }),
     db().lead.findMany({ orderBy: { createdAt: "desc" }, take: 5, select: { id: true, fullName: true, status: true, createdAt: true, subject: true } }),
+    db().prospect.count({ where: { followUpDate: { gte: todayStart, lt: tomorrowStart } } }),
+    db().prospect.count({ where: { followUpDate: { lt: todayStart }, status: { notIn: ["REPONDU", "CONVERTI"] } } }),
+    db().prospect.count({ where: { followUpDate: { gte: tomorrowStart, lt: weekFromNow } } }),
   ]);
 
-  return { leadsByStatus, prospectsByStatus, prospectsBySector, followUpCandidates, totalProjects, recentLeads };
+  return { leadsByStatus, prospectsByStatus, prospectsBySector, followUpCandidates, totalProjects, recentLeads, followUpsDueToday, followUpsOverdue, followUpsUpcoming };
 }
 
 export async function getAnalyticsData() {

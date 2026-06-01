@@ -11,6 +11,7 @@ import { FilterTabs } from "@/components/admin/filter-tabs";
 import { Badge } from "@/components/admin/badge";
 import { StatCard } from "@/components/admin/stat-card";
 import { EmptyState } from "@/components/admin/empty-state";
+import { ProspectDrawer } from "@/components/admin/prospect-drawer";
 import { cn } from "@/lib/utils";
 
 type MsgTemplate = (ig: string, followers: string) => string;
@@ -171,6 +172,7 @@ function ProspectingContent() {
   const [ownerStats, setOwnerStats] = useState<OwnerStat[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [drawerProspectId, setDrawerProspectId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -209,10 +211,15 @@ function ProspectingContent() {
     router.push(`/admin/prospecting${qs.toString() ? `?${qs}` : ""}`);
   }
 
-  async function markSent(p: Prospect) {
-    if (p.status === "A_ENVOYER" || p.status === "PAS_DE_WHATSAPP") {
-      const res = await fetch(`/api/admin/prospecting/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "ENVOYE" }) });
-      if (res.ok) setProspects((prev) => prev.map((pr) => pr.id === p.id ? { ...pr, status: "ENVOYE", sentAt: new Date().toISOString() } : pr));
+  async function markSent(p: Prospect, actionType?: string) {
+    const res = await fetch(`/api/admin/prospecting/${p.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "ENVOYE", actionType: actionType || "SENT_WHATSAPP" }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setProspects((prev) => prev.map((pr) => pr.id === p.id ? { ...pr, ...updated, notes: pr.notes } : pr));
     }
   }
 
@@ -227,7 +234,7 @@ function ProspectingContent() {
     if (phone.startsWith("0")) phone = "212" + phone.slice(1);
     else if (!phone.startsWith("212") && !phone.startsWith("33")) phone = "212" + phone;
     openLink(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);
-    await markSent(p);
+    await markSent(p, "SENT_WHATSAPP");
   }
 
   async function handleSendIG(p: Prospect) {
@@ -238,7 +245,7 @@ function ProspectingContent() {
     navigator.clipboard.writeText(msg).catch(() => {});
     setCopied(p.id); setTimeout(() => setCopied(null), 3000);
     openLink(`https://ig.me/m/${handle}`);
-    await markSent(p);
+    await markSent(p, "SENT_INSTAGRAM");
   }
 
   async function handleSend(p: Prospect) {
@@ -264,8 +271,11 @@ function ProspectingContent() {
       navigator.clipboard.writeText(msg).catch(() => {});
       openLink(`https://ig.me/m/${handle}`);
     } else { return; }
-    await fetch(`/api/admin/prospecting/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "ENVOYE" }) }).catch(() => {});
-    setProspects((prev) => prev.map((pr) => pr.id === p.id ? { ...pr, status: "ENVOYE", sentAt: new Date().toISOString() } : pr));
+    const res = await fetch(`/api/admin/prospecting/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "ENVOYE", actionType: "FOLLOW_UP" }) });
+    if (res.ok) {
+      const updated = await res.json();
+      setProspects((prev) => prev.map((pr) => pr.id === p.id ? { ...pr, ...updated, notes: pr.notes } : pr));
+    }
   }
 
   async function handleMarkReplied(p: Prospect) {
@@ -403,7 +413,7 @@ function ProspectingContent() {
               <div key={p.id} className="rounded-xl border border-[var(--os-border)] bg-white/80 p-3.5">
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="min-w-0">
-                    <Link href={`/admin/prospecting/${p.id}`} className="text-[14px] font-semibold text-[#0F172A] hover:text-purple-600 transition-colors">{p.name}</Link>
+                    <button onClick={() => setDrawerProspectId(p.id)} className="text-[14px] font-semibold text-[#0F172A] hover:text-[#8B00FF] transition-colors text-left">{p.name}</button>
                     {p.instagram && <span className="ml-1.5 text-[11px] text-[#64748B]">@{p.instagram.replace(/^@/, "")}</span>}
                   </div>
                   <Badge variant={STATUS_BADGE[p.status] as "blue" | "amber" | "green" | "red" | "purple"} size="sm" dot>{STATUS_LABELS[p.status]}</Badge>
@@ -478,7 +488,7 @@ function ProspectingContent() {
                   return (
                     <tr key={p.id} className="border-b border-[var(--os-border)] hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-2.5">
-                        <Link href={`/admin/prospecting/${p.id}`} className="text-[#0F172A] font-medium text-[13px] hover:text-purple-600 transition-colors">{p.name}</Link>
+                        <button onClick={() => setDrawerProspectId(p.id)} className="text-[#0F172A] font-medium text-[13px] hover:text-[#8B00FF] transition-colors text-left">{p.name}</button>
                         {p.instagram && <span className="ml-1.5 text-[11px] text-[#64748B]">@{p.instagram.replace(/^@/, "")}</span>}
                       </td>
                       <td className="px-4 py-2.5 text-[#475569] text-xs">{p.sector}</td>
@@ -561,7 +571,7 @@ function ProspectingContent() {
                 <motion.div key={p.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: i * 0.02 }}
                   className="group rounded-xl border border-[var(--os-border)] bg-white/80 p-4 hover:border-[var(--os-border-hover)] hover:bg-white/80 transition-all">
                   <div className="flex items-start justify-between mb-2">
-                    <Link href={`/admin/prospecting/${p.id}`} className="text-[14px] font-semibold text-[#0F172A] hover:text-purple-600 transition-colors truncate">{p.name}</Link>
+                    <button onClick={() => setDrawerProspectId(p.id)} className="text-[14px] font-semibold text-[#0F172A] hover:text-[#8B00FF] transition-colors truncate text-left">{p.name}</button>
                     <Badge variant={STATUS_BADGE[p.status] as "blue" | "amber" | "green" | "red" | "purple"} size="sm" dot>{STATUS_LABELS[p.status]}</Badge>
                   </div>
                   <div className="flex items-center gap-2 mb-3">
@@ -631,6 +641,13 @@ function ProspectingContent() {
           )}
         </>
       )}
+      <ProspectDrawer
+        prospectId={drawerProspectId}
+        onClose={() => setDrawerProspectId(null)}
+        onUpdate={(updated) => {
+          setProspects((prev) => prev.map((pr) => pr.id === updated.id ? { ...pr, ...updated } : pr));
+        }}
+      />
     </div>
   );
 }

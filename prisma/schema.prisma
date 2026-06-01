@@ -129,6 +129,7 @@ model Prospect {
   priority     Int       @default(2)
   status       String    @default("A_ENVOYER")
   sentAt       DateTime? @map("sent_at")
+  followUpDate DateTime? @map("follow_up_date")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
@@ -157,6 +158,8 @@ model ProspectNote {
   id         String   @id @default(cuid())
   prospectId String   @map("prospect_id")
   content    String
+  authorId   String?  @map("author_id")
+  authorName String?  @map("author_name")
   createdAt  DateTime @default(now()) @map("created_at")
 
   prospect Prospect @relation(fields: [prospectId], references: [id], onDelete: Cascade)

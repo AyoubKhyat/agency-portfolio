@@ -15,7 +15,7 @@ export async function POST(
   const parsed = z.object({ content: z.string().min(1) }).safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
-  const note = await addProspectNote(id, parsed.data.content);
+  const note = await addProspectNote(id, parsed.data.content, session.userId, session.fullName);
 
   await logProspectActivity({
     prospectId: id,

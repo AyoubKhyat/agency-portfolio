@@ -19,6 +19,7 @@ export async function GET(
 const patchSchema = z.object({
   status: z.enum(["A_ENVOYER", "ENVOYE", "REPONDU", "PAS_DE_WHATSAPP", "CONVERTI"]).optional(),
   ownerUserId: z.string().nullable().optional(),
+  followUpDate: z.string().nullable().optional(),
   actionType: z.string().optional(),
   details: z.string().optional(),
 });
@@ -51,11 +52,27 @@ export async function PATCH(
     });
   }
 
+  if (parsed.data.followUpDate !== undefined) {
+    await updateProspect(id, { followUpDate: parsed.data.followUpDate ? new Date(parsed.data.followUpDate) : null });
+  }
+
   if (parsed.data.status) {
     const previousStatus = current.status;
     const prospect = await updateProspectStatus(id, parsed.data.status);
 
     const actionType = parsed.data.actionType || `STATUS_${parsed.data.status}`;
+
+    if (parsed.data.status === "ENVOYE") {
+      if (!current.ownerUserId) {
+        await assignProspectOwner(id, session.userId);
+      }
+      await setProspectSentBy(id, session.userId, session.fullName);
+      await setProspectFirstContact(id, session.userId, session.fullName);
+    }
+
+    if (parsed.data.status === "REPONDU") {
+      await setProspectFirstContact(id, session.userId, session.fullName);
+    }
 
     await logProspectActivity({
       prospectId: id,
@@ -67,15 +84,8 @@ export async function PATCH(
       details: parsed.data.details,
     });
 
-    if (parsed.data.status === "ENVOYE" || parsed.data.status === "REPONDU") {
-      await setProspectFirstContact(id, session.userId, session.fullName);
-    }
-
-    if (parsed.data.status === "ENVOYE") {
-      await setProspectSentBy(id, session.userId, session.fullName);
-    }
-
-    return NextResponse.json(prospect);
+    const updated = await getProspectById(id);
+    return NextResponse.json(updated);
   }
 
   const updated = await getProspectById(id);
@@ -133,6 +143,7 @@ export async function DELETE(
 ) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.role !== "admin") return NextResponse.json({ error: "Only admins can delete prospects" }, { status: 403 });
 
   const { id } = await params;
   await deleteProspect(id);
