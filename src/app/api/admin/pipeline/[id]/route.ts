@@ -49,10 +49,12 @@ export async function PATCH(
   if (!parsed.success) return NextResponse.json({ error: "Invalid" }, { status: 400 });
 
   const data: Record<string, unknown> = { ...parsed.data };
-  if (parsed.data.startDate) data.startDate = new Date(parsed.data.startDate);
-  else if (parsed.data.startDate === null) data.startDate = null;
-  if (parsed.data.dueDate) data.dueDate = new Date(parsed.data.dueDate);
-  else if (parsed.data.dueDate === null) data.dueDate = null;
+  if (parsed.data.startDate !== undefined) {
+    data.startDate = parsed.data.startDate ? new Date(parsed.data.startDate) : null;
+  }
+  if (parsed.data.dueDate !== undefined) {
+    data.dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : null;
+  }
   if (parsed.data.status === "COMPLETED") data.completedAt = new Date();
   if (parsed.data.status === "LIVE") data.progress = 100;
 

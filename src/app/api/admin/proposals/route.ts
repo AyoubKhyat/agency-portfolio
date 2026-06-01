@@ -44,6 +44,7 @@ export async function POST(req: Request) {
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
 
+  try {
   const proposal = await prisma.proposal.create({
     data: {
       ...parsed.data,
@@ -67,4 +68,7 @@ export async function POST(req: Request) {
   });
 
   return NextResponse.json(proposal, { status: 201 });
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Failed to create proposal" }, { status: 500 });
+  }
 }

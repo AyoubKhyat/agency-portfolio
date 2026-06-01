@@ -2,9 +2,11 @@ import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "fallback-dev-secret"
-);
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret && process.env.NODE_ENV === "production") {
+  console.error("[auth] CRITICAL: JWT_SECRET not set in production!");
+}
+const SECRET = new TextEncoder().encode(jwtSecret || "fallback-dev-secret-do-not-use-in-prod");
 
 const COOKIE_NAME = "admin_token";
 

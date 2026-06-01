@@ -69,31 +69,35 @@ export async function PATCH(
 
   if (parsed.data.status) {
     const previousStatus = current.status;
-    const prospect = await updateProspectStatus(id, parsed.data.status);
-
     const actionType = parsed.data.actionType || `STATUS_${parsed.data.status}`;
 
-    if (parsed.data.status === "ENVOYE") {
-      if (!current.ownerUserId) {
-        await assignProspectOwner(id, session.userId);
+    try {
+      await updateProspectStatus(id, parsed.data.status);
+
+      if (parsed.data.status === "ENVOYE") {
+        if (!current.ownerUserId) {
+          await assignProspectOwner(id, session.userId);
+        }
+        await setProspectSentBy(id, session.userId, session.fullName);
+        await setProspectFirstContact(id, session.userId, session.fullName);
       }
-      await setProspectSentBy(id, session.userId, session.fullName);
-      await setProspectFirstContact(id, session.userId, session.fullName);
-    }
 
-    if (parsed.data.status === "REPONDU") {
-      await setProspectFirstContact(id, session.userId, session.fullName);
-    }
+      if (parsed.data.status === "REPONDU") {
+        await setProspectFirstContact(id, session.userId, session.fullName);
+      }
 
-    await logProspectActivity({
-      prospectId: id,
-      userId: session.userId,
-      userName: session.fullName,
-      actionType,
-      previousStatus,
-      newStatus: parsed.data.status,
-      details: parsed.data.details,
-    });
+      await logProspectActivity({
+        prospectId: id,
+        userId: session.userId,
+        userName: session.fullName,
+        actionType,
+        previousStatus,
+        newStatus: parsed.data.status,
+        details: parsed.data.details,
+      });
+    } catch (e) {
+      return NextResponse.json({ error: e instanceof Error ? e.message : "Status update failed" }, { status: 500 });
+    }
 
     if (parsed.data.status === "REPONDU") {
       notifyTeam(session.userId, { type: "reply", title: `${current.name} replied`, body: `${session.fullName} got a reply from ${current.name}`, link: `/admin/prospecting/${id}` }).catch(() => {});
@@ -105,12 +109,10 @@ export async function PATCH(
     const updated = await getProspectById(id);
 
     if (parsed.data.status === "ENVOYE" && !current.followUpDate) {
-      const suggestedDate = new Date(Date.now() + 3 * 86400000);
-      return NextResponse.json({ ...updated, suggestedFollowUp: suggestedDate.toISOString() });
+      return NextResponse.json({ ...updated, suggestedFollowUp: new Date(Date.now() + 3 * 86400000).toISOString() });
     }
     if (parsed.data.status === "REPONDU" && !current.followUpDate) {
-      const suggestedDate = new Date(Date.now() + 86400000);
-      return NextResponse.json({ ...updated, suggestedFollowUp: suggestedDate.toISOString() });
+      return NextResponse.json({ ...updated, suggestedFollowUp: new Date(Date.now() + 86400000).toISOString() });
     }
 
     return NextResponse.json(updated);
