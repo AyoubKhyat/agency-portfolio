@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { Badge } from "@/components/admin/badge";
+import { ProposalBuilder } from "@/components/admin/proposal-builder";
 import { cn } from "@/lib/utils";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -237,6 +238,8 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
   const [savingNote, setSavingNote] = useState(false);
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [showProposalBuilder, setShowProposalBuilder] = useState(false);
+  const [proposals, setProposals] = useState<{ id: string; status: string; amount: number; currency: string; packageName: string | null; createdAt: string }[]>([]);
   const [phoneCopied, setPhoneCopied] = useState(false);
   const [sections, setSections] = useState({
     overview: true,
@@ -250,11 +253,12 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
 
   const fetchProspect = useCallback(async (id: string) => {
     setLoading(true);
-    const res = await fetch(`/api/admin/prospecting/${id}`);
-    if (res.ok) {
-      const data = await res.json();
-      setProspect(data);
-    }
+    const [prospectRes, proposalsRes] = await Promise.all([
+      fetch(`/api/admin/prospecting/${id}`),
+      fetch(`/api/admin/proposals?prospectId=${id}`),
+    ]);
+    if (prospectRes.ok) setProspect(await prospectRes.json());
+    if (proposalsRes.ok) setProposals(await proposalsRes.json());
     setLoading(false);
   }, []);
 
@@ -385,6 +389,7 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
   const followUpStatus = prospect ? getFollowUpStatus(prospect.followUpDate) : null;
 
   return (
+    <>
     <AnimatePresence>
       {prospectId && (
         <>
@@ -482,6 +487,13 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                           : "bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]"
                       )}
                       title="Add note"
+                    >
+                      <FileText className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setShowProposalBuilder(true)}
+                      className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0] transition-colors"
+                      title="Create proposal"
                     >
                       <FileText className="w-4 h-4" />
                     </button>
@@ -706,6 +718,26 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                       </div>
                     )}
 
+                    {proposals.length > 0 && (
+                      <>
+                        <div className="border-t border-[#F1F5F9]" />
+                        <div className="px-5 py-3">
+                          <h4 className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2">Proposals</h4>
+                          <div className="space-y-2">
+                            {proposals.map((p) => (
+                              <div key={p.id} className="flex items-center justify-between p-2.5 rounded-lg bg-[#F8FAFC] border border-[#F1F5F9]">
+                                <div>
+                                  <span className="text-[13px] font-medium text-[#0F172A]">{p.packageName || "Custom"}</span>
+                                  <span className="text-[13px] text-[#64748B] ml-2">{p.amount.toLocaleString()} {p.currency}</span>
+                                </div>
+                                <Badge variant={p.status === "ACCEPTED" ? "green" : p.status === "SENT" ? "blue" : p.status === "REJECTED" ? "red" : "default"} size="sm">{p.status}</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
                     <div className="border-t border-[#F1F5F9]" />
 
                     <SectionHeader
@@ -838,5 +870,15 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
         </>
       )}
     </AnimatePresence>
+    {showProposalBuilder && prospect && (
+      <ProposalBuilder
+        prospectId={prospect.id}
+        prospectName={prospect.name}
+        sector={prospect.sector}
+        onClose={() => setShowProposalBuilder(false)}
+        onCreated={() => { fetchProspect(prospect.id); }}
+      />
+    )}
+    </>
   );
 }

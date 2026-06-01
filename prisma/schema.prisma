@@ -153,6 +153,7 @@ model Prospect {
 
   notes      ProspectNote[]
   activities ProspectActivity[]
+  proposals  Proposal[]
 
   @@map("prospects")
 }
@@ -185,6 +186,29 @@ model ProspectActivity {
   user     User     @relation(fields: [userId], references: [id])
 
   @@map("prospect_activities")
+}
+
+model Proposal {
+  id            String   @id @default(cuid())
+  prospectId    String   @map("prospect_id")
+  contactPerson String   @default("") @map("contact_person")
+  services      String
+  amount        Float
+  currency      String   @default("MAD")
+  timeline      String   @default("")
+  paymentTerms  String   @default("") @map("payment_terms")
+  notes         String   @default("")
+  packageName   String?  @map("package_name")
+  status        String   @default("DRAFT")
+  sentAt        DateTime? @map("sent_at")
+  createdById   String   @map("created_by_id")
+  createdByName String   @map("created_by_name")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  prospect Prospect @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+
+  @@map("proposals")
 }
 
 model Notification {

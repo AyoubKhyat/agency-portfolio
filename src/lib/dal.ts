@@ -734,7 +734,26 @@ export async function getAnalyticsData() {
 
   const funnel = await getConversionFunnel();
 
-  return { prospectsByStatus, prospectsBySector, leadsByStatus, sectorPerformance, funnel };
+  const [proposalsSent, proposalsAccepted, proposalsRejected, proposalTotal, proposalWon] = await Promise.all([
+    db().proposal.count({ where: { status: "SENT" } }),
+    db().proposal.count({ where: { status: "ACCEPTED" } }),
+    db().proposal.count({ where: { status: "REJECTED" } }),
+    db().proposal.aggregate({ _sum: { amount: true } }),
+    db().proposal.aggregate({ where: { status: "ACCEPTED" }, _sum: { amount: true } }),
+  ]);
+
+  const proposalStats = {
+    sent: proposalsSent,
+    accepted: proposalsAccepted,
+    rejected: proposalsRejected,
+    totalValue: proposalTotal._sum.amount || 0,
+    wonValue: proposalWon._sum.amount || 0,
+    avgAmount: (proposalsSent + proposalsAccepted + proposalsRejected) > 0
+      ? Math.round((proposalTotal._sum.amount || 0) / (proposalsSent + proposalsAccepted + proposalsRejected))
+      : 0,
+  };
+
+  return { prospectsByStatus, prospectsBySector, leadsByStatus, sectorPerformance, funnel, proposalStats };
 }
 
 export async function getClients() {

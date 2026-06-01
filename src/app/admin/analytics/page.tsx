@@ -19,12 +19,15 @@ type SectorPerf = {
 
 type FunnelStep = { status: string; count: number };
 
+type ProposalStats = { sent: number; accepted: number; rejected: number; totalValue: number; wonValue: number; avgAmount: number };
+
 type AnalyticsData = {
   prospectsByStatus: StatusCount[];
   prospectsBySector: SectorCount[];
   leadsByStatus: StatusCount[];
   sectorPerformance: SectorPerf[];
   funnel: FunnelStep[];
+  proposalStats: ProposalStats;
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -131,6 +134,28 @@ export default function AnalyticsPage() {
           </div>
         </GlassCard>
       </div>
+
+      {/* Proposal Revenue */}
+      {data?.proposalStats && (data.proposalStats.sent > 0 || data.proposalStats.accepted > 0) && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-4">
+          <GlassCard padding="lg" hover initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.42 }}>
+            <div className="text-2xl font-bold text-[#0F172A]">{(data.proposalStats.totalValue / 1000).toFixed(0)}K</div>
+            <div className="text-xs text-[#64748B]">Pipeline Value (MAD)</div>
+          </GlassCard>
+          <GlassCard padding="lg" hover initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
+            <div className="text-2xl font-bold text-emerald-600">{(data.proposalStats.wonValue / 1000).toFixed(0)}K</div>
+            <div className="text-xs text-[#64748B]">Won Revenue (MAD)</div>
+          </GlassCard>
+          <GlassCard padding="lg" hover initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.48 }}>
+            <div className="text-2xl font-bold text-[#8B00FF]">{data.proposalStats.accepted}</div>
+            <div className="text-xs text-[#64748B]">Accepted / {data.proposalStats.sent + data.proposalStats.accepted + data.proposalStats.rejected} Total</div>
+          </GlassCard>
+          <GlassCard padding="lg" hover initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+            <div className="text-2xl font-bold text-[#0F172A]">{data.proposalStats.avgAmount.toLocaleString()}</div>
+            <div className="text-xs text-[#64748B]">Avg Proposal (MAD)</div>
+          </GlassCard>
+        </div>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
