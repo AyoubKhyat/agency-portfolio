@@ -17,15 +17,24 @@ type SectorPerf = {
   sentRate: number; replyRate: number; conversionRate: number;
 };
 
+type FunnelStep = { status: string; count: number };
+
 type AnalyticsData = {
   prospectsByStatus: StatusCount[];
   prospectsBySector: SectorCount[];
   leadsByStatus: StatusCount[];
   sectorPerformance: SectorPerf[];
+  funnel: FunnelStep[];
 };
 
 const STATUS_COLORS: Record<string, string> = {
   A_ENVOYER: "#3b82f6", ENVOYE: "#f59e0b", REPONDU: "#22c55e", PAS_DE_WHATSAPP: "#ef4444", CONVERTI: "#8b5cf6",
+  MEETING: "#8b5cf6", PROPOSAL_SENT: "#3b82f6", NEGOTIATION: "#f59e0b", CLIENT: "#10b981", LOST: "#6b7280",
+};
+
+const FUNNEL_LABELS: Record<string, string> = {
+  A_ENVOYER: "Prospects", ENVOYE: "Contacted", REPONDU: "Replied", MEETING: "Meeting",
+  PROPOSAL_SENT: "Proposal", NEGOTIATION: "Negotiation", CLIENT: "Client", LOST: "Lost",
 };
 const STATUS_LABELS: Record<string, string> = {
   A_ENVOYER: "To Send", ENVOYE: "Sent", REPONDU: "Replied", PAS_DE_WHATSAPP: "No WA", CONVERTI: "Converted",
@@ -169,6 +178,51 @@ export default function AnalyticsPage() {
           </ResponsiveContainer>
         </GlassCard>
       </div>
+
+      {/* Conversion Funnel */}
+      {data?.funnel && data.funnel.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="mt-6">
+          <GlassCard padding="lg">
+            <h3 className="text-sm font-semibold text-[#0F172A] mb-5">Sales Pipeline</h3>
+            <div className="space-y-3">
+              {data.funnel.filter(s => s.status !== "LOST").map((step, i) => {
+                const maxCount = Math.max(...data.funnel.map(s => s.count), 1);
+                const pct = (step.count / maxCount) * 100;
+                const prevStep = i > 0 ? data.funnel.filter(s => s.status !== "LOST")[i - 1] : null;
+                const dropOff = prevStep && prevStep.count > 0 ? Math.round(((prevStep.count - step.count) / prevStep.count) * 100) : null;
+                return (
+                  <div key={step.status}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-medium text-[#0F172A]">{FUNNEL_LABELS[step.status] || step.status}</span>
+                        {dropOff !== null && dropOff > 0 && (
+                          <span className="text-[10px] text-red-500 font-medium">-{dropOff}%</span>
+                        )}
+                      </div>
+                      <span className="text-[13px] font-bold text-[#0F172A]">{step.count}</span>
+                    </div>
+                    <div className="h-3 bg-[#F1F5F9] rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{ background: STATUS_COLORS[step.status] || "#8b5cf6" }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.max(pct, 2)}%` }}
+                        transition={{ duration: 0.8, delay: 0.6 + i * 0.08 }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {data.funnel.find(s => s.status === "LOST")?.count ? (
+              <div className="mt-4 pt-3 border-t border-[#F1F5F9] flex items-center justify-between">
+                <span className="text-[13px] text-[#64748B]">Lost</span>
+                <span className="text-[13px] font-bold text-[#64748B]">{data.funnel.find(s => s.status === "LOST")?.count || 0}</span>
+              </div>
+            ) : null}
+          </GlassCard>
+        </motion.div>
+      )}
 
       {/* Sector Performance Table */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="mt-6">

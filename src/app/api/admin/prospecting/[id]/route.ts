@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getProspectById, updateProspectStatus, updateProspect, deleteProspect, assignProspectOwner, logProspectActivity, setProspectFirstContact, setProspectSentBy } from "@/lib/dal";
+import { getProspectById, updateProspectStatus, updateProspect, deleteProspect, assignProspectOwner, logProspectActivity, setProspectFirstContact, setProspectSentBy, notifyTeam } from "@/lib/dal";
 import { z } from "zod";
 
 export async function GET(
@@ -17,9 +17,12 @@ export async function GET(
 }
 
 const patchSchema = z.object({
-  status: z.enum(["A_ENVOYER", "ENVOYE", "REPONDU", "PAS_DE_WHATSAPP", "CONVERTI"]).optional(),
+  status: z.enum(["A_ENVOYER", "ENVOYE", "REPONDU", "PAS_DE_WHATSAPP", "CONVERTI", "MEETING", "PROPOSAL_SENT", "NEGOTIATION", "CLIENT", "LOST"]).optional(),
   ownerUserId: z.string().nullable().optional(),
   followUpDate: z.string().nullable().optional(),
+  proposalAmount: z.number().nullable().optional(),
+  proposalDate: z.string().nullable().optional(),
+  proposalStatus: z.enum(["DRAFT", "SENT", "ACCEPTED", "REJECTED"]).nullable().optional(),
   actionType: z.string().optional(),
   details: z.string().optional(),
 });
@@ -56,6 +59,14 @@ export async function PATCH(
     await updateProspect(id, { followUpDate: parsed.data.followUpDate ? new Date(parsed.data.followUpDate) : null });
   }
 
+  if (parsed.data.proposalAmount !== undefined || parsed.data.proposalDate !== undefined || parsed.data.proposalStatus !== undefined) {
+    const proposalData: Record<string, unknown> = {};
+    if (parsed.data.proposalAmount !== undefined) proposalData.proposalAmount = parsed.data.proposalAmount;
+    if (parsed.data.proposalDate !== undefined) proposalData.proposalDate = parsed.data.proposalDate ? new Date(parsed.data.proposalDate) : null;
+    if (parsed.data.proposalStatus !== undefined) proposalData.proposalStatus = parsed.data.proposalStatus;
+    await updateProspect(id, proposalData);
+  }
+
   if (parsed.data.status) {
     const previousStatus = current.status;
     const prospect = await updateProspectStatus(id, parsed.data.status);
@@ -84,7 +95,24 @@ export async function PATCH(
       details: parsed.data.details,
     });
 
+    if (parsed.data.status === "REPONDU") {
+      notifyTeam(session.userId, { type: "reply", title: `${current.name} replied`, body: `${session.fullName} got a reply from ${current.name}`, link: `/admin/prospecting/${id}` }).catch(() => {});
+    }
+    if (parsed.data.status === "CONVERTI" || parsed.data.status === "CLIENT") {
+      notifyTeam(session.userId, { type: "conversion", title: `${current.name} converted`, body: `${session.fullName} converted ${current.name}`, link: `/admin/prospecting/${id}` }).catch(() => {});
+    }
+
     const updated = await getProspectById(id);
+
+    if (parsed.data.status === "ENVOYE" && !current.followUpDate) {
+      const suggestedDate = new Date(Date.now() + 3 * 86400000);
+      return NextResponse.json({ ...updated, suggestedFollowUp: suggestedDate.toISOString() });
+    }
+    if (parsed.data.status === "REPONDU" && !current.followUpDate) {
+      const suggestedDate = new Date(Date.now() + 86400000);
+      return NextResponse.json({ ...updated, suggestedFollowUp: suggestedDate.toISOString() });
+    }
+
     return NextResponse.json(updated);
   }
 

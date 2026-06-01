@@ -7,8 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Target, Building2, FolderKanban,
   BarChart3, Settings, LogOut, PanelLeftClose, PanelLeft, Menu, X,
-  Activity, UsersRound,
+  Activity, UsersRound, Bell, Search,
 } from "lucide-react";
+import { CommandPalette } from "@/components/admin/command-palette";
 import { cn } from "@/lib/utils";
 
 const SECTIONS = [
@@ -46,6 +47,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [badges, setBadges] = useState({ leads: 0, prospects: 0, activities: 0, team: 0 });
   const isLogin = pathname === "/admin/login";
 
@@ -59,6 +62,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (isLogin) return;
+    fetch("/api/admin/notifications").then((r) => r.ok ? r.json() : []).then((notifs: { read: boolean }[]) => {
+      setUnreadNotifs(Array.isArray(notifs) ? notifs.filter((n) => !n.read).length : 0);
+    }).catch(() => {});
+  }, [pathname, isLogin]);
 
   useEffect(() => {
     if (isLogin) return;
@@ -238,6 +259,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="text-sm font-bold text-[#0F172A]">{getPageTitle(pathname)}</span>
           </div>
         </div>
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => setSearchOpen(true)} className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]">
+            <Search className="w-5 h-5" />
+          </button>
+          <button className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] relative">
+            <Bell className="w-5 h-5" />
+            {unreadNotifs > 0 && <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile drawer overlay */}
@@ -289,6 +319,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </AnimatePresence>
         </div>
       </main>
+
+      <CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }

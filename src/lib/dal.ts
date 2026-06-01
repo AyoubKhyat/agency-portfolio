@@ -628,6 +628,30 @@ export async function getTeamStats() {
   return stats;
 }
 
+// ─── Notifications ─────────────────────────────────────────────
+
+export async function createNotification(data: { userId: string; type: string; title: string; body?: string; link?: string }) {
+  return db().notification.create({ data });
+}
+
+export async function notifyTeam(excludeUserId: string, data: { type: string; title: string; body?: string; link?: string }) {
+  const users = await db().user.findMany({ where: { isActive: true, id: { not: excludeUserId } }, select: { id: true } });
+  if (users.length === 0) return;
+  await db().notification.createMany({
+    data: users.map((u) => ({ userId: u.id, ...data })),
+  });
+}
+
+// ─── Conversion Funnel ─────────────────────────────────────────
+
+export async function getConversionFunnel() {
+  const statuses = ["A_ENVOYER", "ENVOYE", "REPONDU", "MEETING", "PROPOSAL_SENT", "NEGOTIATION", "CLIENT", "LOST"];
+  const counts = await Promise.all(
+    statuses.map((s) => db().prospect.count({ where: { status: s } }))
+  );
+  return statuses.map((status, i) => ({ status, count: counts[i] }));
+}
+
 // ─── Stats ───────────────────────────────────────────────────────
 
 export async function getAdminStats() {
@@ -708,7 +732,9 @@ export async function getAnalyticsData() {
     };
   });
 
-  return { prospectsByStatus, prospectsBySector, leadsByStatus, sectorPerformance };
+  const funnel = await getConversionFunnel();
+
+  return { prospectsByStatus, prospectsBySector, leadsByStatus, sectorPerformance, funnel };
 }
 
 export async function getClients() {

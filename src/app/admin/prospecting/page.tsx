@@ -84,9 +84,9 @@ const FOLLOWUP_TEMPLATES: MsgTemplate[] = [
 let sendCounter = 0;
 let followupCounter = 0;
 
-const STATUSES = ["ALL", "A_ENVOYER", "ENVOYE", "REPONDU", "PAS_DE_WHATSAPP", "CONVERTI"] as const;
-const STATUS_LABELS: Record<string, string> = { ALL: "All", A_ENVOYER: "To send", ENVOYE: "Sent", REPONDU: "Replied", PAS_DE_WHATSAPP: "No WA", CONVERTI: "Converted" };
-const STATUS_BADGE: Record<string, string> = { A_ENVOYER: "blue", ENVOYE: "amber", REPONDU: "green", PAS_DE_WHATSAPP: "red", CONVERTI: "purple" };
+const STATUSES = ["ALL", "A_ENVOYER", "ENVOYE", "REPONDU", "MEETING", "PROPOSAL_SENT", "NEGOTIATION", "PAS_DE_WHATSAPP", "CLIENT", "CONVERTI", "LOST"] as const;
+const STATUS_LABELS: Record<string, string> = { ALL: "All", A_ENVOYER: "To send", ENVOYE: "Sent", REPONDU: "Replied", MEETING: "Meeting", PROPOSAL_SENT: "Proposal", NEGOTIATION: "Negotiation", PAS_DE_WHATSAPP: "No WA", CLIENT: "Client", CONVERTI: "Converted", LOST: "Lost" };
+const STATUS_BADGE: Record<string, string> = { A_ENVOYER: "blue", ENVOYE: "amber", REPONDU: "green", MEETING: "purple", PROPOSAL_SENT: "blue", NEGOTIATION: "amber", PAS_DE_WHATSAPP: "red", CLIENT: "green", CONVERTI: "purple", LOST: "default" };
 const PRIORITY_BADGE: Record<number, string> = { 1: "green", 2: "amber", 3: "default" };
 const PRIORITY_LABELS: Record<number, string> = { 1: "IG no site", 2: "No site", 3: "Has site" };
 const SECTORS = [
@@ -105,12 +105,15 @@ type Prospect = {
   sector: string; neighborhood: string; instagram: string;
   hasWebsite: boolean; priority: number; status: string;
   sentAt: string | null; createdAt: string;
+  followUpDate: string | null;
   ownerUserId: string | null;
   sentByName: string | null;
   lastActionByName: string | null;
   lastActionAt: string | null;
+  proposalAmount: number | null;
+  proposalStatus: string | null;
   owner?: { id: string; fullName: string; avatarInitials: string } | null;
-  notes: { id: string; content: string; createdAt: string }[];
+  notes: { id: string; content: string; authorName: string | null; createdAt: string }[];
 };
 
 type OwnerStat = { id: string; fullName: string; avatarInitials: string; count: number };
@@ -138,6 +141,20 @@ function getFollowupMessage(p: Prospect): string {
 function isLandline(phone: string) {
   const d = phone?.replace(/\D/g, "") || "";
   return /^0?524/.test(d) || /^212524/.test(d);
+}
+
+function getHealthScore(p: { phone: string; instagram: string; hasWebsite: boolean; status: string; followUpDate: string | null }): { score: number; label: string; color: string } {
+  let score = 0;
+  if (p.phone && !isLandline(p.phone)) score += 20;
+  if (p.instagram) score += 15;
+  if (p.hasWebsite) score += 15;
+  if (p.status === "REPONDU" || p.status === "MEETING" || p.status === "NEGOTIATION") score += 20;
+  if (p.status === "CLIENT" || p.status === "CONVERTI") score += 30;
+  if (p.followUpDate) score += 10;
+  score = Math.min(score, 100);
+  if (score >= 60) return { score, label: "Hot", color: "bg-emerald-100 text-emerald-700" };
+  if (score >= 30) return { score, label: "Warm", color: "bg-amber-100 text-amber-700" };
+  return { score, label: "Cold", color: "bg-red-100 text-red-700" };
 }
 
 function openLink(url: string) {
@@ -220,6 +237,16 @@ function ProspectingContent() {
     if (res.ok) {
       const updated = await res.json();
       setProspects((prev) => prev.map((pr) => pr.id === p.id ? { ...pr, ...updated, notes: pr.notes } : pr));
+      if (updated.suggestedFollowUp) {
+        const days = Math.round((new Date(updated.suggestedFollowUp).getTime() - Date.now()) / 86400000);
+        if (confirm(`Schedule follow-up in ${days} days for ${p.name}?`)) {
+          await fetch(`/api/admin/prospecting/${p.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ followUpDate: updated.suggestedFollowUp }),
+          });
+        }
+      }
     }
   }
 
@@ -420,8 +447,9 @@ function ProspectingContent() {
                 </div>
                 <div className="flex items-center gap-2 flex-wrap mb-2.5">
                   <Badge variant="default" size="sm">{p.sector}</Badge>
-                  <Badge variant={PRIORITY_BADGE[p.priority] as "green" | "amber" | "default"} size="sm">{PRIORITY_LABELS[p.priority]}</Badge>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${getHealthScore(p).color}`}>{getHealthScore(p).label}</span>
                   {p.neighborhood && <span className="text-[11px] text-[#64748B]">{p.neighborhood}</span>}
+                  {p.notes?.[0] && <span className="text-[10px] text-[#64748B] truncate max-w-[180px]" title={p.notes[0].content}>{p.notes[0].content}</span>}
                 </div>
                 {p.lastActionByName && (
                   <div className="flex items-center gap-2 text-[10px] text-[#64748B] mb-2">
@@ -644,8 +672,8 @@ function ProspectingContent() {
       <ProspectDrawer
         prospectId={drawerProspectId}
         onClose={() => setDrawerProspectId(null)}
-        onUpdate={(updated) => {
-          setProspects((prev) => prev.map((pr) => pr.id === updated.id ? { ...pr, ...updated } : pr));
+        onUpdate={(updated: Record<string, unknown>) => {
+          setProspects((prev) => prev.map((pr) => pr.id === updated.id ? { ...pr, ...updated } as Prospect : pr));
         }}
       />
     </div>

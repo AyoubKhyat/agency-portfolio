@@ -299,6 +299,43 @@ export default function DashboardPage() {
           </div>
         </GlassCard>
       </motion.div>
+
+      {/* CRM Health */}
+      <CRMHealthWidget />
     </div>
+  );
+}
+
+function CRMHealthWidget() {
+  const [health, setHealth] = useState<{ issues: { type: string; label: string; count: number }[]; score: number } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/crm-health").then((r) => r.ok ? r.json() : null).then(setHealth).catch(() => {});
+  }, []);
+
+  if (!health || health.issues.length === 0) return null;
+
+  const scoreColor = health.score >= 80 ? "text-emerald-600" : health.score >= 50 ? "text-amber-600" : "text-red-600";
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8, duration: 0.4 }} className="mt-6">
+      <GlassCard padding="lg">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-[#0F172A]">CRM Health</h3>
+          <span className={`text-2xl font-bold ${scoreColor}`}>{health.score}%</span>
+        </div>
+        <div className="space-y-2">
+          {health.issues.map((issue) => (
+            <div key={issue.label} className="flex items-center justify-between py-1.5">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${issue.type === "error" ? "bg-red-500" : issue.type === "warning" ? "bg-amber-500" : "bg-blue-400"}`} />
+                <span className="text-[13px] text-[#475569]">{issue.label}</span>
+              </div>
+              <span className={`text-[13px] font-semibold ${issue.type === "error" ? "text-red-600" : issue.type === "warning" ? "text-amber-600" : "text-[#64748B]"}`}>{issue.count}</span>
+            </div>
+          ))}
+        </div>
+      </GlassCard>
+    </motion.div>
   );
 }
