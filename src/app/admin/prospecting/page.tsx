@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Plus, Upload, Send, CheckCircle, PhoneOff, Pencil, Trash2, Phone, LayoutGrid, List, Target } from "lucide-react";
+import { Plus, Upload, Send, CheckCircle, PhoneOff, Pencil, Trash2, Phone, LayoutGrid, List, Target, Search, X } from "lucide-react";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { PageHeader } from "@/components/admin/page-header";
 import { FilterTabs } from "@/components/admin/filter-tabs";
@@ -169,7 +169,16 @@ function ProspectingContent() {
   const [view, setView] = useState<"list" | "grid">("list");
   const [copied, setCopied] = useState<string | null>(null);
   const [ownerStats, setOwnerStats] = useState<OwnerStat[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleSearchChange(value: string) {
+    setSearchQuery(value);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => setDebouncedSearch(value), 300);
+  }
 
   useEffect(() => {
     fetch("/api/admin/team-stats").then((r) => r.ok ? r.json() : []).then((stats: { user: { id: string; fullName: string; avatarInitials: string }; assigned: number }[]) => {
@@ -184,11 +193,12 @@ function ProspectingContent() {
     if (sectorFilter !== "ALL") qs.set("sector", sectorFilter);
     if (ownerFilter !== "ALL" && ownerFilter !== "UNASSIGNED") qs.set("owner", ownerFilter);
     if (ownerFilter === "UNASSIGNED") qs.set("unassigned", "true");
+    if (debouncedSearch.trim()) qs.set("search", debouncedSearch.trim());
     qs.set("page", String(pageParam));
     fetch(`/api/admin/prospecting?${qs}`)
       .then((r) => { if (r.status === 401) { router.push("/admin/login"); return null; } return r.json(); })
       .then((data) => { if (data) { setProspects(data.prospects); setTotal(data.total); setPages(data.pages); } setLoading(false); });
-  }, [statusFilter, sectorFilter, ownerFilter, pageParam, router]);
+  }, [statusFilter, sectorFilter, ownerFilter, debouncedSearch, pageParam, router]);
 
   function navigate(status: string, sector: string, page = 1, owner = ownerFilter) {
     const qs = new URLSearchParams();
@@ -321,6 +331,23 @@ function ProspectingContent() {
           </div>
         }
       />
+
+      {/* Search */}
+      <div className="relative mb-3">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="Search by name, Instagram, phone, location..."
+          className="w-full pl-9 pr-9 py-2.5 bg-white border border-[var(--os-border)] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all"
+        />
+        {searchQuery && (
+          <button onClick={() => { setSearchQuery(""); setDebouncedSearch(""); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#475569]">
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
 
       {/* Filters */}
       <FilterTabs

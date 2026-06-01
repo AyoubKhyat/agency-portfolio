@@ -395,7 +395,7 @@ export async function updateUser(id: string, data: {
 
 // ─── Prospecting ────────────────────────────────────────────────
 
-export async function getProspects(page = 1, status?: string, sector?: string, ownerUserId?: string) {
+export async function getProspects(page = 1, status?: string, sector?: string, ownerUserId?: string, search?: string) {
   const take = 20;
   const skip = (page - 1) * take;
   const where: Record<string, unknown> = {};
@@ -405,6 +405,14 @@ export async function getProspects(page = 1, status?: string, sector?: string, o
     where.ownerUserId = null;
   } else if (ownerUserId && ownerUserId !== "ALL") {
     where.ownerUserId = ownerUserId;
+  }
+  if (search && search.trim()) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { instagram: { contains: search, mode: "insensitive" } },
+      { phone: { contains: search } },
+      { neighborhood: { contains: search, mode: "insensitive" } },
+    ];
   }
 
   const [prospects, total] = await Promise.all([

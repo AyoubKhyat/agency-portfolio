@@ -11,9 +11,11 @@ export async function GET(req: Request) {
   const page = parseInt(url.searchParams.get("page") || "1");
   const status = url.searchParams.get("status") || undefined;
   const sector = url.searchParams.get("sector") || undefined;
-  const owner = url.searchParams.get("owner") || undefined;
+  const search = url.searchParams.get("search") || undefined;
+  let owner = url.searchParams.get("owner") || undefined;
+  if (url.searchParams.get("unassigned") === "true") owner = "UNASSIGNED";
 
-  const result = await getProspects(page, status, sector, owner);
+  const result = await getProspects(page, status, sector, owner, search);
   return NextResponse.json(result);
 }
 
