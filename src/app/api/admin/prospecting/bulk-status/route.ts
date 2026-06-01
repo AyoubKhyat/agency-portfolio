@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const schema = z.object({
   prospectIds: z.array(z.string()).min(1),
-  status: z.enum(["A_ENVOYER", "ENVOYE", "REPONDU", "PAS_DE_WHATSAPP", "CONVERTI"]),
+  status: z.enum(["A_ENVOYER", "ENVOYE", "REPONDU", "PAS_DE_WHATSAPP", "CONVERTI", "MEETING", "PROPOSAL_SENT", "NEGOTIATION", "CLIENT", "LOST"]),
 });
 
 export async function POST(req: Request) {

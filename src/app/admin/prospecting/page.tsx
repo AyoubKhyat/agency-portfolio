@@ -238,14 +238,11 @@ function ProspectingContent() {
       const updated = await res.json();
       setProspects((prev) => prev.map((pr) => pr.id === p.id ? { ...pr, ...updated, notes: pr.notes } : pr));
       if (updated.suggestedFollowUp) {
-        const days = Math.round((new Date(updated.suggestedFollowUp).getTime() - Date.now()) / 86400000);
-        if (confirm(`Schedule follow-up in ${days} days for ${p.name}?`)) {
-          await fetch(`/api/admin/prospecting/${p.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ followUpDate: updated.suggestedFollowUp }),
-          });
-        }
+        fetch(`/api/admin/prospecting/${p.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ followUpDate: updated.suggestedFollowUp }),
+        }).catch(() => {});
       }
     }
   }

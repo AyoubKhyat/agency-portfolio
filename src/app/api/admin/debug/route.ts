@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma, hasPrisma } from "@/lib/prisma";
-import { verifyPassword } from "@/lib/auth";
+import { verifyPassword, getSession } from "@/lib/auth";
 
 export async function GET(req: Request) {
+  const session = await getSession();
+  if (!session || session.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const url = new URL(req.url);
   const testEmail = url.searchParams.get("email") || "ayoubkhyat@gmail.com";
 

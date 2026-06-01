@@ -11,10 +11,12 @@ const TEAM = [
 ];
 
 export async function POST(req: Request) {
+  const { getSession } = await import("@/lib/auth");
+  const session = await getSession();
   const url = new URL(req.url);
-  if (url.searchParams.get("key") !== "ibda3seed2026") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const hasKey = url.searchParams.get("key") === "ibda3seed2026";
+  if (!session && !hasKey) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (session && session.role !== "admin") return NextResponse.json({ error: "Admin only" }, { status: 403 });
 
   if (!hasPrisma()) {
     return NextResponse.json({ error: "No database" }, { status: 503 });

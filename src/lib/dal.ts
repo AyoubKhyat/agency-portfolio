@@ -540,7 +540,7 @@ export async function logProspectActivity(data: {
 export async function setProspectSentBy(prospectId: string, userId: string, userName: string) {
   await db().prospect.update({
     where: { id: prospectId },
-    data: { sentByUserId: userId, sentByName: userName, sentAt: new Date() },
+    data: { sentByUserId: userId, sentByName: userName },
   });
 }
 
