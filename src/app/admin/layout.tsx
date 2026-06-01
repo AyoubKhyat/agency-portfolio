@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Target, Building2, FolderKanban,
   BarChart3, Settings, LogOut, PanelLeftClose, PanelLeft, Menu, X,
-  Activity, UsersRound, Bell, Search,
+  Activity, UsersRound, Bell, Search, Layers,
 } from "lucide-react";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,12 @@ const SECTIONS = [
     items: [
       { href: "/admin/activity", label: "Activity Feed", icon: Activity, badgeKey: "activities" as const },
       { href: "/admin/team", label: "Team", icon: UsersRound, badgeKey: "team" as const },
+    ],
+  },
+  {
+    label: "Delivery",
+    items: [
+      { href: "/admin/pipeline", label: "Pipeline", icon: Layers },
     ],
   },
   { label: "Portfolio", items: [{ href: "/admin/projects", label: "Projects", icon: FolderKanban }] },

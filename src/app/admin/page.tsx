@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Target, Users, FolderKanban, Clock, ArrowRight, MessageCircle, Reply, CalendarClock, AlertTriangle, CalendarDays } from "lucide-react";
+import { Target, Users, FolderKanban, Clock, ArrowRight, MessageCircle, Reply, CalendarClock, AlertTriangle, CalendarDays, Layers, TrendingUp, DollarSign } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 import { GlassCard } from "@/components/admin/glass-card";
 import { Badge } from "@/components/admin/badge";
@@ -30,15 +30,24 @@ const STATUS_VARIANT: Record<string, string> = {
   NEW: "blue", CONTACTED: "amber", QUALIFIED: "green", CLOSED: "default",
 };
 
+type ExecData = {
+  totalRevenue: number; collectedRevenue: number; activeProjects: number;
+  wonDealsThisMonth: number; conversionRate: number; proposalAcceptRate: number;
+  overdueTasks: number; teamMembers: number;
+  recentWins: { id: string; amount: number; currency: string; prospect: { name: string; sector: string } }[];
+};
+
 export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
+  const [exec, setExec] = useState<ExecData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/stats")
-      .then((r) => { if (r.status === 401) { router.push("/admin/login"); return null; } return r.json(); })
-      .then((d) => d && setData(d))
+    Promise.all([
+      fetch("/api/admin/stats").then((r) => { if (r.status === 401) { router.push("/admin/login"); return null; } return r.json(); }),
+      fetch("/api/admin/executive").then((r) => r.ok ? r.json() : null),
+    ]).then(([d, e]) => { if (d) setData(d); if (e) setExec(e); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [router]);
@@ -93,8 +102,18 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* Hero Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Executive KPIs */}
+      {exec && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+          <StatCard value={Math.round((exec.totalRevenue || 0) / 1000)} suffix="K" label="Won Revenue (MAD)" icon={<DollarSign className="w-5 h-5" />} accent index={0} />
+          <StatCard value={exec.activeProjects} label="Active Projects" icon={<Layers className="w-5 h-5" />} href="/admin/pipeline" index={1} />
+          <StatCard value={exec.conversionRate} suffix="%" label="Conversion Rate" icon={<TrendingUp className="w-5 h-5" />} index={2} />
+          <StatCard value={exec.wonDealsThisMonth} label="Deals This Month" icon={<Target className="w-5 h-5" />} index={3} />
+        </div>
+      )}
+
+      {/* Sales Metrics */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <StatCard value={totalProspects} label="Total Prospects" icon={<Target className="w-5 h-5" />} href="/admin/prospecting" index={0} />
         <StatCard value={pending} label="To Contact" icon={<MessageCircle className="w-5 h-5" />} href="/admin/prospecting?status=A_ENVOYER" accent index={1} />
         <StatCard value={totalLeads} label="Active Leads" icon={<Users className="w-5 h-5" />} href="/admin/leads" index={2} />
@@ -299,6 +318,31 @@ export default function DashboardPage() {
           </div>
         </GlassCard>
       </motion.div>
+
+      {/* Recent Wins */}
+      {exec?.recentWins && exec.recentWins.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75, duration: 0.4 }} className="mt-6">
+          <GlassCard padding="lg" className="border-emerald-200/50 bg-gradient-to-r from-emerald-50/80 to-white">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-emerald-600" />
+              </div>
+              <h3 className="text-sm font-semibold text-[#0F172A]">Recent Wins</h3>
+            </div>
+            <div className="space-y-2">
+              {exec.recentWins.map((win) => (
+                <div key={win.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/60">
+                  <div>
+                    <span className="text-[13px] font-medium text-[#0F172A]">{win.prospect.name}</span>
+                    <span className="text-[11px] text-[#64748B] ml-2">{win.prospect.sector}</span>
+                  </div>
+                  <span className="text-[13px] font-bold text-emerald-600">{win.amount.toLocaleString()} {win.currency}</span>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+        </motion.div>
+      )}
 
       {/* CRM Health */}
       <CRMHealthWidget />

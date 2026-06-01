@@ -223,3 +223,29 @@ model Notification {
 
   @@map("notifications")
 }
+
+model ClientProject {
+  id           String    @id @default(cuid())
+  name         String
+  clientName   String    @map("client_name")
+  description  String    @default("")
+  services     String    @default("")
+  status       String    @default("NEW")
+  priority     String    @default("MEDIUM")
+  budget       Float     @default(0)
+  amountPaid   Float     @default(0) @map("amount_paid")
+  currency     String    @default("MAD")
+  startDate    DateTime? @map("start_date")
+  dueDate      DateTime? @map("due_date")
+  completedAt  DateTime? @map("completed_at")
+  progress     Int       @default(0)
+  ownerUserId  String?   @map("owner_user_id")
+  ownerName    String?   @map("owner_name")
+  prospectId   String?   @map("prospect_id")
+  proposalId   String?   @map("proposal_id")
+  sortOrder    Int       @default(0) @map("sort_order")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("client_projects")
+}
