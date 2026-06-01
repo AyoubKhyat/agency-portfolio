@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Target, Building2, FolderKanban,
   BarChart3, Settings, LogOut, PanelLeftClose, PanelLeft, Menu, X,
-  Activity, UsersRound, Bell, Search, Layers,
+  Activity, UsersRound, Bell, Search, Layers, Shield,
 } from "lucide-react";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { cn } from "@/lib/utils";
@@ -39,7 +39,10 @@ const SECTIONS = [
   { label: "Intelligence", items: [{ href: "/admin/analytics", label: "Analytics", icon: BarChart3 }] },
 ];
 
-const BOTTOM_NAV = [{ href: "/admin/settings", label: "Settings", icon: Settings }];
+const BOTTOM_NAV = [
+  { href: "/admin/system-status", label: "System Status", icon: Shield },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
+];
 
 function getPageTitle(pathname: string): string {
   if (pathname === "/admin") return "Dashboard";
