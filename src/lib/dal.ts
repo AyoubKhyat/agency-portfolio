@@ -218,23 +218,25 @@ export async function createProject(data: ProjectInput) {
 }
 
 export async function updateProject(id: string, data: ProjectInput) {
-  await db().projectTranslation.deleteMany({ where: { projectId: id } });
-
-  return db().project.update({
-    where: { id },
-    data: {
-      slug: data.slug,
-      category: data.category,
-      url: data.url,
-      image: data.image,
-      tag: data.tag,
-      visible: data.visible,
-      translations: {
-        create: data.translations,
+  const [, updated] = await db().$transaction([
+    db().projectTranslation.deleteMany({ where: { projectId: id } }),
+    db().project.update({
+      where: { id },
+      data: {
+        slug: data.slug,
+        category: data.category,
+        url: data.url,
+        image: data.image,
+        tag: data.tag,
+        visible: data.visible,
+        translations: {
+          create: data.translations,
+        },
       },
-    },
-    include: { translations: true },
-  });
+      include: { translations: true },
+    }),
+  ]);
+  return updated;
 }
 
 export async function deleteProject(id: string) {
@@ -523,16 +525,17 @@ export async function logProspectActivity(data: {
   newStatus?: string;
   details?: string;
 }) {
-  const activity = await db().prospectActivity.create({ data });
-
-  await db().prospect.update({
-    where: { id: data.prospectId },
-    data: {
-      lastActionByUserId: data.userId,
-      lastActionByName: data.userName,
-      lastActionAt: new Date(),
-    },
-  });
+  const [activity] = await db().$transaction([
+    db().prospectActivity.create({ data }),
+    db().prospect.update({
+      where: { id: data.prospectId },
+      data: {
+        lastActionByUserId: data.userId,
+        lastActionByName: data.userName,
+        lastActionAt: new Date(),
+      },
+    }),
+  ]);
 
   return activity;
 }
@@ -554,17 +557,14 @@ export async function bulkUpdateStatus(prospectIds: string[], status: string) {
 }
 
 export async function setProspectFirstContact(prospectId: string, userId: string, userName: string) {
-  const prospect = await db().prospect.findUnique({ where: { id: prospectId } });
-  if (prospect && !prospect.contactedByUserId) {
-    await db().prospect.update({
-      where: { id: prospectId },
-      data: {
-        contactedByUserId: userId,
-        contactedByName: userName,
-        contactedAt: new Date(),
-      },
-    });
-  }
+  await db().prospect.updateMany({
+    where: { id: prospectId, contactedByUserId: null },
+    data: {
+      contactedByUserId: userId,
+      contactedByName: userName,
+      contactedAt: new Date(),
+    },
+  });
 }
 
 export async function getProspectActivities(prospectId: string) {

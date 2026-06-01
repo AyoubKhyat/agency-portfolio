@@ -20,12 +20,14 @@ export async function PUT(req: Request) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid" }, { status: 400 });
 
-  for (const update of parsed.data.updates) {
-    await prisma.clientProject.update({
-      where: { id: update.id },
-      data: { status: update.status, sortOrder: update.sortOrder },
-    });
-  }
+  await prisma.$transaction(
+    parsed.data.updates.map((update) =>
+      prisma.clientProject.update({
+        where: { id: update.id },
+        data: { status: update.status, sortOrder: update.sortOrder },
+      })
+    )
+  );
 
   return NextResponse.json({ success: true });
 }

@@ -16,19 +16,21 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
-  await bulkAssignOwner(parsed.data.prospectIds, parsed.data.ownerUserId);
+  try {
+    await bulkAssignOwner(parsed.data.prospectIds, parsed.data.ownerUserId);
 
-  await Promise.all(
-    parsed.data.prospectIds.map((prospectId) =>
-      logProspectActivity({
+    for (const prospectId of parsed.data.prospectIds) {
+      await logProspectActivity({
         prospectId,
         userId: session.userId,
         userName: session.fullName,
         actionType: "ASSIGNED",
         details: parsed.data.ownerUserId ? "Bulk assigned" : "Bulk unassigned",
-      })
-    )
-  );
+      });
+    }
 
-  return NextResponse.json({ success: true, count: parsed.data.prospectIds.length });
+    return NextResponse.json({ success: true, count: parsed.data.prospectIds.length });
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Bulk assign failed" }, { status: 500 });
+  }
 }

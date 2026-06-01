@@ -43,59 +43,63 @@ export async function PATCH(
     include: { prospect: { select: { id: true, name: true, sector: true, status: true } } },
   });
 
-  if (parsed.data.status === "SENT") {
-    await prisma.prospect.update({
-      where: { id: current.prospectId },
-      data: { proposalStatus: "SENT", proposalDate: new Date(), status: "PROPOSAL_SENT" },
-    });
-    await logProspectActivity({
-      prospectId: current.prospectId,
-      userId: session.userId,
-      userName: session.fullName,
-      actionType: "PROPOSAL_SENT",
-      details: `Sent proposal — ${current.amount} ${current.currency}`,
-    });
-  }
+  try {
+    if (parsed.data.status === "SENT") {
+      await prisma.prospect.update({
+        where: { id: current.prospectId },
+        data: { proposalStatus: "SENT", proposalDate: new Date(), status: "PROPOSAL_SENT" },
+      });
+      await logProspectActivity({
+        prospectId: current.prospectId,
+        userId: session.userId,
+        userName: session.fullName,
+        actionType: "PROPOSAL_SENT",
+        details: `Sent proposal — ${current.amount} ${current.currency}`,
+      });
+    }
 
-  if (parsed.data.status === "ACCEPTED") {
-    await prisma.prospect.update({
-      where: { id: current.prospectId },
-      data: { proposalStatus: "ACCEPTED", status: "CLIENT" },
-    });
-    await logProspectActivity({
-      prospectId: current.prospectId,
-      userId: session.userId,
-      userName: session.fullName,
-      actionType: "PROPOSAL_ACCEPTED",
-      details: `Accepted proposal — ${current.amount} ${current.currency}`,
-    });
-    await notifyTeam(session.userId, {
-      type: "conversion",
-      title: `Proposal accepted: ${proposal.prospect.name}`,
-      body: `${session.fullName} accepted a ${current.amount} ${current.currency} proposal`,
-      link: `/admin/prospecting/${current.prospectId}`,
-    }).catch(() => {});
-  }
+    if (parsed.data.status === "ACCEPTED") {
+      await prisma.prospect.update({
+        where: { id: current.prospectId },
+        data: { proposalStatus: "ACCEPTED", status: "CLIENT" },
+      });
+      await logProspectActivity({
+        prospectId: current.prospectId,
+        userId: session.userId,
+        userName: session.fullName,
+        actionType: "PROPOSAL_ACCEPTED",
+        details: `Accepted proposal — ${current.amount} ${current.currency}`,
+      });
+      notifyTeam(session.userId, {
+        type: "conversion",
+        title: `Proposal accepted: ${proposal.prospect.name}`,
+        body: `${session.fullName} accepted a ${current.amount} ${current.currency} proposal`,
+        link: `/admin/prospecting/${current.prospectId}`,
+      }).catch(() => {});
+    }
 
-  if (parsed.data.status === "REJECTED") {
-    await prisma.prospect.update({
-      where: { id: current.prospectId },
-      data: { proposalStatus: "REJECTED" },
-    });
-    await logProspectActivity({
-      prospectId: current.prospectId,
-      userId: session.userId,
-      userName: session.fullName,
-      actionType: "PROPOSAL_REJECTED",
-      details: `Proposal rejected`,
-    });
-  }
+    if (parsed.data.status === "REJECTED") {
+      await prisma.prospect.update({
+        where: { id: current.prospectId },
+        data: { proposalStatus: "REJECTED" },
+      });
+      await logProspectActivity({
+        prospectId: current.prospectId,
+        userId: session.userId,
+        userName: session.fullName,
+        actionType: "PROPOSAL_REJECTED",
+        details: `Proposal rejected`,
+      });
+    }
 
-  if (parsed.data.amount) {
-    await prisma.prospect.update({
-      where: { id: current.prospectId },
-      data: { proposalAmount: parsed.data.amount },
-    });
+    if (parsed.data.amount) {
+      await prisma.prospect.update({
+        where: { id: current.prospectId },
+        data: { proposalAmount: parsed.data.amount },
+      });
+    }
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Update failed" }, { status: 500 });
   }
 
   return NextResponse.json(proposal);

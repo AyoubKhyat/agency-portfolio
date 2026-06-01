@@ -16,20 +16,22 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
-  await bulkUpdateStatus(parsed.data.prospectIds, parsed.data.status);
+  try {
+    await bulkUpdateStatus(parsed.data.prospectIds, parsed.data.status);
 
-  await Promise.all(
-    parsed.data.prospectIds.map((prospectId) =>
-      logProspectActivity({
+    for (const prospectId of parsed.data.prospectIds) {
+      await logProspectActivity({
         prospectId,
         userId: session.userId,
         userName: session.fullName,
         actionType: `STATUS_${parsed.data.status}`,
         newStatus: parsed.data.status,
         details: `Bulk status change`,
-      })
-    )
-  );
+      });
+    }
 
-  return NextResponse.json({ success: true, count: parsed.data.prospectIds.length });
+    return NextResponse.json({ success: true, count: parsed.data.prospectIds.length });
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Bulk status update failed" }, { status: 500 });
+  }
 }
