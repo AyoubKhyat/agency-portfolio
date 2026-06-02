@@ -26,6 +26,7 @@ import {
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { Badge } from "@/components/admin/badge";
 import { ProposalBuilder } from "@/components/admin/proposal-builder";
+import { Input, Textarea, FormButton } from "@/components/admin/form";
 import { cn } from "@/lib/utils";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -686,17 +687,18 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                     />
                     {sections.followUp && (
                       <div className="pb-3 pl-8 space-y-2.5">
-                        <div className="flex items-center gap-3">
-                          <input
+                        <div className="flex items-center gap-2">
+                          <Input
                             type="date"
                             value={prospect.followUpDate ? prospect.followUpDate.split("T")[0] : ""}
                             onChange={(e) => handleFollowUpChange(e.target.value)}
-                            className="flex-1 px-3 py-2 bg-[#F8FAFC] border border-[#E5E7EB] rounded-lg text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all"
+                            className="h-10 text-[13px]"
                           />
                           {prospect.followUpDate && (
                             <button
+                              type="button"
                               onClick={() => handleFollowUpChange("")}
-                              className="p-1.5 text-[#94A3B8] hover:text-red-500 transition-colors"
+                              className="p-2 rounded-lg text-[#94A3B8] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
                               title="Clear follow-up"
                             >
                               <X className="w-4 h-4" />
@@ -749,38 +751,34 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                     {sections.notes && (
                       <div className="pb-3 pl-8 space-y-3">
                         {showNoteInput && (
-                          <form onSubmit={handleAddNote} className="space-y-2">
-                            <textarea
+                          <form onSubmit={handleAddNote} className="space-y-2.5">
+                            <Textarea
                               ref={noteInputRef}
                               value={noteText}
                               onChange={(e) => setNoteText(e.target.value)}
                               placeholder="Write a note..."
                               rows={3}
-                              className="w-full px-3 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-lg text-[13px] text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all resize-none"
+                              className="text-[13px] min-h-[80px]"
                             />
                             <div className="flex items-center gap-2">
-                              <button
+                              <FormButton
                                 type="submit"
-                                disabled={savingNote || !noteText.trim()}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white rounded-lg text-[12px] font-medium transition-all disabled:opacity-40 hover:opacity-90"
+                                size="sm"
+                                variant="primary"
+                                disabled={!noteText.trim()}
+                                loading={savingNote}
+                                icon={!savingNote ? <Send className="w-3.5 h-3.5" /> : undefined}
                               >
-                                {savingNote ? (
-                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                ) : (
-                                  <Send className="w-3.5 h-3.5" />
-                                )}
-                                {savingNote ? "Saving..." : "Save"}
-                              </button>
-                              <button
+                                {savingNote ? "Saving..." : "Save note"}
+                              </FormButton>
+                              <FormButton
                                 type="button"
-                                onClick={() => {
-                                  setShowNoteInput(false);
-                                  setNoteText("");
-                                }}
-                                className="px-3 py-1.5 text-[12px] text-[#64748B] hover:text-[#0F172A] transition-colors"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => { setShowNoteInput(false); setNoteText(""); }}
                               >
                                 Cancel
-                              </button>
+                              </FormButton>
                             </div>
                           </form>
                         )}

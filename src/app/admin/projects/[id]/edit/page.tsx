@@ -21,16 +21,19 @@ export default function EditProjectPage() {
       .then((data) => { if (data) setProject(data); setLoading(false); });
   }, [id, router]);
 
-  if (loading) return <div className="text-gray-500 animate-pulse">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-6 h-6 border-2 border-purple-200 border-t-[#8B00FF] rounded-full animate-spin" />
+      </div>
+    );
+  }
   if (!project) return null;
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-gray-100 mb-8">Edit Project</h1>
-      <ProjectForm
-        mode="edit"
-        initial={project as unknown as Parameters<typeof ProjectForm>[0]["initial"]}
-      />
-    </div>
+    <ProjectForm
+      mode="edit"
+      initial={project as unknown as Parameters<typeof ProjectForm>[0]["initial"]}
+    />
   );
 }

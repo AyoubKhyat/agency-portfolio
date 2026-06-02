@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { User, MapPin, Tag, MessageCircle } from "lucide-react";
+import { FaWhatsapp, FaInstagram } from "react-icons/fa";
+import {
+  AdminFormLayout, FormCard, FormGrid, FormGridMain, FormGridAside,
+  Field, Input, Select, Toggle,
+} from "@/components/admin/form";
 
 const SECTORS = [
   "Dentiste", "Salon Beauté", "Salle de Sport", "Avocat",
@@ -15,9 +21,9 @@ const SECTORS = [
 ];
 
 const PRIORITIES = [
-  { value: 1, label: "1 — Instagram sans site" },
-  { value: 2, label: "2 — Sans site" },
-  { value: 3, label: "3 — A un site" },
+  { value: 1, label: "P1 — Instagram, no website" },
+  { value: 2, label: "P2 — No website" },
+  { value: 3, label: "P3 — Has a website" },
 ];
 
 type ProspectData = {
@@ -32,9 +38,6 @@ type ProspectData = {
   status: string;
 };
 
-const lbl = "block text-xs text-gray-400 uppercase tracking-wider mb-1.5";
-const input = "w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-violet-500 transition-colors";
-
 export default function ProspectForm({ mode, initial }: { mode: "create" | "edit"; initial?: ProspectData }) {
   const router = useRouter();
   const [name, setName] = useState(initial?.name ?? "");
@@ -44,8 +47,25 @@ export default function ProspectForm({ mode, initial }: { mode: "create" | "edit
   const [instagram, setInstagram] = useState(initial?.instagram ?? "");
   const [hasWebsite, setHasWebsite] = useState(initial?.hasWebsite ?? false);
   const [priority, setPriority] = useState(initial?.priority ?? 2);
+
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+
+  useEffect(() => {
+    if (!dirty) return;
+    function handler(e: BeforeUnloadEvent) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
+  const markDirty = () => { if (!dirty) setDirty(true); };
+
+  const nameInvalid = !name.trim() && !!error;
+  const phoneInvalid = !phone.trim() && !!error;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,93 +80,160 @@ export default function ProspectForm({ mode, initial }: { mode: "create" | "edit
     const url = mode === "create" ? "/api/admin/prospecting" : `/api/admin/prospecting/${initial?.id}`;
     const method = mode === "create" ? "POST" : "PUT";
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    if (res.ok) {
-      router.push("/admin/prospecting");
-    } else {
-      const data = await res.json();
-      setError(data.error || "Something went wrong.");
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        setDirty(false);
+        router.push("/admin/prospecting");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(typeof data.error === "string" ? data.error : "Something went wrong.");
+      }
+    } catch {
+      setError("Could not save. Check your connection and try again.");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
+  }
+
+  function handleCancel() {
+    if (dirty && !confirm("Discard unsaved changes?")) return;
+    router.push("/admin/prospecting");
   }
 
   const whatsappPreview = phone ? `wa.me/${phone.replace(/\D/g, "")}` : "";
+  const cleanInstagram = instagram.replace(/^@/, "");
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
-      {error && (
-        <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400">{error}</div>
-      )}
+    <AdminFormLayout
+      title={mode === "create" ? "New prospect" : "Edit prospect"}
+      subtitle={mode === "create" ? "Add a business to the outreach pipeline." : "Update prospect details."}
+      backHref="/admin/prospecting"
+      backLabel="Back to prospecting"
+      primaryLabel={mode === "create" ? "Create prospect" : "Save changes"}
+      primaryLoadingLabel="Saving..."
+      onCancel={handleCancel}
+      onSubmit={handleSubmit}
+      saving={saving}
+      dirty={dirty}
+      error={error}
+    >
+      <FormGrid layout="split-70-30">
+        <FormGridMain>
+          <FormCard
+            title="Identity"
+            subtitle="Who is this prospect and where are they based?"
+            icon={<User className="w-4 h-4" />}
+          >
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Business name" required error={nameInvalid ? "Required" : undefined}>
+                  <Input
+                    value={name}
+                    onChange={(e) => { setName(e.target.value); markDirty(); }}
+                    placeholder="Dr Hind Nadim"
+                    invalid={nameInvalid}
+                  />
+                </Field>
+                <Field
+                  label="Phone"
+                  required
+                  hint={whatsappPreview || "Used to build the WhatsApp link."}
+                  error={phoneInvalid ? "Required" : undefined}
+                >
+                  <Input
+                    value={phone}
+                    onChange={(e) => { setPhone(e.target.value); markDirty(); }}
+                    placeholder="06 06 23 96 19"
+                    invalid={phoneInvalid}
+                  />
+                </Field>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Sector">
+                  <Select value={sector} onChange={(e) => { setSector(e.target.value); markDirty(); }}>
+                    {SECTORS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Neighborhood / City">
+                  <Input
+                    value={neighborhood}
+                    onChange={(e) => { setNeighborhood(e.target.value); markDirty(); }}
+                    placeholder="Gueliz"
+                  />
+                </Field>
+              </div>
+            </div>
+          </FormCard>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className={lbl}>Name *</label>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={input} placeholder="Dr Hind Nadim" />
-        </div>
-        <div>
-          <label className={lbl}>Phone *</label>
-          <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} className={input} placeholder="0606239619" />
-          {whatsappPreview && <p className="text-xs text-gray-600 mt-1">{whatsappPreview}</p>}
-        </div>
-      </div>
+          <FormCard
+            title="Online presence"
+            subtitle="What does this prospect already have?"
+            icon={<MessageCircle className="w-4 h-4" />}
+          >
+            <div className="space-y-5">
+              <Field label="Instagram handle" hint={cleanInstagram ? `instagram.com/${cleanInstagram}` : "Optional — without the @."}>
+                <Input
+                  value={instagram}
+                  onChange={(e) => { setInstagram(e.target.value); markDirty(); }}
+                  placeholder="@drhindnadim"
+                />
+              </Field>
+              <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+                <Toggle
+                  checked={hasWebsite}
+                  onChange={(v) => { setHasWebsite(v); markDirty(); }}
+                  label="Already has a website"
+                  description="Affects scoring — if true, priority drops to P3."
+                />
+              </div>
+            </div>
+          </FormCard>
+        </FormGridMain>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className={lbl}>Sector</label>
-          <select value={sector} onChange={(e) => setSector(e.target.value)} className={input}>
-            {SECTORS.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className={lbl}>Quartier</label>
-          <input type="text" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} className={input} placeholder="Gueliz" />
-        </div>
-      </div>
+        <FormGridAside>
+          <FormCard
+            title="Scoring"
+            subtitle="How hot is this lead?"
+            icon={<Tag className="w-4 h-4" />}
+          >
+            <Field label="Priority" hint="P1 is hottest. Drives default sort and reminders.">
+              <Select value={priority} onChange={(e) => { setPriority(Number(e.target.value)); markDirty(); }}>
+                {PRIORITIES.map((p) => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
+              </Select>
+            </Field>
+          </FormCard>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className={lbl}>Instagram</label>
-          <input type="text" value={instagram} onChange={(e) => setInstagram(e.target.value)} className={input} placeholder="@drhindnadim" />
-        </div>
-        <div>
-          <label className={lbl}>Priority</label>
-          <select value={priority} onChange={(e) => setPriority(Number(e.target.value))} className={input}>
-            {PRIORITIES.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-          </select>
-        </div>
-      </div>
-
-      <label className="flex items-center gap-3 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={hasWebsite}
-          onChange={(e) => setHasWebsite(e.target.checked)}
-          className="w-4 h-4 rounded border-white/10 bg-white/5 text-violet-500 focus:ring-violet-500"
-        />
-        <span className="text-sm text-gray-300">Has a website</span>
-      </label>
-
-      <div className="flex gap-3 pt-2">
-        <button
-          type="submit"
-          disabled={saving}
-          className="px-6 py-2.5 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-        >
-          {saving ? "Saving..." : mode === "create" ? "Create Prospect" : "Update Prospect"}
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push("/admin/prospecting")}
-          className="px-6 py-2.5 border border-white/10 hover:border-white/20 text-gray-300 rounded-lg text-sm transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
+          <FormCard
+            title="Contact channels"
+            subtitle="Preview of links built from the form."
+            icon={<MapPin className="w-4 h-4" />}
+          >
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-green-50 border border-green-100">
+                <FaWhatsapp className="w-4 h-4 text-green-600 shrink-0" />
+                <span className="text-[13px] text-[#0F172A] truncate">
+                  {whatsappPreview || <span className="text-[#94A3B8]">Enter phone to preview</span>}
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-pink-50 border border-pink-100">
+                <FaInstagram className="w-4 h-4 text-pink-600 shrink-0" />
+                <span className="text-[13px] text-[#0F172A] truncate">
+                  {cleanInstagram ? `instagram.com/${cleanInstagram}` : <span className="text-[#94A3B8]">No Instagram set</span>}
+                </span>
+              </div>
+            </div>
+          </FormCard>
+        </FormGridAside>
+      </FormGrid>
+    </AdminFormLayout>
   );
 }

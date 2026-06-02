@@ -9,6 +9,7 @@ import { StatCard } from "@/components/admin/stat-card";
 import { GlassCard } from "@/components/admin/glass-card";
 import { Badge } from "@/components/admin/badge";
 import { EmptyState } from "@/components/admin/empty-state";
+import { Field, Input, Select, FormButton, FormError } from "@/components/admin/form";
 import AvatarChip from "@/components/AvatarChip";
 
 type User = {
@@ -171,77 +172,63 @@ export default function TeamPage() {
             <GlassCard padding="lg">
               <form onSubmit={handleCreateUser} className="space-y-5">
                 <div className="flex items-center gap-3 mb-1">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10">
+                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10">
                     <HiOutlinePlus className="w-4 h-4 text-[#8B00FF]" />
                   </div>
-                  <h3 className="text-[15px] font-semibold text-[#0F172A]">New Team Member</h3>
+                  <div>
+                    <h3 className="text-[15px] font-semibold text-[#0F172A]">New team member</h3>
+                    <p className="text-[12px] text-[#64748B] mt-0.5">They&apos;ll get access to the admin OS based on their role.</p>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[13px] font-medium text-[#475569] mb-1.5">Full Name</label>
-                    <input
+                  <Field label="Full name" required>
+                    <Input
                       value={formData.fullName}
                       onChange={(e) => setFormData((d) => ({ ...d, fullName: e.target.value }))}
                       required
-                      className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all"
+                      placeholder="Ayoub Khyat"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-[13px] font-medium text-[#475569] mb-1.5">Email</label>
-                    <input
+                  </Field>
+                  <Field label="Email" required>
+                    <Input
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData((d) => ({ ...d, email: e.target.value }))}
                       required
-                      className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all"
+                      placeholder="name@ibda3digital.com"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-[13px] font-medium text-[#475569] mb-1.5">Password</label>
-                    <input
+                  </Field>
+                  <Field label="Password" required hint="At least 6 characters.">
+                    <Input
                       type="password"
                       value={formData.password}
                       onChange={(e) => setFormData((d) => ({ ...d, password: e.target.value }))}
                       required
                       minLength={6}
-                      className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all"
+                      placeholder="••••••••"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-[13px] font-medium text-[#475569] mb-1.5">Role</label>
-                    <select
+                  </Field>
+                  <Field label="Role">
+                    <Select
                       value={formData.role}
                       onChange={(e) => setFormData((d) => ({ ...d, role: e.target.value }))}
-                      className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all cursor-pointer"
                     >
                       {ROLES.map((r) => (
                         <option key={r} value={r}>
                           {r.charAt(0).toUpperCase() + r.slice(1)}
                         </option>
                       ))}
-                    </select>
-                  </div>
+                    </Select>
+                  </Field>
                 </div>
-                {formError && (
-                  <div className="px-4 py-2.5 bg-red-50 border border-red-100 rounded-xl">
-                    <p className="text-red-600 text-[13px]">{formError}</p>
-                  </div>
-                )}
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="px-5 py-2.5 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white rounded-xl text-[13px] font-medium shadow-sm shadow-purple-200 hover:shadow-md hover:shadow-purple-300 transition-all disabled:opacity-40"
-                  >
-                    {saving ? "Creating..." : "Create Member"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    className="px-5 py-2.5 bg-white border border-[#E2E8F0] text-[#475569] rounded-xl text-[13px] font-medium hover:bg-[#F8FAFC] transition-colors"
-                  >
+                <FormError message={formError} />
+                <div className="flex gap-2 pt-1">
+                  <FormButton type="submit" variant="primary" loading={saving}>
+                    {saving ? "Creating..." : "Create member"}
+                  </FormButton>
+                  <FormButton type="button" variant="secondary" onClick={() => setShowForm(false)}>
                     Cancel
-                  </button>
+                  </FormButton>
                 </div>
               </form>
             </GlassCard>

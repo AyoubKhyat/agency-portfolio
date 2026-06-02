@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, FileText, Check, Package, Loader2 } from "lucide-react";
+import { X, FileText, Check, Package } from "lucide-react";
 import { Badge } from "@/components/admin/badge";
+import { Field, Input, Textarea, FormButton, FormError } from "@/components/admin/form";
 import { cn } from "@/lib/utils";
 
 type ProposalBuilderProps = {
@@ -215,18 +216,13 @@ export function ProposalBuilder({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[12px] font-semibold text-[#0F172A] uppercase tracking-wider mb-2">
-                  Contact Person
-                </label>
-                <input
-                  type="text"
+              <Field label="Contact person" hint="Optional — who you're sending this to.">
+                <Input
                   value={contactPerson}
                   onChange={(e) => setContactPerson(e.target.value)}
-                  placeholder="Name of the contact person (optional)"
-                  className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all"
+                  placeholder="Sarah Bennani"
                 />
-              </div>
+              </Field>
 
               <div>
                 <label className="block text-[12px] font-semibold text-[#0F172A] uppercase tracking-wider mb-3">
@@ -270,99 +266,75 @@ export function ProposalBuilder({
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[12px] font-semibold text-[#0F172A] uppercase tracking-wider mb-2">
-                    Amount <span className="text-red-500">*</span>
-                  </label>
+                <Field label="Amount" required>
                   <div className="relative">
-                    <input
+                    <Input
                       type="number"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value ? Number(e.target.value) : "")}
                       placeholder="0"
                       min={0}
-                      className="w-full px-3.5 py-2.5 pr-14 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all"
+                      className="pr-14"
                     />
-                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-[#64748B]">
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-[#64748B]">
                       MAD
                     </span>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-[#0F172A] uppercase tracking-wider mb-2">
-                    Timeline
-                  </label>
-                  <input
-                    type="text"
+                </Field>
+                <Field label="Timeline">
+                  <Input
                     value={timeline}
                     onChange={(e) => setTimeline(e.target.value)}
                     placeholder="e.g. 2-3 weeks"
-                    className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all"
                   />
-                </div>
+                </Field>
               </div>
 
-              <div>
-                <label className="block text-[12px] font-semibold text-[#0F172A] uppercase tracking-wider mb-2">
-                  Payment Terms
-                </label>
-                <input
-                  type="text"
+              <Field label="Payment terms">
+                <Input
                   value={paymentTerms}
                   onChange={(e) => setPaymentTerms(e.target.value)}
                   placeholder="50% upfront, 50% on delivery"
-                  className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all"
                 />
-              </div>
+              </Field>
 
-              <div>
-                <label className="block text-[12px] font-semibold text-[#0F172A] uppercase tracking-wider mb-2">
-                  Notes
-                </label>
-                <textarea
+              <Field label="Notes" hint="Internal context, scope details or next steps.">
+                <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Additional notes about this proposal..."
                   rows={3}
-                  className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all resize-none"
                 />
-              </div>
+              </Field>
 
-              {error && (
-                <div className="flex items-center gap-2 px-3.5 py-2.5 bg-red-50 border border-red-200 rounded-xl">
-                  <X className="w-4 h-4 text-red-500 shrink-0" />
-                  <p className="text-[13px] text-red-600">{error}</p>
-                </div>
-              )}
+              <FormError message={error} />
             </div>
           </div>
 
-          <div className="shrink-0 px-6 py-4 border-t border-[#E5E7EB] bg-[#FAFBFC]">
+          <div className="shrink-0 px-6 py-4 border-t border-[#E5E7EB] bg-[#F8FAFC]">
             <div className="flex items-center gap-3">
-              <button
+              <FormButton
+                type="button"
+                variant="secondary"
                 onClick={() => handleSubmit("DRAFT")}
                 disabled={submitting}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-[#E5E7EB] rounded-xl text-[13px] font-semibold text-[#475569] bg-white hover:bg-[#F8FAFC] hover:border-[#D1D5DB] transition-all disabled:opacity-50"
+                icon={!submitting ? <FileText className="w-4 h-4" /> : undefined}
+                loading={submitting}
+                className="flex-1"
               >
-                {submitting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <FileText className="w-4 h-4" />
-                )}
-                Save as Draft
-              </button>
-              <button
+                Save as draft
+              </FormButton>
+              <FormButton
+                type="button"
+                variant="primary"
                 onClick={() => handleSubmit("SENT")}
                 disabled={submitting}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white rounded-xl text-[13px] font-semibold hover:opacity-90 transition-all disabled:opacity-50 shadow-lg shadow-[#8B00FF]/20"
+                icon={!submitting ? <Check className="w-4 h-4" /> : undefined}
+                loading={submitting}
+                className="flex-1"
               >
-                {submitting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4" />
-                )}
-                Create Proposal
-              </button>
+                Create proposal
+              </FormButton>
             </div>
           </div>
         </motion.div>
