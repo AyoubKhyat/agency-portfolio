@@ -12,8 +12,10 @@ const TRANSLATION_FIELDS = [
   "industry", "challenge", "solution", "step1Title", "step1Desc",
   "step2Title", "step2Desc", "step3Title", "step3Desc", "features",
   "tech", "result1Value", "result1Label", "result2Value", "result2Label",
-  "result3Value", "result3Label",
+  "result3Value", "result3Label", "results", "testimonial",
 ] as const;
+
+const VALID_STATUSES = new Set(["DRAFT", "IN_PROGRESS", "REVIEW", "COMPLETED", "PUBLISHED"]);
 
 export async function GET(
   _req: Request,
@@ -47,6 +49,10 @@ export async function PUT(
       return clean;
     });
 
+    const status = typeof body.status === "string" && VALID_STATUSES.has(body.status)
+      ? body.status
+      : undefined;
+
     const project = await updateProject(id, {
       slug: body.slug,
       category: body.category,
@@ -54,6 +60,7 @@ export async function PUT(
       image: body.image || "",
       tag: body.tag || "",
       visible: body.visible ?? true,
+      status,
       translations: cleanTranslations,
     });
     return NextResponse.json(project);

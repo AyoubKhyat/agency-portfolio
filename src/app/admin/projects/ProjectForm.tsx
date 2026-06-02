@@ -6,8 +6,11 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ChevronDown, ChevronLeft, Upload, X, Loader2, Eye, EyeOff,
-  ExternalLink, ImageIcon,
+  ExternalLink, ImageIcon, Sparkles,
 } from "lucide-react";
+import {
+  PROJECT_STATUSES, ProjectStatusBadge,
+} from "@/components/admin/project-status-badge";
 
 const CATEGORIES = ["web", "app", "plugin", "ecommerce"];
 const LANGUAGES = [
@@ -28,6 +31,21 @@ function slugify(text: string): string {
     .slice(0, 60);
 }
 
+function relativeDate(iso: string | undefined | null): string {
+  if (!iso) return "Not saved yet";
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "—";
+  const diff = Date.now() - then;
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
+}
+
 type Fields = {
   title: string; desc: string; tags: string; tagline: string; metaDesc: string;
   client: string; industry: string; challenge: string; solution: string;
@@ -35,6 +53,7 @@ type Fields = {
   step3Title: string; step3Desc: string; features: string; tech: string;
   result1Value: string; result1Label: string; result2Value: string; result2Label: string;
   result3Value: string; result3Label: string;
+  results: string; testimonial: string;
 };
 
 const emptyFields: Fields = {
@@ -42,7 +61,7 @@ const emptyFields: Fields = {
   industry: "", challenge: "", solution: "", step1Title: "", step1Desc: "",
   step2Title: "", step2Desc: "", step3Title: "", step3Desc: "", features: "",
   tech: "", result1Value: "", result1Label: "", result2Value: "", result2Label: "",
-  result3Value: "", result3Label: "",
+  result3Value: "", result3Label: "", results: "", testimonial: "",
 };
 
 type InitialData = {
@@ -53,13 +72,15 @@ type InitialData = {
   image: string;
   tag: string;
   visible: boolean;
+  status?: string;
+  updatedAt?: string;
   translations: (Fields & { locale: string })[];
 };
 
 const input =
   "w-full h-11 px-3.5 bg-white border border-[#D1D5DB] rounded-lg text-[14px] text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
 const textarea =
-  "w-full px-3.5 py-2.5 bg-white border border-[#D1D5DB] rounded-lg text-[14px] text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
+  "w-full px-3.5 py-2.5 bg-white border border-[#D1D5DB] rounded-lg text-[14px] leading-relaxed text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
 const lbl = "block text-[13px] font-medium text-[#374151] mb-1.5";
 
 export default function ProjectForm({
@@ -78,8 +99,7 @@ export default function ProjectForm({
   const [uploading, setUploading] = useState(false);
   const [showCaseStudy, setShowCaseStudy] = useState(false);
 
-  // Always start editing in French if available — fall back to the first
-  // translation only when no French row exists.
+  // Always start editing in French when available
   const initialLang = (() => {
     if (!initial) return "fr";
     if (initial.translations.some((t) => t.locale === "fr")) return "fr";
@@ -91,12 +111,14 @@ export default function ProjectForm({
   const [image, setImage] = useState(initial?.image ?? "");
   const [tag, setTag] = useState(initial?.tag ?? "");
   const [visible, setVisible] = useState(initial?.visible ?? true);
+  const [status, setStatus] = useState<string>(initial?.status ?? "DRAFT");
+  const [lastUpdated, setLastUpdated] = useState(initial?.updatedAt);
 
   const initialFields =
     initial?.translations.find((t) => t.locale === initialLang) ??
     initial?.translations[0] ??
     { ...emptyFields };
-  const [fields, setFields] = useState<Fields>(initialFields);
+  const [fields, setFields] = useState<Fields>({ ...emptyFields, ...initialFields });
 
   const slug = initial?.slug ?? slugify(fields.title);
   const isRtl = lang === "ar";
@@ -151,13 +173,13 @@ export default function ProjectForm({
     const translations = allLocales.map((locale) => {
       if (locale === lang) return { locale, ...fields };
       const existing = initial?.translations.find((t) => t.locale === locale);
-      if (existing && existing.title) return existing;
+      if (existing && existing.title) return { ...emptyFields, ...existing };
       return { locale, ...fields };
     });
 
     const body = {
       slug: slug || slugify(fields.title),
-      category, url, image, tag, visible, translations,
+      category, url, image, tag, visible, status, translations,
     };
 
     const endpoint = mode === "create" ? "/api/admin/projects" : `/api/admin/projects/${initial?.id}`;
@@ -170,8 +192,10 @@ export default function ProjectForm({
         body: JSON.stringify(body),
       });
       if (res.ok) {
+        const saved = await res.json().catch(() => null);
         setDirty(false);
-        router.push("/admin/projects");
+        if (saved?.updatedAt) setLastUpdated(saved.updatedAt);
+        if (mode === "create") router.push("/admin/projects");
       } else {
         const data = await res.json().catch(() => ({}));
         setError(typeof data.error === "string" ? data.error : "Something went wrong.");
@@ -186,30 +210,74 @@ export default function ProjectForm({
   const tagsList = fields.tags.split(",").map((t) => t.trim()).filter(Boolean);
   const previewTitle = fields.title || "Project title";
   const cleanUrl = url ? url.replace(/^https?:\/\//, "").replace(/\/$/, "") : "";
+  const previewHref = slug ? `/fr/portfolio/${slug}` : null;
 
   return (
-    <div className="pb-28">
-      <Link
-        href="/admin/projects"
-        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#6B7280] hover:text-[#111827] mb-4"
-      >
-        <ChevronLeft className="w-4 h-4" /> Back to projects
-      </Link>
-
-      <div className="flex items-end justify-between gap-4 mb-6 flex-wrap">
-        <div>
-          <h1 className="text-[24px] font-bold text-[#111827] tracking-tight">
-            {mode === "create" ? "New project" : "Edit project"}
-          </h1>
-          <p className="text-[14px] text-[#6B7280] mt-1">
-            Project details shown on the public portfolio.
-          </p>
-        </div>
-      </div>
-
+    <div>
       <form onSubmit={handleSubmit}>
+        {/* STICKY TOP ACTION BAR */}
+        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 bg-[#F7F4FF]/90 backdrop-blur border-b border-[#E5E7EB] mb-6">
+          <Link
+            href="/admin/projects"
+            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#6B7280] hover:text-[#111827] mb-1.5"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" /> Back to projects
+          </Link>
+          <div className="flex items-end justify-between gap-4 flex-wrap">
+            <div className="min-w-0">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-[22px] sm:text-[24px] font-bold text-[#111827] tracking-tight leading-tight">
+                  {mode === "create" ? "New project" : "Edit project"}
+                </h1>
+                {mode === "edit" && <ProjectStatusBadge status={status} />}
+              </div>
+              <p className="text-[13px] text-[#6B7280] mt-1">
+                {mode === "create"
+                  ? "Add a project to the portfolio."
+                  : "Project metadata, content and portfolio settings."}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {dirty && !saving && (
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-100 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Unsaved
+                </span>
+              )}
+              {mode === "edit" && previewHref && (
+                <Link
+                  href={previewHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 h-10 px-4 bg-white border border-[#D1D5DB] text-[#374151] rounded-lg text-[13px] font-medium hover:bg-[#F9FAFB]"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> Preview
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (dirty && !confirm("Discard unsaved changes?")) return;
+                  router.push("/admin/projects");
+                }}
+                className="hidden sm:inline-flex items-center justify-center h-10 px-4 bg-white border border-[#D1D5DB] text-[#374151] rounded-lg text-[13px] font-medium hover:bg-[#F9FAFB]"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center justify-center gap-2 h-10 px-5 bg-[#8B00FF] hover:bg-[#7A00E0] text-white rounded-lg text-[13px] font-semibold disabled:opacity-60"
+              >
+                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                {saving ? "Saving..." : mode === "create" ? "Create project" : "Save changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6">
-          {/* LEFT — main form */}
+          {/* LEFT */}
           <div className="space-y-6 min-w-0">
             <section className="bg-white border border-[#E5E7EB] rounded-xl p-6">
               <div className="flex items-center gap-3 flex-wrap mb-5">
@@ -222,7 +290,7 @@ export default function ProjectForm({
                       onClick={() => {
                         const next = initial?.translations.find((t) => t.locale === l.value);
                         setLang(l.value);
-                        if (next) setFields(next);
+                        if (next) setFields({ ...emptyFields, ...next });
                       }}
                       className={`h-8 px-3 rounded-md text-[12px] font-medium transition-colors ${
                         lang === l.value
@@ -316,95 +384,147 @@ export default function ProjectForm({
               </div>
             </section>
 
+            {/* Case study */}
             <section className="bg-white border border-[#E5E7EB] rounded-xl">
               <button
                 type="button"
                 onClick={() => setShowCaseStudy((s) => !s)}
                 className="w-full flex items-center justify-between px-6 py-4 text-left"
               >
-                <div>
-                  <h2 className="text-[15px] font-semibold text-[#111827]">Case study details</h2>
-                  <p className="text-[13px] text-[#6B7280] mt-0.5">
-                    Optional — content for the case study page.
-                  </p>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 flex items-center justify-center text-[#8B00FF]">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-[15px] font-semibold text-[#111827]">Case study</h2>
+                    <p className="text-[12px] text-[#6B7280] mt-0.5">
+                      Reusable content for the project page, portfolio, and client success stories.
+                    </p>
+                  </div>
                 </div>
-                <ChevronDown className={`w-5 h-5 text-[#6B7280] transition-transform ${showCaseStudy ? "rotate-180" : ""}`} />
+                <ChevronDown className={`w-5 h-5 text-[#6B7280] transition-transform shrink-0 ${showCaseStudy ? "rotate-180" : ""}`} />
               </button>
 
               {showCaseStudy && (
-                <div className="px-6 pb-6 border-t border-[#E5E7EB] pt-5 space-y-4" dir={isRtl ? "rtl" : "ltr"}>
+                <div className="px-6 pb-6 border-t border-[#E5E7EB] pt-5 space-y-5" dir={isRtl ? "rtl" : "ltr"}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className={lbl}>Client</label>
-                      <input value={fields.client} onChange={(e) => set("client", e.target.value)} className={input} />
+                      <input value={fields.client} onChange={(e) => set("client", e.target.value)} placeholder="Luxury Copro SARL" className={input} />
                     </div>
                     <div>
                       <label className={lbl}>Industry</label>
-                      <input value={fields.industry} onChange={(e) => set("industry", e.target.value)} className={input} />
+                      <input value={fields.industry} onChange={(e) => set("industry", e.target.value)} placeholder="Real estate" className={input} />
                     </div>
                   </div>
+
+                  <div>
+                    <label className={lbl}>Tagline</label>
+                    <input
+                      value={fields.tagline}
+                      onChange={(e) => set("tagline", e.target.value)}
+                      placeholder="Premium real-estate, beautifully managed."
+                      className={input}
+                    />
+                    <p className="text-[11px] text-[#9CA3AF] mt-1">One-line subtitle shown on the case study hero.</p>
+                  </div>
+
                   <div>
                     <label className={lbl}>Challenge</label>
-                    <textarea value={fields.challenge} onChange={(e) => set("challenge", e.target.value)} rows={2} className={textarea} />
+                    <textarea
+                      value={fields.challenge}
+                      onChange={(e) => set("challenge", e.target.value)}
+                      rows={3}
+                      placeholder="What problem did the client face?"
+                      className={textarea}
+                    />
                   </div>
+
                   <div>
                     <label className={lbl}>Solution</label>
-                    <textarea value={fields.solution} onChange={(e) => set("solution", e.target.value)} rows={2} className={textarea} />
+                    <textarea
+                      value={fields.solution}
+                      onChange={(e) => set("solution", e.target.value)}
+                      rows={3}
+                      placeholder="How did we solve it?"
+                      className={textarea}
+                    />
                   </div>
-                  {([1, 2, 3] as const).map((n) => (
-                    <div key={n} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className={lbl}>Step {n} title</label>
-                        <input value={fields[`step${n}Title`]} onChange={(e) => set(`step${n}Title`, e.target.value)} className={input} />
-                      </div>
-                      <div>
-                        <label className={lbl}>Step {n} description</label>
-                        <input value={fields[`step${n}Desc`]} onChange={(e) => set(`step${n}Desc`, e.target.value)} className={input} />
-                      </div>
-                    </div>
-                  ))}
+
                   <div>
-                    <label className={lbl}>Features (comma separated)</label>
-                    <input value={fields.features} onChange={(e) => set("features", e.target.value)} className={input} />
+                    <label className={lbl}>Technologies used</label>
+                    <textarea
+                      value={fields.tech}
+                      onChange={(e) => set("tech", e.target.value)}
+                      rows={2}
+                      placeholder="Next.js, Tailwind CSS, Prisma, PostgreSQL..."
+                      className={textarea}
+                    />
                   </div>
+
                   <div>
-                    <label className={lbl}>Technologies (comma separated)</label>
-                    <input value={fields.tech} onChange={(e) => set("tech", e.target.value)} className={input} />
+                    <label className={lbl}>Results</label>
+                    <textarea
+                      value={fields.results}
+                      onChange={(e) => set("results", e.target.value)}
+                      rows={3}
+                      placeholder="What did the client gain? Use numbers when you can — sales lift, traffic, page speed..."
+                      className={textarea}
+                    />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {([1, 2, 3] as const).map((n) => (
-                      <div key={n} className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className={lbl}>Result {n}</label>
-                          <input value={fields[`result${n}Value`]} onChange={(e) => set(`result${n}Value`, e.target.value)} placeholder="95%" className={input} />
-                        </div>
-                        <div>
-                          <label className={lbl}>Label</label>
-                          <input value={fields[`result${n}Label`]} onChange={(e) => set(`result${n}Label`, e.target.value)} className={input} />
-                        </div>
-                      </div>
-                    ))}
+
+                  <div>
+                    <label className={lbl}>Client testimonial</label>
+                    <textarea
+                      value={fields.testimonial}
+                      onChange={(e) => set("testimonial", e.target.value)}
+                      rows={3}
+                      placeholder="Verbatim quote from the client, plus their name and role."
+                      className={textarea}
+                    />
                   </div>
                 </div>
               )}
             </section>
           </div>
 
-          {/* RIGHT — sidebar */}
-          <aside className="space-y-6 min-w-0">
+          {/* RIGHT — sticky */}
+          <aside className="space-y-5 min-w-0 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-1">
+            {/* Project Status */}
+            <section className="bg-white border border-[#E5E7EB] rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h2 className="text-[14px] font-semibold text-[#111827]">Project status</h2>
+                <ProjectStatusBadge status={status} size="sm" />
+              </div>
+              <select
+                value={status}
+                onChange={(e) => { setStatus(e.target.value); markDirty(); }}
+                className={input}
+              >
+                {PROJECT_STATUSES.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+              <p className="text-[11px] text-[#9CA3AF] mt-2">
+                Workflow phase. Separate from public visibility below.
+              </p>
+            </section>
+
             {/* Live preview */}
             <section className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#E5E7EB] flex items-center justify-between">
-                <span className="text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">Live preview</span>
-                {visible ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
-                    <Eye className="w-3 h-3" /> Public
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#6B7280] bg-[#F3F4F6] border border-[#E5E7EB] px-2 py-0.5 rounded-full">
-                    <EyeOff className="w-3 h-3" /> Hidden
-                  </span>
-                )}
+              <div className="px-4 py-3 border-b border-[#E5E7EB] flex items-center justify-between gap-2">
+                <span className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider">Live preview</span>
+                <div className="flex items-center gap-1.5">
+                  {visible ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-full">
+                      <Eye className="w-3 h-3" /> Public
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#6B7280] bg-[#F3F4F6] border border-[#E5E7EB] px-1.5 py-0.5 rounded-full">
+                      <EyeOff className="w-3 h-3" /> Hidden
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="relative aspect-[16/10] bg-[#F3F4F6]">
                 {image && image.startsWith("/") ? (
@@ -416,7 +536,8 @@ export default function ProjectForm({
                 )}
               </div>
               <div className="p-4 space-y-2">
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <ProjectStatusBadge status={status} size="sm" />
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8B00FF] bg-[#8B00FF]/10 px-2 py-0.5 rounded">
                     {category}
                   </span>
@@ -449,6 +570,9 @@ export default function ProjectForm({
                     ))}
                   </div>
                 )}
+                <p className="text-[11px] text-[#9CA3AF] pt-2 border-t border-[#F3F4F6] mt-2">
+                  Last updated · {relativeDate(lastUpdated)}
+                </p>
               </div>
             </section>
 
@@ -522,7 +646,7 @@ export default function ProjectForm({
                 <div>
                   <p className="text-[13px] font-medium text-[#111827]">Public on site</p>
                   <p className="text-[12px] text-[#6B7280] mt-0.5">
-                    {visible ? "Visible on the portfolio page." : "Hidden — only admins can see it."}
+                    {visible ? "Listed on the portfolio page." : "Hidden — only admins can see it."}
                   </p>
                 </div>
               </label>
@@ -533,15 +657,6 @@ export default function ProjectForm({
               <h2 className="text-[14px] font-semibold text-[#111827] mb-1">SEO</h2>
               <p className="text-[12px] text-[#6B7280] mb-3">Shown in search engines and social shares.</p>
               <div className="space-y-3" dir={isRtl ? "rtl" : "ltr"}>
-                <div>
-                  <label className={lbl}>Tagline</label>
-                  <input
-                    value={fields.tagline}
-                    onChange={(e) => set("tagline", e.target.value)}
-                    placeholder="Premium real-estate, beautifully managed."
-                    className={input}
-                  />
-                </div>
                 <div>
                   <label className={lbl}>Meta description</label>
                   <textarea
@@ -563,33 +678,6 @@ export default function ProjectForm({
             <p className="text-[13px] text-red-700">{error}</p>
           </div>
         )}
-
-        {/* Fixed bottom-right action bar */}
-        <div className="fixed bottom-4 right-4 lg:bottom-6 lg:right-6 z-30 flex items-center gap-2 p-2 bg-white border border-[#E5E7EB] rounded-2xl shadow-[0_10px_30px_-10px_rgba(15,23,42,0.15)] backdrop-blur-sm">
-          {dirty && !saving && (
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 ml-1 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-100 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Unsaved
-            </span>
-          )}
-          <button
-            type="button"
-            onClick={() => {
-              if (dirty && !confirm("Discard unsaved changes?")) return;
-              router.push("/admin/projects");
-            }}
-            className="h-10 px-4 bg-white border border-[#D1D5DB] text-[#374151] rounded-lg text-[13px] font-medium hover:bg-[#F9FAFB]"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="h-10 px-5 bg-[#8B00FF] hover:bg-[#7A00E0] text-white rounded-lg text-[13px] font-semibold disabled:opacity-60 inline-flex items-center justify-center gap-2"
-          >
-            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-            {saving ? "Saving..." : mode === "create" ? "Create project" : "Save changes"}
-          </button>
-        </div>
       </form>
     </div>
   );

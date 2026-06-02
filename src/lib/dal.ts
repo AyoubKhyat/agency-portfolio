@@ -170,6 +170,7 @@ export type ProjectInput = {
   image: string;
   tag: string;
   visible?: boolean;
+  status?: string;
   translations: {
     locale: string;
     title: string;
@@ -195,6 +196,8 @@ export type ProjectInput = {
     result2Label?: string;
     result3Value?: string;
     result3Label?: string;
+    results?: string;
+    testimonial?: string;
   }[];
 };
 
@@ -208,6 +211,7 @@ export async function createProject(data: ProjectInput) {
       image: data.image,
       tag: data.tag,
       visible: data.visible ?? true,
+      status: data.status ?? "DRAFT",
       sortOrder: (maxOrder._max.sortOrder ?? 0) + 1,
       translations: {
         create: data.translations,
@@ -229,6 +233,7 @@ export async function updateProject(id: string, data: ProjectInput) {
         image: data.image,
         tag: data.tag,
         visible: data.visible,
+        ...(data.status ? { status: data.status } : {}),
         translations: {
           create: data.translations,
         },

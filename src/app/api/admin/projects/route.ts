@@ -28,7 +28,11 @@ const translationSchema = z.object({
   result2Label: z.string().optional().default(""),
   result3Value: z.string().optional().default(""),
   result3Label: z.string().optional().default(""),
+  results: z.string().optional().default(""),
+  testimonial: z.string().optional().default(""),
 });
+
+const PROJECT_STATUSES = ["DRAFT", "IN_PROGRESS", "REVIEW", "COMPLETED", "PUBLISHED"] as const;
 
 function slugify(text: string): string {
   return text
@@ -49,6 +53,7 @@ const createSchema = z.object({
   image: z.string().optional().default(""),
   tag: z.string().optional().default(""),
   visible: z.boolean().optional().default(true),
+  status: z.enum(PROJECT_STATUSES).optional().default("DRAFT"),
   translations: z.array(translationSchema).min(1),
 });
 

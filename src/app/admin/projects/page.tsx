@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import { Badge } from "@/components/admin/badge";
 import { EmptyState } from "@/components/admin/empty-state";
+import { ProjectStatusBadge } from "@/components/admin/project-status-badge";
 import { cn } from "@/lib/utils";
 
 type Project = {
@@ -20,6 +21,7 @@ type Project = {
   image: string;
   tag: string;
   visible: boolean;
+  status?: string;
   sortOrder: number;
   translations: { locale: string; title: string; desc: string }[];
 };
@@ -140,12 +142,11 @@ export default function ProjectsPage() {
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                {/* Visibility indicator */}
-                {!project.visible && (
-                  <div className="absolute top-3 left-3">
-                    <Badge variant="default" size="sm">Hidden</Badge>
-                  </div>
-                )}
+                {/* Top-left status + visibility */}
+                <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                  <ProjectStatusBadge status={project.status} size="sm" />
+                  {!project.visible && <Badge variant="default" size="sm">Hidden</Badge>}
+                </div>
               </div>
 
               {/* Info */}
@@ -160,7 +161,7 @@ export default function ProjectsPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 mt-3">
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
                   <Badge variant="purple" size="sm">{project.category}</Badge>
                   {project.tag && <Badge variant="default" size="sm">{project.tag}</Badge>}
                 </div>
@@ -172,11 +173,12 @@ export default function ProjectsPage() {
         /* List view - existing table style */
         <div className="border border-[var(--os-border)] rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[500px]">
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
               <tr className="border-b border-[var(--os-border)] bg-gray-50/80">
                 <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Image</th>
                 <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Title</th>
+                <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Status</th>
                 <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Category</th>
                 <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Visible</th>
                 <th className="text-right px-4 py-3 text-[#475569] font-medium text-xs">Actions</th>
@@ -193,6 +195,7 @@ export default function ProjectsPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-[#0F172A] font-medium">{project.translations[0]?.title ?? project.slug}</td>
+                  <td className="px-4 py-3"><ProjectStatusBadge status={project.status} size="sm" /></td>
                   <td className="px-4 py-3"><Badge variant="purple" size="sm">{project.category}</Badge></td>
                   <td className="px-4 py-3">
                     <button onClick={() => handleToggle(project.id)} className="transition-colors">

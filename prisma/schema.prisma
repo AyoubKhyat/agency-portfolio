@@ -45,6 +45,7 @@ model Project {
   image     String
   tag       String
   visible   Boolean @default(true)
+  status    String  @default("DRAFT") // DRAFT | IN_PROGRESS | REVIEW | COMPLETED | PUBLISHED
   sortOrder Int     @default(0) @map("sort_order")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -83,6 +84,8 @@ model ProjectTranslation {
   result2Label String? @map("result2_label")
   result3Value String? @map("result3_value")
   result3Label String? @map("result3_label")
+  results      String?
+  testimonial  String?
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
