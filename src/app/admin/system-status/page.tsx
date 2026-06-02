@@ -8,6 +8,7 @@ import {
   Database, Wifi, Bell, CheckCircle, AlertTriangle, XCircle,
   RefreshCw, Download, Clock,
 } from "lucide-react";
+import type React from "react";
 import { GlassCard } from "@/components/admin/glass-card";
 import { Badge } from "@/components/admin/badge";
 import AvatarChip from "@/components/AvatarChip";
@@ -17,16 +18,36 @@ type TeamMember = {
   isActive: boolean; updatedAt: string; lastActivity: string | null;
 };
 
+type CheckRecord = Record<string, unknown>;
+type Check = {
+  id: string;
+  label: string;
+  count: number;
+  severity: "ok" | "warn" | "danger";
+  records: CheckRecord[];
+  href: string;
+};
+type Checks = {
+  meetings:  Check[];
+  contracts: Check[];
+  clients:   Check[];
+  projects:  Check[];
+  tasks:     Check[];
+  crm:       Check[];
+};
+
 type SystemStatus = {
   dbStatus: string;
   apiStatus: string;
   timestamp: string;
+  healthScore?: number;
   team: { total: number; active: number; members: TeamMember[] };
   crm: { total: number; assigned: number; unassigned: number; duplicates: number; missingPhone: number; missingInstagram: number };
   followUps: { overdue: number; dueToday: number; dueThisWeek: number };
   proposals: { draft: number; sent: number; accepted: number; rejected: number };
   projects: { active: number; overdue: number; completed: number };
   system: { unreadNotifications: number; activitiesToday: number };
+  checks?: Checks;
 };
 
 function StatusDot({ status }: { status: "green" | "yellow" | "red" }) {
@@ -138,20 +159,30 @@ export default function SystemStatusPage() {
 
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <GlassCard padding="lg" className={overallHealth === "green" ? "border-emerald-200 bg-emerald-50/30" : overallHealth === "yellow" ? "border-amber-200 bg-amber-50/30" : "border-red-200 bg-red-50/30"}>
-          <div className="flex items-center gap-3">
-            <StatusDot status={overallHealth as "green" | "yellow" | "red"} />
-            <div>
-              <span className={`text-[15px] font-semibold ${overallHealth === "green" ? "text-emerald-700" : overallHealth === "yellow" ? "text-amber-700" : "text-red-700"}`}>
-                {healthLabel}
-              </span>
-              <p className="text-[12px] text-[#64748B] mt-0.5">
-                Last checked: {new Date(data.timestamp).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                {" · "}{data.system.activitiesToday} activities today
-              </p>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <StatusDot status={overallHealth as "green" | "yellow" | "red"} />
+              <div>
+                <span className={`text-[15px] font-semibold ${overallHealth === "green" ? "text-emerald-700" : overallHealth === "yellow" ? "text-amber-700" : "text-red-700"}`}>
+                  {healthLabel}
+                </span>
+                <p className="text-[12px] text-[#64748B] mt-0.5">
+                  Last checked: {new Date(data.timestamp).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                  {" · "}{data.system.activitiesToday} activities today
+                </p>
+              </div>
             </div>
+            {typeof data.healthScore === "number" && (
+              <div className={`text-right ${data.healthScore >= 85 ? "text-emerald-700" : data.healthScore >= 65 ? "text-amber-700" : "text-red-700"}`}>
+                <div className="text-3xl font-bold leading-none">{data.healthScore}</div>
+                <div className="text-[11px] font-semibold uppercase tracking-wider mt-1">Health score</div>
+              </div>
+            )}
           </div>
         </GlassCard>
       </motion.div>
+
+      {data.checks && <ChecksSection checks={data.checks} />}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
@@ -278,5 +309,53 @@ export default function SystemStatusPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+function ChecksSection({ checks }: { checks: Checks }) {
+  const groups: { key: keyof Checks; title: string; icon: React.ReactNode }[] = [
+    { key: "meetings",  title: "Meetings",  icon: <Calendar  className="w-4 h-4 text-blue-600" /> },
+    { key: "contracts", title: "Contracts", icon: <FileText className="w-4 h-4 text-emerald-600" /> },
+    { key: "clients",   title: "Clients",   icon: <Users    className="w-4 h-4 text-purple-600" /> },
+    { key: "projects",  title: "Projects",  icon: <FolderKanban className="w-4 h-4 text-cyan-600" /> },
+    { key: "tasks",     title: "Tasks",     icon: <Target   className="w-4 h-4 text-amber-600" /> },
+    { key: "crm",       title: "CRM data",  icon: <Database className="w-4 h-4 text-[#8B00FF]" /> },
+  ];
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {groups.map((g) => (
+          <GlassCard key={g.key} padding="lg">
+            <div className="flex items-center gap-2 mb-3">
+              {g.icon}
+              <h3 className="text-[14px] font-semibold text-[#0F172A]">{g.title}</h3>
+            </div>
+            <div className="space-y-1">
+              {checks[g.key].map((c) => <CheckRow key={c.id} c={c} />)}
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+function CheckRow({ c }: { c: Check }) {
+  const tone =
+    c.severity === "danger" ? { dot: "bg-red-500",     text: "text-red-700",     bg: "hover:bg-red-50" } :
+    c.severity === "warn"   ? { dot: "bg-amber-500",   text: "text-amber-700",   bg: "hover:bg-amber-50" } :
+                              { dot: "bg-emerald-500", text: "text-[#475569]",   bg: "hover:bg-[#F8FAFC]" };
+  const content = (
+    <div className={`flex items-center justify-between py-2 px-2 rounded-lg ${tone.bg} transition-colors`}>
+      <div className="flex items-center gap-2.5 min-w-0">
+        <span className={`w-1.5 h-1.5 rounded-full ${tone.dot}`} />
+        <span className="text-[13px] text-[#475569] truncate">{c.label}</span>
+      </div>
+      <span className={`text-[13px] font-semibold ${tone.text} shrink-0`}>{c.count}</span>
+    </div>
+  );
+  if (c.count === 0) return content;
+  return (
+    <a href={c.href} className="block">{content}</a>
   );
 }

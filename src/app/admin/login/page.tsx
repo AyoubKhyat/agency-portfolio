@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-    if (res.ok) { router.push("/admin"); } else { setError("Invalid email or password"); }
+    if (res.ok) { router.push("/admin/command-center"); } else { setError("Invalid email or password"); }
     setLoading(false);
   }
 

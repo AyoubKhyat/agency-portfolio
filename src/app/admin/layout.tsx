@@ -8,13 +8,19 @@ import {
   LayoutDashboard, Users, Target, Building2, FolderKanban,
   BarChart3, Settings, LogOut, PanelLeftClose, PanelLeft, Menu, X,
   Activity, UsersRound, Bell, Search, Layers, Shield, CheckSquare, BellRing,
-  Calendar, FileSignature,
+  Calendar, FileSignature, Crown,
 } from "lucide-react";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { cn } from "@/lib/utils";
 
 const SECTIONS = [
-  { label: "Overview", items: [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard }] },
+  {
+    label: "Overview",
+    items: [
+      { href: "/admin/command-center", label: "Command Center", icon: Crown },
+      { href: "/admin",                label: "Dashboard",      icon: LayoutDashboard },
+    ],
+  },
   {
     label: "Sales",
     items: [
