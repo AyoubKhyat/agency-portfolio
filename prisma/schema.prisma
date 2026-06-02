@@ -33,6 +33,9 @@ model User {
   contactedProspects  Prospect[]          @relation("ProspectContactedBy")
   lastActionProspects Prospect[]          @relation("ProspectLastActionBy")
   activities          ProspectActivity[]
+  ownedClients        Client[]            @relation("ClientAccountManager")
+  ownedTasks          Task[]              @relation("TaskOwner")
+  createdTasks        Task[]              @relation("TaskCreator")
 
   @@map("users")
 }
@@ -157,6 +160,7 @@ model Prospect {
   notes      ProspectNote[]
   activities ProspectActivity[]
   proposals  Proposal[]
+  spawnedClients Client[] @relation("ClientFromProspect")
 
   @@map("prospects")
 }
@@ -194,6 +198,7 @@ model ProspectActivity {
 model Proposal {
   id            String   @id @default(cuid())
   prospectId    String   @map("prospect_id")
+  clientId      String?  @map("client_id")
   contactPerson String   @default("") @map("contact_person")
   services      String
   amount        Float
@@ -210,6 +215,7 @@ model Proposal {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   prospect Prospect @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  client   Client?  @relation(fields: [clientId], references: [id])
 
   @@map("proposals")
 }
@@ -231,6 +237,7 @@ model ClientProject {
   id           String    @id @default(cuid())
   name         String
   clientName   String    @map("client_name")
+  clientId     String?   @map("client_id")
   description  String    @default("")
   services     String    @default("")
   status       String    @default("NEW")
@@ -250,5 +257,90 @@ model ClientProject {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
+  client       Client?   @relation(fields: [clientId], references: [id])
+
   @@map("client_projects")
+}
+
+model Client {
+  id                String   @id @default(cuid())
+  companyName       String   @map("company_name")
+  contactPerson     String   @default("") @map("contact_person")
+  phone             String   @default("")
+  whatsapp          String   @default("")
+  email             String   @default("")
+  website           String   @default("")
+  industry          String   @default("")
+  contractValue     Float    @default(0) @map("contract_value")
+  acquisitionSource String   @default("") @map("acquisition_source")
+  status            String   @default("ACTIVE") // ACTIVE | PAUSED | ARCHIVED
+  accountManagerId  String?  @map("account_manager_id")
+  prospectId        String?  @map("prospect_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  accountManager User?     @relation("ClientAccountManager", fields: [accountManagerId], references: [id])
+  prospect       Prospect? @relation("ClientFromProspect", fields: [prospectId], references: [id])
+
+  projects   ClientProject[]
+  proposals  Proposal[]
+  notes      ClientNote[]
+  activities ClientActivity[]
+
+  @@map("clients")
+}
+
+model ClientNote {
+  id         String   @id @default(cuid())
+  clientId   String   @map("client_id")
+  content    String
+  authorId   String?  @map("author_id")
+  authorName String?  @map("author_name")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("client_notes")
+}
+
+model ClientActivity {
+  id         String   @id @default(cuid())
+  clientId   String   @map("client_id")
+  userId     String?  @map("user_id")
+  userName   String?  @map("user_name")
+  actionType String   @map("action_type")
+  details    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("client_activities")
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  title       String
+  description String    @default("")
+  priority    String    @default("MEDIUM") // LOW | MEDIUM | HIGH | URGENT
+  status      String    @default("TODO")   // TODO | IN_PROGRESS | BLOCKED | DONE
+  dueDate     DateTime? @map("due_date")
+  parentType  String?   @map("parent_type") // PROSPECT | CLIENT | PROJECT | PROPOSAL
+  parentId    String?   @map("parent_id")
+  parentLabel String?   @map("parent_label") // denormalized display name
+  ownerId     String?   @map("owner_id")
+  ownerName   String?   @map("owner_name")
+  createdById String?   @map("created_by_id")
+  createdByName String? @map("created_by_name")
+  completedAt DateTime? @map("completed_at")
+  completedById String? @map("completed_by_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  owner   User? @relation("TaskOwner",   fields: [ownerId],     references: [id])
+  creator User? @relation("TaskCreator", fields: [createdById], references: [id])
+
+  @@index([ownerId, status])
+  @@index([parentType, parentId])
+  @@index([dueDate, status])
+  @@map("tasks")
 }

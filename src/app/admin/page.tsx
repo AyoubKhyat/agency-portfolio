@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Target, Users, FolderKanban, Clock, ArrowRight, MessageCircle, Reply, CalendarClock, AlertTriangle, CalendarDays, Layers, TrendingUp, DollarSign } from "lucide-react";
+import { Target, Users, FolderKanban, Clock, ArrowRight, MessageCircle, Reply, CalendarClock, AlertTriangle, CalendarDays, Layers, TrendingUp, DollarSign, CheckSquare, Sun, Inbox } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 import { GlassCard } from "@/components/admin/glass-card";
 import { Badge } from "@/components/admin/badge";
@@ -37,17 +37,33 @@ type ExecData = {
   recentWins: { id: string; amount: number; currency: string; prospect: { name: string; sector: string } }[];
 };
 
+type Task = {
+  id: string; title: string; status: string; priority: string; dueDate: string | null;
+  parentLabel: string | null; parentType: string | null; parentId: string | null;
+  owner: { fullName: string; avatarInitials: string } | null;
+};
+
+type TaskBuckets = { mine: Task[]; today: Task[]; overdue: Task[] };
+
 export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [exec, setExec] = useState<ExecData | null>(null);
+  const [tasks, setTasks] = useState<TaskBuckets | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/admin/stats").then((r) => { if (r.status === 401) { router.push("/admin/login"); return null; } return r.json(); }),
       fetch("/api/admin/executive").then((r) => r.ok ? r.json() : null),
-    ]).then(([d, e]) => { if (d) setData(d); if (e) setExec(e); })
+      fetch("/api/admin/tasks?scope=mine&limit=5").then((r) => r.ok ? r.json() : []),
+      fetch("/api/admin/tasks?scope=today&limit=5").then((r) => r.ok ? r.json() : []),
+      fetch("/api/admin/tasks?scope=overdue&limit=5").then((r) => r.ok ? r.json() : []),
+    ]).then(([d, e, mine, today, overdue]) => {
+      if (d) setData(d);
+      if (e) setExec(e);
+      setTasks({ mine: mine ?? [], today: today ?? [], overdue: overdue ?? [] });
+    })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [router]);
@@ -57,6 +73,65 @@ export default function DashboardPage() {
   }
   function getTotal(arr: StatusCount[] | undefined) {
     return arr?.reduce((sum, s) => sum + s._count, 0) || 0;
+  }
+
+  function dueShort(due: string | null): string {
+    if (!due) return "";
+    const diff = Math.round((new Date(due).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86_400_000);
+    if (diff < 0) return `${-diff}d overdue`;
+    if (diff === 0) return "today";
+    if (diff === 1) return "tomorrow";
+    if (diff < 7) return `in ${diff}d`;
+    return new Date(due).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+  }
+
+  function TaskWidget({
+    title, scope, count, tasks, icon, tone,
+  }: {
+    title: string; scope: string; count: number; tasks: Task[]; icon: React.ReactNode;
+    tone: "purple" | "amber" | "red";
+  }) {
+    const toneStyles: Record<typeof tone, { border: string; iconBg: string; iconText: string; count: string }> = {
+      purple: { border: count > 0 ? "border-purple-200" : "border-[var(--os-border)]", iconBg: "bg-purple-50", iconText: "text-[#8B00FF]", count: "text-[#8B00FF]" },
+      amber:  { border: count > 0 ? "border-amber-200" : "border-[var(--os-border)]", iconBg: "bg-amber-50", iconText: "text-amber-600", count: "text-amber-600" },
+      red:    { border: count > 0 ? "border-red-200" : "border-[var(--os-border)]", iconBg: "bg-red-50", iconText: "text-red-600", count: "text-red-600" },
+    };
+    const s = toneStyles[tone];
+    return (
+      <GlassCard padding="lg" className={s.border} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${s.iconBg} ${s.iconText}`}>
+              {icon}
+            </div>
+            <div>
+              <div className={`text-2xl font-bold ${s.count}`}>{count}</div>
+              <div className="text-xs text-[#64748B]">{title}</div>
+            </div>
+          </div>
+          <Link href={`/admin/tasks?scope=${scope}`} className="text-xs text-purple-600 hover:text-purple-700 flex items-center gap-1">
+            View <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+        {tasks.length === 0 ? (
+          <p className="text-[12px] text-[#9CA3AF] text-center py-3">All clear.</p>
+        ) : (
+          <ul className="space-y-1.5">
+            {tasks.slice(0, 4).map((t) => (
+              <li key={t.id} className="text-[12px] text-[#374151] flex items-start gap-2">
+                <span className="mt-1 w-1 h-1 rounded-full bg-[#9CA3AF] shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <span className="truncate block">{t.title}</span>
+                  <span className="text-[10px] text-[#9CA3AF]">
+                    {t.parentLabel ? `${t.parentLabel} · ` : ""}{dueShort(t.dueDate)}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </GlassCard>
+    );
   }
 
   const totalProspects = getTotal(data?.prospectsByStatus);
@@ -197,6 +272,36 @@ export default function DashboardPage() {
           </div>
         </GlassCard>
       </div>
+
+      {/* Tasks */}
+      {tasks && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+          <TaskWidget
+            title="My open tasks"
+            scope="mine"
+            count={tasks.mine.length}
+            tasks={tasks.mine}
+            icon={<CheckSquare className="w-5 h-5" />}
+            tone="purple"
+          />
+          <TaskWidget
+            title="Due today"
+            scope="today"
+            count={tasks.today.length}
+            tasks={tasks.today}
+            icon={<Sun className="w-5 h-5" />}
+            tone="amber"
+          />
+          <TaskWidget
+            title="Overdue"
+            scope="overdue"
+            count={tasks.overdue.length}
+            tasks={tasks.overdue}
+            icon={<AlertTriangle className="w-5 h-5" />}
+            tone="red"
+          />
+        </div>
+      )}
 
       {/* Follow-up Management */}
       {(data?.followUpsDueToday || data?.followUpsOverdue || data?.followUpsUpcoming) ? (
