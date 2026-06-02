@@ -311,7 +311,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Desktop sidebar */}
       <div className={cn(
         "hidden lg:block shrink-0 py-3 pl-3 transition-all duration-200 ease-out",
-        collapsed ? "w-[72px]" : "w-[252px]"
+        collapsed ? "w-[72px]" : "w-[240px]"
       )}>
         <aside className="flex flex-col h-[calc(100vh-24px)] bg-white/90 backdrop-blur-xl rounded-2xl border border-[var(--os-border)] shadow-lg shadow-purple-900/[0.03] overflow-hidden">
           {sidebarContent(false)}
@@ -320,7 +320,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden pt-14 lg:pt-0 relative z-[1]">
-        <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px]">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto">
           <AnimatePresence mode="wait">
             <motion.div key={pathname} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
               {children}
