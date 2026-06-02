@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
+import { notifyMentionsInText } from "@/lib/notify";
 
 const noteSchema = z.object({
   content: z.string().min(1),
@@ -22,7 +23,7 @@ export async function POST(
     return NextResponse.json({ error: "Content required" }, { status: 400 });
   }
 
-  const exists = await prisma.client.findUnique({ where: { id }, select: { id: true } });
+  const exists = await prisma.client.findUnique({ where: { id }, select: { id: true, companyName: true } });
   if (!exists) return NextResponse.json({ error: "Client not found" }, { status: 404 });
 
   const [note] = await prisma.$transaction([
@@ -44,6 +45,15 @@ export async function POST(
       },
     }),
   ]);
+
+  // Fire @mention notifications (best-effort; never blocks the note).
+  notifyMentionsInText({
+    content: parsed.data.content,
+    authorId: session.userId,
+    authorName: session.fullName,
+    link: `/admin/clients/${id}`,
+    contextLabel: `a note on ${exists.companyName}`,
+  }).catch(() => {});
 
   return NextResponse.json(note, { status: 201 });
 }

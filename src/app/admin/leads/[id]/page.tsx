@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Mail, Phone, MessageSquare, StickyNote } from "lucide-react";
-import { FormCard, Field, Select, Textarea, FormButton } from "@/components/admin/form";
+import { FormCard, Field, Select, FormButton } from "@/components/admin/form";
 import { Badge } from "@/components/admin/badge";
+import { MentionTextarea, HighlightedMentions } from "@/components/admin/mention-textarea";
 
 const STATUSES = ["NEW", "CONTACTED", "QUALIFIED", "CLOSED"];
 const STATUS_VARIANT: Record<string, "blue" | "amber" | "green" | "default"> = {
@@ -157,10 +158,10 @@ export default function LeadDetailPage() {
         icon={<StickyNote className="w-4 h-4" />}
       >
         <form onSubmit={handleAddNote} className="space-y-3 mb-5">
-          <Field label="Add a note">
-            <Textarea
+          <Field label="Add a note" hint="Type @ to mention a teammate.">
+            <MentionTextarea
               value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
+              onChange={setNoteText}
               placeholder="Called on Tuesday — interested in the e-commerce package..."
               rows={3}
             />
@@ -176,7 +177,10 @@ export default function LeadDetailPage() {
           <div className="space-y-2.5">
             {lead.notes.map((note) => (
               <div key={note.id} className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl">
-                <p className="text-[14px] text-[#0F172A] whitespace-pre-wrap leading-relaxed">{note.content}</p>
+                <HighlightedMentions
+                  text={note.content}
+                  className="text-[14px] text-[#0F172A] whitespace-pre-wrap leading-relaxed block"
+                />
                 <p className="text-[12px] text-[#94A3B8] mt-2">
                   {new Date(note.createdAt).toLocaleDateString("fr-FR", {
                     day: "2-digit",

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
+import { notifyUser } from "@/lib/notify";
 
 const STATUSES = ["ACTIVE", "PAUSED", "ARCHIVED"] as const;
 
@@ -84,6 +85,15 @@ export async function PUT(
         details: `${before.status} → ${data.status}`,
       },
     });
+    // Notify the account manager if they didn't make the change themselves.
+    if (updated.accountManagerId && updated.accountManagerId !== session.userId) {
+      notifyUser(updated.accountManagerId, {
+        type: "CLIENT_STATUS_CHANGED",
+        title: `${updated.companyName} is now ${data.status.toLowerCase()}`,
+        body: `${session.fullName} changed the status from ${before.status.toLowerCase()}`,
+        link: `/admin/clients/${id}`,
+      }).catch(() => {});
+    }
   }
   if (data.accountManagerId !== undefined && before.accountManagerId !== updated.accountManagerId) {
     await prisma.clientActivity.create({
@@ -94,6 +104,14 @@ export async function PUT(
         actionType: "MANAGER_CHANGED",
       },
     });
+    if (updated.accountManagerId && updated.accountManagerId !== session.userId) {
+      notifyUser(updated.accountManagerId, {
+        type: "ACCOUNT_ASSIGNED",
+        title: `You're now managing ${updated.companyName}`,
+        body: `${session.fullName} assigned the account to you`,
+        link: `/admin/clients/${id}`,
+      }).catch(() => {});
+    }
   }
 
   return NextResponse.json(updated);

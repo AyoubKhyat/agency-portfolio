@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
+import { notifyUser } from "@/lib/notify";
 
 const STATUSES = ["TODO", "IN_PROGRESS", "BLOCKED", "DONE"] as const;
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
@@ -86,6 +87,21 @@ export async function PATCH(
     },
     include: { owner: { select: { id: true, fullName: true, avatarInitials: true } } },
   });
+
+  // Notify the new owner if the task was just reassigned.
+  if (
+    data.ownerId !== undefined &&
+    task.ownerId &&
+    task.ownerId !== before.ownerId &&
+    task.ownerId !== session.userId
+  ) {
+    notifyUser(task.ownerId, {
+      type: "TASK_ASSIGNED",
+      title: `${session.fullName} assigned you a task`,
+      body: task.title,
+      link: `/admin/tasks?scope=mine`,
+    }).catch(() => {});
+  }
 
   return NextResponse.json(task);
 }

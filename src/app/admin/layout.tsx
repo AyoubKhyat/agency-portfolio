@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Target, Building2, FolderKanban,
   BarChart3, Settings, LogOut, PanelLeftClose, PanelLeft, Menu, X,
-  Activity, UsersRound, Bell, Search, Layers, Shield, CheckSquare,
+  Activity, UsersRound, Bell, Search, Layers, Shield, CheckSquare, BellRing,
 } from "lucide-react";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,7 @@ const SECTIONS = [
     label: "Operations",
     items: [
       { href: "/admin/tasks", label: "Tasks", icon: CheckSquare, badgeKey: "tasks" as const },
+      { href: "/admin/notifications", label: "Notifications", icon: BellRing, badgeKey: "notifications" as const },
       { href: "/admin/activity", label: "Activity Feed", icon: Activity, badgeKey: "activities" as const },
       { href: "/admin/team", label: "Team", icon: UsersRound, badgeKey: "team" as const },
     ],
@@ -59,7 +60,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
-  const [badges, setBadges] = useState({ leads: 0, prospects: 0, activities: 0, team: 0, tasks: 0 });
+  const [badges, setBadges] = useState({ leads: 0, prospects: 0, activities: 0, team: 0, tasks: 0, notifications: 0 });
   const isLogin = pathname === "/admin/login";
 
   useEffect(() => {
@@ -86,9 +87,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (isLogin) return;
-    fetch("/api/admin/notifications").then((r) => r.ok ? r.json() : []).then((notifs: { read: boolean }[]) => {
-      setUnreadNotifs(Array.isArray(notifs) ? notifs.filter((n) => !n.read).length : 0);
-    }).catch(() => {});
+    fetch("/api/admin/notifications/count")
+      .then((r) => (r.ok ? r.json() : { unread: 0 }))
+      .then((d: { unread: number }) => setUnreadNotifs(d.unread || 0))
+      .catch(() => {});
   }, [pathname, isLogin]);
 
   useEffect(() => {
@@ -99,7 +101,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       fetch("/api/admin/activity?limit=20").then((r) => r.ok ? r.json() : []),
       fetch("/api/admin/users").then((r) => r.ok ? r.json() : []),
       fetch("/api/admin/tasks?scope=mine&limit=500").then((r) => r.ok ? r.json() : []),
-    ]).then(([ld, pd, acts, users, myTasks]) => {
+      fetch("/api/admin/notifications/count").then((r) => r.ok ? r.json() : { unread: 0 }),
+    ]).then(([ld, pd, acts, users, myTasks, notifCount]) => {
       const today = new Date().toDateString();
       const todayCount = Array.isArray(acts) ? acts.filter((a: { createdAt: string }) => new Date(a.createdAt).toDateString() === today).length : 0;
       setBadges({
@@ -108,6 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         activities: todayCount,
         team: Array.isArray(users) ? users.length : 0,
         tasks: Array.isArray(myTasks) ? myTasks.length : 0,
+        notifications: notifCount?.unread || 0,
       });
     }).catch(() => {});
   }, [pathname, isLogin]);
@@ -280,10 +284,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <button onClick={() => setSearchOpen(true)} className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]">
             <Search className="w-5 h-5" />
           </button>
-          <button className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] relative">
+          <Link
+            href="/admin/notifications"
+            aria-label="Notifications"
+            className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] relative"
+          >
             <Bell className="w-5 h-5" />
             {unreadNotifs > 0 && <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full" />}
-          </button>
+          </Link>
         </div>
       </div>
 

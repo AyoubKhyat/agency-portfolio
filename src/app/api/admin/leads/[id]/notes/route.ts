@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { addLeadNote } from "@/lib/dal";
+import { notifyMentionsInText } from "@/lib/notify";
+import { prisma, hasPrisma } from "@/lib/prisma";
 import { z } from "zod";
 
 export async function POST(
@@ -16,5 +18,17 @@ export async function POST(
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
   const note = await addLeadNote(id, parsed.data.content);
+
+  if (hasPrisma()) {
+    const lead = await prisma.lead.findUnique({ where: { id }, select: { fullName: true } });
+    notifyMentionsInText({
+      content: parsed.data.content,
+      authorId: session.userId,
+      authorName: session.fullName,
+      link: `/admin/leads/${id}`,
+      contextLabel: `a note on ${lead?.fullName ?? "a lead"}`,
+    }).catch(() => {});
+  }
+
   return NextResponse.json(note, { status: 201 });
 }

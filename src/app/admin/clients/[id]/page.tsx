@@ -13,6 +13,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { TaskList } from "@/components/admin/task-list";
+import { MentionTextarea, HighlightedMentions } from "@/components/admin/mention-textarea";
 
 type Client = {
   id: string;
@@ -290,7 +291,7 @@ export default function ClientDetailPage() {
       )}
       {tab === "projects" && <ProjectsTab projects={client.projects} />}
       {tab === "proposals" && <ProposalsTab proposals={client.proposals} />}
-      {tab === "notes" && <NotesTab client={client} onUpdate={setClient} />}
+      {tab === "notes" && <NotesTab client={client} onUpdate={setClient} team={team} />}
       {tab === "meetings" && <PlaceholderTab icon={<CalendarDays className="w-7 h-7" />} title="Meetings — coming soon" description="Phase 2 will add the meetings module." />}
       {tab === "files" && <PlaceholderTab icon={<FolderOpen className="w-7 h-7" />} title="Files — coming soon" description="Phase 3 will add file attachments." />}
       {tab === "activity" && <ActivityTab activities={client.activities} />}
@@ -576,7 +577,7 @@ function ProposalsTab({ proposals }: { proposals: Proposal[] }) {
   );
 }
 
-function NotesTab({ client, onUpdate }: { client: Client; onUpdate: (c: Client) => void }) {
+function NotesTab({ client, onUpdate, team }: { client: Client; onUpdate: (c: Client) => void; team: TeamMember[] }) {
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -601,12 +602,13 @@ function NotesTab({ client, onUpdate }: { client: Client; onUpdate: (c: Client) 
     <div className="max-w-3xl space-y-4">
       <form onSubmit={addNote} className="bg-white border border-[#E5E7EB] rounded-xl p-5">
         <label className={lbl}>Add a note</label>
-        <textarea
+        <MentionTextarea
           value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Internal note about this client — only visible to your team."
+          onChange={setContent}
+          placeholder="Internal note about this client — type @ to mention a teammate."
           rows={3}
-          className="w-full px-3.5 py-2.5 bg-white border border-[#D1D5DB] rounded-lg text-[14px] text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15 mb-2"
+          users={team}
+          className="mb-2"
         />
         <button
           type="submit"
@@ -624,7 +626,11 @@ function NotesTab({ client, onUpdate }: { client: Client; onUpdate: (c: Client) 
         <div className="space-y-2">
           {client.notes.map((n) => (
             <div key={n.id} className="bg-white border border-[#E5E7EB] rounded-xl p-4">
-              <p className="text-[13px] text-[#111827] whitespace-pre-wrap leading-relaxed">{n.content}</p>
+              <HighlightedMentions
+                text={n.content}
+                users={team}
+                className="text-[13px] text-[#111827] whitespace-pre-wrap leading-relaxed block"
+              />
               <p className="text-[11px] text-[#9CA3AF] mt-2">
                 {n.authorName && <span className="font-medium text-[#6B7280]">{n.authorName} · </span>}
                 {relativeDate(n.createdAt)}

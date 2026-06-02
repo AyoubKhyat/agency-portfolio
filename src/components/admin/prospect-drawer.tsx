@@ -26,7 +26,8 @@ import {
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { Badge } from "@/components/admin/badge";
 import { ProposalBuilder } from "@/components/admin/proposal-builder";
-import { Input, Textarea, FormButton } from "@/components/admin/form";
+import { Input, FormButton } from "@/components/admin/form";
+import { MentionTextarea, HighlightedMentions } from "@/components/admin/mention-textarea";
 import { cn } from "@/lib/utils";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -752,11 +753,11 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                       <div className="pb-3 pl-8 space-y-3">
                         {showNoteInput && (
                           <form onSubmit={handleAddNote} className="space-y-2.5">
-                            <Textarea
+                            <MentionTextarea
                               ref={noteInputRef}
                               value={noteText}
-                              onChange={(e) => setNoteText(e.target.value)}
-                              placeholder="Write a note..."
+                              onChange={setNoteText}
+                              placeholder="Write a note... type @ to mention a teammate."
                               rows={3}
                               className="text-[13px] min-h-[80px]"
                             />
@@ -796,7 +797,10 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                           <div className="space-y-2">
                             {prospect.notes.map((note) => (
                               <div key={note.id} className="p-3 bg-[#F8FAFC] border border-[#F1F5F9] rounded-lg">
-                                <p className="text-[13px] text-[#475569] whitespace-pre-wrap leading-relaxed">{note.content}</p>
+                                <HighlightedMentions
+                                  text={note.content}
+                                  className="text-[13px] text-[#475569] whitespace-pre-wrap leading-relaxed block"
+                                />
                                 <div className="flex items-center gap-2 mt-1.5">
                                   {note.authorName && (
                                     <span className="text-[11px] font-medium text-[#475569]">{note.authorName}</span>
