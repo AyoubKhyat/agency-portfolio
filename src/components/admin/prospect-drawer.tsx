@@ -28,6 +28,8 @@ import { Badge } from "@/components/admin/badge";
 import { ProposalBuilder } from "@/components/admin/proposal-builder";
 import { Input, FormButton } from "@/components/admin/form";
 import { MentionTextarea, HighlightedMentions } from "@/components/admin/mention-textarea";
+import { ScheduleMeetingModal } from "@/components/admin/schedule-meeting-modal";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -241,6 +243,7 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showProposalBuilder, setShowProposalBuilder] = useState(false);
+  const [showScheduleMeeting, setShowScheduleMeeting] = useState(false);
   const [proposals, setProposals] = useState<{ id: string; status: string; amount: number; currency: string; packageName: string | null; createdAt: string }[]>([]);
   const [phoneCopied, setPhoneCopied] = useState(false);
   const [sections, setSections] = useState({
@@ -491,6 +494,13 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                       title="Add note"
                     >
                       <FileText className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setShowScheduleMeeting(true)}
+                      className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                      title="Schedule meeting"
+                    >
+                      <CalendarIcon className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => setShowProposalBuilder(true)}
@@ -879,6 +889,14 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
         sector={prospect.sector}
         onClose={() => setShowProposalBuilder(false)}
         onCreated={() => { fetchProspect(prospect.id); }}
+      />
+    )}
+    {prospect && (
+      <ScheduleMeetingModal
+        open={showScheduleMeeting}
+        onClose={() => setShowScheduleMeeting(false)}
+        onCreated={() => { setShowScheduleMeeting(false); fetchProspect(prospect.id); }}
+        context={{ kind: "prospect", prospectId: prospect.id, label: prospect.name }}
       />
     )}
     </>

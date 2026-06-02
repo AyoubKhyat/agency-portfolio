@@ -56,12 +56,34 @@ export async function PATCH(
         actionType: "PROPOSAL_SENT",
         details: `Sent proposal — ${current.amount} ${current.currency}`,
       });
+      // Auto follow-up: 3 days later, nudge if no reply.
+      try {
+        const due = new Date(); due.setDate(due.getDate() + 3); due.setHours(10, 0, 0, 0);
+        await prisma.task.create({
+          data: {
+            title: `Follow up on proposal to ${proposal.prospect.name}`,
+            description: `Sent ${current.amount} ${current.currency} proposal. If no reply, send a polite nudge.`,
+            priority: "MEDIUM",
+            status: "TODO",
+            dueDate: due,
+            parentType: "PROSPECT",
+            parentId: current.prospectId,
+            parentLabel: proposal.prospect.name,
+            ownerId: session.userId,
+            ownerName: session.fullName,
+            createdById: session.userId,
+            createdByName: session.fullName,
+          },
+        });
+      } catch { /* swallow */ }
     }
 
     if (parsed.data.status === "ACCEPTED") {
+      // Move the prospect into NEGOTIATION rather than CLIENT — that flip
+      // now happens when the contract is signed.
       await prisma.prospect.update({
         where: { id: current.prospectId },
-        data: { proposalStatus: "ACCEPTED", status: "CLIENT" },
+        data: { proposalStatus: "ACCEPTED", status: "NEGOTIATION" },
       });
       await logProspectActivity({
         prospectId: current.prospectId,
@@ -70,10 +92,55 @@ export async function PATCH(
         actionType: "PROPOSAL_ACCEPTED",
         details: `Accepted proposal — ${current.amount} ${current.currency}`,
       });
+
+      // Auto-create a DRAFT Contract carrying over proposal details.
+      let createdContract = null;
+      try {
+        createdContract = await prisma.contract.create({
+          data: {
+            title: proposal.packageName ?? `Engagement — ${proposal.prospect.name}`,
+            proposalId: proposal.id,
+            prospectId: current.prospectId,
+            amount: current.amount ?? 0,
+            currency: current.currency ?? "MAD",
+            status: "DRAFT",
+            paymentTerms: current.paymentTerms ?? "",
+            notes: current.notes ?? "",
+            createdById: session.userId,
+            createdByName: session.fullName,
+          },
+        });
+        await logProspectActivity({
+          prospectId: current.prospectId,
+          userId: session.userId,
+          userName: session.fullName,
+          actionType: "CONTRACT_CREATED",
+          details: `${createdContract.title} — DRAFT`,
+        });
+        // Signature follow-up task.
+        const due = new Date(); due.setDate(due.getDate() + 2); due.setHours(11, 0, 0, 0);
+        await prisma.task.create({
+          data: {
+            title: `Send contract to ${proposal.prospect.name}`,
+            description: `Proposal accepted. Send the contract for signature and confirm payment terms.`,
+            priority: "HIGH",
+            status: "TODO",
+            dueDate: due,
+            parentType: "PROSPECT",
+            parentId: current.prospectId,
+            parentLabel: proposal.prospect.name,
+            ownerId: session.userId,
+            ownerName: session.fullName,
+            createdById: session.userId,
+            createdByName: session.fullName,
+          },
+        });
+      } catch { /* swallow */ }
+
       notifyTeam(session.userId, {
         type: "conversion",
         title: `Proposal accepted: ${proposal.prospect.name}`,
-        body: `${session.fullName} accepted a ${current.amount} ${current.currency} proposal`,
+        body: `${session.fullName} accepted a ${current.amount} ${current.currency} proposal — contract draft created`,
         link: `/admin/prospecting/${current.prospectId}`,
       }).catch(() => {});
     }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Target, Users, FolderKanban, Clock, ArrowRight, MessageCircle, Reply, CalendarClock, AlertTriangle, CalendarDays, Layers, TrendingUp, DollarSign, CheckSquare, Sun, Inbox } from "lucide-react";
+import { Target, Users, FolderKanban, Clock, ArrowRight, MessageCircle, Reply, CalendarClock, AlertTriangle, CalendarDays, Layers, TrendingUp, DollarSign, CheckSquare, Sun, Inbox, Calendar as CalendarIcon, Phone, Video, MapPin } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 import { GlassCard } from "@/components/admin/glass-card";
 import { Badge } from "@/components/admin/badge";
@@ -45,11 +45,20 @@ type Task = {
 
 type TaskBuckets = { mine: Task[]; today: Task[]; overdue: Task[] };
 
+type Meeting = {
+  id: string; title: string; type: string; status: string; startAt: string;
+  client: { id: string; companyName: string } | null;
+  prospect: { id: string; name: string } | null;
+};
+
+type MeetingBuckets = { today: Meeting[]; upcoming: Meeting[]; missed: Meeting[] };
+
 export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [exec, setExec] = useState<ExecData | null>(null);
   const [tasks, setTasks] = useState<TaskBuckets | null>(null);
+  const [meetings, setMeetings] = useState<MeetingBuckets | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,10 +68,14 @@ export default function DashboardPage() {
       fetch("/api/admin/tasks?scope=mine&limit=5").then((r) => r.ok ? r.json() : []),
       fetch("/api/admin/tasks?scope=today&limit=5").then((r) => r.ok ? r.json() : []),
       fetch("/api/admin/tasks?scope=overdue&limit=5").then((r) => r.ok ? r.json() : []),
-    ]).then(([d, e, mine, today, overdue]) => {
+      fetch("/api/admin/meetings?scope=today&limit=10").then((r) => r.ok ? r.json() : []),
+      fetch("/api/admin/meetings?scope=upcoming&limit=10").then((r) => r.ok ? r.json() : []),
+      fetch("/api/admin/meetings?scope=missed&limit=10").then((r) => r.ok ? r.json() : []),
+    ]).then(([d, e, mine, today, overdue, mToday, mUpcoming, mMissed]) => {
       if (d) setData(d);
       if (e) setExec(e);
       setTasks({ mine: mine ?? [], today: today ?? [], overdue: overdue ?? [] });
+      setMeetings({ today: mToday ?? [], upcoming: mUpcoming ?? [], missed: mMissed ?? [] });
     })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -83,6 +96,54 @@ export default function DashboardPage() {
     if (diff === 1) return "tomorrow";
     if (diff < 7) return `in ${diff}d`;
     return new Date(due).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+  }
+
+  function MeetingWidget({ title, scope, list, icon, tone }: { title: string; scope: string; list: Meeting[]; icon: React.ReactNode; tone: "blue" | "purple" | "red" }) {
+    const tones: Record<typeof tone, { border: string; iconBg: string; iconText: string; count: string }> = {
+      blue:   { border: list.length > 0 ? "border-blue-200" : "border-[var(--os-border)]", iconBg: "bg-blue-50",   iconText: "text-blue-600",   count: "text-blue-600" },
+      purple: { border: list.length > 0 ? "border-purple-200" : "border-[var(--os-border)]", iconBg: "bg-purple-50", iconText: "text-[#8B00FF]", count: "text-[#8B00FF]" },
+      red:    { border: list.length > 0 ? "border-red-200" : "border-[var(--os-border)]", iconBg: "bg-red-50",    iconText: "text-red-600",    count: "text-red-600" },
+    };
+    const s = tones[tone];
+    return (
+      <GlassCard padding="lg" className={s.border} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${s.iconBg} ${s.iconText}`}>{icon}</div>
+            <div>
+              <div className={`text-2xl font-bold ${s.count}`}>{list.length}</div>
+              <div className="text-xs text-[#64748B]">{title}</div>
+            </div>
+          </div>
+          <Link href={`/admin/meetings?scope=${scope}`} className="text-xs text-purple-600 hover:text-purple-700 flex items-center gap-1">
+            View <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+        {list.length === 0 ? (
+          <p className="text-[12px] text-[#9CA3AF] text-center py-3">{tone === "red" ? "No misses." : "Nothing here."}</p>
+        ) : (
+          <ul className="space-y-1.5">
+            {list.slice(0, 4).map((m) => {
+              const start = new Date(m.startAt);
+              const linked = m.client?.companyName ?? m.prospect?.name ?? "—";
+              const Icon = m.type === "ZOOM" || m.type === "GOOGLE_MEET" ? Video
+                          : m.type === "IN_PERSON" ? MapPin : Phone;
+              return (
+                <li key={m.id} className="text-[12px] text-[#374151] flex items-start gap-2">
+                  <Icon className="w-3 h-3 text-[#9CA3AF] mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <span className="truncate block">{m.title}</span>
+                    <span className="text-[10px] text-[#9CA3AF]">
+                      {linked} · {start.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </GlassCard>
+    );
   }
 
   function TaskWidget({
@@ -272,6 +333,15 @@ export default function DashboardPage() {
           </div>
         </GlassCard>
       </div>
+
+      {/* Meetings */}
+      {meetings && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+          <MeetingWidget title="Meetings today"  scope="today"    list={meetings.today}    icon={<CalendarIcon className="w-5 h-5" />} tone="blue" />
+          <MeetingWidget title="Upcoming"        scope="upcoming" list={meetings.upcoming} icon={<Clock className="w-5 h-5" />} tone="purple" />
+          <MeetingWidget title="Missed"          scope="missed"   list={meetings.missed}   icon={<AlertTriangle className="w-5 h-5" />} tone="red" />
+        </div>
+      )}
 
       {/* Tasks */}
       {tasks && (

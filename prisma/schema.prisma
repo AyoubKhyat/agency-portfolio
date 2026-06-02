@@ -36,6 +36,7 @@ model User {
   ownedClients        Client[]            @relation("ClientAccountManager")
   ownedTasks          Task[]              @relation("TaskOwner")
   createdTasks        Task[]              @relation("TaskCreator")
+  ownedMeetings       Meeting[]           @relation("MeetingOwner")
 
   @@map("users")
 }
@@ -161,6 +162,8 @@ model Prospect {
   activities ProspectActivity[]
   proposals  Proposal[]
   spawnedClients Client[] @relation("ClientFromProspect")
+  meetings   Meeting[]
+  contracts  Contract[]
 
   @@map("prospects")
 }
@@ -216,6 +219,7 @@ model Proposal {
 
   prospect Prospect @relation(fields: [prospectId], references: [id], onDelete: Cascade)
   client   Client?  @relation(fields: [clientId], references: [id])
+  contracts Contract[]
 
   @@map("proposals")
 }
@@ -286,8 +290,68 @@ model Client {
   proposals  Proposal[]
   notes      ClientNote[]
   activities ClientActivity[]
+  meetings   Meeting[]
+  contracts  Contract[]
 
   @@map("clients")
+}
+
+model Meeting {
+  id          String   @id @default(cuid())
+  title       String
+  clientId    String?  @map("client_id")
+  prospectId  String?  @map("prospect_id")
+  ownerId     String?  @map("owner_id")
+  ownerName   String?  @map("owner_name")
+  type        String   @default("CALL")      // CALL | GOOGLE_MEET | ZOOM | WHATSAPP | IN_PERSON
+  status      String   @default("SCHEDULED") // SCHEDULED | COMPLETED | CANCELLED | NO_SHOW
+  startAt     DateTime @map("start_at")
+  endAt       DateTime? @map("end_at")
+  notes       String   @default("")
+  outcome     String   @default("")
+  nextAction  String   @default("") @map("next_action")
+  createdById String?  @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  client   Client?   @relation(fields: [clientId], references: [id])
+  prospect Prospect? @relation(fields: [prospectId], references: [id])
+  owner    User?     @relation("MeetingOwner", fields: [ownerId], references: [id])
+
+  @@index([clientId])
+  @@index([prospectId])
+  @@index([ownerId, status])
+  @@index([startAt, status])
+  @@map("meetings")
+}
+
+model Contract {
+  id            String    @id @default(cuid())
+  clientId      String?   @map("client_id")
+  proposalId    String?   @map("proposal_id")
+  prospectId    String?   @map("prospect_id")
+  title         String
+  amount        Float     @default(0)
+  currency      String    @default("MAD")
+  status        String    @default("DRAFT") // DRAFT | PENDING_SIGNATURE | SIGNED | ACTIVE | COMPLETED | CANCELLED
+  paymentTerms  String    @default("") @map("payment_terms")
+  notes         String    @default("")
+  signedDate    DateTime? @map("signed_date")
+  startDate     DateTime? @map("start_date")
+  endDate       DateTime? @map("end_date")
+  createdById   String?   @map("created_by_id")
+  createdByName String?   @map("created_by_name")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  client   Client?   @relation(fields: [clientId], references: [id])
+  proposal Proposal? @relation(fields: [proposalId], references: [id])
+  prospect Prospect? @relation(fields: [prospectId], references: [id])
+
+  @@index([clientId])
+  @@index([status])
+  @@index([endDate])
+  @@map("contracts")
 }
 
 model ClientNote {
