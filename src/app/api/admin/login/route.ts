@@ -16,10 +16,6 @@ const ROLE_MAP: Record<string, string> = {
   "abderrahmane.aittaleb@ibda3digital.com": "admin",
 };
 
-function getInitials(name: string) {
-  return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
-}
-
 export async function POST(req: Request) {
   if (!hasPrisma()) {
     return NextResponse.json({ error: "Database not available" }, { status: 503 });
@@ -39,21 +35,32 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    // Prefer the team User row when one exists. Activities, tasks,
-    // notifications and chat all reference User.id, so the session must hold
-    // that ID — falling back to adminUser.id only when the user is admin-only.
+    // ProspectActivity / Task / ChannelMember / Notification all FK to User.id.
+    // We refuse to issue a session that doesn't map to a real, active User row
+    // because any subsequent activity write would crash with a FK violation
+    // (prospect_activities_user_id_fkey). Admins who only exist in adminUser
+    // need a User row before they can log in.
     const teamUser = await prisma.user.findUnique({
       where: { email },
       select: { id: true, fullName: true, avatarInitials: true, role: true, isActive: true },
     });
+    if (!teamUser) {
+      return NextResponse.json(
+        { error: "This account isn't linked to a team member record. Ask an admin to provision a User row before logging in." },
+        { status: 403 },
+      );
+    }
+    if (!teamUser.isActive) {
+      return NextResponse.json({ error: "Your account is inactive." }, { status: 403 });
+    }
 
-    const role = ROLE_MAP[email] ?? teamUser?.role ?? "sales";
+    const role = ROLE_MAP[email] ?? teamUser.role ?? "sales";
     const token = await signToken({
-      userId: teamUser?.id ?? admin.id,
+      userId: teamUser.id,
       email: admin.email,
-      fullName: teamUser?.fullName ?? admin.name,
+      fullName: teamUser.fullName,
       role,
-      avatarInitials: teamUser?.avatarInitials ?? getInitials(admin.name),
+      avatarInitials: teamUser.avatarInitials,
     });
     const cookie = createSessionCookie(token);
 
