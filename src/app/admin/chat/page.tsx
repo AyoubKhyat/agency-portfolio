@@ -80,6 +80,7 @@ function ChatInner() {
   const [team, setTeam] = useState<User[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [dms, setDms] = useState<Channel[]>([]);
+  const [channelsLoaded, setChannelsLoaded] = useState(false);
   const [active, setActive] = useState<Channel | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -101,14 +102,23 @@ function ChatInner() {
     });
   }, []);
 
-  // Load channel list + poll for unread
+  // Load channel list + poll for unread. Always flips `channelsLoaded` so the
+  // UI can fall back to an empty state instead of spinning forever when the
+  // current session has no channel memberships.
   const loadChannels = useCallback(async () => {
-    const res = await fetch("/api/admin/chat/channels");
-    if (res.status === 401) { router.push("/admin/login"); return; }
-    if (!res.ok) return;
-    const data = await res.json();
-    setChannels(data.channels ?? []);
-    setDms(data.dms ?? []);
+    try {
+      const res = await fetch("/api/admin/chat/channels");
+      if (res.status === 401) { router.push("/admin/login"); return; }
+      if (!res.ok) return;
+      const data = await res.json();
+      setChannels(data.channels ?? []);
+      setDms(data.dms ?? []);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn("[chat] loadChannels failed:", e);
+    } finally {
+      setChannelsLoaded(true);
+    }
   }, [router]);
 
   useEffect(() => {
@@ -315,9 +325,29 @@ function ChatInner() {
 
       {/* Main pane */}
       <div className="flex-1 flex flex-col min-w-0 bg-white">
-        {!active ? (
+        {!active && !channelsLoaded ? (
           <div className="flex-1 flex items-center justify-center text-[13px] text-[#9CA3AF]">
             <Loader2 className="w-5 h-5 animate-spin" />
+          </div>
+        ) : !active ? (
+          <div className="flex-1 flex items-center justify-center p-8 text-center">
+            <div className="max-w-sm">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#F3F4F6] text-[#9CA3AF] mb-3">
+                <MessageCircle className="w-7 h-7" />
+              </div>
+              <h3 className="text-[15px] font-semibold text-[#111827] mb-1">No channels yet</h3>
+              <p className="text-[13px] text-[#6B7280] mb-3">
+                You don&apos;t have any channels assigned yet. This usually means your session is
+                stale — try logging out and back in.
+              </p>
+              <button
+                type="button"
+                onClick={() => router.push("/admin/login")}
+                className="inline-flex items-center gap-1.5 h-9 px-3 bg-[#8B00FF] hover:bg-[#7A00E0] text-white rounded-lg text-[12px] font-semibold"
+              >
+                Log in again
+              </button>
+            </div>
           </div>
         ) : (
           <>

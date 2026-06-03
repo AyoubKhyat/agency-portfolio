@@ -80,10 +80,16 @@ export default function MeetingsPage() {
 
   const load = useCallback(async (s: Scope) => {
     setLoading(true);
-    const res = await fetch(`/api/admin/meetings?scope=${s}&limit=500`);
-    if (res.status === 401) { router.push("/admin/login"); return; }
-    if (res.ok) setMeetings(await res.json());
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/admin/meetings?scope=${s}&limit=500`);
+      if (res.status === 401) { router.push("/admin/login"); return; }
+      if (res.ok) setMeetings(await res.json());
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn("[meetings] load failed:", e);
+    } finally {
+      setLoading(false);
+    }
   }, [router]);
 
   useEffect(() => { load(scope); }, [scope, load]);

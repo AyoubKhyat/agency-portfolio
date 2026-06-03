@@ -99,12 +99,39 @@ export default function CommandCenterPage() {
   const [data, setData] = useState<CommandCenter | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   useEffect(() => {
     fetch("/api/admin/command-center")
-      .then((r) => { if (r.status === 401) { router.push("/admin/login"); return null; } return r.json(); })
-      .then((d) => { if (d && !d.error) setData(d); })
+      .then((r) => {
+        if (r.status === 401) { router.push("/admin/login"); return null; }
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((d) => {
+        if (d && !d.error) setData(d);
+        else if (d?.error) setLoadError(String(d.error));
+      })
+      .catch((e) => {
+        // eslint-disable-next-line no-console
+        console.warn("[command-center] load failed:", e);
+        setLoadError(e instanceof Error ? e.message : "Could not load data");
+      })
       .finally(() => setLoading(false));
   }, [router]);
+
+  if (!loading && loadError) {
+    return (
+      <div>
+        <PageHeader title="Command Center" subtitle="How the agency is doing, right now." />
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
+          <p className="text-[14px] font-semibold text-red-700">Could not load dashboard</p>
+          <p className="text-[13px] text-red-600 mt-1">{loadError}</p>
+          <p className="text-[12px] text-red-500 mt-3">Try refreshing the page, or log out and back in if you recently changed accounts.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading || !data) {
     return (
