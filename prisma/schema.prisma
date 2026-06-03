@@ -37,6 +37,7 @@ model User {
   ownedTasks          Task[]              @relation("TaskOwner")
   createdTasks        Task[]              @relation("TaskCreator")
   ownedMeetings       Meeting[]           @relation("MeetingOwner")
+  chatChannels        ChannelMember[]
 
   @@map("users")
 }
@@ -352,6 +353,68 @@ model Contract {
   @@index([status])
   @@index([endDate])
   @@map("contracts")
+}
+
+model Channel {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String   @default("")
+  isDm        Boolean  @default(false) @map("is_dm")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  members  ChannelMember[]
+  messages ChatMessage[]
+
+  @@map("chat_channels")
+}
+
+model ChannelMember {
+  id         String    @id @default(cuid())
+  channelId  String    @map("channel_id")
+  userId     String    @map("user_id")
+  lastReadAt DateTime? @map("last_read_at")
+  joinedAt   DateTime  @default(now()) @map("joined_at")
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([channelId, userId])
+  @@index([userId])
+  @@map("chat_channel_members")
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  channelId   String   @map("channel_id")
+  authorId    String   @map("author_id")
+  authorName  String   @map("author_name")
+  content     String
+  attachType  String?  @map("attach_type")  // PROSPECT | CLIENT | PROJECT | TASK | MEETING
+  attachId    String?  @map("attach_id")
+  attachLabel String?  @map("attach_label")
+  attachHref  String?  @map("attach_href")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  channel   Channel        @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  reactions ChatReaction[]
+
+  @@index([channelId, createdAt])
+  @@map("chat_messages")
+}
+
+model ChatReaction {
+  id        String   @id @default(cuid())
+  messageId String   @map("message_id")
+  userId    String   @map("user_id")
+  userName  String   @map("user_name")
+  emoji     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@map("chat_reactions")
 }
 
 model ClientNote {

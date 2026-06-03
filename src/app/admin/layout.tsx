@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, Target, Building2, FolderKanban,
   BarChart3, Settings, LogOut, PanelLeftClose, PanelLeft, Menu, X,
   Activity, UsersRound, Bell, Search, Layers, Shield, CheckSquare, BellRing,
-  Calendar, FileSignature, Crown,
+  Calendar, FileSignature, Crown, MessageSquare,
 } from "lucide-react";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,7 @@ const SECTIONS = [
   {
     label: "Operations",
     items: [
+      { href: "/admin/chat", label: "Chat", icon: MessageSquare, badgeKey: "chat" as const },
       { href: "/admin/tasks", label: "Tasks", icon: CheckSquare, badgeKey: "tasks" as const },
       { href: "/admin/notifications", label: "Notifications", icon: BellRing, badgeKey: "notifications" as const },
       { href: "/admin/activity", label: "Activity Feed", icon: Activity, badgeKey: "activities" as const },
@@ -69,7 +70,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
-  const [badges, setBadges] = useState({ leads: 0, prospects: 0, activities: 0, team: 0, tasks: 0, notifications: 0, meetings: 0, contracts: 0 });
+  const [badges, setBadges] = useState({ leads: 0, prospects: 0, activities: 0, team: 0, tasks: 0, notifications: 0, meetings: 0, contracts: 0, chat: 0 });
   const isLogin = pathname === "/admin/login";
 
   useEffect(() => {
@@ -113,7 +114,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       fetch("/api/admin/notifications/count").then((r) => r.ok ? r.json() : { unread: 0 }),
       fetch("/api/admin/meetings?scope=today&limit=500").then((r) => r.ok ? r.json() : []),
       fetch("/api/admin/contracts?status=PENDING_SIGNATURE&limit=500").then((r) => r.ok ? r.json() : []),
-    ]).then(([ld, pd, acts, users, myTasks, notifCount, mToday, pendingContracts]) => {
+      fetch("/api/admin/chat/unread").then((r) => r.ok ? r.json() : { unread: 0 }),
+    ]).then(([ld, pd, acts, users, myTasks, notifCount, mToday, pendingContracts, chatUnread]) => {
       const today = new Date().toDateString();
       const todayCount = Array.isArray(acts) ? acts.filter((a: { createdAt: string }) => new Date(a.createdAt).toDateString() === today).length : 0;
       setBadges({
@@ -125,6 +127,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         notifications: notifCount?.unread || 0,
         meetings: Array.isArray(mToday) ? mToday.length : 0,
         contracts: Array.isArray(pendingContracts) ? pendingContracts.length : 0,
+        chat: chatUnread?.unread || 0,
       });
     }).catch(() => {});
   }, [pathname, isLogin]);
