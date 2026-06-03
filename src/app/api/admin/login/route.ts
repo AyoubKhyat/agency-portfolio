@@ -39,13 +39,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    const role = ROLE_MAP[email] ?? "sales";
+    // Prefer the team User row when one exists. Activities, tasks,
+    // notifications and chat all reference User.id, so the session must hold
+    // that ID — falling back to adminUser.id only when the user is admin-only.
+    const teamUser = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, fullName: true, avatarInitials: true, role: true, isActive: true },
+    });
+
+    const role = ROLE_MAP[email] ?? teamUser?.role ?? "sales";
     const token = await signToken({
-      userId: admin.id,
+      userId: teamUser?.id ?? admin.id,
       email: admin.email,
-      fullName: admin.name,
+      fullName: teamUser?.fullName ?? admin.name,
       role,
-      avatarInitials: getInitials(admin.name),
+      avatarInitials: teamUser?.avatarInitials ?? getInitials(admin.name),
     });
     const cookie = createSessionCookie(token);
 
