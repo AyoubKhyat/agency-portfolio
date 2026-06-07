@@ -45,7 +45,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push(entry(`/portfolio/${slug}`, "monthly", 0.8));
   }
 
-  for (const slug of getAllPostSlugs("fr")) {
+  for (const slug of await getAllPostSlugs("fr")) {
     entries.push(entry(`/blog/${slug}`, "monthly", 0.75));
   }
 

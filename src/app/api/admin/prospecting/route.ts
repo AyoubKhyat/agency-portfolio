@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getProspects, createProspect, logProspectActivity, findDuplicateProspect } from "@/lib/dal";
 import { z } from "zod";
+import { dispatchWebhook } from "@/lib/webhooks";
 
 export async function GET(req: Request) {
   const session = await getSession();
@@ -63,6 +64,17 @@ export async function POST(req: Request) {
   }
 
   const prospect = await createProspect(parsed.data);
+
+  // Fire webhook for new prospect
+  dispatchWebhook("prospect.created", {
+    id: prospect.id,
+    name: prospect.name,
+    phone: prospect.phone,
+    sector: prospect.sector,
+    neighborhood: prospect.neighborhood,
+    status: prospect.status,
+    createdBy: session.fullName,
+  });
 
   await logProspectActivity({
     prospectId: prospect.id,

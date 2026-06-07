@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { logProspectActivity, notifyTeam, updateProspectStatus } from "@/lib/dal";
 import { z } from "zod";
+import { dispatchWebhook } from "@/lib/webhooks";
 
 const patchSchema = z.object({
   status: z.enum(["DRAFT", "SENT", "ACCEPTED", "REJECTED"]).optional(),
@@ -56,6 +57,16 @@ export async function PATCH(
         actionType: "PROPOSAL_SENT",
         details: `Sent proposal — ${current.amount} ${current.currency}`,
       });
+
+      dispatchWebhook("proposal.sent", {
+        proposalId: id,
+        prospectId: current.prospectId,
+        prospectName: proposal.prospect.name,
+        amount: current.amount,
+        currency: current.currency,
+        sentBy: session.fullName,
+      });
+
       // Auto follow-up: 3 days later, nudge if no reply.
       try {
         const due = new Date(); due.setDate(due.getDate() + 3); due.setHours(10, 0, 0, 0);
@@ -91,6 +102,15 @@ export async function PATCH(
         userName: session.fullName,
         actionType: "PROPOSAL_ACCEPTED",
         details: `Accepted proposal — ${current.amount} ${current.currency}`,
+      });
+
+      dispatchWebhook("proposal.accepted", {
+        proposalId: id,
+        prospectId: current.prospectId,
+        prospectName: proposal.prospect.name,
+        amount: current.amount,
+        currency: current.currency,
+        acceptedBy: session.fullName,
       });
 
       // Auto-create a DRAFT Contract carrying over proposal details.
@@ -156,6 +176,15 @@ export async function PATCH(
         userName: session.fullName,
         actionType: "PROPOSAL_REJECTED",
         details: `Proposal rejected`,
+      });
+
+      dispatchWebhook("proposal.rejected", {
+        proposalId: id,
+        prospectId: current.prospectId,
+        prospectName: proposal.prospect.name,
+        amount: current.amount,
+        currency: current.currency,
+        rejectedBy: session.fullName,
       });
     }
 

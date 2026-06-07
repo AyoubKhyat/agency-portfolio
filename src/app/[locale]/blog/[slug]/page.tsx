@@ -49,7 +49,7 @@ function BlogPostJsonLd({
 }
 
 export async function generateStaticParams() {
-  const slugs = getAllPostSlugs("fr");
+  const slugs = await getAllPostSlugs("fr");
   const locales = ["fr", "en", "ar"];
   return locales.flatMap((locale) => slugs.map((slug) => ({ locale, slug })));
 }
@@ -60,7 +60,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
   const { locale, slug } = await params;
-  const post = getPostBySlug(slug, locale);
+  const post = await getPostBySlug(slug, locale);
   if (!post) return {};
 
   return {
@@ -91,7 +91,7 @@ export default async function BlogPostPage({
   params: Promise<{ locale: string; slug: string }>;
 }) {
   const { locale, slug } = await params;
-  const post = getPostBySlug(slug, locale);
+  const post = await getPostBySlug(slug, locale);
   if (!post) notFound();
 
   const t = await getTranslations({ locale, namespace: "Blog" });

@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Users, Kanban, List, Mail, Calendar, UserCheck } from "lucide-react";
+import { Users, Kanban, List, Mail, Calendar, UserCheck, GripVertical } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/admin/badge";
 import { FilterTabs } from "@/components/admin/filter-tabs";
@@ -12,11 +12,11 @@ import { EmptyState } from "@/components/admin/empty-state";
 import { cn } from "@/lib/utils";
 
 const COLUMNS = ["NEW", "CONTACTED", "QUALIFIED", "CLOSED"] as const;
-const COL_COLORS: Record<string, { border: string; bg: string; dot: string; badge: string }> = {
-  NEW: { border: "border-blue-200", bg: "bg-blue-50/50", dot: "bg-blue-600", badge: "blue" },
-  CONTACTED: { border: "border-amber-200", bg: "bg-amber-50/50", dot: "bg-amber-600", badge: "amber" },
-  QUALIFIED: { border: "border-emerald-200", bg: "bg-emerald-50/50", dot: "bg-emerald-600", badge: "green" },
-  CLOSED: { border: "border-gray-200", bg: "bg-gray-50/50", dot: "bg-gray-400", badge: "default" },
+const COL_COLORS: Record<string, { border: string; bg: string; dot: string; badge: string; cardLeft: string }> = {
+  NEW: { border: "border-blue-200", bg: "bg-blue-50/50", dot: "bg-blue-600", badge: "blue", cardLeft: "border-l-blue-500" },
+  CONTACTED: { border: "border-amber-200", bg: "bg-amber-50/50", dot: "bg-amber-600", badge: "amber", cardLeft: "border-l-amber-500" },
+  QUALIFIED: { border: "border-emerald-200", bg: "bg-emerald-50/50", dot: "bg-emerald-600", badge: "green", cardLeft: "border-l-emerald-500" },
+  CLOSED: { border: "border-gray-200", bg: "bg-gray-50/50", dot: "bg-gray-400", badge: "default", cardLeft: "border-l-gray-400" },
 };
 
 type Lead = { id: string; fullName: string; email: string; subject: string; status: string; createdAt: string; phone?: string | null; assignedToName?: string | null };
@@ -41,6 +41,8 @@ function LeadsContent() {
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -76,6 +78,26 @@ function LeadsContent() {
     if (res.ok) {
       setAllLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, status: newStatus } : l));
     }
+  }
+
+  function handleDragStart(id: string) { setDragId(id); }
+  function handleDragOver(e: React.DragEvent, status: string) { e.preventDefault(); setDragOverCol(status); }
+  function handleDragLeave() { setDragOverCol(null); }
+
+  async function handleDrop(targetStatus: string) {
+    if (!dragId) return;
+    setDragOverCol(null);
+    const lead = allLeads.find((l) => l.id === dragId);
+    if (!lead || lead.status === targetStatus) { setDragId(null); return; }
+    // Optimistic update
+    setAllLeads((prev) => prev.map((l) => l.id === dragId ? { ...l, status: targetStatus } : l));
+    setDragId(null);
+    // Persist to server
+    await fetch(`/api/admin/leads/${lead.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: targetStatus }),
+    });
   }
 
   function navigate(status: string, page = 1) {
@@ -127,7 +149,14 @@ function LeadsContent() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: COLUMNS.indexOf(col) * 0.08 }}
-                  className={cn("rounded-xl border p-3 min-h-[400px]", colors.border, colors.bg)}
+                  className={cn(
+                    "rounded-xl border p-3 min-h-[400px] transition-all",
+                    colors.border, colors.bg,
+                    dragOverCol === col && "ring-2 ring-[#8B00FF]/30 bg-[#8B00FF]/5"
+                  )}
+                  onDragOver={(e) => handleDragOver(e, col)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={() => handleDrop(col)}
                 >
                   {/* Column header */}
                   <div className="flex items-center justify-between mb-3 px-1">
@@ -139,15 +168,24 @@ function LeadsContent() {
                   </div>
 
                   {/* Cards */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-h-[100px]">
                     {colLeads.map((lead) => (
-                      <Link
+                      <motion.div
                         key={lead.id}
-                        href={`/admin/leads/${lead.id}`}
-                        className="block p-3 rounded-lg bg-white/80 border border-[var(--os-border)] hover:border-[var(--os-border-hover)] hover:bg-white/90 transition-all group"
+                        draggable
+                        onDragStart={() => handleDragStart(lead.id)}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: dragId === lead.id ? 0.5 : 1, y: 0 }}
+                        className={cn(
+                          "p-3 rounded-lg bg-white/80 border border-[var(--os-border)] border-l-[3px] hover:border-[var(--os-border-hover)] hover:bg-white/90 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing group",
+                          colors.cardLeft
+                        )}
                       >
                         <div className="flex items-start justify-between gap-2 mb-1.5">
-                          <span className="text-[13px] font-medium text-[#0F172A] group-hover:text-purple-600 transition-colors truncate">{lead.fullName}</span>
+                          <Link href={`/admin/leads/${lead.id}`} className="text-[13px] font-medium text-[#0F172A] group-hover:text-purple-600 transition-colors truncate">
+                            {lead.fullName}
+                          </Link>
+                          <GripVertical className="w-3.5 h-3.5 text-[#CBD5E1] shrink-0" />
                         </div>
                         <p className="text-[11px] text-[#475569] truncate mb-2">{lead.subject}</p>
                         <div className="flex items-center gap-2 text-[10px] text-[#64748B]">
@@ -164,31 +202,12 @@ function LeadsContent() {
                             <span>{lead.assignedToName}</span>
                           </div>
                         )}
-                      </Link>
+                      </motion.div>
                     ))}
                     {colLeads.length === 0 && (
                       <div className="text-center py-8 text-[11px] text-[#64748B]">No leads</div>
                     )}
                   </div>
-
-                  {/* Quick move buttons at bottom for each card */}
-                  {colLeads.length > 0 && col !== "CLOSED" && (
-                    <div className="mt-3 pt-2 border-t border-[var(--os-border)]">
-                      <p className="text-[10px] text-[#64748B] px-1 mb-1">Move selected to:</p>
-                      <div className="flex gap-1 flex-wrap">
-                        {COLUMNS.filter((c) => c !== col).map((targetCol) => (
-                          <button
-                            key={targetCol}
-                            className="text-[10px] px-2 py-1 rounded bg-gray-50/80 text-[#475569] hover:text-[#1E293B] hover:bg-gray-100 transition-colors"
-                            onClick={(e) => { e.preventDefault(); }}
-                            title={`Drag leads to ${targetCol} or use lead detail page`}
-                          >
-                            {targetCol}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </motion.div>
               );
             })}

@@ -21,13 +21,13 @@ export function PageHeader({ title, subtitle, count, actions, className }: PageH
       className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8", className)}
     >
       <div className="min-w-0">
-        <h1 className="text-xl sm:text-2xl font-semibold text-[#0F172A] tracking-tight flex items-center gap-3">
+        <h1 className="text-xl sm:text-2xl font-semibold text-[var(--os-text)] tracking-tight flex items-center gap-3">
           {title}
           {typeof count === "number" && (
-            <span className="text-sm sm:text-base font-normal text-[#64748B]">({count})</span>
+            <span className="text-sm sm:text-base font-normal text-[var(--os-text-dim)]">({count})</span>
           )}
         </h1>
-        {subtitle && <p className="text-xs sm:text-sm text-[#475569] mt-1">{subtitle}</p>}
+        {subtitle && <p className="text-xs sm:text-sm text-[var(--os-text-muted)] mt-1">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2 sm:gap-3 shrink-0">{actions}</div>}
     </motion.div>

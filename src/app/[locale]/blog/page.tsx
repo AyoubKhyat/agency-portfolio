@@ -21,8 +21,8 @@ export default async function BlogPage({
 }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Blog" });
-  const posts = getAllPosts(locale);
-  const categories = getAllCategories(locale);
+  const posts = await getAllPosts(locale);
+  const categories = await getAllCategories(locale);
 
   return (
     <>

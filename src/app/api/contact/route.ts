@@ -3,6 +3,7 @@ import { createLead, getLeastLoadedUser } from "@/lib/dal";
 import { z } from "zod";
 import { contactLimiter } from "@/lib/rate-limit";
 import { withApiLogging } from "@/lib/api-logger";
+import { dispatchWebhook } from "@/lib/webhooks";
 
 const schema = z.object({
   fullName: z.string().min(2).max(200),
@@ -54,7 +55,7 @@ async function contactHandler(req: Request) {
       // If user lookup fails, create lead without assignment
     }
 
-    await createLead({
+    const lead = await createLead({
       fullName,
       email,
       phone: phone || undefined,
@@ -62,6 +63,17 @@ async function contactHandler(req: Request) {
       message,
       assignedToId,
       assignedToName,
+    });
+
+    // Fire webhook for new lead
+    dispatchWebhook("lead.new", {
+      id: lead?.id,
+      fullName,
+      email,
+      phone: phone || null,
+      subject,
+      message,
+      assignedToName: assignedToName || null,
     });
   } catch {
     // DB not available — still return success since EmailJS handles delivery

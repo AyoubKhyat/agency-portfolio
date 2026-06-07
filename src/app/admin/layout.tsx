@@ -8,7 +8,8 @@ import {
   LayoutDashboard, Users, Target, Building2, FolderKanban,
   BarChart3, Settings, LogOut, PanelLeftClose, PanelLeft, Menu, X,
   Activity, UsersRound, Bell, Search, Layers, Shield, CheckSquare, BellRing,
-  Calendar, FileSignature, Crown, MessageSquare,
+  Calendar, FileSignature, Crown, MessageSquare, Moon, Sun, Gauge, Receipt, PenLine,
+  Webhook,
 } from "lucide-react";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ const SECTIONS = [
       { href: "/admin/notifications", label: "Notifications", icon: BellRing, badgeKey: "notifications" as const },
       { href: "/admin/activity", label: "Activity Feed", icon: Activity, badgeKey: "activities" as const },
       { href: "/admin/team", label: "Team", icon: UsersRound, badgeKey: "team" as const },
+      { href: "/admin/workload", label: "Workload", icon: Gauge },
     ],
   },
   {
@@ -45,14 +47,19 @@ const SECTIONS = [
       { href: "/admin/meetings", label: "Meetings", icon: Calendar, badgeKey: "meetings" as const },
       { href: "/admin/pipeline", label: "Pipeline", icon: Layers },
       { href: "/admin/contracts", label: "Contracts", icon: FileSignature, badgeKey: "contracts" as const },
+      { href: "/admin/invoices", label: "Invoices", icon: Receipt },
     ],
   },
-  { label: "Portfolio", items: [{ href: "/admin/projects", label: "Projects", icon: FolderKanban }] },
+  { label: "Portfolio", items: [
+    { href: "/admin/projects", label: "Projects", icon: FolderKanban },
+    { href: "/admin/blog", label: "Blog", icon: PenLine },
+  ] },
   { label: "Intelligence", items: [{ href: "/admin/analytics", label: "Analytics", icon: BarChart3 }] },
 ];
 
 const BOTTOM_NAV = [
   { href: "/admin/system-status", label: "System Status", icon: Shield },
+  { href: "/admin/webhooks", label: "Webhooks", icon: Webhook },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
@@ -69,6 +76,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [osDark, setOsDark] = useState(false);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [badges, setBadges] = useState({ leads: 0, prospects: 0, activities: 0, team: 0, tasks: 0, notifications: 0, meetings: 0, contracts: 0, chat: 0 });
   const isLogin = pathname === "/admin/login";
@@ -77,6 +85,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("os-sidebar");
       if (saved === "collapsed") setCollapsed(true);
+      const darkSaved = localStorage.getItem("os-dark");
+      if (darkSaved === "true") setOsDark(true);
     }
   }, []);
 
@@ -151,6 +161,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     localStorage.setItem("os-sidebar", next ? "collapsed" : "expanded");
   }
 
+  function toggleDark() {
+    const next = !osDark;
+    setOsDark(next);
+    localStorage.setItem("os-dark", next ? "true" : "false");
+  }
+
   async function handleLogout() {
     await fetch("/api/admin/logout", { method: "POST" });
     router.push("/admin/login");
@@ -185,6 +201,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <X className="w-5 h-5" />
           </button>
         )}
+      </div>
+
+      {/* Search trigger */}
+      <div className="px-3 pt-3">
+        <button
+          onClick={() => { setSearchOpen(true); if (isMobileDrawer) closeMobile(); }}
+          className={cn(
+            "flex items-center gap-2.5 w-full rounded-xl border border-[var(--os-border)] transition-all duration-200 text-[#94A3B8] hover:text-[#475569] hover:border-[#8B00FF]/30 hover:bg-[#F8F5FF]",
+            collapsed && !isMobileDrawer ? "justify-center h-10 w-10 mx-auto px-0" : "px-3 py-2"
+          )}
+        >
+          <Search className={cn("shrink-0", collapsed && !isMobileDrawer ? "w-[18px] h-[18px]" : "w-4 h-4")} />
+          {(!collapsed || isMobileDrawer) && (
+            <>
+              <span className="text-[13px] font-medium flex-1 text-left">Search...</span>
+              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 bg-[#F1F5F9] border border-[#E5E7EB] rounded text-[10px] font-medium text-[#94A3B8]">
+                Ctrl+K
+              </kbd>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Navigation */}
@@ -256,6 +293,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Link>
           );
         })}
+        <button onClick={toggleDark} title={(!collapsed || isMobileDrawer) ? (osDark ? "Light mode" : "Dark mode") : (osDark ? "Light" : "Dark")}
+          className={cn(
+            "flex items-center gap-2.5 rounded-xl transition-all duration-200 w-full text-[var(--os-text-dim)] hover:text-[var(--os-text)] hover:bg-[var(--os-surface-2)]",
+            (!collapsed || isMobileDrawer) ? "px-3 py-2" : "justify-center h-10 w-10 mx-auto"
+          )}>
+          {osDark
+            ? <Sun className={cn("shrink-0", (!collapsed || isMobileDrawer) ? "w-4 h-4" : "w-[18px] h-[18px]")} />
+            : <Moon className={cn("shrink-0", (!collapsed || isMobileDrawer) ? "w-4 h-4" : "w-[18px] h-[18px]")} />}
+          {(!collapsed || isMobileDrawer) && <span className="text-[13px] font-medium">{osDark ? "Light Mode" : "Dark Mode"}</span>}
+        </button>
         <button onClick={handleLogout} title={(!collapsed || isMobileDrawer) ? undefined : "Logout"}
           className={cn(
             "flex items-center gap-2.5 rounded-xl transition-all duration-200 w-full text-[#94A3B8] hover:text-red-500 hover:bg-red-50/80",
@@ -278,13 +325,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 
   return (
-    <div className="admin-os flex h-screen overflow-hidden">
+    <div className={cn("admin-os flex h-screen overflow-hidden", osDark && "os-dark")}>
       {/* Background gradient blobs */}
       <div className="os-gradient-blob os-gradient-blob-1" />
       <div className="os-gradient-blob os-gradient-blob-2" />
 
       {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center justify-between px-4 bg-white/90 backdrop-blur-xl border-b border-[var(--os-border)] shadow-sm">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center justify-between px-4 backdrop-blur-xl border-b border-[var(--os-border)] shadow-sm" style={{ backgroundColor: `color-mix(in srgb, var(--os-surface) 90%, transparent)` }}>
         <div className="flex items-center gap-3">
           <button onClick={() => setMobileOpen(true)} className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]">
             <Menu className="w-5 h-5" />
@@ -297,13 +344,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <button onClick={() => setSearchOpen(true)} className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]">
+          <button onClick={toggleDark} className="p-1.5 rounded-lg text-[var(--os-text-dim)] hover:text-[var(--os-text)] hover:bg-[var(--os-surface-2)]" title="Toggle dark mode">
+            {osDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+          <button onClick={() => setSearchOpen(true)} className="p-1.5 rounded-lg text-[var(--os-text-dim)] hover:text-[var(--os-text)] hover:bg-[var(--os-surface-2)]">
             <Search className="w-5 h-5" />
           </button>
           <Link
             href="/admin/notifications"
             aria-label="Notifications"
-            className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] relative"
+            className="p-1.5 rounded-lg text-[var(--os-text-dim)] hover:text-[var(--os-text)] hover:bg-[var(--os-surface-2)] relative"
           >
             <Bell className="w-5 h-5" />
             {unreadNotifs > 0 && <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full" />}
@@ -333,7 +383,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "spring", stiffness: 400, damping: 40 }}
-            className="lg:hidden fixed top-0 left-0 bottom-0 z-50 w-[280px] flex flex-col bg-white border-r border-[var(--os-border)] shadow-2xl shadow-purple-900/10"
+            className="lg:hidden fixed top-0 left-0 bottom-0 z-50 w-[280px] flex flex-col border-r border-[var(--os-border)] shadow-2xl shadow-purple-900/10" style={{ backgroundColor: "var(--os-surface)" }}
           >
             {sidebarContent(true)}
           </motion.aside>
@@ -345,7 +395,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         "hidden lg:block shrink-0 py-3 pl-3 transition-all duration-200 ease-out",
         collapsed ? "w-[72px]" : "w-[240px]"
       )}>
-        <aside className="flex flex-col h-[calc(100vh-24px)] bg-white/90 backdrop-blur-xl rounded-2xl border border-[var(--os-border)] shadow-lg shadow-purple-900/[0.03] overflow-hidden">
+        <aside className="flex flex-col h-[calc(100vh-24px)] backdrop-blur-xl rounded-2xl border border-[var(--os-border)] shadow-lg shadow-purple-900/[0.03] overflow-hidden" style={{ backgroundColor: `color-mix(in srgb, var(--os-surface) 90%, transparent)` }}>
           {sidebarContent(false)}
         </aside>
       </div>

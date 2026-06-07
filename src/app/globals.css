@@ -117,6 +117,29 @@ body {
   --os-red: #ef4444;
   color: var(--os-text);
   background: var(--os-bg);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.admin-os.os-dark {
+  --os-bg: #0B0B14;
+  --os-surface: #131320;
+  --os-surface-2: #1A1A2E;
+  --os-surface-3: #1E1E32;
+  --os-border: #2A2A3E;
+  --os-border-hover: #3A3A52;
+  --os-text: #E4E4E7;
+  --os-text-muted: #9CA3AF;
+  --os-text-dim: #6B7280;
+  --os-purple: #A78BFA;
+  --os-purple-glow: rgba(167, 139, 250, 0.15);
+  --os-purple-subtle: rgba(167, 139, 250, 0.08);
+}
+
+.admin-os.os-dark .os-gradient-blob-1 {
+  background: radial-gradient(circle, rgba(139,0,255,0.1), transparent 70%);
+}
+.admin-os.os-dark .os-gradient-blob-2 {
+  background: radial-gradient(circle, rgba(37,99,235,0.06), transparent 70%);
 }
 
 .admin-os .os-gradient-blob {

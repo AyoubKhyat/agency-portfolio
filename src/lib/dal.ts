@@ -831,3 +831,66 @@ export async function getClients() {
   ]);
   return { convertedProspects, qualifiedLeads };
 }
+
+// ─── Workload / Capacity ────────────────────────────────────────
+
+export async function getWorkloadData() {
+  const users = await db().user.findMany({
+    where: { isActive: true },
+    select: { id: true, fullName: true, avatarInitials: true, role: true },
+  });
+
+  const now = new Date();
+  const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
+
+  const members = await Promise.all(
+    users.map(async (user) => {
+      const [
+        todoTasks,
+        inProgressTasks,
+        reviewTasks,
+        blockedTasks,
+        doneTasks,
+        openProspects,
+        meetingsThisWeek,
+      ] = await Promise.all([
+        db().task.count({ where: { ownerId: user.id, status: "TODO" } }),
+        db().task.count({ where: { ownerId: user.id, status: "IN_PROGRESS" } }),
+        db().task.count({ where: { ownerId: user.id, status: "REVIEW" } }),
+        db().task.count({ where: { ownerId: user.id, status: "BLOCKED" } }),
+        db().task.count({ where: { ownerId: user.id, status: "DONE" } }),
+        db().prospect.count({
+          where: { ownerUserId: user.id, status: { notIn: ["CONVERTI", "LOST"] } },
+        }),
+        db().meeting.count({
+          where: {
+            ownerId: user.id,
+            status: { in: ["SCHEDULED", "COMPLETED"] },
+            startAt: { gte: weekStart, lt: weekEnd },
+          },
+        }),
+      ]);
+
+      const activeTasks = todoTasks + inProgressTasks + reviewTasks + blockedTasks;
+      const totalActiveItems = activeTasks + openProspects + meetingsThisWeek;
+
+      return {
+        user,
+        tasks: {
+          todo: todoTasks,
+          inProgress: inProgressTasks,
+          review: reviewTasks,
+          blocked: blockedTasks,
+          done: doneTasks,
+          active: activeTasks,
+        },
+        openProspects,
+        meetingsThisWeek,
+        totalActiveItems,
+      };
+    })
+  );
+
+  return members;
+}

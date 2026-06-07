@@ -492,3 +492,63 @@ model Task {
   @@index([dueDate, status])
   @@map("tasks")
 }
+
+model Invoice {
+  id            String    @id @default(cuid())
+  invoiceNumber String    @unique @map("invoice_number")
+  proposalId    String?   @map("proposal_id")
+  clientName    String    @map("client_name")
+  clientEmail   String?   @map("client_email")
+  clientPhone   String?   @map("client_phone")
+  clientAddress String?   @map("client_address")
+  items         String    // JSON array: [{description, quantity, unitPrice, total}]
+  subtotal      Float     @default(0)
+  taxRate       Float     @default(20) @map("tax_rate")
+  taxAmount     Float     @default(0) @map("tax_amount")
+  total         Float     @default(0)
+  currency      String    @default("MAD")
+  status        String    @default("DRAFT") // DRAFT, SENT, PAID, OVERDUE, CANCELLED
+  dueDate       DateTime? @map("due_date")
+  paidAt        DateTime? @map("paid_at")
+  notes         String?
+  createdById   String    @map("created_by_id")
+  createdByName String    @map("created_by_name")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("invoices")
+}
+
+model BlogPost {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  locale    String   @default("fr")
+  title     String
+  excerpt   String
+  content   String   // markdown content
+  category  String
+  readTime  Int      @default(5) @map("read_time")
+  author    String   @default("Ibda3 Digital")
+  image     String?
+  published Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([slug, locale])
+  @@index([locale, published])
+  @@map("blog_posts")
+}
+
+model Webhook {
+  id        String   @id @default(cuid())
+  name      String
+  url       String
+  events    String   // comma-separated: "lead.new,prospect.created,proposal.sent"
+  isActive  Boolean  @default(true) @map("is_active")
+  secret    String?  // optional HMAC-SHA256 signing secret
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("webhooks")
+}
