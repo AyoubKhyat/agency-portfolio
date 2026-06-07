@@ -121,8 +121,8 @@ export async function PATCH(
 
   const { id } = await params;
   const project = await toggleProjectVisibility(id);
+  if (!project) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Audit: visibility toggled
   await logAudit({
     userId: session.userId,
     userName: session.fullName,
