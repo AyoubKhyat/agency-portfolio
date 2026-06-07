@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Plus, Upload, Send, CheckCircle, PhoneOff, Pencil, Trash2, Phone, LayoutGrid, List, Target, Search, X } from "lucide-react";
+import { Plus, Upload, Send, CheckCircle, PhoneOff, Pencil, Trash2, Phone, LayoutGrid, List, Target, Search, X, Zap, ArrowUpDown, Info } from "lucide-react";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { PageHeader } from "@/components/admin/page-header";
 import { FilterTabs } from "@/components/admin/filter-tabs";
@@ -112,6 +112,10 @@ type Prospect = {
   lastActionAt: string | null;
   proposalAmount: number | null;
   proposalStatus: string | null;
+  contactedAt: string | null;
+  score: number | null;
+  scoreLabel: string | null;
+  scoredAt: string | null;
   owner?: { id: string; fullName: string; avatarInitials: string } | null;
   notes: { id: string; content: string; authorName: string | null; createdAt: string }[];
 };
@@ -171,6 +175,59 @@ export default function ProspectingPage() {
   );
 }
 
+function ScoreBadge({ prospect, factors }: { prospect: Prospect; factors?: string[] }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const score = prospect.score;
+  const label = prospect.scoreLabel;
+
+  if (score == null || !label) {
+    return <span className="text-[10px] text-[#94A3B8] italic">--</span>;
+  }
+
+  const colorMap: Record<string, string> = {
+    Hot: "bg-red-100 text-red-700 border-red-200",
+    Warm: "bg-orange-100 text-orange-700 border-orange-200",
+    Cold: "bg-blue-100 text-blue-700 border-blue-200",
+  };
+
+  const dotColor: Record<string, string> = {
+    Hot: "bg-red-500",
+    Warm: "bg-orange-500",
+    Cold: "bg-blue-500",
+  };
+
+  return (
+    <div className="relative inline-flex">
+      <button
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        onClick={(e) => { e.stopPropagation(); setShowTooltip(!showTooltip); }}
+        className={cn(
+          "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold border transition-colors cursor-help",
+          colorMap[label] || "bg-gray-100 text-gray-600 border-gray-200"
+        )}
+      >
+        <span className={cn("w-1.5 h-1.5 rounded-full", dotColor[label] || "bg-gray-400")} />
+        {score} {label}
+      </button>
+      {showTooltip && factors && factors.length > 0 && (
+        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-white rounded-lg shadow-lg border border-[#E2E8F0] p-2.5 text-left">
+          <div className="text-[11px] font-semibold text-[#0F172A] mb-1.5">Score Breakdown</div>
+          <ul className="space-y-0.5">
+            {factors.map((f, i) => (
+              <li key={i} className="text-[10px] text-[#475569] flex items-start gap-1">
+                <span className="text-[#94A3B8] mt-0.5">&#8226;</span>
+                {f}
+              </li>
+            ))}
+          </ul>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-2 h-2 bg-white border-r border-b border-[#E2E8F0] rotate-45" />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ProspectingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -190,6 +247,9 @@ function ProspectingContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [drawerProspectId, setDrawerProspectId] = useState<string | null>(null);
+  const [scoring, setScoring] = useState(false);
+  const [sortByScore, setSortByScore] = useState(false);
+  const [scoreFactors, setScoreFactors] = useState<Record<string, string[]>>({});
   const fileRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -329,6 +389,64 @@ function ProspectingContent() {
     else { alert(`Import failed: ${data.error}`); }
   }
 
+  async function handleScoreAll() {
+    setScoring(true);
+    try {
+      const res = await fetch("/api/admin/prospecting/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ all: true }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const factorsMap: Record<string, string[]> = {};
+        const scoreMap: Record<string, { score: number; label: string }> = {};
+        for (const p of data.prospects) {
+          factorsMap[p.id] = p.factors;
+          scoreMap[p.id] = { score: p.score, label: p.label };
+        }
+        setScoreFactors((prev) => ({ ...prev, ...factorsMap }));
+        setProspects((prev) =>
+          prev.map((pr) =>
+            scoreMap[pr.id]
+              ? { ...pr, score: scoreMap[pr.id].score, scoreLabel: scoreMap[pr.id].label, scoredAt: new Date().toISOString() }
+              : pr
+          )
+        );
+      }
+    } catch {
+      // silently fail
+    }
+    setScoring(false);
+  }
+
+  async function handleScoreOne(prospectId: string) {
+    try {
+      const res = await fetch("/api/admin/prospecting/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prospectId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setScoreFactors((prev) => ({ ...prev, [data.id]: data.factors }));
+        setProspects((prev) =>
+          prev.map((pr) =>
+            pr.id === data.id
+              ? { ...pr, score: data.score, scoreLabel: data.label, scoredAt: new Date().toISOString() }
+              : pr
+          )
+        );
+      }
+    } catch {
+      // silently fail
+    }
+  }
+
+  const displayedProspects = sortByScore
+    ? [...prospects].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+    : prospects;
+
   function getSendStyle(p: Prospect) {
     const d = p.phone?.replace(/\D/g, "") || "";
     const land = isLandline(p.phone);
@@ -355,6 +473,26 @@ function ProspectingContent() {
                 <LayoutGrid className="w-4 h-4" />
               </button>
             </div>
+            <button
+              onClick={() => setSortByScore(!sortByScore)}
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-2 border rounded-lg text-xs sm:text-sm font-medium transition-all",
+                sortByScore
+                  ? "border-[#8B00FF] bg-[#8B00FF]/10 text-[#8B00FF]"
+                  : "border-[var(--os-border)] hover:border-[var(--os-border-hover)] text-gray-600 hover:text-[#0F172A]"
+              )}
+              title="Sort by score (highest first)"
+            >
+              <ArrowUpDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Score
+            </button>
+            <button
+              onClick={handleScoreAll}
+              disabled={scoring}
+              className="flex items-center gap-1.5 px-2.5 py-2 border border-[var(--os-border)] hover:border-[var(--os-border-hover)] rounded-lg text-xs sm:text-sm text-gray-600 hover:text-[#0F172A] transition-all disabled:opacity-50"
+              title="Score all prospects"
+            >
+              <Zap className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", scoring && "animate-pulse text-amber-500")} /> {scoring ? "Scoring..." : "Score All"}
+            </button>
             <input ref={fileRef} type="file" accept=".csv" onChange={handleImport} className="hidden" />
             <button onClick={() => fileRef.current?.click()} disabled={importing} className="flex items-center gap-1.5 px-2.5 py-2 border border-[var(--os-border)] hover:border-[var(--os-border-hover)] rounded-lg text-xs sm:text-sm text-gray-600 hover:text-[#0F172A] transition-all disabled:opacity-50">
               <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {importing ? "..." : "CSV"}
@@ -433,7 +571,7 @@ function ProspectingContent() {
         <>
           {/* Mobile card list */}
           <div className="md:hidden space-y-3">
-            {prospects.map((p) => (
+            {displayedProspects.map((p) => (
               <div key={p.id} className="rounded-xl border border-[var(--os-border)] bg-white/80 p-3.5">
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="min-w-0">
@@ -444,7 +582,7 @@ function ProspectingContent() {
                 </div>
                 <div className="flex items-center gap-2 flex-wrap mb-2.5">
                   <Badge variant="default" size="sm">{p.sector}</Badge>
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${getHealthScore(p).color}`}>{getHealthScore(p).label}</span>
+                  <ScoreBadge prospect={p} factors={scoreFactors[p.id]} />
                   {p.neighborhood && <span className="text-[11px] text-[#64748B]">{p.neighborhood}</span>}
                   {p.notes?.[0] && <span className="text-[10px] text-[#64748B] truncate max-w-[180px]" title={p.notes[0].content}>{p.notes[0].content}</span>}
                 </div>
@@ -502,13 +640,14 @@ function ProspectingContent() {
                   <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Sector</th>
                   <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider hidden lg:table-cell">Location</th>
                   <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Priority</th>
+                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Score</th>
                   <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Status</th>
                   <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider hidden lg:table-cell">Sent</th>
                   <th className="text-right px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {prospects.map((p) => {
+                {displayedProspects.map((p) => {
                   const ss = getSendStyle(p);
                   return (
                     <tr key={p.id} className="border-b border-[var(--os-border)] hover:bg-gray-50 transition-colors">
@@ -519,6 +658,7 @@ function ProspectingContent() {
                       <td className="px-4 py-2.5 text-[#475569] text-xs">{p.sector}</td>
                       <td className="px-4 py-2.5 text-[#475569] text-xs hidden lg:table-cell">{p.neighborhood || "—"}</td>
                       <td className="px-4 py-2.5"><Badge variant={PRIORITY_BADGE[p.priority] as "green" | "amber" | "default"} size="sm">{PRIORITY_LABELS[p.priority]}</Badge></td>
+                      <td className="px-4 py-2.5"><ScoreBadge prospect={p} factors={scoreFactors[p.id]} /></td>
                       <td className="px-4 py-2.5"><Badge variant={STATUS_BADGE[p.status] as "blue" | "amber" | "green" | "red" | "purple"} size="sm" dot>{STATUS_LABELS[p.status]}</Badge></td>
                       <td className="px-4 py-2.5 text-[#64748B] text-xs hidden lg:table-cell">{p.sentAt ? new Date(p.sentAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) : "—"}</td>
                       <td className="px-4 py-2.5">
@@ -590,7 +730,7 @@ function ProspectingContent() {
         /* Grid View */
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {prospects.map((p, i) => {
+            {displayedProspects.map((p, i) => {
               const ss = getSendStyle(p);
               return (
                 <motion.div key={p.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: i * 0.02 }}
@@ -601,6 +741,7 @@ function ProspectingContent() {
                   </div>
                   <div className="flex items-center gap-2 mb-3">
                     <Badge variant="default" size="sm">{p.sector}</Badge>
+                    <ScoreBadge prospect={p} factors={scoreFactors[p.id]} />
                     {p.neighborhood && <span className="text-[11px] text-[#64748B]">{p.neighborhood}</span>}
                   </div>
                   <div className="flex items-center gap-3 text-[11px] text-[#475569] mb-3">

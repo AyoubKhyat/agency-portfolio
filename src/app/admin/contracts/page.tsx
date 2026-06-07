@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  FileSignature, DollarSign, ShieldCheck, AlertCircle, CalendarClock,
+  FileSignature, DollarSign, AlertCircle, CalendarClock,
+  Send, Check, Loader2,
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
@@ -56,6 +57,8 @@ export default function ContractsPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("ALL");
+  const [signingId, setSigningId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/contracts")
@@ -85,6 +88,36 @@ export default function ContractsPage() {
     label: s === "ALL" ? "All" : s.charAt(0) + s.slice(1).toLowerCase().replace("_", " "),
     count: s === "ALL" ? contracts.length : contracts.filter((c) => c.status === s).length,
   }));
+
+  async function handleSendForSignature(e: React.MouseEvent, contractId: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    setSigningId(contractId);
+    setCopiedId(null);
+    try {
+      const res = await fetch(`/api/admin/contracts/${contractId}/sign-link`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to generate signing link");
+        return;
+      }
+      await navigator.clipboard.writeText(data.url);
+      setCopiedId(contractId);
+      // Update the contract status locally if it changed to PENDING_SIGNATURE
+      setContracts((prev) =>
+        prev.map((c) =>
+          c.id === contractId && c.status === "DRAFT"
+            ? { ...c, status: "PENDING_SIGNATURE" }
+            : c
+        )
+      );
+      setTimeout(() => setCopiedId(null), 3000);
+    } catch {
+      alert("Failed to generate signing link");
+    } finally {
+      setSigningId(null);
+    }
+  }
 
   return (
     <div>
@@ -133,6 +166,34 @@ export default function ContractsPage() {
                     {c.client?.companyName ?? c.prospect?.name ?? "—"} · {relativeDate(c.createdAt)}
                   </p>
                 </div>
+                {/* Send for Signature button — shown for DRAFT and PENDING_SIGNATURE */}
+                {(c.status === "DRAFT" || c.status === "PENDING_SIGNATURE") && (
+                  <button
+                    onClick={(e) => handleSendForSignature(e, c.id)}
+                    disabled={signingId === c.id}
+                    title={copiedId === c.id ? "Link copied!" : "Generate signing link & copy"}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold shrink-0 transition",
+                      copiedId === c.id
+                        ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                        : "bg-purple-50 text-purple-600 border border-purple-200 hover:bg-purple-100"
+                    )}
+                  >
+                    {signingId === c.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : copiedId === c.id ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-3.5 h-3.5" />
+                        Sign Link
+                      </>
+                    )}
+                  </button>
+                )}
                 <p className="text-[14px] font-semibold text-[#111827] shrink-0">
                   {formatMAD(c.amount)} <span className="text-[10px] font-normal text-[#9CA3AF]">{c.currency}</span>
                 </p>

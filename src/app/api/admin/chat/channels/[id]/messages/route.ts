@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { notifyMentionsInText } from "@/lib/notify";
+import { processAICommand, AI_AUTHOR_NAME } from "@/lib/chat-ai";
 
 const ATTACH_TYPES = ["PROSPECT", "CLIENT", "PROJECT", "TASK", "MEETING"] as const;
 
@@ -93,6 +94,23 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     link: `/admin/chat?channel=${channel?.slug ?? id}`,
     contextLabel: channel?.isDm ? `your DM with ${session.fullName}` : `#${channel?.name ?? "chat"}`,
   }).catch(() => {});
+
+  // AI Assistant: if message contains @AI, generate a response in the same channel.
+  processAICommand(data.content)
+    .then(async (aiResponse) => {
+      if (!aiResponse) return;
+      await prisma.chatMessage.create({
+        data: {
+          channelId: id,
+          authorId: session.userId,
+          authorName: AI_AUTHOR_NAME,
+          content: aiResponse,
+        },
+      });
+    })
+    .catch((err) => {
+      console.error("[chat-ai] Failed to create AI response:", err);
+    });
 
   return NextResponse.json(message, { status: 201 });
 }

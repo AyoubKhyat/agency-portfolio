@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Hash, MessageCircle, Plus, Smile, Paperclip, Send, X, Search,
   Briefcase, Building2, CheckSquare, Calendar, Target, Loader2, ArrowLeft,
-  Image, FileText,
+  Image, FileText, Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MentionTextarea, HighlightedMentions } from "@/components/admin/mention-textarea";
@@ -570,7 +570,7 @@ function ChatInner() {
                   </button>
                 </div>
               </div>
-              <p className="text-[10px] text-[#9CA3AF] mt-1">⏎ to send · ⇧⏎ for newline · @ to mention · 📎 images & PDFs</p>
+              <p className="text-[10px] text-[#9CA3AF] mt-1">⏎ to send · ⇧⏎ for newline · @ to mention · @AI for assistant · 📎 images & PDFs</p>
             </div>
           </>
         )}
@@ -631,6 +631,7 @@ function MessageBubble({ message, isMe, isAdmin, groupWithPrev, team, reactions,
   onDelete: () => void;
 }) {
   const author = team.find((u) => u.id === message.authorId);
+  const isAI = message.authorName === "AI Assistant";
   const [hovering, setHovering] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -645,21 +646,28 @@ function MessageBubble({ message, isMe, isAdmin, groupWithPrev, team, reactions,
 
   return (
     <div
-      className={cn("group flex gap-3 px-2 py-1 rounded-md relative", hovering && "bg-white")}
+      className={cn("group flex gap-3 px-2 py-1 rounded-md relative", hovering && "bg-white", isAI && "bg-blue-50/40")}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => { setHovering(false); setEmojiOpen(false); setConfirmDelete(false); }}
     >
       <div className="w-8 shrink-0">
         {!groupWithPrev && (
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[11px] font-bold">
-            {author?.avatarInitials ?? message.authorName.slice(0, 2).toUpperCase()}
-          </span>
+          isAI ? (
+            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-[#3B82F6] to-[#06B6D4] text-white">
+              <Sparkles className="w-4 h-4" />
+            </span>
+          ) : (
+            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[11px] font-bold">
+              {author?.avatarInitials ?? message.authorName.slice(0, 2).toUpperCase()}
+            </span>
+          )
         )}
       </div>
       <div className="min-w-0 flex-1">
         {!groupWithPrev && (
-          <div className="flex items-baseline gap-2 mb-0.5">
-            <span className="text-[13px] font-semibold text-[#111827]">{message.authorName}</span>
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className={cn("text-[13px] font-semibold", isAI ? "text-blue-600" : "text-[#111827]")}>{message.authorName}</span>
+            {isAI && <Sparkles className="w-3 h-3 text-blue-400" />}
             <span className="text-[10px] text-[#9CA3AF]">{formatTime(message.createdAt)}</span>
           </div>
         )}

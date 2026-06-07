@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, FileText, Check, Package } from "lucide-react";
+import { X, FileText, Check, Package, Sparkles, Wand2 } from "lucide-react";
 import { Badge } from "@/components/admin/badge";
-import { Field, Input, Textarea, FormButton, FormError } from "@/components/admin/form";
+import { Field, Input, Textarea, Select, FormButton, FormError } from "@/components/admin/form";
 import { cn } from "@/lib/utils";
 
 type ProposalBuilderProps = {
@@ -25,6 +25,18 @@ const SERVICES = [
   "WhatsApp Automation",
   "Custom Web App",
   "Maintenance",
+];
+
+const AI_SERVICE_OPTIONS = [
+  { value: "Website Vitrine", label: "Site Vitrine" },
+  { value: "E-commerce", label: "E-commerce" },
+  { value: "Custom Web App", label: "Application Web" },
+  { value: "AI Chatbot", label: "Chatbot IA" },
+  { value: "WhatsApp Automation", label: "Automatisation WhatsApp" },
+  { value: "SEO Local", label: "SEO & Referencement" },
+  { value: "Branding", label: "Branding & Identite" },
+  { value: "Social Media Design", label: "Design Reseaux Sociaux" },
+  { value: "Maintenance", label: "Maintenance & Support" },
 ];
 
 const PACKAGES = [
@@ -74,6 +86,59 @@ export function ProposalBuilder({
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // AI Generate state
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiService, setAiService] = useState(AI_SERVICE_OPTIONS[0].value);
+  const [aiBudget, setAiBudget] = useState("");
+  const [aiNotes, setAiNotes] = useState("");
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  async function handleAiGenerate() {
+    setAiError(null);
+    setAiGenerating(true);
+    try {
+      const res = await fetch("/api/admin/ai/generate-proposal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prospectName,
+          sector,
+          services: aiService,
+          budget: aiBudget || undefined,
+          notes: aiNotes || undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || `Generation failed (${res.status})`);
+      }
+
+      const data = await res.json();
+
+      // Auto-fill the proposal form with generated content
+      if (data.packageName) setSelectedPackage(data.packageName);
+
+      // Select the matching services
+      const serviceList = aiService.split(", ").filter(Boolean);
+      setSelectedServices(serviceList);
+
+      if (data.timeline) setTimeline(data.timeline);
+      if (data.paymentTerms) setPaymentTerms(data.paymentTerms);
+      if (data.notes) setNotes(data.notes);
+
+      // Close the AI modal
+      setShowAiModal(false);
+      setAiBudget("");
+      setAiNotes("");
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setAiGenerating(false);
+    }
+  }
 
   function handlePackageSelect(pkg: (typeof PACKAGES)[number]) {
     if (selectedPackage === pkg.name) {
@@ -133,6 +198,7 @@ export function ProposalBuilder({
   }
 
   return (
+    <>
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
@@ -166,12 +232,22 @@ export function ProposalBuilder({
                   </div>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors shrink-0"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowAiModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF] hover:from-[#8B00FF]/20 hover:to-[#C026D3]/20 transition-all"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  AI Generate
+                </button>
+                <button
+                  onClick={onClose}
+                  className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -340,5 +416,127 @@ export function ProposalBuilder({
         </motion.div>
       </motion.div>
     </AnimatePresence>
+
+    {/* AI Generate Modal */}
+    <AnimatePresence>
+      {showAiModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+          onClick={() => !aiGenerating && setShowAiModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.97 }}
+            transition={{ type: "spring", damping: 28, stiffness: 350 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-[420px] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-5 pt-4 pb-3 border-b border-[#E5E7EB]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-[#8B00FF] to-[#C026D3]">
+                    <Wand2 className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-[15px] font-bold text-[#0F172A]">AI Generate</h3>
+                    <p className="text-[11px] text-[#94A3B8]">Auto-fill proposal from AI</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => !aiGenerating && setShowAiModal(false)}
+                  className="p-1 rounded-lg text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
+                  disabled={aiGenerating}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-5 py-4 space-y-4">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F8FAFC] border border-[#E5E7EB]">
+                <span className="text-[12px] text-[#64748B]">Client:</span>
+                <span className="text-[13px] font-semibold text-[#0F172A]">{prospectName}</span>
+                <Badge variant="default" size="sm">{sector}</Badge>
+              </div>
+
+              <Field label="Service type">
+                <Select
+                  value={aiService}
+                  onChange={(e) => setAiService(e.target.value)}
+                  disabled={aiGenerating}
+                >
+                  {AI_SERVICE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Field label="Budget" hint="Optional - helps tailor the proposal.">
+                <Input
+                  value={aiBudget}
+                  onChange={(e) => setAiBudget(e.target.value)}
+                  placeholder="e.g. 8000"
+                  disabled={aiGenerating}
+                />
+              </Field>
+
+              <Field label="Special notes" hint="Any specific requirements or context.">
+                <Textarea
+                  value={aiNotes}
+                  onChange={(e) => setAiNotes(e.target.value)}
+                  placeholder="e.g. The client needs a bilingual site (FR/AR), with online booking..."
+                  rows={2}
+                  disabled={aiGenerating}
+                />
+              </Field>
+
+              {aiError && (
+                <div className="px-3 py-2 rounded-lg bg-red-50 border border-red-100">
+                  <p className="text-[12px] text-red-600">{aiError}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 py-3 border-t border-[#E5E7EB] bg-[#F8FAFC]">
+              <div className="flex items-center gap-2.5">
+                <FormButton
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowAiModal(false)}
+                  disabled={aiGenerating}
+                  className="flex-1"
+                >
+                  Cancel
+                </FormButton>
+                <FormButton
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={handleAiGenerate}
+                  disabled={aiGenerating}
+                  loading={aiGenerating}
+                  icon={!aiGenerating ? <Sparkles className="w-3.5 h-3.5" /> : undefined}
+                  className="flex-1"
+                >
+                  {aiGenerating ? "Generating..." : "Generate"}
+                </FormButton>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }

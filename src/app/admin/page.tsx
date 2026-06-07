@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Target, Users, FolderKanban, Clock, ArrowRight, MessageCircle, Reply, CalendarClock, AlertTriangle, CalendarDays, Layers, TrendingUp, DollarSign, CheckSquare, Sun, Inbox, Calendar as CalendarIcon, Phone, Video, MapPin } from "lucide-react";
+import { Target, Users, FolderKanban, Clock, ArrowRight, MessageCircle, Reply, CalendarClock, AlertTriangle, CalendarDays, Layers, TrendingUp, DollarSign, CheckSquare, Sun, Inbox, Calendar as CalendarIcon, Phone, Video, MapPin, BarChart3, PieChart, Activity, UsersRound } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 import { GlassCard } from "@/components/admin/glass-card";
 import { Badge } from "@/components/admin/badge";
 import { PageHeader } from "@/components/admin/page-header";
+import { FunnelChart, PipelineFunnel, LineChart, DonutChart, BarChart, TeamPerformanceChart } from "@/components/admin/charts";
 import Link from "next/link";
 
 type StatusCount = { status: string; _count: number };
@@ -53,12 +54,22 @@ type Meeting = {
 
 type MeetingBuckets = { today: Meeting[]; upcoming: Meeting[]; missed: Meeting[] };
 
+type ChartData = {
+  leadFunnel: { status: string; count: number }[];
+  prospectPipeline: { status: string; count: number }[];
+  revenue: { month: string; label: string; amount: number }[];
+  sectorDistribution: { sector: string; count: number }[];
+  weeklyActivity: { date: string; label: string; count: number }[];
+  teamPerformance: { name: string; initials: string; sent: number; replied: number; converted: number }[];
+};
+
 export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [exec, setExec] = useState<ExecData | null>(null);
   const [tasks, setTasks] = useState<TaskBuckets | null>(null);
   const [meetings, setMeetings] = useState<MeetingBuckets | null>(null);
+  const [charts, setCharts] = useState<ChartData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -71,11 +82,13 @@ export default function DashboardPage() {
       fetch("/api/admin/meetings?scope=today&limit=10").then((r) => r.ok ? r.json() : []),
       fetch("/api/admin/meetings?scope=upcoming&limit=10").then((r) => r.ok ? r.json() : []),
       fetch("/api/admin/meetings?scope=missed&limit=10").then((r) => r.ok ? r.json() : []),
-    ]).then(([d, e, mine, today, overdue, mToday, mUpcoming, mMissed]) => {
+      fetch("/api/admin/dashboard-charts").then((r) => r.ok ? r.json() : null),
+    ]).then(([d, e, mine, today, overdue, mToday, mUpcoming, mMissed, chartData]) => {
       if (d) setData(d);
       if (e) setExec(e);
       setTasks({ mine: mine ?? [], today: today ?? [], overdue: overdue ?? [] });
       setMeetings({ today: mToday ?? [], upcoming: mUpcoming ?? [], missed: mMissed ?? [] });
+      if (chartData) setCharts(chartData);
     })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -516,6 +529,106 @@ export default function DashboardPage() {
               ))}
             </div>
           </GlassCard>
+        </motion.div>
+      )}
+
+      {/* ── Visual Charts ────────────────────────────────────────── */}
+      {charts && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.85, duration: 0.4 }}
+          className="mt-8"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+              <BarChart3 className="w-4 h-4 text-purple-600" />
+            </div>
+            <h2 className="text-sm font-semibold text-[#0F172A]">Analytics</h2>
+          </div>
+
+          {/* Row 1: Lead Funnel + Prospect Pipeline */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9, duration: 0.4 }}>
+              <div className="flex items-center gap-2 mb-4">
+                <Inbox className="w-4 h-4 text-blue-500" />
+                <h3 className="text-sm font-semibold text-[#0F172A]">Lead Funnel</h3>
+              </div>
+              <FunnelChart data={charts.leadFunnel} />
+            </GlassCard>
+
+            <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.95, duration: 0.4 }}>
+              <div className="flex items-center gap-2 mb-4">
+                <Target className="w-4 h-4 text-purple-500" />
+                <h3 className="text-sm font-semibold text-[#0F172A]">Prospect Pipeline</h3>
+              </div>
+              <PipelineFunnel data={charts.prospectPipeline} />
+            </GlassCard>
+          </div>
+
+          {/* Row 2: Revenue trend (full width) */}
+          <div className="mt-4">
+            <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.0, duration: 0.4 }}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-emerald-500" />
+                  <h3 className="text-sm font-semibold text-[#0F172A]">Revenue Trend</h3>
+                </div>
+                <span className="text-[10px] text-[#94A3B8]">Last 6 months (MAD)</span>
+              </div>
+              <LineChart
+                data={charts.revenue.map((r) => ({ label: r.label, value: r.amount }))}
+                height={220}
+                color="#10B981"
+                formatValue={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)}
+              />
+            </GlassCard>
+          </div>
+
+          {/* Row 3: Sector donut + Weekly activity bar */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+            <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.05, duration: 0.4 }}>
+              <div className="flex items-center gap-2 mb-4">
+                <PieChart className="w-4 h-4 text-amber-500" />
+                <h3 className="text-sm font-semibold text-[#0F172A]">Sector Distribution</h3>
+              </div>
+              <DonutChart
+                data={charts.sectorDistribution.map((s) => ({
+                  label: s.sector,
+                  value: s.count,
+                }))}
+                size={160}
+              />
+            </GlassCard>
+
+            <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1, duration: 0.4 }}>
+              <div className="flex items-center gap-2 mb-4">
+                <Activity className="w-4 h-4 text-blue-500" />
+                <h3 className="text-sm font-semibold text-[#0F172A]">Weekly Activity</h3>
+              </div>
+              <BarChart
+                data={charts.weeklyActivity.map((a) => ({
+                  label: a.label,
+                  value: a.count,
+                  color: "#3B82F6",
+                }))}
+                height={180}
+              />
+            </GlassCard>
+          </div>
+
+          {/* Row 4: Team performance (full width) */}
+          {charts.teamPerformance.length > 0 && (
+            <div className="mt-4">
+              <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.15, duration: 0.4 }}>
+                <div className="flex items-center gap-2 mb-4">
+                  <UsersRound className="w-4 h-4 text-purple-500" />
+                  <h3 className="text-sm font-semibold text-[#0F172A]">Team Performance</h3>
+                </div>
+                <TeamPerformanceChart data={charts.teamPerformance} />
+              </GlassCard>
+            </div>
+          )}
         </motion.div>
       )}
 
