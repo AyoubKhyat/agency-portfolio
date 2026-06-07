@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 import ar from "@/messages/ar.json";
+import { withApiLogging } from "@/lib/api-logger";
 
 const TEAM = [
   { name: "Ayoub Khyat", email: "ayoubkhyat@gmail.com", role: "admin", initials: "AK" },
@@ -59,7 +60,7 @@ function getTranslation(messages: Record<string, Record<string, string>>, key: s
   };
 }
 
-export async function POST(req: Request) {
+async function seedHandler(req: Request) {
   const { getSession } = await import("@/lib/auth");
   const session = await getSession();
   if (!session || session.role !== "admin") return NextResponse.json({ error: "Admin only" }, { status: 403 });
@@ -153,3 +154,5 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ results, channels: channelResults, projects: projectResults, seeded: results.length });
 }
+
+export const POST = withApiLogging("POST /api/admin/seed", seedHandler);

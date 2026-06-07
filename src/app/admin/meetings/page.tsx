@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Calendar, Plus, Phone, Video, MapPin, AlertCircle,
-  CheckCircle2, XCircle, Clock, Sun,
+  CheckCircle2, XCircle, Clock, Sun, List, CalendarDays,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { PageHeader } from "@/components/admin/page-header";
@@ -13,6 +13,7 @@ import { StatCard } from "@/components/admin/stat-card";
 import { FilterTabs } from "@/components/admin/filter-tabs";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ScheduleMeetingModal } from "@/components/admin/schedule-meeting-modal";
+import { MeetingsCalendar } from "@/components/admin/meetings-calendar";
 import { cn } from "@/lib/utils";
 
 type Meeting = {
@@ -31,6 +32,7 @@ type Meeting = {
 };
 
 type Scope = "today" | "tomorrow" | "week" | "upcoming" | "missed" | "mine" | "all";
+type ViewMode = "list" | "calendar";
 
 const SCOPE_DEFS: { value: Scope; label: string }[] = [
   { value: "today",    label: "Today" },
@@ -77,6 +79,7 @@ export default function MeetingsPage() {
   const [scope, setScope] = useState<Scope>("today");
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
+  const [view, setView] = useState<ViewMode>("list");
 
   const load = useCallback(async (s: Scope) => {
     setLoading(true);
@@ -147,13 +150,44 @@ export default function MeetingsPage() {
         title="Meetings"
         subtitle="Calls, demos and on-site visits across the agency"
         actions={
-          <button
-            type="button"
-            onClick={() => setModal(true)}
-            className="inline-flex items-center gap-1.5 h-10 px-4 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white rounded-lg text-[13px] font-semibold shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 transition-all"
-          >
-            <Plus className="w-4 h-4" /> New meeting
-          </button>
+          <>
+            {/* View toggle */}
+            <div className="inline-flex items-center rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-0.5">
+              <button
+                type="button"
+                onClick={() => setView("list")}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all",
+                  view === "list"
+                    ? "bg-white text-[#0F172A] shadow-sm"
+                    : "text-[#64748B] hover:text-[#0F172A]"
+                )}
+              >
+                <List className="w-3.5 h-3.5" />
+                List
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("calendar")}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all",
+                  view === "calendar"
+                    ? "bg-white text-[#0F172A] shadow-sm"
+                    : "text-[#64748B] hover:text-[#0F172A]"
+                )}
+              >
+                <CalendarDays className="w-3.5 h-3.5" />
+                Calendar
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setModal(true)}
+              className="inline-flex items-center gap-1.5 h-10 px-4 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white rounded-lg text-[13px] font-semibold shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+            >
+              <Plus className="w-4 h-4" /> New meeting
+            </button>
+          </>
         }
       />
 
@@ -164,37 +198,43 @@ export default function MeetingsPage() {
         <StatCard value={counts?.mine ?? 0}     label="Mine this week" icon={<Calendar className="w-5 h-5" />} index={3} />
       </div>
 
-      <div className="mb-4">
-        <FilterTabs items={tabs} active={scope} onChange={(v) => setScope(v as Scope)} />
-      </div>
-
-      {loading ? (
-        <div className="grid gap-3">{[...Array(4)].map((_, i) => <div key={i} className="os-skeleton h-16 rounded-xl" />)}</div>
-      ) : grouped.length === 0 ? (
-        <EmptyState
-          icon={<Calendar className="w-7 h-7" />}
-          title="No meetings in this view"
-          description="Schedule a meeting from a prospect or client to get started."
-          action={
-            <button
-              onClick={() => setModal(true)}
-              className="inline-flex items-center gap-1.5 h-10 px-4 bg-[#8B00FF] hover:bg-[#7A00E0] text-white rounded-lg text-[13px] font-semibold"
-            >
-              <Plus className="w-4 h-4" /> New meeting
-            </button>
-          }
-        />
+      {view === "calendar" ? (
+        <MeetingsCalendar onStatusChange={updateStatus} />
       ) : (
-        <div className="space-y-6">
-          {grouped.map((g) => (
-            <section key={g.date}>
-              <h3 className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wider mb-2 px-1">{g.day}</h3>
-              <div className="bg-white border border-[#E5E7EB] rounded-xl divide-y divide-[#F3F4F6] overflow-hidden">
-                {g.items.map((m) => <MeetingRow key={m.id} m={m} onStatus={updateStatus} />)}
-              </div>
-            </section>
-          ))}
-        </div>
+        <>
+          <div className="mb-4">
+            <FilterTabs items={tabs} active={scope} onChange={(v) => setScope(v as Scope)} />
+          </div>
+
+          {loading ? (
+            <div className="grid gap-3">{[...Array(4)].map((_, i) => <div key={i} className="os-skeleton h-16 rounded-xl" />)}</div>
+          ) : grouped.length === 0 ? (
+            <EmptyState
+              icon={<Calendar className="w-7 h-7" />}
+              title="No meetings in this view"
+              description="Schedule a meeting from a prospect or client to get started."
+              action={
+                <button
+                  onClick={() => setModal(true)}
+                  className="inline-flex items-center gap-1.5 h-10 px-4 bg-[#8B00FF] hover:bg-[#7A00E0] text-white rounded-lg text-[13px] font-semibold"
+                >
+                  <Plus className="w-4 h-4" /> New meeting
+                </button>
+              }
+            />
+          ) : (
+            <div className="space-y-6">
+              {grouped.map((g) => (
+                <section key={g.date}>
+                  <h3 className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wider mb-2 px-1">{g.day}</h3>
+                  <div className="bg-white border border-[#E5E7EB] rounded-xl divide-y divide-[#F3F4F6] overflow-hidden">
+                    {g.items.map((m) => <MeetingRow key={m.id} m={m} onStatus={updateStatus} />)}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <ScheduleMeetingModal

@@ -6,6 +6,7 @@ import {
   deleteProject,
   toggleProjectVisibility,
 } from "@/lib/dal";
+import { logAudit, getClientIp } from "@/lib/audit";
 
 const TRANSLATION_FIELDS = [
   "locale", "title", "desc", "tags", "tagline", "metaDesc", "client",
@@ -63,6 +64,18 @@ export async function PUT(
       status,
       translations: cleanTranslations,
     });
+
+    // Audit: project updated
+    await logAudit({
+      userId: session.userId,
+      userName: session.fullName,
+      action: "UPDATE_PROJECT",
+      entity: "project",
+      entityId: id,
+      details: { slug: body.slug, category: body.category, status },
+      ipAddress: getClientIp(req),
+    });
+
     return NextResponse.json(project);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Update failed";
@@ -71,7 +84,7 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
@@ -79,12 +92,28 @@ export async function DELETE(
   if (session.role !== "admin") return NextResponse.json({ error: "Admin only" }, { status: 403 });
 
   const { id } = await params;
+
+  // Fetch project info before deletion for the audit log
+  const existing = await getProjectByIdForAdmin(id);
+
   await deleteProject(id);
+
+  // Audit: project deleted
+  await logAudit({
+    userId: session.userId,
+    userName: session.fullName,
+    action: "DELETE_PROJECT",
+    entity: "project",
+    entityId: id,
+    details: { slug: existing?.slug },
+    ipAddress: getClientIp(req),
+  });
+
   return NextResponse.json({ success: true });
 }
 
 export async function PATCH(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
@@ -92,5 +121,17 @@ export async function PATCH(
 
   const { id } = await params;
   const project = await toggleProjectVisibility(id);
+
+  // Audit: visibility toggled
+  await logAudit({
+    userId: session.userId,
+    userName: session.fullName,
+    action: "TOGGLE_PROJECT_VISIBILITY",
+    entity: "project",
+    entityId: id,
+    details: { visible: project.visible, slug: project.slug },
+    ipAddress: getClientIp(req),
+  });
+
   return NextResponse.json(project);
 }

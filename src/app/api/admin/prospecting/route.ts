@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getProspects, createProspect, logProspectActivity } from "@/lib/dal";
+import { getProspects, createProspect, logProspectActivity, findDuplicateProspect } from "@/lib/dal";
 import { z } from "zod";
 
 export async function GET(req: Request) {
@@ -42,6 +42,24 @@ export async function POST(req: Request) {
     const flat = parsed.error.flatten();
     const errors = Object.entries(flat.fieldErrors).map(([k, v]) => `${k}: ${v?.join(", ")}`);
     return NextResponse.json({ error: errors.join("; ") }, { status: 400 });
+  }
+
+  // Check for duplicate by phone number or Instagram handle
+  const duplicate = await findDuplicateProspect(parsed.data.phone, parsed.data.instagram);
+  if (duplicate) {
+    return NextResponse.json(
+      {
+        error: "Duplicate prospect detected",
+        duplicate: {
+          id: duplicate.id,
+          name: duplicate.name,
+          phone: duplicate.phone,
+          instagram: duplicate.instagram,
+          status: duplicate.status,
+        },
+      },
+      { status: 409 }
+    );
   }
 
   const prospect = await createProspect(parsed.data);

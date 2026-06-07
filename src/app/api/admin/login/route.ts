@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { verifyPassword, signToken, createSessionCookie } from "@/lib/auth";
+import { logAudit, getClientIp } from "@/lib/audit";
 import { z } from "zod";
+import { loginLimiter } from "@/lib/rate-limit";
+import { withApiLogging } from "@/lib/api-logger";
 
 const schema = z.object({
   email: z.string().email(),
@@ -16,7 +19,21 @@ const ROLE_MAP: Record<string, string> = {
   "abderrahmane.aittaleb@ibda3digital.com": "admin",
 };
 
-export async function POST(req: Request) {
+async function loginHandler(req: Request) {
+  // Rate limiting: max 5 login attempts per minute per IP
+  const forwarded = req.headers.get("x-forwarded-for");
+  const ip = forwarded?.split(",")[0]?.trim() || "unknown";
+  const rateResult = loginLimiter.check(ip);
+  if (!rateResult.allowed) {
+    return NextResponse.json(
+      { error: "Too many login attempts. Please try again later." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil(rateResult.resetMs / 1000)) },
+      },
+    );
+  }
+
   if (!hasPrisma()) {
     return NextResponse.json({ error: "Database not available" }, { status: 503 });
   }
@@ -64,6 +81,15 @@ export async function POST(req: Request) {
     });
     const cookie = createSessionCookie(token);
 
+    // Audit: successful login
+    await logAudit({
+      userId: teamUser.id,
+      userName: teamUser.fullName,
+      action: "LOGIN",
+      details: { email, role },
+      ipAddress: getClientIp(req),
+    });
+
     const res = NextResponse.json({ success: true, name: admin.name, role });
     res.cookies.set(cookie);
     return res;
@@ -72,3 +98,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Login error", detail: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }
+
+export const POST = withApiLogging("POST /api/admin/login", loginHandler);

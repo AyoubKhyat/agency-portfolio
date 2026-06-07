@@ -99,15 +99,17 @@ model ProjectTranslation {
 }
 
 model Lead {
-  id       String @id @default(cuid())
-  fullName String @map("full_name")
-  email    String
-  phone    String?
-  subject  String
-  message  String
-  status   String @default("NEW")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id             String  @id @default(cuid())
+  fullName       String  @map("full_name")
+  email          String
+  phone          String?
+  subject        String
+  message        String
+  status         String  @default("NEW")
+  assignedToId   String? @map("assigned_to_id")
+  assignedToName String? @map("assigned_to_name")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   notes LeadNote[]
 
@@ -415,6 +417,22 @@ model ChatReaction {
 
   @@unique([messageId, userId, emoji])
   @@map("chat_reactions")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  userName  String   @map("user_name")
+  action    String   // LOGIN, LOGOUT, CREATE_PROJECT, UPDATE_PROJECT, DELETE_PROJECT, UPDATE_LEAD, RESET_PASSWORD, etc.
+  entity    String?  // "project", "lead", "prospect", "user", etc.
+  entityId  String?  @map("entity_id")
+  details   String?  // JSON string with extra info
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
 
 model ClientNote {

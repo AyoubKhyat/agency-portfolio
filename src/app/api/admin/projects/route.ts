@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getProjectsForAdmin, createProject } from "@/lib/dal";
+import { logAudit, getClientIp } from "@/lib/audit";
 import { z } from "zod";
 
 const translationSchema = z.object({
@@ -103,5 +104,17 @@ export async function POST(req: Request) {
     ...data,
     translations: filledTranslations,
   });
+
+  // Audit: project created
+  await logAudit({
+    userId: session.userId,
+    userName: session.fullName,
+    action: "CREATE_PROJECT",
+    entity: "project",
+    entityId: project.id,
+    details: { slug: data.slug, category: data.category },
+    ipAddress: getClientIp(req),
+  });
+
   return NextResponse.json(project, { status: 201 });
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Mail, Phone, MessageSquare, StickyNote } from "lucide-react";
+import { ChevronLeft, Mail, Phone, MessageSquare, StickyNote, UserCheck } from "lucide-react";
 import { FormCard, Field, Select, FormButton } from "@/components/admin/form";
 import { Badge } from "@/components/admin/badge";
 import { MentionTextarea, HighlightedMentions } from "@/components/admin/mention-textarea";
@@ -25,6 +25,8 @@ type Lead = {
   subject: string;
   message: string;
   status: string;
+  assignedToId: string | null;
+  assignedToName: string | null;
   createdAt: string;
   notes: Note[];
 };
@@ -138,6 +140,16 @@ export default function LeadDetailPage() {
           <div>
             <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-[0.06em] mb-1.5">Status</p>
             <Badge variant={STATUS_VARIANT[lead.status]} size="sm" dot>{lead.status}</Badge>
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-[0.06em] mb-1.5">Assigned to</p>
+            {lead.assignedToName ? (
+              <span className="text-[14px] text-[#8B00FF] inline-flex items-center gap-1.5">
+                <UserCheck className="w-3.5 h-3.5" /> {lead.assignedToName}
+              </span>
+            ) : (
+              <span className="text-[14px] text-[#94A3B8]">Unassigned</span>
+            )}
           </div>
         </div>
       </FormCard>

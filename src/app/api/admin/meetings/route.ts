@@ -34,6 +34,8 @@ export async function GET(req: Request) {
   const clientId = searchParams.get("clientId");
   const prospectId = searchParams.get("prospectId");
   const status = searchParams.get("status");
+  const from = searchParams.get("from"); // ISO date string — calendar range start
+  const to = searchParams.get("to");     // ISO date string — calendar range end
   const limit = Math.min(Number(searchParams.get("limit")) || 200, 500);
 
   const now = new Date();
@@ -44,7 +46,10 @@ export async function GET(req: Request) {
   if (prospectId) where.prospectId = prospectId;
   if (status && STATUSES.includes(status as typeof STATUSES[number])) where.status = status;
 
-  if (scope === "mine") {
+  // Arbitrary date range (used by calendar view)
+  if (from && to) {
+    where.startAt = { gte: new Date(from), lte: new Date(to) };
+  } else if (scope === "mine") {
     where.ownerId = session.userId;
   } else if (scope === "today") {
     where.startAt = { gte: startOfDay(now), lte: endOfDay(now) };

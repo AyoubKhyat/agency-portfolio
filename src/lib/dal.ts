@@ -272,8 +272,40 @@ export async function createLead(data: {
   phone?: string;
   subject: string;
   message: string;
+  assignedToId?: string;
+  assignedToName?: string;
 }) {
   return db().lead.create({ data });
+}
+
+/**
+ * Find the active team member (sales or admin) with the fewest assigned leads.
+ * Used for round-robin lead auto-assignment.
+ */
+export async function getLeastLoadedUser() {
+  const eligibleUsers = await db().user.findMany({
+    where: {
+      isActive: true,
+      role: { in: ["sales", "admin", "Sales", "Admin"] },
+    },
+    select: { id: true, fullName: true },
+  });
+
+  if (eligibleUsers.length === 0) return null;
+
+  // Count leads assigned to each eligible user
+  const counts = await Promise.all(
+    eligibleUsers.map(async (user) => {
+      const count = await db().lead.count({
+        where: { assignedToId: user.id },
+      });
+      return { user, count };
+    })
+  );
+
+  // Return the user with the fewest leads
+  counts.sort((a, b) => a.count - b.count);
+  return counts[0].user;
 }
 
 export async function getLeads(page = 1, status?: string) {
@@ -452,6 +484,29 @@ export async function getProspectById(id: string) {
         take: 50,
       },
     },
+  });
+}
+
+export async function findDuplicateProspect(phone: string, instagram?: string) {
+  const digits = phone.replace(/\D/g, "");
+  const conditions: Record<string, unknown>[] = [];
+
+  // Match on last 8 digits of phone number to handle different country code formats
+  if (digits.length >= 6) {
+    conditions.push({ phone: { contains: digits.slice(-8) } });
+  }
+
+  // Match on Instagram handle (case-insensitive, strip leading @)
+  if (instagram && instagram.trim().length >= 2) {
+    const handle = instagram.replace(/^@/, "").trim();
+    conditions.push({ instagram: { equals: handle, mode: "insensitive" } });
+  }
+
+  if (conditions.length === 0) return null;
+
+  return db().prospect.findFirst({
+    where: { OR: conditions },
+    select: { id: true, name: true, phone: true, instagram: true, status: true },
   });
 }
 

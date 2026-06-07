@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Users, Kanban, List, Mail, Calendar } from "lucide-react";
+import { Users, Kanban, List, Mail, Calendar, UserCheck } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/admin/badge";
 import { FilterTabs } from "@/components/admin/filter-tabs";
@@ -19,7 +19,7 @@ const COL_COLORS: Record<string, { border: string; bg: string; dot: string; badg
   CLOSED: { border: "border-gray-200", bg: "bg-gray-50/50", dot: "bg-gray-400", badge: "default" },
 };
 
-type Lead = { id: string; fullName: string; email: string; subject: string; status: string; createdAt: string; phone?: string | null };
+type Lead = { id: string; fullName: string; email: string; subject: string; status: string; createdAt: string; phone?: string | null; assignedToName?: string | null };
 
 export default function LeadsPage() {
   return (
@@ -158,6 +158,12 @@ function LeadsContent() {
                             {relativeDate(lead.createdAt)}
                           </span>
                         </div>
+                        {lead.assignedToName && (
+                          <div className="flex items-center gap-1 mt-1.5 text-[10px] text-[#8B00FF]">
+                            <UserCheck className="w-3 h-3" />
+                            <span>{lead.assignedToName}</span>
+                          </div>
+                        )}
                       </Link>
                     ))}
                     {colLeads.length === 0 && (
@@ -232,6 +238,7 @@ function LeadsContent() {
                       <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Email</th>
                       <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs hidden lg:table-cell">Subject</th>
                       <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Status</th>
+                      <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs hidden lg:table-cell">Assigned</th>
                       <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Date</th>
                     </tr>
                   </thead>
@@ -245,6 +252,16 @@ function LeadsContent() {
                         <td className="px-4 py-3 text-[#475569] text-xs max-w-xs truncate hidden lg:table-cell">{lead.subject}</td>
                         <td className="px-4 py-3">
                           <Badge variant={COL_COLORS[lead.status]?.badge as "blue" | "amber" | "green" | "default" || "default"} size="sm">{lead.status}</Badge>
+                        </td>
+                        <td className="px-4 py-3 text-[#475569] text-xs hidden lg:table-cell">
+                          {lead.assignedToName ? (
+                            <span className="inline-flex items-center gap-1 text-[#8B00FF]">
+                              <UserCheck className="w-3 h-3" />
+                              {lead.assignedToName}
+                            </span>
+                          ) : (
+                            <span className="text-[#94A3B8]">Unassigned</span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-[#64748B] text-xs">{relativeDate(lead.createdAt)}</td>
                       </tr>
