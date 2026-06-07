@@ -396,6 +396,9 @@ model ChatMessage {
   attachId    String?  @map("attach_id")
   attachLabel String?  @map("attach_label")
   attachHref  String?  @map("attach_href")
+  fileUrl     String?  @map("file_url")
+  fileName    String?  @map("file_name")
+  fileType    String?  @map("file_type")
   createdAt   DateTime @default(now()) @map("created_at")
 
   channel   Channel        @relation(fields: [channelId], references: [id], onDelete: Cascade)

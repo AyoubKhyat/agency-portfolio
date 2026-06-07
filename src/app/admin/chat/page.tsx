@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Hash, MessageCircle, Plus, Smile, Paperclip, Send, X, Search,
   Briefcase, Building2, CheckSquare, Calendar, Target, Loader2, ArrowLeft,
+  Image, FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MentionTextarea, HighlightedMentions } from "@/components/admin/mention-textarea";
@@ -36,6 +37,9 @@ type Message = {
   attachId: string | null;
   attachLabel: string | null;
   attachHref: string | null;
+  fileUrl: string | null;
+  fileName: string | null;
+  fileType: string | null;
   createdAt: string;
   reactions: Reaction[];
 };
@@ -86,6 +90,8 @@ function ChatInner() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [composer, setComposer] = useState("");
   const [attach, setAttach] = useState<AttachResult | null>(null);
+  const [filePreview, setFilePreview] = useState<{ file: File; url: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachOpen, setAttachOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -254,10 +260,45 @@ function ChatInner() {
     }
   }
 
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert("File too large (max 5 MB)"); return; }
+    const allowed = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"];
+    if (!allowed.includes(file.type)) { alert("Only images and PDFs allowed"); return; }
+    const url = file.type.startsWith("image/") ? URL.createObjectURL(file) : "";
+    setFilePreview({ file, url });
+    e.target.value = "";
+  }
+
+  function clearFilePreview() {
+    if (filePreview?.url) URL.revokeObjectURL(filePreview.url);
+    setFilePreview(null);
+  }
+
+  async function sendFile() {
+    if (!active || !filePreview || sending) return;
+    setSending(true);
+    const fd = new FormData();
+    fd.append("file", filePreview.file);
+    fd.append("channelId", active.id);
+    fd.append("content", composer.trim() || filePreview.file.name);
+    const res = await fetch("/api/admin/chat/upload", { method: "POST", body: fd });
+    if (res.ok) {
+      const m: Message = await res.json();
+      setMessages((prev) => [...prev, m]);
+      setComposer("");
+      clearFilePreview();
+      loadChannels();
+    }
+    setSending(false);
+  }
+
   function handleKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      send();
+      if (filePreview) sendFile();
+      else send();
     }
   }
 
@@ -466,17 +507,50 @@ function ChatInner() {
                   </button>
                 </div>
               )}
+              {filePreview && (
+                <div className="flex items-center gap-3 mb-2 px-3 py-2 rounded-lg bg-[#F3F4F6] border border-[#E5E7EB]">
+                  {filePreview.file.type.startsWith("image/") ? (
+                    <img src={filePreview.url} alt="" className="w-16 h-16 rounded-lg object-cover" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-lg bg-red-50 flex items-center justify-center">
+                      <FileText className="w-6 h-6 text-red-500" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-medium text-[#111827] truncate">{filePreview.file.name}</p>
+                    <p className="text-[10px] text-[#6B7280]">{(filePreview.file.size / 1024).toFixed(0)} KB</p>
+                  </div>
+                  <button onClick={clearFilePreview} className="text-[#9CA3AF] hover:text-red-500">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
               <div className="relative">
                 <MentionTextarea
                   value={composer}
                   onChange={setComposer}
                   onKeyDown={handleKey}
-                  placeholder={`Message ${active.isDm ? active.partner?.fullName ?? "" : "#" + active.name}`}
+                  placeholder={filePreview ? "Add a caption..." : `Message ${active.isDm ? active.partner?.fullName ?? "" : "#" + active.name}`}
                   rows={1}
                   users={team}
-                  className="min-h-[44px] pr-32 resize-none"
+                  className="min-h-[44px] pr-40 resize-none"
                 />
                 <div className="absolute right-2 top-1.5 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-1.5 rounded-md text-[#6B7280] hover:bg-[#F3F4F6]"
+                    title="Upload image or PDF"
+                  >
+                    <Image className="w-4 h-4" />
+                  </button>
                   <button
                     type="button"
                     onClick={() => setAttachOpen(true)}
@@ -487,8 +561,8 @@ function ChatInner() {
                   </button>
                   <button
                     type="button"
-                    onClick={send}
-                    disabled={sending || !composer.trim()}
+                    onClick={filePreview ? sendFile : send}
+                    disabled={sending || (!composer.trim() && !filePreview)}
                     className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-[#8B00FF] hover:bg-[#7A00E0] text-white disabled:opacity-40"
                     title="Send"
                   >
@@ -496,7 +570,7 @@ function ChatInner() {
                   </button>
                 </div>
               </div>
-              <p className="text-[10px] text-[#9CA3AF] mt-1">⏎ to send · ⇧⏎ for newline · @ to mention</p>
+              <p className="text-[10px] text-[#9CA3AF] mt-1">⏎ to send · ⇧⏎ for newline · @ to mention · 📎 images & PDFs</p>
             </div>
           </>
         )}
@@ -605,9 +679,46 @@ function MessageBubble({ message, isMe, isAdmin, groupWithPrev, team, reactions,
             </div>
           </div>
         ) : (
-          <div className="text-[13px] text-[#111827] leading-relaxed">
-            <HighlightedMentions text={message.content} users={team} />
-          </div>
+          <>
+            {!message.fileUrl && (
+              <div className="text-[13px] text-[#111827] leading-relaxed">
+                <HighlightedMentions text={message.content} users={team} />
+              </div>
+            )}
+            {message.fileUrl && message.fileType?.startsWith("image/") && (
+              <div className="mt-1">
+                {message.content && message.content !== message.fileName && (
+                  <div className="text-[13px] text-[#111827] leading-relaxed mb-1">
+                    <HighlightedMentions text={message.content} users={team} />
+                  </div>
+                )}
+                <a href={message.fileUrl} target="_blank" rel="noopener noreferrer">
+                  <img
+                    src={message.fileUrl}
+                    alt={message.fileName ?? "image"}
+                    className="max-w-[320px] max-h-[240px] rounded-lg border border-[#E5E7EB] object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                  />
+                </a>
+              </div>
+            )}
+            {message.fileUrl && message.fileType === "application/pdf" && (
+              <div className="mt-1">
+                {message.content && message.content !== message.fileName && (
+                  <div className="text-[13px] text-[#111827] leading-relaxed mb-1">
+                    <HighlightedMentions text={message.content} users={team} />
+                  </div>
+                )}
+                <a
+                  href={message.fileUrl}
+                  download={message.fileName ?? "file.pdf"}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-red-200 bg-red-50 text-red-700 text-[12px] font-medium hover:bg-red-100 transition-colors"
+                >
+                  <FileText className="w-4 h-4" />
+                  {message.fileName ?? "Document.pdf"}
+                </a>
+              </div>
+            )}
+          </>
         )}
         {message.attachType && message.attachLabel && (
           <AttachChip result={{
