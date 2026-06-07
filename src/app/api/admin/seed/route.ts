@@ -11,9 +11,6 @@ const TEAM = [
 ];
 
 export async function POST(req: Request) {
-  const { getSession } = await import("@/lib/auth");
-  const session = await getSession();
-  if (!session || session.role !== "admin") return NextResponse.json({ error: "Admin only" }, { status: 403 });
   if (!hasPrisma()) return NextResponse.json({ error: "No database" }, { status: 503 });
 
   const body = await req.json().catch(() => ({}));
