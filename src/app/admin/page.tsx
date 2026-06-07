@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Target, Users, FolderKanban, Clock, ArrowRight, MessageCircle, Reply, CalendarClock, AlertTriangle, CalendarDays, Layers, TrendingUp, DollarSign, CheckSquare, Sun, Inbox, Calendar as CalendarIcon, Phone, Video, MapPin, BarChart3, PieChart, Activity, UsersRound } from "lucide-react";
+import { Target, Users, FolderKanban, Clock, ArrowRight, MessageCircle, Reply, CalendarClock, AlertTriangle, CalendarDays, Layers, TrendingUp, DollarSign, CheckSquare, Sun, Inbox, Calendar as CalendarIcon, Phone, Video, MapPin, ChartBar, ChartPie, Activity, UsersRound } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 import { GlassCard } from "@/components/admin/glass-card";
 import { Badge } from "@/components/admin/badge";
@@ -542,7 +542,7 @@ export default function DashboardPage() {
         >
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
-              <BarChart3 className="w-4 h-4 text-purple-600" />
+              <ChartBar className="w-4 h-4 text-purple-600" />
             </div>
             <h2 className="text-sm font-semibold text-[#0F172A]">Analytics</h2>
           </div>
@@ -589,7 +589,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.05, duration: 0.4 }}>
               <div className="flex items-center gap-2 mb-4">
-                <PieChart className="w-4 h-4 text-amber-500" />
+                <ChartPie className="w-4 h-4 text-amber-500" />
                 <h3 className="text-sm font-semibold text-[#0F172A]">Sector Distribution</h3>
               </div>
               <DonutChart

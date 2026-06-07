@@ -65,9 +65,10 @@ export async function POST(
   }
 
   // Build full URL from the request origin
-  const origin = req.headers.get("origin") || req.headers.get("x-forwarded-host")
-    ? `https://${req.headers.get("x-forwarded-host")}`
-    : new URL(req.url).origin;
+  const fwdHost = req.headers.get("x-forwarded-host");
+  const origin = req.headers.get("origin")
+    || (fwdHost ? `https://${fwdHost}` : null)
+    || new URL(req.url).origin;
 
   const signingUrl = `${origin}/sign/${token}`;
 
