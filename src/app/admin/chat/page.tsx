@@ -143,22 +143,38 @@ function ChatInner() {
     window.history.replaceState({}, "", `/admin/chat?${sp.toString()}`);
   }, [active]);
 
-  // Load + poll messages for the active channel
+  // Load + poll messages for the active channel (cursor-based: only fetch new)
+  const lastMsgTimeRef = useRef<string | null>(null);
   useEffect(() => {
     if (!active) return;
     let cancelled = false;
+    lastMsgTimeRef.current = null;
     setLoadingMessages(true);
-    const pull = async () => {
-      const res = await fetch(`/api/admin/chat/channels/${active.id}/messages?limit=100`);
+    const pull = async (initial?: boolean) => {
+      const cursor = initial ? "" : lastMsgTimeRef.current ? `&after=${encodeURIComponent(lastMsgTimeRef.current)}` : "";
+      const limit = initial ? 100 : 50;
+      const res = await fetch(`/api/admin/chat/channels/${active.id}/messages?limit=${limit}${cursor}`);
       if (!res.ok || cancelled) return;
       const data: Message[] = await res.json();
-      setMessages(data);
-      setLoadingMessages(false);
-      // Mark this channel as read (only when we genuinely fetched messages).
-      fetch(`/api/admin/chat/channels/${active.id}/read`, { method: "POST" }).catch(() => {});
+      if (initial) {
+        setMessages(data);
+        setLoadingMessages(false);
+      } else if (data.length > 0) {
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m.id));
+          const fresh = data.filter((m) => !existingIds.has(m.id));
+          return fresh.length > 0 ? [...prev, ...fresh] : prev;
+        });
+      }
+      if (data.length > 0) {
+        lastMsgTimeRef.current = data[data.length - 1].createdAt;
+      }
+      if (initial) {
+        fetch(`/api/admin/chat/channels/${active.id}/read`, { method: "POST" }).catch(() => {});
+      }
     };
-    pull();
-    const t = setInterval(pull, 5_000);
+    pull(true);
+    const t = setInterval(() => pull(false), 2_000);
     return () => { cancelled = true; clearInterval(t); };
   }, [active]);
 
@@ -216,6 +232,26 @@ function ChatInner() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ emoji }),
     });
+  }
+
+  async function editMessage(messageId: string, newContent: string) {
+    const res = await fetch(`/api/admin/chat/messages/${messageId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: newContent }),
+    });
+    if (res.ok) {
+      const updated: Message = await res.json();
+      setMessages((prev) => prev.map((m) => m.id === messageId ? updated : m));
+    }
+  }
+
+  async function deleteMessage(messageId: string) {
+    const res = await fetch(`/api/admin/chat/messages/${messageId}`, { method: "DELETE" });
+    if (res.ok) {
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+      loadChannels();
+    }
   }
 
   function handleKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -402,10 +438,13 @@ function ChatInner() {
                               key={m.id}
                               message={m}
                               isMe={isMe}
+                              isAdmin={me?.id ? (team.find((u) => u.id === me.id) as Record<string, unknown>)?.role === "admin" : false}
                               groupWithPrev={!!groupWithPrev}
                               team={team}
                               reactions={reactions}
                               onReact={(emoji) => toggleReaction(m, emoji)}
+                              onEdit={(content) => editMessage(m.id, content)}
+                              onDelete={() => deleteMessage(m.id)}
                             />
                           );
                         })}
@@ -510,19 +549,31 @@ function ChannelRow({ active, onClick, icon, name, unread, preview }: { active: 
   );
 }
 
-function MessageBubble({ message, isMe, groupWithPrev, team, reactions, onReact }: {
-  message: Message; isMe: boolean; groupWithPrev: boolean; team: User[];
+function MessageBubble({ message, isMe, isAdmin, groupWithPrev, team, reactions, onReact, onEdit, onDelete }: {
+  message: Message; isMe: boolean; isAdmin: boolean; groupWithPrev: boolean; team: User[];
   reactions: { emoji: string; count: number; mine: boolean; users: string[] }[];
   onReact: (emoji: string) => void;
+  onEdit: (content: string) => void;
+  onDelete: () => void;
 }) {
   const author = team.find((u) => u.id === message.authorId);
   const [hovering, setHovering] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState(message.content);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  function submitEdit() {
+    if (!editContent.trim()) return;
+    onEdit(editContent.trim());
+    setEditing(false);
+  }
+
   return (
     <div
       className={cn("group flex gap-3 px-2 py-1 rounded-md relative", hovering && "bg-white")}
       onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => { setHovering(false); setEmojiOpen(false); }}
+      onMouseLeave={() => { setHovering(false); setEmojiOpen(false); setConfirmDelete(false); }}
     >
       <div className="w-8 shrink-0">
         {!groupWithPrev && (
@@ -538,9 +589,26 @@ function MessageBubble({ message, isMe, groupWithPrev, team, reactions, onReact 
             <span className="text-[10px] text-[#9CA3AF]">{formatTime(message.createdAt)}</span>
           </div>
         )}
-        <div className="text-[13px] text-[#111827] leading-relaxed">
-          <HighlightedMentions text={message.content} users={team} />
-        </div>
+        {editing ? (
+          <div className="mt-1">
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitEdit(); } if (e.key === "Escape") setEditing(false); }}
+              className="w-full px-3 py-2 rounded-lg border border-purple-200 text-[13px] text-[#111827] focus:ring-2 focus:ring-purple-100 outline-none resize-none"
+              rows={2}
+              autoFocus
+            />
+            <div className="flex gap-2 mt-1.5">
+              <button onClick={submitEdit} className="text-[11px] px-2.5 py-1 rounded-md bg-[#8B00FF] text-white font-medium hover:bg-[#7A00E0]">Save</button>
+              <button onClick={() => setEditing(false)} className="text-[11px] px-2.5 py-1 rounded-md text-[#6B7280] hover:bg-[#F3F4F6]">Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-[13px] text-[#111827] leading-relaxed">
+            <HighlightedMentions text={message.content} users={team} />
+          </div>
+        )}
         {message.attachType && message.attachLabel && (
           <AttachChip result={{
             type: message.attachType,
@@ -569,7 +637,7 @@ function MessageBubble({ message, isMe, groupWithPrev, team, reactions, onReact 
           </div>
         )}
       </div>
-      {hovering && !isMe && (
+      {hovering && !editing && (
         <div className="absolute -top-3 right-2 bg-white border border-[#E5E7EB] rounded-md shadow-sm px-1 py-0.5 flex items-center gap-0.5">
           {QUICK_REACTIONS.slice(0, emojiOpen ? QUICK_REACTIONS.length : 3).map((e) => (
             <button key={e} onClick={() => onReact(e)} className="px-1 hover:bg-[#F3F4F6] rounded">{e}</button>
@@ -577,6 +645,20 @@ function MessageBubble({ message, isMe, groupWithPrev, team, reactions, onReact 
           <button onClick={() => setEmojiOpen((s) => !s)} className="px-1 text-[#6B7280] hover:bg-[#F3F4F6] rounded">
             <Smile className="w-3 h-3" />
           </button>
+          {isMe && (
+            <button onClick={() => { setEditContent(message.content); setEditing(true); }} className="px-1 text-[#6B7280] hover:bg-[#F3F4F6] rounded" title="Edit">
+              <span className="text-[11px]">✏️</span>
+            </button>
+          )}
+          {(isMe || isAdmin) && (
+            confirmDelete ? (
+              <button onClick={onDelete} className="px-1.5 py-0.5 text-[10px] font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded">Delete?</button>
+            ) : (
+              <button onClick={() => setConfirmDelete(true)} className="px-1 text-[#6B7280] hover:bg-red-50 hover:text-red-500 rounded" title="Delete">
+                <X className="w-3 h-3" />
+              </button>
+            )
+          )}
         </div>
       )}
     </div>

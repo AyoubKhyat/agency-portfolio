@@ -30,13 +30,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (!member) return NextResponse.json({ error: "Not a member" }, { status: 403 });
 
   const { searchParams } = new URL(req.url);
-  const before = searchParams.get("before"); // ISO cursor for pagination
+  const before = searchParams.get("before");
+  const after = searchParams.get("after");
   const limit = Math.min(Number(searchParams.get("limit")) || 60, 200);
 
   const messages = await prisma.chatMessage.findMany({
     where: {
       channelId: id,
       ...(before ? { createdAt: { lt: new Date(before) } } : {}),
+      ...(after ? { createdAt: { gt: new Date(after) } } : {}),
     },
     include: {
       reactions: { select: { emoji: true, userId: true, userName: true } },
@@ -45,7 +47,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     take: limit,
   });
 
-  // Return in chronological order (oldest first).
   return NextResponse.json(messages.reverse());
 }
 
