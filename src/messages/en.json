@@ -217,6 +217,9 @@
     "project13_title": "Luxury Copro",
     "project13_desc": "Corporate website for a property management and real estate company in Marrakech — co-ownership management, rental, buying and selling with professional and transparent guidance.",
     "project13_tags": "Next.js,React,Real Estate,Property Management",
+    "project14_title": "Asrar Lalla",
+    "project14_desc": "E-commerce boutique for 100% natural Moroccan beauty products with cash on delivery, WhatsApp ordering, and shipping throughout Morocco.",
+    "project14_tags": "Next.js,React,E-commerce,Beauty",
     "view_case_study": "View Case Study",
     "live_site": "Live Site"
   },
@@ -545,6 +548,28 @@
     "luxury-copro_result2_value": "98%",
     "luxury-copro_result2_label": "Client satisfaction",
     "luxury-copro_result3_value": "10+",
-    "luxury-copro_result3_label": "Years of experience"
+    "luxury-copro_result3_label": "Years of experience",
+
+    "asrar-lalla_title": "Asrar Lalla",
+    "asrar-lalla_tagline": "Moroccan natural beauty, delivered to your door.",
+    "asrar-lalla_meta_desc": "Case study: How we built an e-commerce boutique for Asrar Lalla, a brand of 100% natural Moroccan beauty products with cash on delivery and WhatsApp ordering.",
+    "asrar-lalla_client": "Asrar Lalla",
+    "asrar-lalla_industry": "E-commerce / Natural Beauty & Cosmetics",
+    "asrar-lalla_challenge": "Asrar Lalla wanted to digitize their brand of natural cosmetics inspired by Moroccan beauty secrets. The challenge: build a trustworthy shopping experience for a market used to cash on delivery, with reliable nationwide shipping and ordering as simple as a WhatsApp message.",
+    "asrar-lalla_solution": "We designed a feminine, warm online store — pink and white palette, bold typography and an immersive product hero. The purchase journey combines a classic order form with a dedicated WhatsApp button, plus WhatsApp confirmation to reassure customers. Free shipping above 99 MAD and cash on delivery are highlighted in the top banner.",
+    "asrar-lalla_step1_title": "Brand Identity & Art Direction",
+    "asrar-lalla_step1_desc": "Defined the visual world — powder pink, pure white and deep black — inspired by premium feminine beauty products. Mapped the conversion funnel adapted to Moroccan buying behavior (cash on delivery + WhatsApp).",
+    "asrar-lalla_step2_title": "Design & Development",
+    "asrar-lalla_step2_desc": "Built the store with Next.js and Tailwind. Immersive product page, filterable collection, optimized order form and direct WhatsApp Business integration for fast order confirmation.",
+    "asrar-lalla_step3_title": "Launch & Logistics",
+    "asrar-lalla_step3_desc": "Set up cash on delivery, configured nationwide shipping, integrated customer reviews and deployed on Vercel for a fast experience anywhere in Morocco.",
+    "asrar-lalla_features": "Filterable catalog of natural products,Cash on delivery across Morocco,Direct WhatsApp ordering,Free shipping above 99 MAD,Customer reviews section,Beauty secrets section (storytelling),WhatsApp order confirmation",
+    "asrar-lalla_tech": "Next.js,React,Tailwind CSS,Vercel",
+    "asrar-lalla_result1_value": "99 MAD",
+    "asrar-lalla_result1_label": "Free shipping above",
+    "asrar-lalla_result2_value": "100%",
+    "asrar-lalla_result2_label": "Natural",
+    "asrar-lalla_result3_value": "Morocco",
+    "asrar-lalla_result3_label": "Nationwide delivery"
   }
 }

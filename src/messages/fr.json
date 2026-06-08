@@ -217,6 +217,9 @@
     "project13_title": "Luxury Copro",
     "project13_desc": "Site vitrine pour un syndic de copropriété et gestionnaire immobilier à Marrakech — gestion de biens, location, achat et vente avec un accompagnement professionnel et transparent.",
     "project13_tags": "Next.js,React,Immobilier,Copropriété",
+    "project14_title": "Asrar Lalla",
+    "project14_desc": "Boutique e-commerce de produits de beauté 100% naturels marocains avec paiement à la livraison, commande WhatsApp et livraison partout au Maroc.",
+    "project14_tags": "Next.js,React,E-commerce,Beauté",
     "view_case_study": "Voir l'étude de cas",
     "live_site": "Site en ligne"
   },
@@ -545,6 +548,28 @@
     "luxury-copro_result2_value": "98%",
     "luxury-copro_result2_label": "Clients satisfaits",
     "luxury-copro_result3_value": "10+",
-    "luxury-copro_result3_label": "Ans d'expérience"
+    "luxury-copro_result3_label": "Ans d'expérience",
+
+    "asrar-lalla_title": "Asrar Lalla",
+    "asrar-lalla_tagline": "La beauté naturelle marocaine, livrée chez vous.",
+    "asrar-lalla_meta_desc": "Étude de cas : Comment nous avons créé une boutique e-commerce pour Asrar Lalla, marque de produits de beauté 100% naturels marocains avec paiement à la livraison et commande WhatsApp.",
+    "asrar-lalla_client": "Asrar Lalla",
+    "asrar-lalla_industry": "E-commerce / Beauté & Cosmétiques Naturels",
+    "asrar-lalla_challenge": "Asrar Lalla souhaitait digitaliser sa marque de cosmétiques naturels inspirés des secrets de beauté marocains. Le défi : créer une expérience d'achat de confiance pour un marché habitué au paiement à la livraison, avec une livraison fiable partout au Maroc et une commande aussi simple qu'un message WhatsApp.",
+    "asrar-lalla_solution": "Nous avons conçu une boutique en ligne féminine et chaleureuse — palette rose et blanche, typographie audacieuse et hero produit immersif. Le parcours d'achat combine commande classique et bouton WhatsApp dédié, avec confirmation par WhatsApp pour rassurer la cliente. Livraison offerte dès 99 DH et paiement à la livraison mis en avant en bandeau supérieur.",
+    "asrar-lalla_step1_title": "Identité & Direction Artistique",
+    "asrar-lalla_step1_desc": "Définition de l'univers visuel — rose poudré, blanc pur et noir profond — inspiré des produits de beauté féminins haut de gamme. Cartographie du tunnel de conversion adapté au comportement d'achat marocain (paiement à la livraison + WhatsApp).",
+    "asrar-lalla_step2_title": "Design & Développement",
+    "asrar-lalla_step2_desc": "Construction de la boutique avec Next.js et Tailwind. Page produit immersive, collection filtrable, formulaire de commande optimisé et intégration directe avec WhatsApp Business pour confirmation rapide des commandes.",
+    "asrar-lalla_step3_title": "Lancement & Logistique",
+    "asrar-lalla_step3_desc": "Mise en place du paiement à la livraison, configuration de la livraison nationale, intégration des avis clients et déploiement sur Vercel pour une expérience rapide partout au Maroc.",
+    "asrar-lalla_features": "Catalogue de produits naturels filtrable,Paiement à la livraison sur tout le Maroc,Commande directe via WhatsApp,Livraison offerte dès 99 DH,Section avis clients,Section secrets de beauté (storytelling),Confirmation WhatsApp des commandes",
+    "asrar-lalla_tech": "Next.js,React,Tailwind CSS,Vercel",
+    "asrar-lalla_result1_value": "99 DH",
+    "asrar-lalla_result1_label": "Livraison offerte dès",
+    "asrar-lalla_result2_value": "100%",
+    "asrar-lalla_result2_label": "Naturel",
+    "asrar-lalla_result3_value": "Maroc",
+    "asrar-lalla_result3_label": "Livraison nationale"
   }
 }
