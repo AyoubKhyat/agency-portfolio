@@ -38,6 +38,9 @@ model User {
   createdTasks        Task[]              @relation("TaskCreator")
   ownedMeetings       Meeting[]           @relation("MeetingOwner")
   chatChannels        ChannelMember[]
+  outreachMessages    OutreachMessage[]   @relation("OutreachMessageSender")
+  campaigns           Campaign[]          @relation("CampaignOwner")
+  dailyTargets        DailyTarget[]
 
   @@map("users")
 }
@@ -140,6 +143,9 @@ model Prospect {
   status       String    @default("A_ENVOYER")
   sentAt       DateTime? @map("sent_at")
   followUpDate    DateTime? @map("follow_up_date")
+  followup1At     DateTime? @map("followup_1_at")
+  followup2At     DateTime? @map("followup_2_at")
+  followup3At     DateTime? @map("followup_3_at")
   proposalAmount  Float?    @map("proposal_amount")
   proposalDate    DateTime? @map("proposal_date")
   proposalStatus  String?   @map("proposal_status")
@@ -170,7 +176,13 @@ model Prospect {
   spawnedClients Client[] @relation("ClientFromProspect")
   meetings   Meeting[]
   contracts  Contract[]
+  outreachMessages OutreachMessage[]
 
+  campaignId      String?  @map("campaign_id")
+  source          String?  @default("MANUAL") // MANUAL, DISCOVERY_GOOGLE, DISCOVERY_OSM, IMPORT
+  campaign        Campaign? @relation(fields: [campaignId], references: [id])
+
+  @@index([campaignId])
   @@map("prospects")
 }
 
@@ -560,3 +572,111 @@ model Webhook {
 
   @@map("webhooks")
 }
+
+// ============================================================
+// Sales Playbook
+// ============================================================
+
+model OutreachTemplate {
+  id        String   @id @default(cuid())
+  key       String   @unique // WEBSITE_OFFER, AUTOMATION_OFFER, CRM_OFFER, AI_ASSISTANT_OFFER, INTRO
+  name      String
+  channel   String   @default("WHATSAPP") // WHATSAPP, INSTAGRAM, EMAIL, CALL
+  subject   String   @default("")
+  body      String
+  language  String   @default("fr") // fr, en, ar
+  notes     String   @default("")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  messages  OutreachMessage[]
+  campaigns Campaign[]
+
+  @@map("outreach_templates")
+}
+
+// ============================================================
+// Prospect Discovery
+// ============================================================
+
+model Campaign {
+  id            String   @id @default(cuid())
+  name          String
+  sector        String?
+  city          String?
+  templateId    String?  @map("template_id")
+  ownerId       String?  @map("owner_id")
+  createdById   String?  @map("created_by_id")
+  createdByName String?  @map("created_by_name")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  template      OutreachTemplate? @relation(fields: [templateId], references: [id])
+  owner         User?    @relation("CampaignOwner", fields: [ownerId], references: [id])
+  prospects     Prospect[]
+
+  @@index([ownerId])
+  @@map("campaigns")
+}
+
+model DailyTarget {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  date            DateTime @db.Date
+  targetImports   Int      @default(0) @map("target_imports")
+  targetContacts  Int      @default(0) @map("target_contacts")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date])
+  @@index([date])
+  @@map("daily_targets")
+}
+
+model SalesScript {
+  id        String   @id @default(cuid())
+  category  String   // WHATSAPP, INSTAGRAM_DM, CALL, OBJECTION_HANDLING
+  title     String
+  body      String
+  tags      String   @default("") // comma-separated
+  language  String   @default("fr")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@map("sales_scripts")
+}
+
+model OutreachMessage {
+  id           String    @id @default(cuid())
+  prospectId   String    @map("prospect_id")
+  templateId   String?   @map("template_id")
+  templateKey  String?   @map("template_key")
+  channel      String    @default("WHATSAPP")
+  body         String
+  sentAt       DateTime  @default(now()) @map("sent_at")
+  sentById     String?   @map("sent_by_id")
+  sentByName   String    @default("") @map("sent_by_name")
+  replied      Boolean   @default(false)
+  repliedAt    DateTime? @map("replied_at")
+  replyReason  String?   @map("reply_reason") // INTERESTED, NOT_INTERESTED, HAS_PROVIDER, TOO_EXPENSIVE, LATER, NO_BUDGET
+  variantLabel String?   @map("variant_label") // A | B | C | D (AI variants)
+  tone         String?   @map("tone")          // tone used at generation (snapshot)
+  objective    String?   @map("objective")     // objective at generation (snapshot)
+  meetingBooked Boolean  @default(false) @map("meeting_booked")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  prospect Prospect          @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  template OutreachTemplate? @relation(fields: [templateId], references: [id])
+  sentBy   User?             @relation("OutreachMessageSender", fields: [sentById], references: [id])
+
+  @@index([prospectId])
+  @@index([templateId])
+  @@index([sentById])
+  @@index([sentAt])
+  @@map("outreach_messages")
+}
+

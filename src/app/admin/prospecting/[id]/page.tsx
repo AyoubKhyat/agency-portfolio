@@ -6,6 +6,7 @@ import Link from "next/link";
 import { HiOutlineArrowLeft, HiOutlineChatBubbleLeft, HiOutlinePhone } from "react-icons/hi2";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import AvatarChip from "@/components/AvatarChip";
+import { PlaybookPanel } from "./PlaybookPanel";
 
 const STATUSES = ["A_ENVOYER", "ENVOYE", "REPONDU", "PAS_DE_WHATSAPP", "CONVERTI"];
 const STATUS_LABELS: Record<string, string> = { A_ENVOYER: "To Send", ENVOYE: "Sent", REPONDU: "Replied", PAS_DE_WHATSAPP: "No WhatsApp", CONVERTI: "Converted" };
@@ -35,6 +36,7 @@ type Prospect = {
   sentByUser: SentBy; sentByName: string | null;
   contactedByName: string | null; contactedAt: string | null; lastActionByName: string | null; lastActionAt: string | null;
   notes: Note[]; activities: Activity[];
+  score?: number | null; scoreLabel?: "HIGH" | "MEDIUM" | "LOW" | null;
 };
 
 export default function ProspectDetailPage() {
@@ -194,6 +196,22 @@ export default function ProspectDetailPage() {
           Convert to Lead →
         </button>
       )}
+
+      {/* Sales Playbook panel */}
+      <PlaybookPanel
+        prospect={{
+          id: prospect.id,
+          name: prospect.name,
+          sector: prospect.sector,
+          neighborhood: prospect.neighborhood,
+          instagram: prospect.instagram,
+          whatsappLink: prospect.whatsappLink,
+          hasWebsite: prospect.hasWebsite,
+          score: prospect.score,
+          scoreLabel: prospect.scoreLabel,
+        }}
+        onScoreUpdated={(score, label) => setProspect((prev) => prev ? { ...prev, score, scoreLabel: label as "HIGH" | "MEDIUM" | "LOW" } : prev)}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Notes */}

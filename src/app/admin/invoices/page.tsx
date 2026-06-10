@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Receipt, DollarSign, AlertCircle, Clock, Plus, Download,
-  CheckCircle, Trash2, X,
+  CheckCircle, Trash2, X, Loader2,
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
@@ -86,6 +86,8 @@ export default function InvoicesPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
   const [showForm, setShowForm] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ kind: "error" | "success"; msg: string } | null>(null);
 
   /* fetch data */
   useEffect(() => {
@@ -140,8 +142,52 @@ export default function InvoicesPage() {
     if (res.ok) setInvoices((prev) => prev.filter((i) => i.id !== id));
   }
 
-  function downloadPdf(id: string) {
-    window.open(`/api/admin/invoices/${id}/pdf`, "_blank");
+  function showToast(kind: "error" | "success", msg: string) {
+    setToast({ kind, msg });
+    setTimeout(() => setToast(null), 4000);
+  }
+
+  function canDownload(inv: Invoice): boolean {
+    if (!inv.invoiceNumber || !inv.clientName) return false;
+    try {
+      const items = JSON.parse(inv.items || "[]");
+      return Array.isArray(items) && items.length > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  async function downloadPdf(inv: Invoice) {
+    if (downloadingId) return;
+    if (!canDownload(inv)) {
+      showToast("error", "Invoice is missing required data (client or line items)");
+      return;
+    }
+    setDownloadingId(inv.id);
+    try {
+      const res = await fetch(`/api/admin/invoices/${inv.id}/pdf`, { credentials: "include" });
+      if (res.status === 401) {
+        router.push("/admin/login");
+        return;
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `Failed (${res.status})`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${inv.invoiceNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      showToast("error", err instanceof Error ? err.message : "Download failed");
+    } finally {
+      setDownloadingId(null);
+    }
   }
 
   async function handleCreate(data: CreateInvoiceData) {
@@ -225,7 +271,15 @@ export default function InvoicesPage() {
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-[14px] font-semibold text-[#0F172A]">{formatMAD(inv.total)} <span className="text-[10px] text-[#9CA3AF]">{inv.currency}</span></span>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => downloadPdf(inv.id)} className="p-1.5 rounded-lg text-[#475569] hover:text-[#8B00FF] hover:bg-purple-50 transition-colors" title="Download PDF"><Download className="w-3.5 h-3.5" /></button>
+                    <button
+                      onClick={() => downloadPdf(inv)}
+                      disabled={downloadingId === inv.id || !canDownload(inv)}
+                      aria-busy={downloadingId === inv.id}
+                      className="p-1.5 rounded-lg text-[#475569] hover:text-[#8B00FF] hover:bg-purple-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#475569]"
+                      title={canDownload(inv) ? "Download PDF" : "Missing required data"}
+                    >
+                      {downloadingId === inv.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                    </button>
                     {inv.status !== "PAID" && inv.status !== "CANCELLED" && (
                       <button onClick={() => markPaid(inv.id)} className="p-1.5 rounded-lg text-[#475569] hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Mark Paid"><CheckCircle className="w-3.5 h-3.5" /></button>
                     )}
@@ -272,11 +326,13 @@ export default function InvoicesPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={() => downloadPdf(inv.id)}
-                            className="p-1.5 rounded-lg text-[#475569] hover:text-[#8B00FF] hover:bg-purple-50 transition-colors"
-                            title="Download PDF"
+                            onClick={() => downloadPdf(inv)}
+                            disabled={downloadingId === inv.id || !canDownload(inv)}
+                            aria-busy={downloadingId === inv.id}
+                            className="p-1.5 rounded-lg text-[#475569] hover:text-[#8B00FF] hover:bg-purple-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#475569]"
+                            title={canDownload(inv) ? "Download PDF" : "Missing required data"}
                           >
-                            <Download className="w-4 h-4" />
+                            {downloadingId === inv.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                           </button>
                           {inv.status !== "PAID" && inv.status !== "CANCELLED" && (
                             <button
@@ -312,6 +368,26 @@ export default function InvoicesPage() {
           onClose={() => setShowForm(false)}
           onSubmit={handleCreate}
         />
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={cn(
+            "fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-lg text-[13px] font-medium flex items-center gap-2 border max-w-sm",
+            toast.kind === "error"
+              ? "bg-red-50 border-red-200 text-red-800"
+              : "bg-emerald-50 border-emerald-200 text-emerald-800"
+          )}
+        >
+          {toast.kind === "error" ? <AlertCircle className="w-4 h-4 shrink-0" /> : <CheckCircle className="w-4 h-4 shrink-0" />}
+          <span className="flex-1">{toast.msg}</span>
+          <button onClick={() => setToast(null)} className="p-0.5 rounded hover:bg-black/5">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
       )}
     </div>
   );
