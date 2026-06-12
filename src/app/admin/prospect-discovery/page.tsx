@@ -7,7 +7,10 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { EmptyState } from "@/components/admin/empty-state";
+import { FilterTabs } from "@/components/admin/filter-tabs";
 import { cn } from "@/lib/utils";
+import { BulkSweepTab } from "./_components/BulkSweepTab";
+import { CoverageTab } from "./_components/CoverageTab";
 
 /* ---------------- Types ---------------- */
 type DuplicateStatus = "EXISTS" | "POSSIBLE" | "NEW";
@@ -60,31 +63,24 @@ type User = { id: string; fullName: string; isActive: boolean };
 type Template = { id: string; name: string; channel: string; language: string };
 
 /* ---------------- Constants ---------------- */
-const CITIES = [
+const CITIES_FALLBACK = [
   { key: "MARRAKECH", label: "Marrakech" },
   { key: "CASABLANCA", label: "Casablanca" },
   { key: "RABAT", label: "Rabat" },
   { key: "AGADIR", label: "Agadir" },
 ];
 
-const SECTORS = [
-  { key: "CLINICS", label: "Clinics" },
-  { key: "DENTISTS", label: "Dentists" },
-  { key: "RIADS", label: "Riads" },
-  { key: "RESTAURANTS", label: "Restaurants" },
-  { key: "REAL_ESTATE", label: "Real estate agencies" },
-  { key: "SCHOOLS", label: "Schools" },
-  { key: "BEAUTY", label: "Beauty salons" },
-  { key: "GYMS", label: "Gyms" },
-  { key: "LAWYERS", label: "Lawyers" },
-  { key: "ACCOUNTANTS", label: "Accountants" },
+// Fallback only — the live list comes from /api/admin/prospect-discovery/sectors
+const SECTORS_FALLBACK = [
+  { key: "RESTAURANTS", label: "Restaurants", category: "Food & Drink" },
+  { key: "DENTISTS", label: "Dentists", category: "Healthcare" },
 ];
 
-const NEIGHBORHOODS_BY_CITY: Record<string, string[]> = {
-  MARRAKECH: ["Gueliz", "Hivernage", "Targa", "Medina", "Majorelle", "Semlalia", "Sidi Ghanem", "Daoudiate"],
-  CASABLANCA: ["Maarif", "Anfa", "Gauthier", "Sidi Belyout", "Ain Diab", "Bourgogne"],
-  RABAT: ["Agdal", "Hassan", "Souissi", "Hay Riad", "Yacoub El Mansour"],
-  AGADIR: ["Centre Ville", "Founty", "Talborjt", "Sonaba", "Hay Mohammadi"],
+const NEIGHBORHOODS_FALLBACK: Record<string, string[]> = {
+  MARRAKECH: ["Gueliz", "Hivernage", "Medina"],
+  CASABLANCA: ["Maarif", "Anfa"],
+  RABAT: ["Agdal", "Hassan"],
+  AGADIR: ["Centre Ville"],
 };
 
 const DUP_BADGE: Record<DuplicateStatus, string> = {
@@ -123,10 +119,29 @@ export default function ProspectDiscoveryPage() {
   // Campaign modal
   const [campaignModalOpen, setCampaignModalOpen] = useState(false);
 
+  // Tab state
+  const [tab, setTab] = useState<"search" | "sweep" | "coverage">("search");
+
+  // Sector / city / neighborhood catalog from the server (source of truth)
+  const [CITIES, setCITIES] = useState(CITIES_FALLBACK);
+  const [SECTORS, setSECTORS] = useState<Array<{ key: string; label: string; category: string }>>(SECTORS_FALLBACK);
+  const [NEIGHBORHOODS_BY_CITY, setNEIGHBORHOODS_BY_CITY] = useState<Record<string, string[]>>(NEIGHBORHOODS_FALLBACK);
+  const [providerName, setProviderName] = useState<"GOOGLE" | "OSM">("OSM");
+
+  // For Find More → switch to sweep with prefilled sectors
+  const [sweepPrefill, setSweepPrefill] = useState<string[] | undefined>(undefined);
+
   // Initial loads
   useEffect(() => {
     fetch("/api/admin/users").then((r) => r.ok ? r.json() : []).then((u: User[]) => setUsers(u.filter((x) => x.isActive))).catch(() => {});
     fetch("/api/admin/sales-playbook/templates").then((r) => r.ok ? r.json() : []).then(setTemplates).catch(() => {});
+    fetch("/api/admin/prospect-discovery/sectors").then((r) => r.ok ? r.json() : null).then((d) => {
+      if (!d) return;
+      if (d.cities) setCITIES(d.cities);
+      if (d.sectors) setSECTORS(d.sectors);
+      if (d.neighborhoods) setNEIGHBORHOODS_BY_CITY(d.neighborhoods);
+      if (d.providerConfigured) setProviderName(d.providerConfigured);
+    }).catch(() => {});
     loadTargets();
   }, []);
 
@@ -285,10 +300,54 @@ export default function ProspectDiscoveryPage() {
         subtitle="Find businesses by sector and city, then import them into Prospecting."
       />
 
-      {/* AI suggestions banner */}
+      {/* AI suggestions banner — always visible */}
       <AiSuggestionsBlock data={aiSuggestions} loading={aiLoading} onLoad={loadAiSuggestions} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+      {/* Tab nav */}
+      <div className="mt-5 mb-4">
+        <FilterTabs
+          items={[
+            { value: "search", label: "Search" },
+            { value: "sweep", label: "Bulk Sweep" },
+            { value: "coverage", label: "Coverage" },
+          ]}
+          active={tab}
+          onChange={(v) => setTab(v as "search" | "sweep" | "coverage")}
+          size="md"
+        />
+      </div>
+
+      {/* Bulk Sweep tab */}
+      {tab === "sweep" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <BulkSweepTab
+              city={city}
+              sectors={SECTORS}
+              neighborhoods={NEIGHBORHOODS_BY_CITY[city] || []}
+              prefillSectors={sweepPrefill}
+              providerName={providerName}
+            />
+          </div>
+          <div className="lg:col-span-1 space-y-5">
+            <TargetsWidget targets={targets} onUpdate={loadTargets} />
+          </div>
+        </div>
+      )}
+
+      {/* Coverage tab */}
+      {tab === "coverage" && (
+        <CoverageTab
+          onFindMore={(sectorKeys) => {
+            setSweepPrefill(sectorKeys);
+            setTab("sweep");
+          }}
+        />
+      )}
+
+      {/* Search tab — original layout below */}
+      {tab === "search" && (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-5">
           {/* Search form */}
           <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
@@ -522,6 +581,19 @@ export default function ProspectDiscoveryPage() {
           <TargetsWidget targets={targets} onUpdate={loadTargets} />
         </div>
       </div>
+      )}
+
+      {/* Find More button shown on Search tab to jump into Sweep */}
+      {tab === "search" && (
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={() => setTab("coverage")}
+            className="text-[12px] text-[#7C3AED] hover:underline inline-flex items-center gap-1"
+          >
+            View coverage stats & find more →
+          </button>
+        </div>
+      )}
 
       {campaignModalOpen && importResult && (
         <CampaignModal

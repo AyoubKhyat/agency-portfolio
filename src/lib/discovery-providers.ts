@@ -37,25 +37,94 @@ export type DiscoveryProviderName = "GOOGLE" | "OSM";
 
 /* ---------- Sector taxonomy ---------- */
 
+export type SectorCategory =
+  | "Healthcare"
+  | "Legal & Finance"
+  | "Real Estate & Construction"
+  | "Hospitality & Travel"
+  | "Food & Drink"
+  | "Beauty & Wellness"
+  | "Education"
+  | "Professional Services"
+  | "Retail"
+  | "Events & Media";
+
 export type SectorDef = {
   key: string;
   label: string;
-  googleQuery: string; // human phrase passed to Google Places
+  category: SectorCategory;
+  googleQuery: string;
   osmTags: Array<{ key: string; value: string }>;
-  osmNameFilter?: RegExp; // optional post-filter (e.g. riads filtered by name)
+  osmNameFilter?: RegExp;
 };
 
 export const SECTORS: SectorDef[] = [
-  { key: "CLINICS", label: "Clinics", googleQuery: "clinic", osmTags: [{ key: "amenity", value: "clinic" }, { key: "healthcare", value: "clinic" }] },
-  { key: "DENTISTS", label: "Dentists", googleQuery: "dentist", osmTags: [{ key: "amenity", value: "dentist" }, { key: "healthcare", value: "dentist" }] },
-  { key: "RIADS", label: "Riads", googleQuery: "riad", osmTags: [{ key: "tourism", value: "guest_house" }, { key: "tourism", value: "hotel" }], osmNameFilter: /riad/i },
-  { key: "RESTAURANTS", label: "Restaurants", googleQuery: "restaurant", osmTags: [{ key: "amenity", value: "restaurant" }] },
-  { key: "REAL_ESTATE", label: "Real estate agencies", googleQuery: "real estate agency", osmTags: [{ key: "office", value: "estate_agent" }] },
-  { key: "SCHOOLS", label: "Schools", googleQuery: "school", osmTags: [{ key: "amenity", value: "school" }] },
-  { key: "BEAUTY", label: "Beauty salons", googleQuery: "beauty salon", osmTags: [{ key: "shop", value: "beauty" }, { key: "shop", value: "hairdresser" }, { key: "amenity", value: "beauty_salon" }] },
-  { key: "GYMS", label: "Gyms", googleQuery: "gym fitness", osmTags: [{ key: "leisure", value: "fitness_centre" }] },
-  { key: "LAWYERS", label: "Lawyers", googleQuery: "lawyer law firm", osmTags: [{ key: "office", value: "lawyer" }] },
-  { key: "ACCOUNTANTS", label: "Accountants", googleQuery: "accountant accounting firm", osmTags: [{ key: "office", value: "accountant" }] },
+  // === Healthcare ===
+  { key: "DENTISTS", label: "Dentists", category: "Healthcare", googleQuery: "dentist", osmTags: [{ key: "amenity", value: "dentist" }, { key: "healthcare", value: "dentist" }] },
+  { key: "DOCTORS", label: "Doctors", category: "Healthcare", googleQuery: "doctor medical practice", osmTags: [{ key: "amenity", value: "doctors" }, { key: "healthcare", value: "doctor" }] },
+  { key: "CLINICS", label: "Clinics", category: "Healthcare", googleQuery: "clinic", osmTags: [{ key: "amenity", value: "clinic" }, { key: "healthcare", value: "clinic" }] },
+  { key: "PHYSIOTHERAPISTS", label: "Physiotherapists", category: "Healthcare", googleQuery: "physiotherapist", osmTags: [{ key: "healthcare", value: "physiotherapist" }] },
+  { key: "OSTEOPATHS", label: "Osteopaths", category: "Healthcare", googleQuery: "osteopath", osmTags: [{ key: "healthcare", value: "osteopath" }] },
+  { key: "PHARMACIES", label: "Pharmacies", category: "Healthcare", googleQuery: "pharmacy", osmTags: [{ key: "amenity", value: "pharmacy" }] },
+  { key: "VETERINARY", label: "Veterinary clinics", category: "Healthcare", googleQuery: "veterinary clinic", osmTags: [{ key: "amenity", value: "veterinary" }] },
+
+  // === Legal & Finance ===
+  { key: "LAWYERS", label: "Lawyers", category: "Legal & Finance", googleQuery: "lawyer law firm", osmTags: [{ key: "office", value: "lawyer" }] },
+  { key: "NOTARIES", label: "Notaries", category: "Legal & Finance", googleQuery: "notary public", osmTags: [{ key: "office", value: "notary" }] },
+  { key: "ACCOUNTANTS", label: "Accountants", category: "Legal & Finance", googleQuery: "accountant accounting firm", osmTags: [{ key: "office", value: "accountant" }] },
+  { key: "TAX_CONSULTANTS", label: "Tax consultants", category: "Legal & Finance", googleQuery: "tax consultant", osmTags: [{ key: "office", value: "tax_advisor" }] },
+  { key: "INSURANCE", label: "Insurance brokers", category: "Legal & Finance", googleQuery: "insurance agency", osmTags: [{ key: "office", value: "insurance" }] },
+
+  // === Real Estate & Construction ===
+  { key: "REAL_ESTATE", label: "Real estate agencies", category: "Real Estate & Construction", googleQuery: "real estate agency", osmTags: [{ key: "office", value: "estate_agent" }] },
+  { key: "PROPERTY_MGMT", label: "Property managers", category: "Real Estate & Construction", googleQuery: "property management", osmTags: [{ key: "office", value: "property_management" }] },
+  { key: "ARCHITECTS", label: "Architects", category: "Real Estate & Construction", googleQuery: "architect", osmTags: [{ key: "office", value: "architect" }] },
+  { key: "INTERIOR_DESIGN", label: "Interior designers", category: "Real Estate & Construction", googleQuery: "interior designer", osmTags: [{ key: "office", value: "interior_design" }, { key: "craft", value: "interior_decorator" }] },
+  { key: "CONSTRUCTION", label: "Construction companies", category: "Real Estate & Construction", googleQuery: "construction company", osmTags: [{ key: "office", value: "construction" }, { key: "craft", value: "builder" }] },
+
+  // === Hospitality & Travel ===
+  { key: "HOTELS", label: "Hotels", category: "Hospitality & Travel", googleQuery: "hotel", osmTags: [{ key: "tourism", value: "hotel" }] },
+  { key: "RIADS", label: "Riads", category: "Hospitality & Travel", googleQuery: "riad", osmTags: [{ key: "tourism", value: "guest_house" }, { key: "tourism", value: "hotel" }], osmNameFilter: /riad/i },
+  { key: "GUEST_HOUSES", label: "Guest houses", category: "Hospitality & Travel", googleQuery: "guest house", osmTags: [{ key: "tourism", value: "guest_house" }] },
+  { key: "TRAVEL_AGENCIES", label: "Travel agencies", category: "Hospitality & Travel", googleQuery: "travel agency", osmTags: [{ key: "shop", value: "travel_agency" }] },
+  { key: "CAR_RENTAL", label: "Car rental", category: "Hospitality & Travel", googleQuery: "car rental", osmTags: [{ key: "amenity", value: "car_rental" }, { key: "shop", value: "car_rental" }] },
+
+  // === Food & Drink ===
+  { key: "RESTAURANTS", label: "Restaurants", category: "Food & Drink", googleQuery: "restaurant", osmTags: [{ key: "amenity", value: "restaurant" }] },
+  { key: "CAFES", label: "Cafés", category: "Food & Drink", googleQuery: "cafe", osmTags: [{ key: "amenity", value: "cafe" }] },
+  { key: "BAKERIES", label: "Bakeries", category: "Food & Drink", googleQuery: "bakery", osmTags: [{ key: "shop", value: "bakery" }] },
+  { key: "PASTRY", label: "Pastry shops", category: "Food & Drink", googleQuery: "pastry shop patisserie", osmTags: [{ key: "shop", value: "pastry" }, { key: "shop", value: "confectionery" }] },
+
+  // === Beauty & Wellness ===
+  { key: "BEAUTY", label: "Beauty salons", category: "Beauty & Wellness", googleQuery: "beauty salon", osmTags: [{ key: "shop", value: "beauty" }, { key: "amenity", value: "beauty_salon" }] },
+  { key: "BARBERS", label: "Barbers", category: "Beauty & Wellness", googleQuery: "barber shop", osmTags: [{ key: "shop", value: "hairdresser" }] },
+  { key: "SPAS", label: "Spas", category: "Beauty & Wellness", googleQuery: "spa hammam", osmTags: [{ key: "leisure", value: "spa" }, { key: "shop", value: "massage" }, { key: "amenity", value: "spa" }] },
+  { key: "GYMS", label: "Gyms", category: "Beauty & Wellness", googleQuery: "gym fitness", osmTags: [{ key: "leisure", value: "fitness_centre" }] },
+  { key: "YOGA", label: "Yoga studios", category: "Beauty & Wellness", googleQuery: "yoga studio", osmTags: [{ key: "leisure", value: "fitness_centre" }], osmNameFilter: /yoga/i },
+
+  // === Education ===
+  { key: "LANGUAGE_CENTERS", label: "Language centers", category: "Education", googleQuery: "language school", osmTags: [{ key: "amenity", value: "language_school" }] },
+  { key: "PRIVATE_SCHOOLS", label: "Private schools", category: "Education", googleQuery: "private school", osmTags: [{ key: "amenity", value: "school" }] },
+  { key: "DAYCARES", label: "Daycares", category: "Education", googleQuery: "daycare nursery", osmTags: [{ key: "amenity", value: "childcare" }, { key: "amenity", value: "kindergarten" }] },
+  { key: "TRAINING_CENTERS", label: "Training centers", category: "Education", googleQuery: "training center vocational", osmTags: [{ key: "amenity", value: "training" }] },
+
+  // === Professional Services ===
+  { key: "IT_COMPANIES", label: "IT companies", category: "Professional Services", googleQuery: "IT company software", osmTags: [{ key: "office", value: "it" }] },
+  { key: "MARKETING", label: "Marketing agencies", category: "Professional Services", googleQuery: "marketing agency advertising", osmTags: [{ key: "office", value: "advertising_agency" }] },
+  { key: "PRINTING", label: "Printing companies", category: "Professional Services", googleQuery: "printing shop", osmTags: [{ key: "shop", value: "copyshop" }, { key: "craft", value: "printer" }] },
+
+  // === Retail ===
+  { key: "FURNITURE", label: "Furniture stores", category: "Retail", googleQuery: "furniture store", osmTags: [{ key: "shop", value: "furniture" }] },
+  { key: "KITCHEN_STORES", label: "Kitchen stores", category: "Retail", googleQuery: "kitchen store design", osmTags: [{ key: "shop", value: "kitchen" }] },
+  { key: "ELECTRONICS", label: "Electronics stores", category: "Retail", googleQuery: "electronics store", osmTags: [{ key: "shop", value: "electronics" }] },
+  { key: "OPTICIANS", label: "Opticians", category: "Retail", googleQuery: "optician", osmTags: [{ key: "shop", value: "optician" }] },
+  { key: "JEWELRY", label: "Jewelry stores", category: "Retail", googleQuery: "jewelry store", osmTags: [{ key: "shop", value: "jewelry" }] },
+
+  // === Events & Media ===
+  { key: "EVENT_AGENCIES", label: "Event agencies", category: "Events & Media", googleQuery: "event planner agency", osmTags: [{ key: "office", value: "event_management" }] },
+  { key: "WEDDING_PLANNERS", label: "Wedding planners", category: "Events & Media", googleQuery: "wedding planner", osmTags: [{ key: "office", value: "event_management" }], osmNameFilter: /wedding|mariage/i },
+  { key: "PHOTOGRAPHERS", label: "Photographers", category: "Events & Media", googleQuery: "photographer studio", osmTags: [{ key: "shop", value: "photo" }, { key: "craft", value: "photographer" }] },
+  { key: "VIDEOGRAPHERS", label: "Videographers", category: "Events & Media", googleQuery: "videographer video production", osmTags: [{ key: "craft", value: "photographer" }], osmNameFilter: /video|film/i },
 ];
 
 export const CITIES = [
@@ -66,14 +135,11 @@ export const CITIES = [
 ];
 
 export const NEIGHBORHOODS_MARRAKECH = [
-  "Gueliz",
-  "Hivernage",
-  "Targa",
-  "Medina",
-  "Majorelle",
-  "Semlalia",
-  "Daoudiate",
-  "Sidi Ghanem",
+  "Gueliz", "Hivernage", "Medina", "Sidi Ghanem", "Targa", "Mhamid",
+  "Hay Hassani", "Daoudiate", "Route de Casablanca", "Route de Safi",
+  "Route d'Ourika", "Route de Fès", "Semlalia", "Majorelle", "Agdal",
+  "Palmeraie", "Izdihar", "Azli", "Hay Charaf", "Amerchich",
+  "Massira", "Ennakhil", "Bab Doukkala",
 ];
 
 /* ---------- Phone normalization ---------- */
