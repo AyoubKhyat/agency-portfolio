@@ -52,7 +52,7 @@ export const SECTORS: SectorDef[] = [
   { key: "RESTAURANTS", label: "Restaurants", googleQuery: "restaurant", osmTags: [{ key: "amenity", value: "restaurant" }] },
   { key: "REAL_ESTATE", label: "Real estate agencies", googleQuery: "real estate agency", osmTags: [{ key: "office", value: "estate_agent" }] },
   { key: "SCHOOLS", label: "Schools", googleQuery: "school", osmTags: [{ key: "amenity", value: "school" }] },
-  { key: "BEAUTY", label: "Beauty salons", googleQuery: "beauty salon", osmTags: [{ key: "shop", value: "beauty" }, { key: "shop", value: "hairdresser" }] },
+  { key: "BEAUTY", label: "Beauty salons", googleQuery: "beauty salon", osmTags: [{ key: "shop", value: "beauty" }, { key: "shop", value: "hairdresser" }, { key: "amenity", value: "beauty_salon" }] },
   { key: "GYMS", label: "Gyms", googleQuery: "gym fitness", osmTags: [{ key: "leisure", value: "fitness_centre" }] },
   { key: "LAWYERS", label: "Lawyers", googleQuery: "lawyer law firm", osmTags: [{ key: "office", value: "lawyer" }] },
   { key: "ACCOUNTANTS", label: "Accountants", googleQuery: "accountant accounting firm", osmTags: [{ key: "office", value: "accountant" }] },
@@ -196,7 +196,7 @@ const OVERPASS_ENDPOINTS = [
 // Polite, descriptive User-Agent — Overpass blocks bare "node" / empty UAs (returns 406 HTML).
 const OVERPASS_UA = "Ibda3OS/1.0 (https://ibda3-digital.vercel.app; contact: ibda3.digital0@gmail.com)";
 
-export type OverpassErrorCode = "OSM_REJECTED" | "OSM_UNAVAILABLE" | "OSM_RATE_LIMITED" | "OSM_TIMEOUT";
+export type OverpassErrorCode = "OSM_REJECTED" | "OSM_UNAVAILABLE" | "OSM_RATE_LIMITED" | "OSM_TIMEOUT" | "OSM_TOO_BROAD";
 
 export class OverpassError extends Error {
   constructor(public code: OverpassErrorCode, message: string, public endpoint?: string) {
@@ -282,8 +282,9 @@ async function callOverpass(queryStr: string): Promise<OsmElement[]> {
       const data = (await res.json()) as { elements?: OsmElement[]; remark?: string };
 
       // Overpass uses a `remark` field for runtime errors (timeout/memory) inside a 200 response.
+      // These almost always mean the query asked for too much — narrow the search.
       if (data.remark && /timed out|memory|killed/i.test(data.remark)) {
-        lastError = new OverpassError("OSM_TIMEOUT", `OpenStreetMap reported: ${data.remark}`, endpoint);
+        lastError = new OverpassError("OSM_TOO_BROAD", `Query exceeded limits: ${data.remark}`, endpoint);
         continue;
       }
 

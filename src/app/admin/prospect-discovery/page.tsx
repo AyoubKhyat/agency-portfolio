@@ -185,6 +185,7 @@ export default function ProspectDiscoveryPage() {
       case "OSM_UNAVAILABLE": return "OpenStreetMap is currently unavailable";
       case "OSM_RATE_LIMITED": return "OpenStreetMap rate-limited the request";
       case "OSM_TIMEOUT": return "OpenStreetMap query timed out";
+      case "OSM_TOO_BROAD": return "Query is too broad for OpenStreetMap";
       case "NETWORK_ERROR": return "Network error";
       default: return "Search failed";
     }
@@ -193,8 +194,11 @@ export default function ProspectDiscoveryPage() {
   function errorHint(code: string): string | null {
     switch (code) {
       case "OSM_REJECTED":
+        return "Pick a different sector, or add a GOOGLE_PLACES_API_KEY env var on Vercel for richer results.";
+      case "OSM_TOO_BROAD":
+        return "Pick a narrower neighborhood, add a keyword, or switch to a more specific sector. Google Places handles broad queries better.";
       case "OSM_TIMEOUT":
-        return "Try a more specific sector or add a GOOGLE_PLACES_API_KEY env var on Vercel for richer results.";
+        return "Try a more specific sector or a narrower neighborhood.";
       case "OSM_UNAVAILABLE":
         return "Try again in a minute. Both Overpass mirrors failed.";
       case "OSM_RATE_LIMITED":
@@ -378,6 +382,16 @@ export default function ProspectDiscoveryPage() {
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Google Places key missing — shown after first OSM search */}
+          {searchData?.provider === "OSM" && (
+            <div className="rounded-2xl border border-blue-200 bg-blue-50/40 p-3 flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+              <div className="flex-1 text-[12px] text-blue-900">
+                <span className="font-semibold">Google Places API key not configured.</span> Results come from OpenStreetMap, which has uneven coverage for some sectors in Morocco (dentists, beauty salons, accountants are sparse). Add <code className="px-1 py-0.5 bg-white rounded text-[11px] font-mono">GOOGLE_PLACES_API_KEY</code> on Vercel for ratings, review counts, and richer phone-number coverage. <a href="https://console.cloud.google.com/apis/library/places-backend.googleapis.com" target="_blank" rel="noopener noreferrer" className="underline font-medium">Get a key →</a>
               </div>
             </div>
           )}
