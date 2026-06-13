@@ -1,13 +1,41 @@
 /**
- * Prospect contact-quality tiers and scoring.
+ * Prospect contact-quality tiers — Moroccan phone-aware.
  *
- * HOT  — has WhatsApp OR Instagram (can DM tonight)
- * WARM — has Website AND Phone (need to visit + call)
- * COLD — only name/location, no contact channel
+ * HOT  — actionable today: mobile (06/07) OR Instagram OR explicit WhatsApp link
+ * WARM — reachable but not message-able today: fixed line (05) only, website, email
+ * COLD — no contact channel at all
  *
- * Scoring is contact-channel-weighted per spec:
- *   WhatsApp +40, Instagram +30, Email +20, Website +15, Phone +10
+ * Moroccan numbering plan (per ANRT):
+ *   06xxxxxxxx, 07xxxxxxxx → mobile (WhatsApp viable)
+ *   05xxxxxxxx              → fixed line (NOT a WhatsApp lead)
+ *
+ * Scoring is contact-channel-weighted, mobile-aware:
+ *   Mobile (= WhatsApp) +40, Instagram +30, Email +20, Website +15, Fixed phone +10
  */
+
+/** True if phone is a Moroccan mobile (starts with 06 or 07 after normalization). */
+export function isMobileMA(phone: string | null | undefined): boolean {
+  if (!phone) return false;
+  // Strip non-digits, drop leading 212 (country code) and any leading 0
+  const d = phone.replace(/\D/g, "").replace(/^212/, "").replace(/^0+/, "");
+  return /^[67]/.test(d);
+}
+
+/** True if phone is a Moroccan fixed line (starts with 05 after normalization). */
+export function isFixedLineMA(phone: string | null | undefined): boolean {
+  if (!phone) return false;
+  const d = phone.replace(/\D/g, "").replace(/^212/, "").replace(/^0+/, "");
+  return /^5/.test(d);
+}
+
+/** True if a string looks like an explicit wa.me / api.whatsapp.com link with a mobile destination. */
+function isVerifiedWhatsappLink(s: string | null | undefined): boolean {
+  if (!s) return false;
+  // Extract digits from wa.me/<digits> patterns
+  const m = s.match(/wa\.me\/(\+?\d+)/i) || s.match(/api\.whatsapp\.com\/send\?phone=(\+?\d+)/i);
+  if (!m) return false;
+  return isMobileMA(m[1]);
+}
 
 export type QualityLabel = "HOT" | "WARM" | "COLD";
 
@@ -24,48 +52,65 @@ function nonEmpty(v: string | null | undefined): boolean {
 }
 
 export function computeQualityLabel(s: ContactSignals): QualityLabel {
-  const hasWhatsapp = nonEmpty(s.whatsapp) || nonEmpty(s.phone);
+  // Actionable channels (HOT)
+  const hasMobile = isMobileMA(s.phone) || isMobileMA(s.whatsapp);
+  const hasVerifiedWhatsapp = isVerifiedWhatsappLink(s.whatsapp);
   const hasInstagram = nonEmpty(s.instagram);
-  const hasWebsite = nonEmpty(s.website);
-  const hasPhone = nonEmpty(s.phone);
 
-  if (hasWhatsapp || hasInstagram) return "HOT";
-  if (hasWebsite && hasPhone) return "WARM";
+  if (hasMobile || hasVerifiedWhatsapp || hasInstagram) return "HOT";
+
+  // Warm channels — reachable but not message-able today
+  const hasFixedLine = isFixedLineMA(s.phone);
+  const hasWebsite = nonEmpty(s.website);
+  const hasEmail = nonEmpty(s.email);
+
+  if (hasFixedLine || hasWebsite || hasEmail) return "WARM";
+
   return "COLD";
 }
 
 /**
- * Pure contact-channel score (0-100). Independent of engagement signals.
- * Use this for ranking discovery results before import.
+ * Pure contact-channel score (0-100). Mobile gets the WhatsApp bonus;
+ * fixed line gets only the small phone bonus.
  */
 export function contactScore(s: ContactSignals): number {
   let total = 0;
-  if (nonEmpty(s.whatsapp) || nonEmpty(s.phone)) total += 40; // WhatsApp = phone we can wa.me
+  const hasMobile = isMobileMA(s.phone) || isMobileMA(s.whatsapp) || isVerifiedWhatsappLink(s.whatsapp);
+  const hasFixed = isFixedLineMA(s.phone);
+
+  if (hasMobile) total += 40;                  // WhatsApp viable
   if (nonEmpty(s.instagram)) total += 30;
   if (nonEmpty(s.email)) total += 20;
   if (nonEmpty(s.website)) total += 15;
-  if (nonEmpty(s.phone)) total += 10;
+  if (hasFixed && !hasMobile) total += 10;     // fixed-line-only gets just the phone bonus
   return Math.min(100, total);
 }
 
 /**
  * Returns which channels are present — used to render the 5-column ✓/✗ grid.
+ * WhatsApp ✓ means we can actually wa.me them (mobile or verified link).
  */
 export type ChannelFlags = {
   whatsapp: boolean;
   instagram: boolean;
   website: boolean;
   email: boolean;
-  phone: boolean;
+  phone: boolean;        // any phone (mobile or fixed)
+  mobile: boolean;       // mobile-only
+  fixedLine: boolean;    // fixed-line-only
 };
 
 export function channelFlags(s: ContactSignals): ChannelFlags {
+  const mobile = isMobileMA(s.phone) || isMobileMA(s.whatsapp);
+  const fixedLine = isFixedLineMA(s.phone);
   return {
-    whatsapp: nonEmpty(s.whatsapp) || nonEmpty(s.phone),
+    whatsapp: mobile || isVerifiedWhatsappLink(s.whatsapp),
     instagram: nonEmpty(s.instagram),
     website: nonEmpty(s.website),
     email: nonEmpty(s.email),
     phone: nonEmpty(s.phone),
+    mobile,
+    fixedLine,
   };
 }
 
@@ -75,7 +120,10 @@ export function contactableChannelCount(s: ContactSignals): number {
 }
 
 export function isContactable(s: ContactSignals): boolean {
-  // "Contactable tonight" = has WhatsApp / Instagram / Email / Phone (a way to reach humans).
-  // Website alone doesn't count — we can't message a website.
-  return nonEmpty(s.whatsapp) || nonEmpty(s.phone) || nonEmpty(s.instagram) || nonEmpty(s.email);
+  return isMobileMA(s.phone) || isMobileMA(s.whatsapp) || nonEmpty(s.instagram) || nonEmpty(s.email);
+}
+
+/** True if a prospect is HOT under the actionable definition — used by Outreach metrics. */
+export function isActionableHot(s: ContactSignals): boolean {
+  return isMobileMA(s.phone) || isMobileMA(s.whatsapp) || isVerifiedWhatsappLink(s.whatsapp) || nonEmpty(s.instagram);
 }

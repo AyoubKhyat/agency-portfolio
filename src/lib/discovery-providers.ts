@@ -130,8 +130,13 @@ export const SECTORS: SectorDef[] = [
 export const CITIES = [
   { key: "MARRAKECH", label: "Marrakech", wikidata: "Q101625" },
   { key: "CASABLANCA", label: "Casablanca", wikidata: "Q11220" },
+  { key: "TANGER", label: "Tanger", wikidata: "Q83871" },
   { key: "RABAT", label: "Rabat", wikidata: "Q3551" },
   { key: "AGADIR", label: "Agadir", wikidata: "Q189824" },
+  { key: "FES", label: "Fès", wikidata: "Q80985" },
+  { key: "MEKNES", label: "Meknès", wikidata: "Q83876" },
+  { key: "KENITRA", label: "Kénitra", wikidata: "Q183541" },
+  { key: "OUJDA", label: "Oujda", wikidata: "Q193477" },
 ];
 
 export const NEIGHBORHOODS_MARRAKECH = [

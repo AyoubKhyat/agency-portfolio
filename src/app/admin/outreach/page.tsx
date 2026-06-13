@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Send, MessageCircle, CalendarCheck, FileSignature, Trophy, Flame,
-  Phone as PhoneIcon, Loader2, AlertCircle, ChevronRight, SkipForward, RefreshCw,
-  ChevronLeft, Target as TargetIcon, Sparkles, CheckCircle2, ExternalLink, BookOpen, Crown,
+  Phone as PhoneIcon, ChevronRight, SkipForward, RefreshCw,
+  ChevronLeft, Sparkles, ExternalLink, BookOpen, Crown, MapPin, AlertTriangle,
 } from "lucide-react";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { PageHeader } from "@/components/admin/page-header";
@@ -42,6 +42,22 @@ type Prediction = QueueProspect & {
   _count?: { outreachMessages: number; meetings: number };
 };
 
+type Coverage = {
+  threshold: number;
+  needsExpansion: boolean;
+  marrakech: {
+    totalProspects: number;
+    actionableHot: number;
+    breakdown: { mobileAndInstagram: number; mobileOnly: number; instagramOnly: number; fixedLineOnly: number; websiteOnly: number; noContact: number };
+    qualityLabels: { HOT: number; WARM: number; COLD: number };
+  };
+  recommendations: Array<{
+    key: string; label: string; population: number; densityScore: number; outreachScore: number;
+    sectors: string[]; rationale: string; expectedScore: number;
+  }>;
+  summary: string;
+};
+
 const BUCKET_LABELS: Record<string, { label: string; icon: string; color: string }> = {
   never_contacted: { label: "Never contacted", icon: "🆕", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
   due_day_4: { label: "Day 4+ no follow-up", icon: "📨", color: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -74,18 +90,21 @@ export default function OutreachCommandCenter() {
   const [queue, setQueue] = useState<QueueData | null>(null);
   const [scoreboard, setScoreboard] = useState<Scoreboard | null>(null);
   const [predictions, setPredictions] = useState<Prediction[] | null>(null);
+  const [coverage, setCoverage] = useState<Coverage | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
-    const [q, s, p] = await Promise.all([
+    const [q, s, p, c] = await Promise.all([
       fetch("/api/admin/outreach/queue").then((r) => r.ok ? r.json() : null),
       fetch("/api/admin/outreach/scoreboard").then((r) => r.ok ? r.json() : null),
       fetch("/api/admin/outreach/predictions").then((r) => r.ok ? r.json() : null),
+      fetch("/api/admin/outreach/coverage").then((r) => r.ok ? r.json() : null),
     ]);
     if (q) setQueue(q);
     if (s) setScoreboard(s);
     if (p) setPredictions(p.predictions || []);
+    if (c) setCoverage(c);
     setLoading(false);
   }, []);
 
@@ -117,7 +136,9 @@ export default function OutreachCommandCenter() {
     <div>
       <PageHeader
         title="Outreach Command Center"
-        subtitle="Convert HOT prospects into clients. 293 ready · stop discovery until 100+ contacted."
+        subtitle={coverage
+          ? `${coverage.marrakech.actionableHot} actionable HOT leads in Marrakech · target ${coverage.threshold}`
+          : "Convert HOT prospects into clients."}
         actions={
           <button onClick={loadAll} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[var(--os-border)] bg-white text-[#475569] hover:bg-gray-50">
             <RefreshCw className="w-3.5 h-3.5" /> Refresh
@@ -126,7 +147,12 @@ export default function OutreachCommandCenter() {
       />
 
       {/* Persistent scoreboard */}
-      <ScoreboardCard scoreboard={scoreboard} loading={loading && !scoreboard} />
+      <ScoreboardCard scoreboard={scoreboard} loading={loading && !scoreboard} actionableHot={coverage?.marrakech.actionableHot} />
+
+      {/* Coverage report */}
+      <div className="mt-4">
+        <CoverageBlock coverage={coverage} loading={loading && !coverage} />
+      </div>
 
       {/* Tab nav */}
       <div className="mt-5 mb-4">
@@ -166,7 +192,7 @@ export default function OutreachCommandCenter() {
 /* ============================================================
  * Scoreboard
  * ============================================================ */
-function ScoreboardCard({ scoreboard, loading }: { scoreboard: Scoreboard | null; loading: boolean }) {
+function ScoreboardCard({ scoreboard, loading, actionableHot }: { scoreboard: Scoreboard | null; loading: boolean; actionableHot?: number }) {
   if (loading || !scoreboard) {
     return <div className="os-skeleton h-24 rounded-2xl" />;
   }
@@ -178,10 +204,13 @@ function ScoreboardCard({ scoreboard, loading }: { scoreboard: Scoreboard | null
         <h2 className="text-[14px] font-semibold text-[#0F172A]">Today&apos;s scoreboard</h2>
         <span className="ml-auto text-[11px] text-[#64748B]">all team members</span>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
+        {typeof actionableHot === "number" && (
+          <ScoreCard label="Actionable HOT" value={actionableHot} icon={<Flame className="w-3.5 h-3.5" />} subtle="mobile / IG / WA" pool />
+        )}
         <ScoreCard label="Messages" value={c.messagesSent} icon={<Send className="w-3.5 h-3.5" />} />
         <ScoreCard label="Replies" value={c.replies} icon={<MessageCircle className="w-3.5 h-3.5" />} subtle={`${c.replyRate}%`} />
-        <ScoreCard label="Prospects" value={c.prospectsContacted} icon={<Flame className="w-3.5 h-3.5" />} subtle="touched" />
+        <ScoreCard label="Prospects" value={c.prospectsContacted} icon={<Flame className="w-3.5 h-3.5" />} subtle="touched today" />
         <ScoreCard label="Meetings" value={c.meetingsBooked} icon={<CalendarCheck className="w-3.5 h-3.5" />} />
         <ScoreCard label="Proposals" value={c.proposalsSent} icon={<FileSignature className="w-3.5 h-3.5" />} />
         <ScoreCard label="Clients" value={c.clientsWon} icon={<Trophy className="w-3.5 h-3.5" />} highlight />
@@ -201,18 +230,143 @@ function ScoreboardCard({ scoreboard, loading }: { scoreboard: Scoreboard | null
   );
 }
 
-function ScoreCard({ label, value, icon, subtle, highlight }: { label: string; value: number; icon: React.ReactNode; subtle?: string; highlight?: boolean }) {
+function ScoreCard({ label, value, icon, subtle, highlight, pool }: { label: string; value: number; icon: React.ReactNode; subtle?: string; highlight?: boolean; pool?: boolean }) {
+  return (
+    <div className={cn(
+      "rounded-xl border p-2.5",
+      highlight ? "border-purple-300 bg-white shadow-sm shadow-purple-500/10"
+        : pool ? "border-rose-200 bg-gradient-to-br from-rose-50/60 to-orange-50/40"
+        : "border-purple-100 bg-white"
+    )}>
+      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium mb-1">
+        <span className={cn(highlight ? "text-[#8B00FF]" : pool ? "text-rose-600" : "text-[#7C3AED]")}>{icon}</span>
+        <span className={pool ? "text-rose-700" : "text-[#64748B]"}>{label}</span>
+      </div>
+      <div className={cn(
+        "text-xl sm:text-2xl font-bold tabular-nums",
+        highlight ? "text-[#8B00FF]" : pool ? "text-rose-700" : "text-[#0F172A]"
+      )}>
+        {value}
+      </div>
+      {subtle && <div className={cn("text-[10px]", pool ? "text-rose-600" : "text-[#64748B]")}>{subtle}</div>}
+    </div>
+  );
+}
+
+/* ============================================================
+ * Coverage block — Marrakech breakdown + city expansion recommendation
+ * ============================================================ */
+function CoverageBlock({ coverage, loading }: { coverage: Coverage | null; loading: boolean }) {
+  if (loading || !coverage) return <div className="os-skeleton h-32 rounded-2xl" />;
+  const { marrakech, recommendations, needsExpansion, threshold, summary } = coverage;
+  const b = marrakech.breakdown;
+
+  return (
+    <div className={cn(
+      "rounded-2xl border-2 p-4 sm:p-5",
+      needsExpansion ? "border-amber-200 bg-gradient-to-br from-amber-50/40 to-orange-50/40" : "border-emerald-200 bg-gradient-to-br from-emerald-50/40 to-teal-50/40"
+    )}>
+      <div className="flex items-start gap-3 mb-3">
+        <div className={cn(
+          "w-9 h-9 rounded-xl flex items-center justify-center shadow-md shrink-0",
+          needsExpansion ? "bg-amber-500 shadow-amber-500/30" : "bg-emerald-500 shadow-emerald-500/30"
+        )}>
+          {needsExpansion ? <AlertTriangle className="w-5 h-5 text-white" /> : <MapPin className="w-5 h-5 text-white" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[14px] font-semibold text-[#0F172A]">Marrakech coverage</div>
+          <div className="text-[12px] text-[#475569] mt-0.5">{summary}</div>
+        </div>
+      </div>
+
+      {/* Breakdown */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 mb-4">
+        <CoverageStat label="Total prospects" value={marrakech.totalProspects} />
+        <CoverageStat label="Actionable HOT" value={marrakech.actionableHot} tone="hot" subtle={`target ${threshold}`} />
+        <CoverageStat label="Mobile + IG" value={b.mobileAndInstagram} tone="hot" />
+        <CoverageStat label="Mobile only" value={b.mobileOnly} tone="hot" />
+        <CoverageStat label="Instagram only" value={b.instagramOnly} tone="hot" />
+        <CoverageStat label="Fixed-line only" value={b.fixedLineOnly} tone="warm" subtle="not WhatsApp-able" />
+      </div>
+
+      {/* City expansion recommendation */}
+      {needsExpansion && (
+        <div className="border-t border-amber-200/60 pt-4">
+          <div className="text-[13px] font-semibold text-[#0F172A] mb-1">
+            Next-city recommendation
+          </div>
+          <div className="text-[11.5px] text-[#475569] mb-3">
+            Below {threshold} actionable HOTs in Marrakech. Ranked by population × business density × outreach potential.
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {recommendations.slice(0, 4).map((c, i) => (
+              <div key={c.key} className={cn(
+                "rounded-xl border bg-white p-3",
+                i === 0 ? "border-amber-300 shadow-sm" : "border-[var(--os-border)]"
+              )}>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className={cn(
+                    "inline-flex items-center justify-center w-6 h-6 rounded-lg text-[11px] font-bold",
+                    i === 0 ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white" : "bg-gray-100 text-[#475569]"
+                  )}>
+                    {i + 1}
+                  </span>
+                  <span className="text-[14px] font-semibold text-[#0F172A]">{c.label}</span>
+                  <span className="text-[11px] text-[#94A3B8]">{c.population.toLocaleString()}k pop</span>
+                  <span className="ml-auto text-[10px] uppercase tracking-wider text-amber-700 font-bold">score {c.expectedScore}</span>
+                </div>
+                <div className="text-[11.5px] text-[#475569] leading-snug mb-2">{c.rationale}</div>
+                <div className="flex flex-wrap gap-1">
+                  {c.sectors.slice(0, 5).map((s) => (
+                    <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-[#7C3AED] border border-purple-100">{s}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          {recommendations.length > 4 && (
+            <details className="mt-2 text-[11px]">
+              <summary className="cursor-pointer text-[#7C3AED] hover:underline">Show all {recommendations.length} cities</summary>
+              <div className="mt-2 space-y-1.5">
+                {recommendations.slice(4).map((c, i) => (
+                  <div key={c.key} className="flex items-center gap-2 text-[11.5px]">
+                    <span className="text-[#94A3B8] tabular-nums w-5">{i + 5}.</span>
+                    <span className="font-medium text-[#0F172A]">{c.label}</span>
+                    <span className="text-[#64748B]">— {c.rationale}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+          <div className="mt-3">
+            <Link
+              href="/admin/prospect-discovery"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md hover:shadow-lg"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Open Discovery to sweep {recommendations[0].label}
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CoverageStat({ label, value, tone, subtle }: { label: string; value: number; tone?: "hot" | "warm"; subtle?: string }) {
   return (
     <div className={cn(
       "rounded-xl border p-2.5 bg-white",
-      highlight ? "border-purple-300 shadow-sm shadow-purple-500/10" : "border-purple-100"
+      tone === "hot" ? "border-rose-200" : tone === "warm" ? "border-amber-200" : "border-[var(--os-border)]"
     )}>
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-1">
-        <span className={cn(highlight ? "text-[#8B00FF]" : "text-[#7C3AED]")}>{icon}</span>
-        {label}
+      <div className="text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-0.5">{label}</div>
+      <div className={cn(
+        "text-lg sm:text-xl font-bold tabular-nums",
+        tone === "hot" ? "text-rose-700" : tone === "warm" ? "text-amber-700" : "text-[#0F172A]"
+      )}>
+        {value.toLocaleString()}
       </div>
-      <div className={cn("text-xl sm:text-2xl font-bold tabular-nums", highlight ? "text-[#8B00FF]" : "text-[#0F172A]")}>{value}</div>
-      {subtle && <div className="text-[10px] text-[#64748B]">{subtle}</div>}
+      {subtle && <div className="text-[10px] text-[#94A3B8]">{subtle}</div>}
     </div>
   );
 }
