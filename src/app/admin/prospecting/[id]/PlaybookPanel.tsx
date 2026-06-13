@@ -59,11 +59,13 @@ type AuditFinding = { observation: string; opportunity: string; recommendation: 
 type AuditResult = { recommendations: AuditFinding[]; conversation_opener: string };
 
 const REPLY_REASONS = [
+  { value: "MEETING_REQUESTED", label: "Wants a meeting" },
+  { value: "PROPOSAL_REQUESTED", label: "Wants a proposal" },
   { value: "INTERESTED", label: "Interested" },
+  { value: "LATER", label: "Call later" },
   { value: "NOT_INTERESTED", label: "Not interested" },
   { value: "HAS_PROVIDER", label: "Already has provider" },
   { value: "TOO_EXPENSIVE", label: "Too expensive" },
-  { value: "LATER", label: "Call later" },
   { value: "NO_BUDGET", label: "No budget" },
 ];
 

@@ -16,7 +16,10 @@ const createSchema = z.object({
   objective: z.string().nullable().optional(),
 });
 
-const REPLY_REASONS = ["INTERESTED", "NOT_INTERESTED", "HAS_PROVIDER", "TOO_EXPENSIVE", "LATER", "NO_BUDGET"] as const;
+const REPLY_REASONS = [
+  "INTERESTED", "MEETING_REQUESTED", "PROPOSAL_REQUESTED",
+  "LATER", "NOT_INTERESTED", "HAS_PROVIDER", "TOO_EXPENSIVE", "NO_BUDGET",
+] as const;
 
 const patchSchema = z.object({
   messageId: z.string(),

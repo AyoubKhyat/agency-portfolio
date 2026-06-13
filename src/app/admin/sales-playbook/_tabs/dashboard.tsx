@@ -237,20 +237,24 @@ export function DashboardTab() {
 }
 
 const REPLY_REASON_LABELS: Record<string, string> = {
+  MEETING_REQUESTED: "Wants a meeting",
+  PROPOSAL_REQUESTED: "Wants a proposal",
   INTERESTED: "Interested",
+  LATER: "Call later",
   NOT_INTERESTED: "Not interested",
   HAS_PROVIDER: "Already has provider",
   TOO_EXPENSIVE: "Too expensive",
-  LATER: "Wants to talk later",
   NO_BUDGET: "No budget",
 };
 
 const REPLY_REASON_COLORS: Record<string, string> = {
+  MEETING_REQUESTED: "bg-purple-600",
+  PROPOSAL_REQUESTED: "bg-indigo-600",
   INTERESTED: "bg-emerald-500",
+  LATER: "bg-amber-500",
   NOT_INTERESTED: "bg-gray-400",
   HAS_PROVIDER: "bg-blue-500",
-  TOO_EXPENSIVE: "bg-amber-500",
-  LATER: "bg-purple-500",
+  TOO_EXPENSIVE: "bg-orange-500",
   NO_BUDGET: "bg-rose-500",
 };
 
