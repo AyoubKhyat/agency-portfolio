@@ -631,20 +631,19 @@ function ProspectingContent() {
                   )}
                   {(() => {
                     const digits = p.phone?.replace(/\D/g, "") || "";
-                    const land = isLandline(p.phone);
-                    const hasWA = digits && !land;
-                    const hasCall = digits && land;
+                    const hasPhone = !!digits;
                     const hasIG = !!p.instagram;
+                    if (!hasPhone && !hasIG) return <span className="text-[11px] text-red-500 px-2" title="No contact data — audit at /admin/data-audit">no contact</span>;
                     return (
                       <>
-                        {hasWA && (
-                          <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"><FaWhatsapp className="w-3.5 h-3.5" /> WA</button>
+                        {hasPhone && (
+                          <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors" title="WhatsApp"><FaWhatsapp className="w-3.5 h-3.5" /> WA</button>
                         )}
                         {hasIG && (
-                          <button onClick={() => handleSendIG(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors"><FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "IG"}</button>
+                          <button onClick={() => handleSendIG(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors" title="Instagram DM"><FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "IG"}</button>
                         )}
-                        {hasCall && !hasIG && (
-                          <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"><Phone className="w-3.5 h-3.5" /> Call</button>
+                        {hasPhone && (
+                          <a href={`tel:${p.phone}`} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title={`Call ${p.phone}`}><Phone className="w-3.5 h-3.5" /> Call</a>
                         )}
                       </>
                     );
@@ -701,29 +700,28 @@ function ProspectingContent() {
                           )}
                           {(() => {
                             const digits = p.phone?.replace(/\D/g, "") || "";
-                            const land = isLandline(p.phone);
-                            const hasWA = digits && !land;
-                            const hasCall = digits && land;
+                            const hasPhone = !!digits;
                             const hasIG = !!p.instagram;
+                            if (!hasPhone && !hasIG) return <span className="text-[11px] text-red-500 px-2" title="No contact data — audit at /admin/data-audit">no contact</span>;
                             return (
                               <>
-                                {hasWA && (
-                                  <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors" title="Send WhatsApp">
+                                {hasPhone && (
+                                  <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors" title="WhatsApp">
                                     <FaWhatsapp className="w-3.5 h-3.5" /> WA
                                   </button>
                                 )}
                                 {hasIG && (
-                                  <button onClick={() => handleSendIG(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors" title="Send Instagram DM">
+                                  <button onClick={() => handleSendIG(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors" title="Instagram DM">
                                     <FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "IG"}
                                   </button>
                                 )}
-                                {hasCall && !hasIG && (
-                                  <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title="Landline — copy message">
+                                {hasPhone && (
+                                  <a href={`tel:${p.phone}`} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title={`Call ${p.phone}`}>
                                     <Phone className="w-3.5 h-3.5" /> Call
-                                  </button>
+                                  </a>
                                 )}
-                                {!hasWA && !hasIG && !hasCall && (
-                                  <span className="text-[11px] text-[#64748B] px-2">—</span>
+                                {false && (
+                                  <span />
                                 )}
                               </>
                             );
@@ -793,13 +791,12 @@ function ProspectingContent() {
                     )}
                     {(() => {
                       const digits = p.phone?.replace(/\D/g, "") || "";
-                      const land = isLandline(p.phone);
-                      const hasWA = digits && !land;
-                      const hasCall = digits && land;
+                      const hasPhone = !!digits;
                       const hasIG = !!p.instagram;
+                      if (!hasPhone && !hasIG) return <span className="text-[11px] text-red-500 px-2" title="No contact data — audit at /admin/data-audit">no contact</span>;
                       return (
                         <>
-                          {hasWA && (
+                          {hasPhone && (
                             <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors" title="WhatsApp">
                               <FaWhatsapp className="w-3.5 h-3.5" /> WA
                             </button>
@@ -809,10 +806,10 @@ function ProspectingContent() {
                               <FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "IG"}
                             </button>
                           )}
-                          {hasCall && !hasIG && (
-                            <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title="Call">
+                          {hasPhone && (
+                            <a href={`tel:${p.phone}`} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title={`Call ${p.phone}`}>
                               <Phone className="w-3.5 h-3.5" /> Call
-                            </button>
+                            </a>
                           )}
                         </>
                       );

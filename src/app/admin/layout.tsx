@@ -60,6 +60,7 @@ const SECTIONS = [
 ];
 
 const BOTTOM_NAV = [
+  { href: "/admin/data-audit", label: "Data Audit", icon: Shield },
   { href: "/admin/system-status", label: "System Status", icon: Shield },
   { href: "/admin/webhooks", label: "Webhooks", icon: Webhook },
   { href: "/admin/settings", label: "Settings", icon: Settings },
