@@ -9,7 +9,7 @@ import {
   BarChart3, Settings, LogOut, PanelLeftClose, PanelLeft, Menu, X,
   Activity, UsersRound, Bell, Search, Layers, Shield, CheckSquare, BellRing,
   Calendar, FileSignature, Crown, MessageSquare, Moon, Sun, Gauge, Receipt, PenLine,
-  Webhook, BookOpen, Compass, Flame, Inbox,
+  Webhook, BookOpen, Compass, Flame, Inbox, Banknote,
 } from "lucide-react";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { cn } from "@/lib/utils";
@@ -52,6 +52,7 @@ const SECTIONS = [
       { href: "/admin/pipeline", label: "Pipeline", icon: Layers },
       { href: "/admin/contracts", label: "Contracts", icon: FileSignature, badgeKey: "contracts" as const },
       { href: "/admin/invoices", label: "Invoices", icon: Receipt },
+      { href: "/admin/revenue", label: "Revenue", icon: Banknote },
     ],
   },
   { label: "Portfolio", items: [
