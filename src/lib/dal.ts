@@ -435,12 +435,13 @@ export async function updateUser(id: string, data: {
 
 // ─── Prospecting ────────────────────────────────────────────────
 
-export async function getProspects(page = 1, status?: string, sector?: string, ownerUserId?: string, search?: string) {
+export async function getProspects(page = 1, status?: string, sector?: string, ownerUserId?: string, search?: string, qualityLabel?: string) {
   const take = 20;
   const skip = (page - 1) * take;
   const where: Record<string, unknown> = {};
   if (status && status !== "ALL") where.status = status;
   if (sector && sector !== "ALL") where.sector = sector;
+  if (qualityLabel && qualityLabel !== "ALL") where.qualityLabel = qualityLabel;
   if (ownerUserId === "UNASSIGNED") {
     where.ownerUserId = null;
   } else if (ownerUserId && ownerUserId !== "ALL") {

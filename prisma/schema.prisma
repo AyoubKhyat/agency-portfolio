@@ -139,6 +139,9 @@ model Prospect {
   neighborhood String    @default("")
   instagram    String    @default("")
   hasWebsite   Boolean   @default(false) @map("has_website")
+  website      String    @default("")
+  email        String    @default("")
+  qualityLabel String?   @map("quality_label") // HOT | WARM | COLD
   priority     Int       @default(2)
   status       String    @default("A_ENVOYER")
   sentAt       DateTime? @map("sent_at")

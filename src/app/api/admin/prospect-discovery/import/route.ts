@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { scoreProspect } from "@/lib/prospect-scoring";
+import { computeQualityLabel } from "@/lib/prospect-quality";
 import { classify } from "@/lib/discovery-duplicates";
 import { CITIES, SECTORS, type DiscoveryCandidate } from "@/lib/discovery-providers";
 
@@ -17,6 +18,7 @@ const candidateSchema = z.object({
   whatsapp: z.string().nullable().optional(),
   website: z.string().nullable().optional(),
   instagram: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
   facebook: z.string().nullable().optional(),
   mapsUrl: z.string().nullable().optional(),
   rating: z.number().nullable().optional(),
@@ -24,10 +26,11 @@ const candidateSchema = z.object({
 });
 
 const bodySchema = z.object({
-  candidates: z.array(candidateSchema).min(1).max(200),
+  candidates: z.array(candidateSchema).min(1).max(500),
   ownerId: z.string().nullable().optional(),
   campaignId: z.string().nullable().optional(),
   allowPossibleDuplicates: z.boolean().default(true),
+  tier: z.enum(["HOT_ONLY", "HOT_WARM", "ALL"]).default("ALL"),
 });
 
 export async function POST(req: Request) {
@@ -83,13 +86,30 @@ export async function POST(req: Request) {
     // Build prospect data
     const phone = cand.phone || "";
     const whatsappLink = cand.whatsapp || (phone ? `https://wa.me/${phone.replace(/\D/g, "")}` : "");
+    const website = cand.website || "";
+    const email = cand.email || "";
+    const instagram = cand.instagram || "";
     const sectorLabel = sectorDef?.label || cand.sector;
     const cityLabel = cityDef?.label || cand.city;
 
+    // Quality label gate — skip imports below the chosen tier
+    const qualityLabel = computeQualityLabel({ phone, whatsapp: whatsappLink, instagram, website, email });
+    if (parsed.data.tier === "HOT_ONLY" && qualityLabel !== "HOT") {
+      skipped.push({ name: cand.name, reason: `${qualityLabel} (tier=HOT_ONLY)` });
+      continue;
+    }
+    if (parsed.data.tier === "HOT_WARM" && qualityLabel === "COLD") {
+      skipped.push({ name: cand.name, reason: "COLD (tier=HOT_WARM)" });
+      continue;
+    }
+
     const score = scoreProspect({
-      hasWebsite: !!cand.website,
-      instagram: cand.instagram ?? null,
+      hasWebsite: !!website,
+      instagram,
       whatsappLink,
+      phone,
+      email,
+      website,
       sentAt: null,
       outreachReplies: 0,
       meetingsCompleted: 0,
@@ -103,10 +123,13 @@ export async function POST(req: Request) {
         whatsappLink,
         sector: sectorLabel,
         neighborhood: cand.neighborhood || cityLabel || "",
-        instagram: cand.instagram || "",
-        hasWebsite: !!cand.website,
+        instagram,
+        hasWebsite: !!website,
+        website,
+        email,
+        qualityLabel,
         status: "A_ENVOYER",
-        priority: cand.website ? 3 : (cand.instagram ? 1 : 2),
+        priority: website ? 3 : (instagram ? 1 : 2),
         score: score.score,
         scoreLabel: score.label,
         scoredAt: new Date(),

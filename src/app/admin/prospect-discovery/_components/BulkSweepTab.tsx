@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Loader2, Play, Pause, CheckCircle2, AlertCircle, Compass, ExternalLink,
-  Phone, Globe, Star, MapPin, Zap, FastForward,
+  Zap, FastForward, Flame,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { computeQualityLabel, channelFlags, type QualityLabel } from "@/lib/prospect-quality";
 
 type Sector = { key: string; label: string; category: string };
 type Neighborhood = string;
@@ -31,10 +32,20 @@ type SearchItem = {
 };
 
 type Aggregated = SearchItem & {
-  // sweep-time fields
+  email?: string | null;
   sweepSectorKey: string;
   sweepNeighborhood: string | null;
   opportunityScore: number;
+  qualityLabel: QualityLabel;
+};
+
+type ChannelFilter = "whatsapp" | "instagram" | "website" | "email" | "phone";
+type ImportTier = "HOT_ONLY" | "HOT_WARM" | "ALL";
+
+const QUALITY_BADGE: Record<QualityLabel, string> = {
+  HOT: "bg-rose-50 text-rose-700 border-rose-200",
+  WARM: "bg-amber-50 text-amber-700 border-amber-200",
+  COLD: "bg-gray-100 text-gray-600 border-gray-200",
 };
 
 type SweepProgress = {
@@ -103,6 +114,15 @@ export function BulkSweepTab({
 
   const cancelRef = useRef(false);
   const pacingMs = providerName === "GOOGLE" ? PACING_GOOGLE_MS : PACING_OSM_MS;
+
+  // Quality filters (apply to displayed + imported results)
+  const [contactableOnly, setContactableOnly] = useState(true);
+  const [requiredChannels, setRequiredChannels] = useState<Set<ChannelFilter>>(new Set());
+  const [importTier, setImportTier] = useState<ImportTier>("HOT_ONLY");
+
+  function toggleChannelFilter(c: ChannelFilter) {
+    setRequiredChannels((p) => { const n = new Set(p); n.has(c) ? n.delete(c) : n.add(c); return n; });
+  }
 
   // Sync prefill when parent passes new sectors
   useEffect(() => {
@@ -244,11 +264,14 @@ export function BulkSweepTab({
             if (it.duplicateStatus === "EXISTS") queryDuplicateCount++;
             else queryUniqueCount++;
             if (accumulated.has(it.sourceId)) continue; // dedup across the sweep batch
+            const signals = { phone: it.phone, whatsapp: it.whatsapp, instagram: it.instagram, website: it.website, email: null };
             accumulated.set(it.sourceId, {
               ...it,
+              email: null,
               sweepSectorKey: q.sector,
               sweepNeighborhood: q.neighborhood,
               opportunityScore: computeOpportunityScore(it),
+              qualityLabel: computeQualityLabel(signals),
             });
           }
         }
@@ -294,13 +317,39 @@ export function BulkSweepTab({
 
   function cancelSweep() { cancelRef.current = true; }
 
-  const newCount = results.filter((r) => r.duplicateStatus === "NEW").length;
-  const possibleCount = results.filter((r) => r.duplicateStatus === "POSSIBLE").length;
-  const existsCount = results.filter((r) => r.duplicateStatus === "EXISTS").length;
+  // Apply quality filters
+  const filteredResults = useMemo(() => {
+    return results.filter((r) => {
+      const flags = channelFlags({ phone: r.phone, whatsapp: r.whatsapp, instagram: r.instagram, website: r.website, email: r.email ?? null });
+      if (contactableOnly) {
+        // Must have at least one outreach channel (not website-only)
+        if (!flags.whatsapp && !flags.instagram && !flags.email && !flags.phone) return false;
+      }
+      for (const c of requiredChannels) {
+        if (!flags[c]) return false;
+      }
+      return true;
+    });
+  }, [results, contactableOnly, requiredChannels]);
+
+  const newCount = filteredResults.filter((r) => r.duplicateStatus === "NEW").length;
+  const possibleCount = filteredResults.filter((r) => r.duplicateStatus === "POSSIBLE").length;
+  const existsCount = filteredResults.filter((r) => r.duplicateStatus === "EXISTS").length;
+
+  const hotNewCount = filteredResults.filter((r) => r.duplicateStatus === "NEW" && r.qualityLabel === "HOT").length;
+  const warmNewCount = filteredResults.filter((r) => r.duplicateStatus === "NEW" && r.qualityLabel === "WARM").length;
+  const coldNewCount = filteredResults.filter((r) => r.duplicateStatus === "NEW" && r.qualityLabel === "COLD").length;
+  const tierEligibleCount = importTier === "HOT_ONLY" ? hotNewCount : importTier === "HOT_WARM" ? hotNewCount + warmNewCount : newCount;
 
   async function importAllNew() {
     if (importing) return;
-    const toImport = results.filter((r) => r.duplicateStatus === "NEW");
+    // Pre-filter by tier on the client too (server enforces, but skip wasted bytes)
+    const toImport = filteredResults.filter((r) => {
+      if (r.duplicateStatus !== "NEW") return false;
+      if (importTier === "HOT_ONLY") return r.qualityLabel === "HOT";
+      if (importTier === "HOT_WARM") return r.qualityLabel === "HOT" || r.qualityLabel === "WARM";
+      return true;
+    });
     if (toImport.length === 0) return;
     setImporting(true);
     try {
@@ -317,10 +366,11 @@ export function BulkSweepTab({
               sourceId: b.sourceId, source: b.source, name: b.name, sector: b.sweepSectorKey,
               city: b.city, neighborhood: b.sweepNeighborhood || b.neighborhood,
               phone: b.phone, whatsapp: b.whatsapp, website: b.website,
-              instagram: b.instagram, facebook: b.facebook, mapsUrl: b.mapsUrl,
+              instagram: b.instagram, email: b.email ?? null, facebook: b.facebook, mapsUrl: b.mapsUrl,
               rating: b.rating, reviewCount: b.reviewCount,
             })),
             allowPossibleDuplicates: false,
+            tier: importTier,
           }),
         });
         if (res.ok) {
@@ -545,23 +595,64 @@ export function BulkSweepTab({
       {/* Results */}
       {results.length > 0 && (
         <div className="rounded-2xl border border-[var(--os-border)] bg-white">
+          {/* Filter row */}
+          <div className="px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/40 space-y-2">
+            <div className="flex flex-wrap items-center gap-3 text-[11.5px]">
+              <span className="text-[10px] uppercase tracking-wider text-[#64748B] font-bold">Filter</span>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={contactableOnly}
+                  onChange={(e) => setContactableOnly(e.target.checked)}
+                  className="rounded border-gray-300 text-purple-600"
+                />
+                <span className="text-[#475569] font-medium">Contactable only</span>
+              </label>
+              <span className="text-[#94A3B8]">·</span>
+              {(["whatsapp","instagram","website","email","phone"] as ChannelFilter[]).map((c) => (
+                <label key={c} className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={requiredChannels.has(c)}
+                    onChange={() => toggleChannelFilter(c)}
+                    className="rounded border-gray-300 text-purple-600"
+                  />
+                  <span className="text-[#475569] capitalize">{c}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/60">
             <div className="flex items-center gap-3 flex-wrap text-[12px]">
-              <span className="font-medium text-[#0F172A]">{results.length} unique</span>
+              <span className="font-medium text-[#0F172A]">{filteredResults.length} shown</span>
+              {filteredResults.length !== results.length && <span className="text-[#94A3B8]">of {results.length}</span>}
               <span className="text-[#64748B]">·</span>
-              <span className="text-emerald-700">{newCount} new</span>
-              <span className="text-amber-700">{possibleCount} possible</span>
-              <span className="text-[#64748B]">{existsCount} exists</span>
-              <span className="text-[#64748B]">· sorted by opportunity score</span>
+              <span className="text-rose-700"><Flame className="w-3 h-3 inline -mt-0.5" /> {hotNewCount} HOT</span>
+              <span className="text-amber-700">{warmNewCount} WARM</span>
+              <span className="text-[#64748B]">{coldNewCount} COLD</span>
+              <span className="text-[#94A3B8]">· {existsCount} exists</span>
             </div>
-            <button
-              onClick={importAllNew}
-              disabled={importing || newCount === 0}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm disabled:opacity-40"
-            >
-              {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-              {importing ? "Importing..." : `Import ${newCount} new`}
-            </button>
+
+            <div className="flex items-center gap-2">
+              <select
+                value={importTier}
+                onChange={(e) => setImportTier(e.target.value as ImportTier)}
+                className="text-[12px] px-2 py-1 rounded-lg border border-[var(--os-border)] bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300"
+              >
+                <option value="HOT_ONLY">Import HOT only</option>
+                <option value="HOT_WARM">Import HOT + WARM</option>
+                <option value="ALL">Import all</option>
+              </select>
+              <button
+                onClick={importAllNew}
+                disabled={importing || tierEligibleCount === 0}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm disabled:opacity-40"
+              >
+                {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                {importing ? "Importing..." : `Import ${tierEligibleCount}`}
+              </button>
+            </div>
           </div>
 
           {importResult && (
@@ -575,65 +666,64 @@ export function BulkSweepTab({
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-white">
                 <tr className="border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
-                  <th className="px-3 py-2 text-left">Score</th>
+                  <th className="px-3 py-2 text-left">Quality</th>
                   <th className="px-3 py-2 text-left">Business</th>
-                  <th className="px-3 py-2 text-left hidden md:table-cell">Signals</th>
-                  <th className="px-3 py-2 text-left">Status</th>
+                  <th className="px-3 py-2 text-center" title="WhatsApp">WA</th>
+                  <th className="px-3 py-2 text-center" title="Instagram">IG</th>
+                  <th className="px-3 py-2 text-center" title="Website">Site</th>
+                  <th className="px-3 py-2 text-center" title="Email">Email</th>
+                  <th className="px-3 py-2 text-center" title="Phone">Phone</th>
+                  <th className="px-3 py-2 text-left">Dup</th>
                   <th className="px-3 py-2"></th>
                 </tr>
               </thead>
               <tbody>
-                {results.slice(0, 300).map((r) => (
-                  <tr key={r.sourceId} className={cn("border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60", r.duplicateStatus === "EXISTS" && "opacity-60")}>
-                    <td className="px-3 py-2">
-                      <div className={cn(
-                        "inline-flex items-center justify-center w-8 h-8 rounded-lg text-[11px] font-bold tabular-nums",
-                        r.opportunityScore >= 75 ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
-                        r.opportunityScore >= 50 ? "bg-amber-50 text-amber-700 border border-amber-200" :
-                        "bg-gray-50 text-[#64748B] border border-gray-200"
-                      )}>
-                        {r.opportunityScore}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="text-[13px] font-medium text-[#0F172A]">{r.name}</div>
-                      <div className="text-[11px] text-[#64748B]">
-                        {sectors.find((s) => s.key === r.sweepSectorKey)?.label || r.sweepSectorKey}
-                        {r.sweepNeighborhood && ` · ${r.sweepNeighborhood}`}
-                        {r.rating !== null && r.rating !== undefined && ` · ★${r.rating} (${r.reviewCount ?? 0})`}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 hidden md:table-cell">
-                      <div className="flex items-center gap-1 flex-wrap">
-                        <QualityBadge active={!!r.phone} icon={<Phone className="w-3 h-3" />} title={r.phone ? `Phone: ${r.phone}` : "No phone"} />
-                        <QualityBadge active={!!r.website} icon={<Globe className="w-3 h-3" />} title={r.website || "No website"} />
-                        <QualityBadge active={r.rating !== null && r.rating !== undefined} icon={<Star className="w-3 h-3" />} title={r.rating ? `Rating ${r.rating}` : "No rating"} />
-                        <QualityBadge active={(r.reviewCount ?? 0) > 0} icon={<span className="text-[8px] font-bold">{r.reviewCount ?? 0}</span>} title={`${r.reviewCount ?? 0} reviews`} />
-                        <QualityBadge active={!!r.mapsUrl} icon={<MapPin className="w-3 h-3" />} title="Has Google Maps link" />
-                      </div>
-                    </td>
-                    <td className="px-3 py-2">
-                      <span className={cn("text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded border",
-                        r.duplicateStatus === "NEW" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                        r.duplicateStatus === "POSSIBLE" ? "bg-amber-50 text-amber-700 border-amber-200" :
-                        "bg-gray-100 text-gray-600 border-gray-200"
-                      )} title={r.duplicateReason || undefined}>
-                        {r.duplicateStatus.toLowerCase()}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      {r.mapsUrl && (
-                        <a href={r.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-[#64748B] hover:text-[#8B00FF]">
-                          <ExternalLink className="w-3.5 h-3.5 inline" />
-                        </a>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {filteredResults.slice(0, 300).map((r) => {
+                  const flags = channelFlags({ phone: r.phone, whatsapp: r.whatsapp, instagram: r.instagram, website: r.website, email: r.email ?? null });
+                  return (
+                    <tr key={r.sourceId} className={cn("border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60", r.duplicateStatus === "EXISTS" && "opacity-60")}>
+                      <td className="px-3 py-2">
+                        <span className={cn("inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border", QUALITY_BADGE[r.qualityLabel])}>
+                          {r.qualityLabel === "HOT" && <Flame className="w-3 h-3" />}
+                          {r.qualityLabel}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="text-[13px] font-medium text-[#0F172A]">{r.name}</div>
+                        <div className="text-[11px] text-[#64748B]">
+                          {sectors.find((s) => s.key === r.sweepSectorKey)?.label || r.sweepSectorKey}
+                          {r.sweepNeighborhood && ` · ${r.sweepNeighborhood}`}
+                          {r.rating !== null && r.rating !== undefined && ` · ★${r.rating} (${r.reviewCount ?? 0})`}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-center"><ChannelMark on={flags.whatsapp} title={r.phone ? `WhatsApp: ${r.phone}` : "No WhatsApp"} /></td>
+                      <td className="px-3 py-2 text-center"><ChannelMark on={flags.instagram} title={r.instagram || "No Instagram"} /></td>
+                      <td className="px-3 py-2 text-center"><ChannelMark on={flags.website} title={r.website || "No website"} /></td>
+                      <td className="px-3 py-2 text-center"><ChannelMark on={flags.email} title={r.email || "No email"} /></td>
+                      <td className="px-3 py-2 text-center"><ChannelMark on={flags.phone} title={r.phone || "No phone"} /></td>
+                      <td className="px-3 py-2">
+                        <span className={cn("text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded border",
+                          r.duplicateStatus === "NEW" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                          r.duplicateStatus === "POSSIBLE" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                          "bg-gray-100 text-gray-600 border-gray-200"
+                        )} title={r.duplicateReason || undefined}>
+                          {r.duplicateStatus.toLowerCase()}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        {r.mapsUrl && (
+                          <a href={r.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-[#64748B] hover:text-[#8B00FF]">
+                            <ExternalLink className="w-3.5 h-3.5 inline" />
+                          </a>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
-            {results.length > 300 && (
-              <div className="px-4 py-2 text-[11px] text-[#64748B] text-center">Showing top 300 by opportunity score · {results.length - 300} more in queue</div>
+            {filteredResults.length > 300 && (
+              <div className="px-4 py-2 text-[11px] text-[#64748B] text-center">Showing top 300 by opportunity score · {filteredResults.length - 300} more match the filter</div>
             )}
           </div>
         </div>
@@ -678,17 +768,17 @@ export function BulkSweepTab({
   );
 }
 
-/* ---------- Quality badge ---------- */
-function QualityBadge({ active, icon, title }: { active: boolean; icon: React.ReactNode; title: string }) {
+/* ---------- Channel ✓/✗ mark ---------- */
+function ChannelMark({ on, title }: { on: boolean; title?: string }) {
   return (
     <span
       title={title}
       className={cn(
-        "inline-flex items-center justify-center w-5 h-5 rounded",
-        active ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-[#94A3B8]"
+        "inline-flex items-center justify-center w-5 h-5 rounded text-[11px] font-bold",
+        on ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-[#CBD5E1]"
       )}
     >
-      {icon}
+      {on ? "✓" : "✗"}
     </span>
   );
 }

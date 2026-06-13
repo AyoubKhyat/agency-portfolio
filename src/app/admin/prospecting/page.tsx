@@ -104,6 +104,8 @@ type Prospect = {
   id: string; name: string; phone: string; whatsappLink: string;
   sector: string; neighborhood: string; instagram: string;
   hasWebsite: boolean; priority: number; status: string;
+  email?: string | null; website?: string | null;
+  qualityLabel?: "HOT" | "WARM" | "COLD" | null;
   sentAt: string | null; createdAt: string;
   followUpDate: string | null;
   ownerUserId: string | null;
@@ -234,6 +236,7 @@ function ProspectingContent() {
   const statusFilter = searchParams.get("status") ?? "ALL";
   const sectorFilter = searchParams.get("sector") ?? "ALL";
   const ownerFilter = searchParams.get("owner") ?? "ALL";
+  const qualityFilter = searchParams.get("qualityLabel") ?? "ALL";
   const pageParam = parseInt(searchParams.get("page") ?? "1", 10);
 
   const [prospects, setProspects] = useState<Prospect[]>([]);
@@ -270,6 +273,7 @@ function ProspectingContent() {
     const qs = new URLSearchParams();
     if (statusFilter !== "ALL") qs.set("status", statusFilter);
     if (sectorFilter !== "ALL") qs.set("sector", sectorFilter);
+    if (qualityFilter !== "ALL") qs.set("qualityLabel", qualityFilter);
     if (ownerFilter !== "ALL" && ownerFilter !== "UNASSIGNED") qs.set("owner", ownerFilter);
     if (ownerFilter === "UNASSIGNED") qs.set("unassigned", "true");
     if (debouncedSearch.trim()) qs.set("search", debouncedSearch.trim());
@@ -277,12 +281,13 @@ function ProspectingContent() {
     fetch(`/api/admin/prospecting?${qs}`)
       .then((r) => { if (r.status === 401) { router.push("/admin/login"); return null; } return r.json(); })
       .then((data) => { if (data) { setProspects(data.prospects); setTotal(data.total); setPages(data.pages); } setLoading(false); });
-  }, [statusFilter, sectorFilter, ownerFilter, debouncedSearch, pageParam, router]);
+  }, [statusFilter, sectorFilter, qualityFilter, ownerFilter, debouncedSearch, pageParam, router]);
 
-  function navigate(status: string, sector: string, page = 1, owner = ownerFilter) {
+  function navigate(status: string, sector: string, page = 1, owner = ownerFilter, quality = qualityFilter) {
     const qs = new URLSearchParams();
     if (status !== "ALL") qs.set("status", status);
     if (sector !== "ALL") qs.set("sector", sector);
+    if (quality !== "ALL") qs.set("qualityLabel", quality);
     if (owner !== "ALL") qs.set("owner", owner);
     if (page > 1) qs.set("page", String(page));
     router.push(`/admin/prospecting${qs.toString() ? `?${qs}` : ""}`);
@@ -535,6 +540,32 @@ function ProspectingContent() {
         className="mb-2"
         scrollable
       />
+
+      {/* Quality filter chips */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-2">
+        <span className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mr-1">Quality</span>
+        {[
+          { id: "ALL", label: "All", emoji: "" },
+          { id: "HOT", label: "🔥 HOT only", emoji: "" },
+          { id: "WARM", label: "WARM", emoji: "" },
+          { id: "COLD", label: "COLD", emoji: "" },
+        ].map((item) => (
+          <button
+            key={item.id}
+            onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, item.id)}
+            className={cn(
+              "text-[11.5px] px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-all",
+              qualityFilter === item.id
+                ? item.id === "HOT" ? "bg-rose-500 text-white shadow-sm"
+                  : item.id === "WARM" ? "bg-amber-500 text-white shadow-sm"
+                  : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
+                : "text-[#475569] bg-white border border-[var(--os-border)] hover:bg-gray-50"
+            )}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
 
       {/* Owner filter chips */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-6">
