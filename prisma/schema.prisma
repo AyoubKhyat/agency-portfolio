@@ -635,6 +635,29 @@ model DailyTarget {
   @@map("daily_targets")
 }
 
+model DiscoverySweep {
+  id              String    @id @default(cuid())
+  provider        String    // "GOOGLE" | "OSM"
+  city            String    // city KEY (e.g. MARRAKECH) for stable matching
+  sector          String    // sector KEY
+  neighborhood    String?   // null = city-wide query
+  keyword         String?
+  resultCount     Int       @default(0) @map("result_count")
+  uniqueCount     Int       @default(0) @map("unique_count")
+  importedCount   Int       @default(0) @map("imported_count")
+  duplicateCount  Int       @default(0) @map("duplicate_count")
+  status          String    @default("COMPLETED") // COMPLETED | FAILED | CANCELLED
+  error           String?
+  startedAt       DateTime  @default(now()) @map("started_at")
+  completedAt     DateTime? @map("completed_at")
+  startedById     String?   @map("started_by_id")
+  startedByName   String?   @map("started_by_name")
+
+  @@index([city, sector, neighborhood, startedAt])
+  @@index([startedAt])
+  @@map("discovery_sweeps")
+}
+
 model SalesScript {
   id        String   @id @default(cuid())
   category  String   // WHATSAPP, INSTAGRAM_DM, CALL, OBJECTION_HANDLING

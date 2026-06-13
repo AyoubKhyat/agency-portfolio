@@ -134,6 +134,40 @@ export async function POST(req: Request) {
     });
   }
 
+  // Backfill DiscoverySweep.importedCount for any sweeps in the last 24h
+  // matching the (city, sector) of imports — best-effort, non-fatal.
+  if (created.length > 0) {
+    try {
+      // Group imports by (cityKey, sectorKey)
+      const byBucket = new Map<string, number>();
+      for (const cand of parsed.data.candidates) {
+        const cityKey = CITIES.find((c) => c.label === cand.city || c.key === cand.city)?.key;
+        if (!cityKey) continue;
+        // Only count those that actually got created
+        const created_for_this_cand = created.find((c) => c.name === cand.name);
+        if (!created_for_this_cand) continue;
+        const bucket = `${cityKey}::${cand.sector}`;
+        byBucket.set(bucket, (byBucket.get(bucket) || 0) + 1);
+      }
+      const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      for (const [bucket, count] of byBucket) {
+        const [cityKey, sectorKey] = bucket.split("::");
+        // Increment ALL recent sweeps for this bucket — small N (typically 1-3)
+        await prisma.discoverySweep.updateMany({
+          where: {
+            city: cityKey,
+            sector: sectorKey,
+            startedAt: { gte: cutoff },
+            status: "COMPLETED",
+          },
+          data: { importedCount: { increment: count } },
+        });
+      }
+    } catch {
+      // Don't fail the import because sweep bookkeeping failed
+    }
+  }
+
   return NextResponse.json({
     imported: created.length,
     skipped: skipped.length,

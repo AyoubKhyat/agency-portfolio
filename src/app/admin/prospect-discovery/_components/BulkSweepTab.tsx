@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Play, Pause, X, CheckCircle2, AlertCircle, Compass, ExternalLink } from "lucide-react";
+import {
+  Loader2, Play, Pause, CheckCircle2, AlertCircle, Compass, ExternalLink,
+  Phone, Globe, Star, MapPin, Zap, FastForward,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Sector = { key: string; label: string; category: string };
@@ -41,8 +44,23 @@ type SweepProgress = {
   errors: number;
 };
 
-const PACING_MS = 800; // delay between Overpass queries — under the ~2/sec public rate limit
-const MAX_QUERIES = 200;
+// Pacing varies by provider — Google Places allows much higher QPS.
+const PACING_OSM_MS = 1000;
+const PACING_GOOGLE_MS = 250;
+const MAX_QUERIES = 500;
+
+// Priority sectors from the spec (in order of importance).
+const PRIORITY_SECTORS = [
+  "RESTAURANTS", "CAFES", "RIADS", "HOTELS", "CLINICS", "DENTISTS",
+  "BEAUTY", "SPAS", "REAL_ESTATE", "CAR_RENTAL", "PRIVATE_SCHOOLS", "GYMS",
+];
+
+type SweepCheckResult = {
+  withinDays: number;
+  matches: Array<{ sector: string; neighborhood: string | null; lastSweptAt: string; daysAgo: number; resultCount: number; importedCount: number }>;
+  staleQueries: Array<{ sector: string; neighborhood: string | null }>;
+  summary: { total: number; recentlySwept: number; toRun: number };
+};
 
 function computeOpportunityScore(item: SearchItem): number {
   let s = 50;
@@ -78,8 +96,13 @@ export function BulkSweepTab({
   const [errors, setErrors] = useState<Array<{ sector: string; neighborhood: string | null; message: string }>>([]);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
+  const [sweepCheck, setSweepCheck] = useState<SweepCheckResult | null>(null);
+  const [checkingSweeps, setCheckingSweeps] = useState(false);
+  const [skipRecent, setSkipRecent] = useState(true);
+  const [sweepDone, setSweepDone] = useState(false);
 
   const cancelRef = useRef(false);
+  const pacingMs = providerName === "GOOGLE" ? PACING_GOOGLE_MS : PACING_OSM_MS;
 
   // Sync prefill when parent passes new sectors
   useEffect(() => {
@@ -105,6 +128,25 @@ export function BulkSweepTab({
   function clearSectors() { setSelectedSectors(new Set()); }
   function selectAllNeighborhoods() { setSelectedNeighborhoods(new Set(neighborhoods)); }
   function clearNeighborhoods() { setSelectedNeighborhoods(new Set()); }
+
+  // Presets
+  function presetPriority() {
+    const valid = new Set(sectors.map((s) => s.key));
+    setSelectedSectors(new Set(PRIORITY_SECTORS.filter((k) => valid.has(k))));
+    setSelectedNeighborhoods(new Set());
+    setIncludeCityWide(true);
+  }
+  function presetSecondary() {
+    const priority = new Set(PRIORITY_SECTORS);
+    setSelectedSectors(new Set(sectors.filter((s) => !priority.has(s.key)).map((s) => s.key)));
+    setSelectedNeighborhoods(new Set());
+    setIncludeCityWide(true);
+  }
+  function presetFullMarrakech() {
+    setSelectedSectors(new Set(sectors.map((s) => s.key)));
+    setSelectedNeighborhoods(new Set());
+    setIncludeCityWide(true);
+  }
   function selectCategorySectors(cat: string) {
     setSelectedSectors((p) => {
       const n = new Set(p);
@@ -127,28 +169,62 @@ export function BulkSweepTab({
     return queries;
   }, [selectedSectors, selectedNeighborhoods, includeCityWide]);
 
-  const estimatedSeconds = Math.round((queryList.length * PACING_MS) / 1000);
-  const tooMany = queryList.length > MAX_QUERIES;
+  // Pre-check sweep history (debounced) when selection changes
+  useEffect(() => {
+    if (queryList.length === 0) { setSweepCheck(null); return; }
+    setCheckingSweeps(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/admin/prospect-discovery/sweeps/check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ city, queries: queryList, withinDays: 7 }),
+        });
+        if (res.ok) setSweepCheck(await res.json());
+      } finally {
+        setCheckingSweeps(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [queryList, city]);
+
+  // Effective queries = full list, filtered by skipRecent if pre-check has matches
+  const effectiveQueries = useMemo(() => {
+    if (!skipRecent || !sweepCheck || sweepCheck.matches.length === 0) return queryList;
+    const skipSet = new Set(sweepCheck.matches.map((m) => `${m.sector}|${m.neighborhood || ""}`));
+    return queryList.filter((q) => !skipSet.has(`${q.sector}|${q.neighborhood || ""}`));
+  }, [queryList, sweepCheck, skipRecent]);
+
+  const estimatedSeconds = Math.round((effectiveQueries.length * pacingMs) / 1000);
+  const tooMany = effectiveQueries.length > MAX_QUERIES;
 
   async function startSweep() {
-    if (running || queryList.length === 0 || tooMany) return;
+    if (running || effectiveQueries.length === 0 || tooMany) return;
     cancelRef.current = false;
     setRunning(true);
     setResults([]);
     setErrors([]);
     setImportResult(null);
-    setProgress({ total: queryList.length, completed: 0, currentLabel: "", errors: 0 });
+    setSweepDone(false);
+    setProgress({ total: effectiveQueries.length, completed: 0, currentLabel: "", errors: 0 });
 
     const accumulated = new Map<string, Aggregated>();
     let errorCount = 0;
     const localErrors: typeof errors = [];
 
-    for (let i = 0; i < queryList.length; i++) {
+    for (let i = 0; i < effectiveQueries.length; i++) {
       if (cancelRef.current) break;
-      const q = queryList[i];
+      const q = effectiveQueries[i];
       const label = sectors.find((s) => s.key === q.sector)?.label || q.sector;
       const place = q.neighborhood ? `${label} · ${q.neighborhood}` : `${label} · all areas`;
-      setProgress({ total: queryList.length, completed: i, currentLabel: place, errors: errorCount });
+      setProgress({ total: effectiveQueries.length, completed: i, currentLabel: place, errors: errorCount });
+
+      const queryStartedAt = new Date();
+      let queryStatus: "COMPLETED" | "FAILED" = "COMPLETED";
+      let queryError: string | null = null;
+      let queryResultCount = 0;
+      let queryUniqueCount = 0;
+      let queryDuplicateCount = 0;
 
       try {
         const res = await fetch("/api/admin/prospect-discovery/search", {
@@ -159,9 +235,14 @@ export function BulkSweepTab({
         const data = await res.json();
         if (!res.ok) {
           errorCount++;
-          localErrors.push({ sector: q.sector, neighborhood: q.neighborhood, message: data.message || data.error || `HTTP ${res.status}` });
+          queryStatus = "FAILED";
+          queryError = data.message || data.error || `HTTP ${res.status}`;
+          localErrors.push({ sector: q.sector, neighborhood: q.neighborhood, message: queryError || "error" });
         } else {
+          queryResultCount = (data.items as SearchItem[]).length;
           for (const it of (data.items as SearchItem[])) {
+            if (it.duplicateStatus === "EXISTS") queryDuplicateCount++;
+            else queryUniqueCount++;
             if (accumulated.has(it.sourceId)) continue; // dedup across the sweep batch
             accumulated.set(it.sourceId, {
               ...it,
@@ -173,21 +254,42 @@ export function BulkSweepTab({
         }
       } catch (err) {
         errorCount++;
-        localErrors.push({ sector: q.sector, neighborhood: q.neighborhood, message: err instanceof Error ? err.message : "Network error" });
+        queryStatus = "FAILED";
+        queryError = err instanceof Error ? err.message : "Network error";
+        localErrors.push({ sector: q.sector, neighborhood: q.neighborhood, message: queryError });
       }
+
+      // Log this query's outcome to sweep history (fire-and-forget)
+      fetch("/api/admin/prospect-discovery/sweeps", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: providerName,
+          city,
+          sector: q.sector,
+          neighborhood: q.neighborhood,
+          resultCount: queryResultCount,
+          uniqueCount: queryUniqueCount,
+          duplicateCount: queryDuplicateCount,
+          status: queryStatus,
+          error: queryError,
+          startedAt: queryStartedAt.toISOString(),
+        }),
+      }).catch(() => {});
 
       // Update results live so user sees them accumulate
       setResults(Array.from(accumulated.values()).sort((a, b) => b.opportunityScore - a.opportunityScore));
       setErrors(localErrors.slice());
 
       // Pace between requests (skip pacing on last)
-      if (i < queryList.length - 1 && !cancelRef.current) {
-        await new Promise((r) => setTimeout(r, PACING_MS));
+      if (i < effectiveQueries.length - 1 && !cancelRef.current) {
+        await new Promise((r) => setTimeout(r, pacingMs));
       }
     }
 
     setProgress((p) => p ? { ...p, completed: p.total, currentLabel: cancelRef.current ? "Cancelled" : "Done", errors: errorCount } : null);
     setRunning(false);
+    setSweepDone(true);
   }
 
   function cancelSweep() { cancelRef.current = true; }
@@ -248,6 +350,40 @@ export function BulkSweepTab({
           </span>
         </div>
       )}
+
+      {/* Presets */}
+      <div className="rounded-2xl border border-purple-200 bg-purple-50/30 p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Zap className="w-4 h-4 text-[#8B00FF]" />
+          <h2 className="text-[14px] font-semibold text-[#0F172A]">Quick presets</h2>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={presetPriority}
+            disabled={running}
+            className="text-[12px] px-3 py-1.5 rounded-lg font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm hover:shadow disabled:opacity-50"
+          >
+            Priority sectors (12)
+          </button>
+          <button
+            onClick={presetSecondary}
+            disabled={running}
+            className="text-[12px] px-3 py-1.5 rounded-lg font-medium border border-purple-200 bg-white text-[#7C3AED] hover:bg-purple-50 disabled:opacity-50"
+          >
+            Secondary sectors
+          </button>
+          <button
+            onClick={presetFullMarrakech}
+            disabled={running}
+            className="text-[12px] px-3 py-1.5 rounded-lg font-medium border border-purple-200 bg-white text-[#7C3AED] hover:bg-purple-50 disabled:opacity-50"
+          >
+            Full Marrakech ({sectors.length} sectors)
+          </button>
+          <div className="text-[11px] text-[#64748B] ml-auto self-center">
+            Each preset selects sectors city-wide (no neighborhood drill-down). Add neighborhoods below for deeper coverage.
+          </div>
+        </div>
+      </div>
 
       {/* Selectors */}
       <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
@@ -336,13 +472,41 @@ export function BulkSweepTab({
 
       {/* Plan + start */}
       <div className="rounded-2xl border-2 border-purple-200 bg-purple-50/30 p-4 sm:p-5">
+        {/* Sweep history pre-check banner */}
+        {sweepCheck && sweepCheck.matches.length > 0 && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-3 mb-3">
+            <div className="flex items-start gap-2">
+              <FastForward className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="text-[12.5px] font-medium text-amber-900">
+                  {sweepCheck.matches.length} of {queryList.length} {queryList.length === 1 ? "query" : "queries"} already swept in last {sweepCheck.withinDays} days
+                </div>
+                <label className="flex items-center gap-2 mt-1.5 text-[12px] text-amber-800 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={skipRecent}
+                    onChange={(e) => setSkipRecent(e.target.checked)}
+                    disabled={running}
+                    className="rounded border-amber-300 text-purple-600 focus:ring-purple-300"
+                  />
+                  Skip recently swept queries (saves {sweepCheck.matches.length} API calls)
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="text-[12.5px] text-[#475569]">
-            Plan: <span className="font-semibold text-[#0F172A]">{queryList.length} queries</span>
-            {queryList.length > 0 && (
-              <> · <span className="font-medium text-[#0F172A]">~{estimatedSeconds}s</span> at {PACING_MS}ms pacing</>
+            Plan: <span className="font-semibold text-[#0F172A]">{effectiveQueries.length} queries</span>
+            {effectiveQueries.length > 0 && (
+              <> · <span className="font-medium text-[#0F172A]">~{estimatedSeconds}s</span> at {pacingMs}ms pacing</>
             )}
+            {checkingSweeps && <span className="text-[#94A3B8] ml-2">· checking history...</span>}
             {tooMany && <span className="text-red-600 font-medium ml-2">· Exceeds limit ({MAX_QUERIES} max per sweep)</span>}
+            {sweepCheck && sweepCheck.matches.length > 0 && skipRecent && (
+              <span className="text-emerald-700 ml-2 text-[11px]">· {sweepCheck.matches.length} skipped from history</span>
+            )}
           </div>
           {running ? (
             <button
@@ -355,7 +519,7 @@ export function BulkSweepTab({
           ) : (
             <button
               onClick={startSweep}
-              disabled={queryList.length === 0 || tooMany}
+              disabled={effectiveQueries.length === 0 || tooMany}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
               <Play className="w-4 h-4" />
@@ -441,10 +605,11 @@ export function BulkSweepTab({
                     </td>
                     <td className="px-3 py-2 hidden md:table-cell">
                       <div className="flex items-center gap-1 flex-wrap">
-                        {!r.website && <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">no site</span>}
-                        {!r.instagram && <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">no IG</span>}
-                        {!r.phone && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">no phone</span>}
-                        {r.phone && <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-50 text-[#475569]">{r.phone}</span>}
+                        <QualityBadge active={!!r.phone} icon={<Phone className="w-3 h-3" />} title={r.phone ? `Phone: ${r.phone}` : "No phone"} />
+                        <QualityBadge active={!!r.website} icon={<Globe className="w-3 h-3" />} title={r.website || "No website"} />
+                        <QualityBadge active={r.rating !== null && r.rating !== undefined} icon={<Star className="w-3 h-3" />} title={r.rating ? `Rating ${r.rating}` : "No rating"} />
+                        <QualityBadge active={(r.reviewCount ?? 0) > 0} icon={<span className="text-[8px] font-bold">{r.reviewCount ?? 0}</span>} title={`${r.reviewCount ?? 0} reviews`} />
+                        <QualityBadge active={!!r.mapsUrl} icon={<MapPin className="w-3 h-3" />} title="Has Google Maps link" />
                       </div>
                     </td>
                     <td className="px-3 py-2">
@@ -474,6 +639,17 @@ export function BulkSweepTab({
         </div>
       )}
 
+      {/* Post-sweep summary */}
+      {sweepDone && results.length > 0 && (
+        <PostSweepReport
+          results={results}
+          errors={errors}
+          progress={progress}
+          sectors={sectors}
+          importResult={importResult}
+        />
+      )}
+
       {progress && progress.completed === progress.total && results.length === 0 && (
         <div className="rounded-2xl border border-[var(--os-border)] bg-white p-8 text-center">
           <Compass className="w-8 h-8 text-[#94A3B8] mx-auto mb-2" />
@@ -498,6 +674,113 @@ export function BulkSweepTab({
           </div>
         </details>
       )}
+    </div>
+  );
+}
+
+/* ---------- Quality badge ---------- */
+function QualityBadge({ active, icon, title }: { active: boolean; icon: React.ReactNode; title: string }) {
+  return (
+    <span
+      title={title}
+      className={cn(
+        "inline-flex items-center justify-center w-5 h-5 rounded",
+        active ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-[#94A3B8]"
+      )}
+    >
+      {icon}
+    </span>
+  );
+}
+
+/* ---------- Post-sweep summary report ---------- */
+function PostSweepReport({
+  results,
+  errors,
+  progress,
+  sectors,
+  importResult,
+}: {
+  results: Aggregated[];
+  errors: Array<{ sector: string; neighborhood: string | null; message: string }>;
+  progress: SweepProgress | null;
+  sectors: Sector[];
+  importResult: { imported: number; skipped: number } | null;
+}) {
+  const rawTotal = results.length;
+  const unique = results.filter((r) => r.duplicateStatus !== "EXISTS").length;
+  const existing = results.filter((r) => r.duplicateStatus === "EXISTS").length;
+  const newCount = results.filter((r) => r.duplicateStatus === "NEW").length;
+  const sectorsCovered = new Set(results.map((r) => r.sweepSectorKey));
+  const neighborhoodsCovered = new Set(results.map((r) => r.sweepNeighborhood).filter(Boolean) as string[]);
+  const queriesWithZero = errors.length;
+
+  const sectorBreakdown = Array.from(sectorsCovered).map((k) => ({
+    key: k,
+    label: sectors.find((s) => s.key === k)?.label || k,
+    count: results.filter((r) => r.sweepSectorKey === k).length,
+  })).sort((a, b) => b.count - a.count);
+
+  return (
+    <div className="rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/40 to-teal-50/40 p-4 sm:p-5">
+      <div className="flex items-center gap-2 mb-3">
+        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+        <h2 className="text-[14px] font-semibold text-[#0F172A]">Sweep complete · {progress?.total ?? "?"} queries run</h2>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <SummaryStat label="Raw results" value={rawTotal} />
+        <SummaryStat label="Unique" value={unique} subtle={`${existing} already in DB`} />
+        <SummaryStat label="New (importable)" value={newCount} highlight />
+        <SummaryStat label="Failed queries" value={queriesWithZero} subtle={queriesWithZero > 0 ? "see errors below" : "all clean"} warn={queriesWithZero > 0} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="rounded-xl bg-white border border-emerald-100 p-3">
+          <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-2">Sectors covered ({sectorsCovered.size})</div>
+          {sectorBreakdown.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+              {sectorBreakdown.map((s) => (
+                <span key={s.key} className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  {s.label} <span className="font-bold tabular-nums">{s.count}</span>
+                </span>
+              ))}
+            </div>
+          ) : <p className="text-[12px] text-[#94A3B8]">None</p>}
+        </div>
+        <div className="rounded-xl bg-white border border-emerald-100 p-3">
+          <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-2">Neighborhoods covered ({neighborhoodsCovered.size})</div>
+          {neighborhoodsCovered.size > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {Array.from(neighborhoodsCovered).map((n) => (
+                <span key={n} className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">{n}</span>
+              ))}
+            </div>
+          ) : <p className="text-[12px] text-[#94A3B8]">City-wide queries only — no neighborhood drill-down.</p>}
+        </div>
+      </div>
+
+      {importResult && (
+        <div className="mt-3 p-2.5 rounded-lg bg-purple-50 border border-purple-200 text-[12.5px] text-[#7C3AED]">
+          ✓ Imported <span className="font-bold">{importResult.imported}</span> prospect{importResult.imported !== 1 ? "s" : ""}
+          {importResult.skipped > 0 && ` · skipped ${importResult.skipped} final-check duplicates`}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SummaryStat({ label, value, subtle, highlight, warn }: { label: string; value: number; subtle?: string; highlight?: boolean; warn?: boolean }) {
+  return (
+    <div className={cn(
+      "rounded-xl border bg-white p-3",
+      highlight ? "border-purple-200" : warn ? "border-amber-200" : "border-emerald-100"
+    )}>
+      <div className="text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-0.5">{label}</div>
+      <div className={cn("text-2xl font-bold tabular-nums", highlight ? "text-[#8B00FF]" : warn ? "text-amber-700" : "text-[#0F172A]")}>
+        {value}
+      </div>
+      {subtle && <div className="text-[10px] text-[#94A3B8] mt-0.5">{subtle}</div>}
     </div>
   );
 }

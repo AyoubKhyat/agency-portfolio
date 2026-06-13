@@ -65,6 +65,57 @@ export async function GET() {
     catalogued: seenSectorKeys.has(s.key),
   })).sort((a, b) => a.discovered - b.discovered);
 
+  // ---------- Sweep history ----------
+  const sweeps = await prisma.discoverySweep.findMany({
+    where: { status: "COMPLETED" },
+    select: { sector: true, neighborhood: true, startedAt: true, resultCount: true, importedCount: true, provider: true },
+    orderBy: { startedAt: "desc" },
+  });
+
+  // Last-swept date per sector + per (sector, neighborhood)
+  const lastSweptBySector = new Map<string, Date>();
+  const sweepsBySector = new Map<string, number>();
+  for (const s of sweeps) {
+    const cur = lastSweptBySector.get(s.sector);
+    if (!cur || s.startedAt > cur) lastSweptBySector.set(s.sector, s.startedAt);
+    sweepsBySector.set(s.sector, (sweepsBySector.get(s.sector) || 0) + 1);
+  }
+
+  // Sectors not yet swept (in catalog but no DiscoverySweep row)
+  const sweptSectorKeys = new Set(lastSweptBySector.keys());
+  const neverSweptSectors = SECTORS.filter((s) => !sweptSectorKeys.has(s.key)).map((s) => ({
+    key: s.key, label: s.label, category: s.category,
+  }));
+
+  // Last-swept date per sector list
+  const sectorSweepStats = SECTORS.map((s) => ({
+    key: s.key,
+    label: s.label,
+    category: s.category,
+    sweepsRun: sweepsBySector.get(s.key) || 0,
+    lastSweptAt: lastSweptBySector.get(s.key)?.toISOString() || null,
+    daysSinceSwept: lastSweptBySector.has(s.key)
+      ? Math.floor((Date.now() - lastSweptBySector.get(s.key)!.getTime()) / 86_400_000)
+      : null,
+  }));
+
+  // Marrakech coverage % — fraction of catalog sectors that have at least one sweep recorded
+  const marrakechSweeps = sweeps.filter((s) => s.sector); // all sweeps for now (DiscoverySweep doesn't track city in this slice)
+  const marrakechSectorsSwept = new Set(marrakechSweeps.map((s) => s.sector)).size;
+  const sectorCoveragePct = SECTORS.length > 0
+    ? Math.round((marrakechSectorsSwept / SECTORS.length) * 1000) / 10
+    : 0;
+
+  // Recent sweeps for the activity timeline (last 30)
+  const recentSweeps = sweeps.slice(0, 30).map((s) => ({
+    sector: s.sector,
+    neighborhood: s.neighborhood,
+    startedAt: s.startedAt.toISOString(),
+    resultCount: s.resultCount,
+    importedCount: s.importedCount,
+    provider: s.provider,
+  }));
+
   return NextResponse.json({
     totals: {
       discovered: totalDiscovered,
@@ -78,6 +129,19 @@ export async function GET() {
     catalog: {
       totalSectors: SECTORS.length,
       totalCities: CITIES.length,
+    },
+    sweep: {
+      sectorCoveragePct,
+      sectorsSwept: marrakechSectorsSwept,
+      neverSweptSectors,
+      sectorSweepStats: sectorSweepStats.sort((a, b) => {
+        if (a.lastSweptAt && !b.lastSweptAt) return -1;
+        if (!a.lastSweptAt && b.lastSweptAt) return 1;
+        if (a.lastSweptAt && b.lastSweptAt) return b.lastSweptAt.localeCompare(a.lastSweptAt);
+        return a.label.localeCompare(b.label);
+      }),
+      recentSweeps,
+      totalSweeps: sweeps.length,
     },
   });
 }
