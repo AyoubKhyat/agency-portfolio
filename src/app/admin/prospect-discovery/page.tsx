@@ -325,9 +325,9 @@ export default function ProspectDiscoveryPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <BulkSweepTab
-              city={city}
+              cities={CITIES}
               sectors={SECTORS}
-              neighborhoods={NEIGHBORHOODS_BY_CITY[city] || []}
+              neighborhoodsByCity={NEIGHBORHOODS_BY_CITY}
               prefillSectors={sweepPrefill}
               providerName={providerName}
             />

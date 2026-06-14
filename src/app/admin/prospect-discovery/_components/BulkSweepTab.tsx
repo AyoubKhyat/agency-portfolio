@@ -68,8 +68,8 @@ const PRIORITY_SECTORS = [
 
 type SweepCheckResult = {
   withinDays: number;
-  matches: Array<{ sector: string; neighborhood: string | null; lastSweptAt: string; daysAgo: number; resultCount: number; importedCount: number }>;
-  staleQueries: Array<{ sector: string; neighborhood: string | null }>;
+  matches: Array<{ city: string; sector: string; neighborhood: string | null; lastSweptAt: string; daysAgo: number; resultCount: number; importedCount: number }>;
+  staleQueries: Array<{ city: string; sector: string; neighborhood: string | null }>;
   summary: { total: number; recentlySwept: number; toRun: number };
 };
 
@@ -85,26 +85,50 @@ function computeOpportunityScore(item: SearchItem): number {
 }
 
 export function BulkSweepTab({
-  city,
+  cities,
   sectors,
-  neighborhoods,
+  neighborhoodsByCity,
   prefillSectors,
   providerName,
 }: {
-  city: string;
+  cities: Array<{ key: string; label: string }>;
   sectors: Sector[];
-  neighborhoods: Neighborhood[];
+  neighborhoodsByCity: Record<string, string[]>;
   prefillSectors?: string[];
   providerName: "GOOGLE" | "OSM";
 }) {
+  const [selectedCities, setSelectedCities] = useState<Set<string>>(() => {
+    if (cities.length === 0) return new Set();
+    const marrakech = cities.find((c) => c.key === "MARRAKECH");
+    return new Set([marrakech ? marrakech.key : cities[0].key]);
+  });
   const [selectedSectors, setSelectedSectors] = useState<Set<string>>(new Set(prefillSectors || []));
   const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<Set<string>>(new Set());
   const [includeCityWide, setIncludeCityWide] = useState(true); // also search whole city (no neighborhood filter)
 
+  // Neighborhoods only apply when a single city is selected (and only Marrakech has data today)
+  const singleCityKey = selectedCities.size === 1 ? Array.from(selectedCities)[0] : null;
+  const neighborhoods: Neighborhood[] = singleCityKey ? (neighborhoodsByCity[singleCityKey] || []) : [];
+  const multiCity = selectedCities.size > 1;
+
+  function toggleCity(k: string) {
+    setSelectedCities((p) => { const n = new Set(p); n.has(k) ? n.delete(k) : n.add(k); return n; });
+    // Clear neighborhoods when switching cities, since lists differ
+    setSelectedNeighborhoods(new Set());
+  }
+  function selectAllCities() {
+    setSelectedCities(new Set(cities.map((c) => c.key)));
+    setSelectedNeighborhoods(new Set());
+  }
+  function clearCities() {
+    setSelectedCities(new Set());
+    setSelectedNeighborhoods(new Set());
+  }
+
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState<SweepProgress | null>(null);
   const [results, setResults] = useState<Aggregated[]>([]);
-  const [errors, setErrors] = useState<Array<{ sector: string; neighborhood: string | null; message: string }>>([]);
+  const [errors, setErrors] = useState<Array<{ city: string; sector: string; neighborhood: string | null; message: string }>>([]);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
   const [sweepCheck, setSweepCheck] = useState<SweepCheckResult | null>(null);
@@ -162,8 +186,16 @@ export function BulkSweepTab({
     setSelectedNeighborhoods(new Set());
     setIncludeCityWide(true);
   }
-  function presetFullMarrakech() {
+  function presetAllSectors() {
     setSelectedSectors(new Set(sectors.map((s) => s.key)));
+    setSelectedNeighborhoods(new Set());
+    setIncludeCityWide(true);
+  }
+  function presetAllMorocco() {
+    // Sweep priority sectors city-wide across every supported Moroccan city.
+    setSelectedCities(new Set(cities.map((c) => c.key)));
+    const valid = new Set(sectors.map((s) => s.key));
+    setSelectedSectors(new Set(PRIORITY_SECTORS.filter((k) => valid.has(k))));
     setSelectedNeighborhoods(new Set());
     setIncludeCityWide(true);
   }
@@ -177,17 +209,21 @@ export function BulkSweepTab({
     });
   }
 
-  // Build the query list (sector × neighborhood, optionally + city-wide)
+  // Build the query list (city × sector × neighborhood, optionally + city-wide).
+  // Neighborhoods only apply when a single city is selected.
   const queryList = useMemo(() => {
+    const cityKeys = Array.from(selectedCities);
     const sectorKeys = Array.from(selectedSectors);
-    const nbList = Array.from(selectedNeighborhoods);
-    const queries: { sector: string; neighborhood: string | null }[] = [];
-    for (const sec of sectorKeys) {
-      if (includeCityWide || nbList.length === 0) queries.push({ sector: sec, neighborhood: null });
-      for (const nb of nbList) queries.push({ sector: sec, neighborhood: nb });
+    const nbList = singleCityKey ? Array.from(selectedNeighborhoods) : [];
+    const queries: { city: string; sector: string; neighborhood: string | null }[] = [];
+    for (const c of cityKeys) {
+      for (const sec of sectorKeys) {
+        if (includeCityWide || nbList.length === 0) queries.push({ city: c, sector: sec, neighborhood: null });
+        for (const nb of nbList) queries.push({ city: c, sector: sec, neighborhood: nb });
+      }
     }
     return queries;
-  }, [selectedSectors, selectedNeighborhoods, includeCityWide]);
+  }, [selectedCities, selectedSectors, selectedNeighborhoods, includeCityWide, singleCityKey]);
 
   // Pre-check sweep history (debounced) when selection changes
   useEffect(() => {
@@ -198,7 +234,11 @@ export function BulkSweepTab({
         const res = await fetch("/api/admin/prospect-discovery/sweeps/check", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ city, queries: queryList, withinDays: 7 }),
+          body: JSON.stringify({
+            cities: Array.from(selectedCities),
+            queries: queryList,
+            withinDays: 7,
+          }),
         });
         if (res.ok) setSweepCheck(await res.json());
       } finally {
@@ -206,13 +246,13 @@ export function BulkSweepTab({
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [queryList, city]);
+  }, [queryList, selectedCities]);
 
   // Effective queries = full list, filtered by skipRecent if pre-check has matches
   const effectiveQueries = useMemo(() => {
     if (!skipRecent || !sweepCheck || sweepCheck.matches.length === 0) return queryList;
-    const skipSet = new Set(sweepCheck.matches.map((m) => `${m.sector}|${m.neighborhood || ""}`));
-    return queryList.filter((q) => !skipSet.has(`${q.sector}|${q.neighborhood || ""}`));
+    const skipSet = new Set(sweepCheck.matches.map((m) => `${m.city}|${m.sector}|${m.neighborhood || ""}`));
+    return queryList.filter((q) => !skipSet.has(`${q.city}|${q.sector}|${q.neighborhood || ""}`));
   }, [queryList, sweepCheck, skipRecent]);
 
   const estimatedSeconds = Math.round((effectiveQueries.length * pacingMs) / 1000);
@@ -235,8 +275,10 @@ export function BulkSweepTab({
     for (let i = 0; i < effectiveQueries.length; i++) {
       if (cancelRef.current) break;
       const q = effectiveQueries[i];
-      const label = sectors.find((s) => s.key === q.sector)?.label || q.sector;
-      const place = q.neighborhood ? `${label} · ${q.neighborhood}` : `${label} · all areas`;
+      const sectorLabel = sectors.find((s) => s.key === q.sector)?.label || q.sector;
+      const cityLabel = cities.find((c) => c.key === q.city)?.label || q.city;
+      const areaPart = q.neighborhood ? q.neighborhood : "all areas";
+      const place = `${cityLabel} · ${sectorLabel} · ${areaPart}`;
       setProgress({ total: effectiveQueries.length, completed: i, currentLabel: place, errors: errorCount });
 
       const queryStartedAt = new Date();
@@ -250,14 +292,14 @@ export function BulkSweepTab({
         const res = await fetch("/api/admin/prospect-discovery/search", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ city, sector: q.sector, neighborhood: q.neighborhood, keyword: null }),
+          body: JSON.stringify({ city: q.city, sector: q.sector, neighborhood: q.neighborhood, keyword: null }),
         });
         const data = await res.json();
         if (!res.ok) {
           errorCount++;
           queryStatus = "FAILED";
           queryError = data.message || data.error || `HTTP ${res.status}`;
-          localErrors.push({ sector: q.sector, neighborhood: q.neighborhood, message: queryError || "error" });
+          localErrors.push({ city: q.city, sector: q.sector, neighborhood: q.neighborhood, message: queryError || "error" });
         } else {
           queryResultCount = (data.items as SearchItem[]).length;
           for (const it of (data.items as SearchItem[])) {
@@ -279,7 +321,7 @@ export function BulkSweepTab({
         errorCount++;
         queryStatus = "FAILED";
         queryError = err instanceof Error ? err.message : "Network error";
-        localErrors.push({ sector: q.sector, neighborhood: q.neighborhood, message: queryError });
+        localErrors.push({ city: q.city, sector: q.sector, neighborhood: q.neighborhood, message: queryError });
       }
 
       // Log this query's outcome to sweep history (fire-and-forget)
@@ -288,7 +330,7 @@ export function BulkSweepTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           provider: providerName,
-          city,
+          city: q.city,
           sector: q.sector,
           neighborhood: q.neighborhood,
           resultCount: queryResultCount,
@@ -409,6 +451,14 @@ export function BulkSweepTab({
         </div>
         <div className="flex flex-wrap gap-2">
           <button
+            onClick={presetAllMorocco}
+            disabled={running || cities.length === 0}
+            title={`Select all ${cities.length} Moroccan cities + priority sectors (city-wide)`}
+            className="text-[12px] px-3 py-1.5 rounded-lg font-medium bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm hover:shadow disabled:opacity-50 inline-flex items-center gap-1.5"
+          >
+            🇲🇦 All Morocco ({cities.length} cities × priority sectors)
+          </button>
+          <button
             onClick={presetPriority}
             disabled={running}
             className="text-[12px] px-3 py-1.5 rounded-lg font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm hover:shadow disabled:opacity-50"
@@ -423,16 +473,58 @@ export function BulkSweepTab({
             Secondary sectors
           </button>
           <button
-            onClick={presetFullMarrakech}
+            onClick={presetAllSectors}
             disabled={running}
             className="text-[12px] px-3 py-1.5 rounded-lg font-medium border border-purple-200 bg-white text-[#7C3AED] hover:bg-purple-50 disabled:opacity-50"
           >
-            Full Marrakech ({sectors.length} sectors)
+            All sectors ({sectors.length})
           </button>
           <div className="text-[11px] text-[#64748B] ml-auto self-center">
-            Each preset selects sectors city-wide (no neighborhood drill-down). Add neighborhoods below for deeper coverage.
+            Each preset selects sectors city-wide. Pick cities below to scope.
           </div>
         </div>
+      </div>
+
+      {/* Cities multi-select */}
+      <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-[14px] font-semibold text-[#0F172A] flex items-center gap-1.5">
+            Cities
+            {multiCity && (
+              <span className="text-[10px] uppercase tracking-wider font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">
+                multi-city
+              </span>
+            )}
+          </h2>
+          <div className="flex items-center gap-2">
+            <button onClick={selectAllCities} disabled={running} className="text-[11px] text-[#7C3AED] hover:underline disabled:opacity-50">All</button>
+            <button onClick={clearCities} disabled={running} className="text-[11px] text-[#64748B] hover:text-[#0F172A] disabled:opacity-50">Clear</button>
+            <span className="text-[11px] text-[#94A3B8]">{selectedCities.size} of {cities.length} selected</span>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {cities.map((c) => (
+            <button
+              key={c.key}
+              onClick={() => toggleCity(c.key)}
+              disabled={running}
+              className={cn(
+                "text-[11.5px] px-2.5 py-1 rounded-full border transition-all",
+                selectedCities.has(c.key)
+                  ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white border-transparent"
+                  : "bg-white text-[#475569] border-[var(--os-border)] hover:border-purple-300",
+                running && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+        {multiCity && (
+          <div className="mt-2 text-[11px] text-amber-700 bg-amber-50/40 border border-amber-200 rounded-lg px-2.5 py-1.5">
+            Multi-city mode: neighborhood drill-down disabled (only Marrakech has neighborhood data). All sweeps run city-wide.
+          </div>
+        )}
       </div>
 
       {/* Selectors */}
@@ -481,9 +573,10 @@ export function BulkSweepTab({
         </div>
       </div>
 
+      {!multiCity && neighborhoods.length > 0 && (
       <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[14px] font-semibold text-[#0F172A]">Neighborhoods</h2>
+          <h2 className="text-[14px] font-semibold text-[#0F172A]">Neighborhoods{singleCityKey ? ` · ${cities.find((c) => c.key === singleCityKey)?.label ?? singleCityKey}` : ""}</h2>
           <div className="flex items-center gap-2">
             <button onClick={selectAllNeighborhoods} className="text-[11px] text-[#7C3AED] hover:underline">All</button>
             <button onClick={clearNeighborhoods} className="text-[11px] text-[#64748B] hover:text-[#0F172A]">Clear</button>
@@ -519,6 +612,7 @@ export function BulkSweepTab({
           Also search city-wide for each sector (recommended for sparse data)
         </label>
       </div>
+      )}
 
       {/* Plan + start */}
       <div className="rounded-2xl border-2 border-purple-200 bg-purple-50/30 p-4 sm:p-5">
@@ -668,6 +762,7 @@ export function BulkSweepTab({
                 <tr className="border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
                   <th className="px-3 py-2 text-left">Quality</th>
                   <th className="px-3 py-2 text-left">Business</th>
+                  {multiCity && <th className="px-3 py-2 text-left">City</th>}
                   <th className="px-3 py-2 text-center" title="WhatsApp">WA</th>
                   <th className="px-3 py-2 text-center" title="Instagram">IG</th>
                   <th className="px-3 py-2 text-center" title="Website">Site</th>
@@ -696,6 +791,11 @@ export function BulkSweepTab({
                           {r.rating !== null && r.rating !== undefined && ` · ★${r.rating} (${r.reviewCount ?? 0})`}
                         </div>
                       </td>
+                      {multiCity && (
+                        <td className="px-3 py-2 text-[12px] text-[#475569]">
+                          {cities.find((c) => c.key === r.city)?.label || r.city}
+                        </td>
+                      )}
                       <td className="px-3 py-2 text-center"><ChannelMark on={flags.whatsapp} title={r.phone ? `WhatsApp: ${r.phone}` : "No WhatsApp"} /></td>
                       <td className="px-3 py-2 text-center"><ChannelMark on={flags.instagram} title={r.instagram || "No Instagram"} /></td>
                       <td className="px-3 py-2 text-center"><ChannelMark on={flags.website} title={r.website || "No website"} /></td>
@@ -758,7 +858,7 @@ export function BulkSweepTab({
           <div className="mt-2 space-y-1 max-h-48 overflow-y-auto">
             {errors.map((e, i) => (
               <div key={i} className="text-[11px] text-amber-700">
-                {sectors.find((s) => s.key === e.sector)?.label || e.sector}{e.neighborhood ? ` · ${e.neighborhood}` : ""}: {e.message}
+                {cities.find((c) => c.key === e.city)?.label || e.city} · {sectors.find((s) => s.key === e.sector)?.label || e.sector}{e.neighborhood ? ` · ${e.neighborhood}` : ""}: {e.message}
               </div>
             ))}
           </div>
@@ -792,7 +892,7 @@ function PostSweepReport({
   importResult,
 }: {
   results: Aggregated[];
-  errors: Array<{ sector: string; neighborhood: string | null; message: string }>;
+  errors: Array<{ city: string; sector: string; neighborhood: string | null; message: string }>;
   progress: SweepProgress | null;
   sectors: Sector[];
   importResult: { imported: number; skipped: number } | null;
