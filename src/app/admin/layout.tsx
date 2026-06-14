@@ -26,6 +26,7 @@ const SECTIONS = [
     label: "Sales",
     items: [
       { href: "/admin/outreach", label: "Outreach", icon: Flame },
+      { href: "/admin/saturation", label: "Saturation", icon: Target },
       { href: "/admin/inbox", label: "Reply Inbox", icon: Inbox },
       { href: "/admin/leads", label: "Leads", icon: Users, badgeKey: "leads" as const },
       { href: "/admin/prospecting", label: "Prospecting", icon: Target, badgeKey: "prospects" as const },
