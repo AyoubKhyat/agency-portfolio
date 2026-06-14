@@ -6,6 +6,7 @@ import {
   Send, MessageCircle, CalendarCheck, FileSignature, Trophy, Flame,
   Phone as PhoneIcon, ChevronRight, SkipForward, RefreshCw,
   ChevronLeft, Sparkles, ExternalLink, BookOpen, Crown, MapPin, AlertTriangle,
+  Plus, X, Loader2, CheckCircle2 as CheckIcon,
 } from "lucide-react";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { PageHeader } from "@/components/admin/page-header";
@@ -92,6 +93,7 @@ export default function OutreachCommandCenter() {
   const [predictions, setPredictions] = useState<Prediction[] | null>(null);
   const [coverage, setCoverage] = useState<Coverage | null>(null);
   const [loading, setLoading] = useState(true);
+  const [addOpen, setAddOpen] = useState(false);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -140,9 +142,14 @@ export default function OutreachCommandCenter() {
           ? `${coverage.marrakech.actionableHot} actionable HOT leads in Marrakech · target ${coverage.threshold}`
           : "Convert HOT prospects into clients."}
         actions={
-          <button onClick={loadAll} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[var(--os-border)] bg-white text-[#475569] hover:bg-gray-50">
-            <RefreshCw className="w-3.5 h-3.5" /> Refresh
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button onClick={() => setAddOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20 hover:shadow-lg">
+              <Plus className="w-3.5 h-3.5" /> Add prospect
+            </button>
+            <button onClick={loadAll} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[var(--os-border)] bg-white text-[#475569] hover:bg-gray-50">
+              <RefreshCw className="w-3.5 h-3.5" /> Refresh
+            </button>
+          </div>
         }
       />
 
@@ -184,6 +191,10 @@ export default function OutreachCommandCenter() {
       )}
       {tab === "all" && (
         <AllHotTab prospects={allHot} loading={loading && allHot.length === 0} onAction={markStatus} />
+      )}
+
+      {addOpen && (
+        <QuickAddModal onClose={() => setAddOpen(false)} onSaved={() => { setAddOpen(false); loadAll(); }} />
       )}
     </div>
   );
@@ -761,6 +772,174 @@ function AllHotTab({ prospects, loading, onAction }: { prospects: QueueProspect[
           <div className="px-4 py-2 text-[11px] text-[#64748B] text-center border-t border-[var(--os-border)]">Showing top 300 of {filtered.length}</div>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ============================================================
+ * Quick Add modal — minimal fields, save → ready to message
+ * ============================================================ */
+const SUGGESTED_SECTORS = [
+  "Restaurant", "Café", "Hotel", "Riad", "Clinic", "Dentist", "Beauty salon",
+  "Spa", "Gym", "Real estate", "Lawyer", "Architect", "School", "Other",
+];
+
+function QuickAddModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [sector, setSector] = useState("Restaurant");
+  const [neighborhood, setNeighborhood] = useState("Marrakech");
+  const [website, setWebsite] = useState("");
+  const [email, setEmail] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState<{ name: string; qualityLabel: string | null } | null>(null);
+
+  // At least one of phone or instagram is required
+  const canSubmit = name.trim().length > 0 && (phone.trim().length > 0 || instagram.trim().length > 0);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!canSubmit || saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/outreach/quick-add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone, instagram, sector, neighborhood, website, email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 409 && data.duplicate) {
+          setError(`Already exists: ${data.duplicate.name}`);
+        } else {
+          setError(data.error || `Failed (${res.status})`);
+        }
+        return;
+      }
+      setSaved({ name: data.prospect.name, qualityLabel: data.prospect.qualityLabel });
+      // Auto-close after a beat so the queue refresh kicks in
+      setTimeout(() => onSaved(), 800);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Network error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 sm:pt-16 px-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--os-border)]">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8B00FF] to-[#C026D3] flex items-center justify-center shadow-md shadow-purple-500/20">
+              <Plus className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h2 className="text-[15px] font-semibold text-[#0F172A]">Quick add prospect</h2>
+              <div className="text-[11px] text-[#64748B]">Lands in &quot;Never contacted&quot; — start messaging right after</div>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"><X className="w-4 h-4" /></button>
+        </div>
+
+        {saved ? (
+          <div className="p-6 text-center">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500 mx-auto mb-3 flex items-center justify-center shadow-md shadow-emerald-500/30">
+              <CheckIcon className="w-6 h-6 text-white" />
+            </div>
+            <div className="text-[14px] font-semibold text-[#0F172A] mb-1">{saved.name} added</div>
+            <div className="text-[12px] text-[#64748B]">
+              Classified as <span className={cn(
+                "px-1.5 py-0.5 rounded font-bold",
+                saved.qualityLabel === "HOT" ? "bg-rose-100 text-rose-700" :
+                saved.qualityLabel === "WARM" ? "bg-amber-100 text-amber-700" :
+                "bg-gray-100 text-gray-600"
+              )}>{saved.qualityLabel}</span> · refreshing queue...
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={submit} className="p-5 space-y-3">
+            <QField label="Business name *" required>
+              <input type="text" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Restaurant Le Foundouk" className={QINPUT} required />
+            </QField>
+
+            <div className="rounded-lg border border-purple-200 bg-purple-50/30 p-2.5">
+              <div className="text-[10px] uppercase tracking-wider text-[#7C3AED] font-bold mb-2">Contact (need at least one)</div>
+              <div className="grid grid-cols-2 gap-2">
+                <QField label="Phone">
+                  <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="06 12 34 56 78" className={QINPUT} />
+                </QField>
+                <QField label="Instagram">
+                  <input type="text" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="@handle" className={QINPUT} />
+                </QField>
+              </div>
+              {phone.trim() && (
+                <div className="text-[10px] text-[#64748B] mt-1.5">
+                  {/^[+]?2?1?2?0?[67]/.test(phone.replace(/\D/g, "")) || /^[67]/.test(phone.replace(/\D/g, ""))
+                    ? <span className="text-emerald-700">✓ Mobile — will be HOT, WhatsApp ready</span>
+                    : /^[+]?2?1?2?0?5/.test(phone.replace(/\D/g, "")) || /^5/.test(phone.replace(/\D/g, ""))
+                    ? <span className="text-amber-700">⚠ Landline (05xx) — will be WARM unless Instagram added</span>
+                    : <span className="text-[#94A3B8]">Format will be normalized to +212</span>}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <QField label="Sector">
+                <select value={sector} onChange={(e) => setSector(e.target.value)} className={QINPUT}>
+                  {SUGGESTED_SECTORS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </QField>
+              <QField label="Neighborhood">
+                <input type="text" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Gueliz" className={QINPUT} />
+              </QField>
+            </div>
+
+            <details className="text-[12px]">
+              <summary className="cursor-pointer text-[#7C3AED] hover:underline">Add website / email (optional)</summary>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <QField label="Website">
+                  <input type="text" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://..." className={QINPUT} />
+                </QField>
+                <QField label="Email">
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contact@..." className={QINPUT} />
+                </QField>
+              </div>
+            </details>
+
+            {error && (
+              <div className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-2.5 py-2">{error}</div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button type="button" onClick={onClose} className="px-3 py-2 rounded-xl text-[13px] font-medium text-[#475569] hover:bg-[#F1F5F9]">Cancel</button>
+              <button type="submit" disabled={!canSubmit || saving} className={cn(
+                "inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-[13px] font-semibold text-white shadow-md transition-all",
+                !canSubmit || saving ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:shadow-lg"
+              )}>
+                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                {saving ? "Adding..." : "Add & ready to message"}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const QINPUT = "w-full px-2.5 py-1.5 rounded-lg border border-[var(--os-border)] bg-white text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300";
+
+function QField({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-1">
+        {label}{required && <span className="text-rose-500 ml-0.5">*</span>}
+      </label>
+      {children}
     </div>
   );
 }
