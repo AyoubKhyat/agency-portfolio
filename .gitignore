@@ -49,3 +49,9 @@ next-env.d.ts
 # claude
 .claude/
 .env*.local
+
+# Local outreach/lead files (never commit)
+ALL-LEADS.md
+OUTREACH-DAY1.md
+leads/
+send-batch*.sh
