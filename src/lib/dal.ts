@@ -35,6 +35,7 @@ async function getFallbackProjects(locale: string) {
     const key = keyMap[p.slug] ?? p.slug;
     return {
       ...p,
+      tag: safeT(t, `${key}_eyebrow`) ?? p.tag,
       title: safeT(t, `${key}_title`) ?? p.slug,
       desc: safeT(t, `${key}_desc`) ?? "",
       tags: safeT(t, `${key}_tags`) ?? "",
