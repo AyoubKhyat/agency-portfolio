@@ -21,7 +21,7 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Home" });
   return {
-    title: `Ibda3 Digital — ${t("hero_title")}`,
+    title: t("meta_title"),
     description: t("hero_subtitle"),
   };
 }
@@ -64,7 +64,7 @@ export default async function HomePage({
   return (
     <>
       <CinematicHero
-        tagline="Web Studio / Marrakech"
+        tagline={t("hero_tagline")}
         subtitle={t("hero_title")}
         description={t("hero_subtitle")}
         ctaLabel={t("hero_cta")}
