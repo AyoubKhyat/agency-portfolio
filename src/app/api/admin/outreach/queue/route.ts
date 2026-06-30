@@ -43,16 +43,34 @@ export async function GET() {
     take: 1000,
   });
 
+  // Touch count from the audit log — counts every WA/IG button click logged as ProspectActivity.
+  // Used by /admin/outreach to cap pre-filled templates at "intro + 1 follow-up" per prospect.
+  const touchRows = all.length === 0 ? [] : await prisma.prospectActivity.groupBy({
+    by: ["prospectId"],
+    where: {
+      prospectId: { in: all.map((p) => p.id) },
+      actionType: { in: ["SENT_WHATSAPP", "SENT_INSTAGRAM"] },
+    },
+    _count: { _all: true },
+  });
+  const touchCountByProspect = new Map<string, number>(
+    touchRows.map((r) => [r.prospectId, r._count._all]),
+  );
+  const allWithTouches = all.map((p) => ({
+    ...p,
+    whatsappTouchCount: touchCountByProspect.get(p.id) ?? 0,
+  }));
+
   const now = Date.now();
   type Bucket = "never_contacted" | "due_day_4" | "due_day_10" | "due_day_20";
-  const buckets: Record<Bucket, typeof all> = {
+  const buckets: Record<Bucket, typeof allWithTouches> = {
     never_contacted: [],
     due_day_4: [],
     due_day_10: [],
     due_day_20: [],
   };
 
-  for (const p of all) {
+  for (const p of allWithTouches) {
     // Most-advanced bucket the prospect qualifies for
     if (!p.sentAt) {
       buckets.never_contacted.push(p);
@@ -92,6 +110,6 @@ export async function GET() {
       due_day_10: buckets.due_day_10.length,
       due_day_20: buckets.due_day_20.length,
     },
-    totalHot: all.length,
+    totalHot: allWithTouches.length,
   });
 }

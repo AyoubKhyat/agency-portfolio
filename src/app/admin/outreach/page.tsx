@@ -21,6 +21,8 @@ type QueueProspect = {
   sentAt: string | null; followup1At: string | null; followup2At: string | null; followup3At: string | null;
   lastActionByName: string | null; lastActionAt: string | null;
   owner: { id: string; fullName: string; avatarInitials: string } | null;
+  /** Count of SENT_WHATSAPP + SENT_INSTAGRAM activity rows. Drives the one-follow-up cap. */
+  whatsappTouchCount: number;
 };
 
 type QueueData = {
@@ -94,17 +96,45 @@ function fillTemplate(body: string, p: { name: string; sector: string; neighborh
     .replace(/\{\{city\}\}/g, p.neighborhood || "Marrakech");
 }
 
-function pickTemplate(sector: string, templates: Template[]): Template | null {
-  const s = (sector || "").toLowerCase();
-  if (/spa|hammam/.test(s)) {
-    return templates.find((t) => t.key === "WEBSITE_OFFER_SPA_HAMMAM") ?? null;
+const CLOSED_STATUSES = ["REPONDU", "CONVERTI", "CLIENT", "PERDU", "REFUSE"];
+
+/** Effective touch count: trust the activity log when it has any rows; otherwise treat sentAt
+ *  as a single legacy backfill touch. Caps at "intro + one follow-up" — see /admin/outreach docs. */
+function effectiveTouches(p: { whatsappTouchCount: number; sentAt: string | null }): number {
+  if (p.whatsappTouchCount > 0) return p.whatsappTouchCount;
+  return p.sentAt ? 1 : 0;
+}
+
+/** Returns the template to pre-fill the WhatsApp composer with, or null to skip pre-fill
+ *  (cap hit / engaged / no template available). Universal cap across all sectors. */
+function pickTemplate(p: { sector: string; status: string; sentAt: string | null; whatsappTouchCount: number }, templates: Template[]): Template | null {
+  if (CLOSED_STATUSES.includes(p.status)) return null;
+
+  const touches = effectiveTouches(p);
+  if (touches >= 2) return null; // cap: intro + one follow-up, no more
+
+  const s = (p.sector || "").toLowerCase();
+  const isSpa = /spa|hammam/.test(s);
+
+  if (touches === 1) {
+    // Follow-up slot: prefer sector-specific FU, fall back to generic templates (no generic FU yet)
+    if (isSpa) return templates.find((t) => t.key === "WEBSITE_OFFER_SPA_HAMMAM_FOLLOWUP") ?? null;
+    return null;
   }
-  // Default fallback chain — extend with more sector branches over time
+
+  // touches === 0 → first-touch / intro
+  if (isSpa) return templates.find((t) => t.key === "WEBSITE_OFFER_SPA_HAMMAM") ?? null;
   return (
     templates.find((t) => t.key === "WEBSITE_OFFER") ??
     templates.find((t) => t.key === "INTRO") ??
     null
   );
+}
+
+/** True when no more pre-filled outreach should be auto-suggested for this prospect. */
+function isFollowupCapped(p: { status: string; sentAt: string | null; whatsappTouchCount: number }): boolean {
+  if (CLOSED_STATUSES.includes(p.status)) return false; // closed shows its own status badge already
+  return effectiveTouches(p) >= 2;
 }
 
 /** wa.me requires international digits. Stored whatsappLink is already in 212xxx form;
@@ -436,7 +466,7 @@ function ActionRow({ p, onAction, compact, templates }: { p: QueueProspect; onAc
   const igUrl = hasIG ? `https://instagram.com/${(p.instagram || "").replace(/^@/, "")}` : "";
 
   function handleWhatsApp() {
-    const tpl = pickTemplate(p.sector, templates);
+    const tpl = pickTemplate(p, templates);
     const body = tpl ? fillTemplate(tpl.body, p) : "";
     const url = buildWaUrl(p, body);
     if (url) window.open(url, "_blank");
@@ -538,6 +568,9 @@ function ProspectRow({ p, onAction, templates }: { p: QueueProspect; onAction: (
             <span className="text-[11px] text-[#64748B]">{p.sector}</span>
             {p.neighborhood && <span className="text-[11px] text-[#94A3B8]">· {p.neighborhood}</span>}
             {p.score !== null && <span className="text-[10px] text-[#7C3AED] font-medium">score {p.score}</span>}
+            {isFollowupCapped(p) && (
+              <span title="Already messaged twice — no pre-filled template will load" className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">✓ Followed up</span>
+            )}
           </div>
           <div className="flex items-center gap-2 text-[11px] text-[#64748B] flex-wrap">
             {p.phone && <span className="tabular-nums">{p.phone}</span>}
@@ -630,11 +663,14 @@ function FocusTab({ prospects, onAction, templates }: { prospects: QueueProspect
 
       {/* Main card */}
       <div className="rounded-2xl border-2 border-purple-200 bg-white p-6 sm:p-8 mb-4 shadow-md shadow-purple-500/5">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
           <Flame className="w-4 h-4 text-rose-600" />
           <span className="text-[10px] px-2 py-0.5 rounded bg-rose-50 text-rose-700 font-bold uppercase tracking-wider">HOT</span>
           <span className="text-[11px] text-[#94A3B8]">·</span>
           <span className="text-[11px] text-[#64748B]">score {current.score ?? 0} · {current.sector}{current.neighborhood ? ` · ${current.neighborhood}` : ""}</span>
+          {isFollowupCapped(current) && (
+            <span title="Already messaged twice — no pre-filled template will load" className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">✓ Followed up</span>
+          )}
         </div>
         <h2 className="text-[22px] sm:text-[26px] font-bold text-[#0F172A] tracking-tight mb-2">{current.name}</h2>
         <div className="space-y-1 mb-4 text-[13px] text-[#475569]">
@@ -651,7 +687,7 @@ function FocusTab({ prospects, onAction, templates }: { prospects: QueueProspect
           {hasPhone && (
             <button
               onClick={() => {
-                const tpl = pickTemplate(current.sector, templates);
+                const tpl = pickTemplate(current, templates);
                 const body = tpl ? fillTemplate(tpl.body, current) : "";
                 const url = buildWaUrl(current, body);
                 if (url) window.open(url, "_blank");
@@ -807,6 +843,7 @@ function AllHotTab({ prospects, loading, onAction, templates }: { prospects: Que
                     {p.status === "ENVOYE" && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-medium">SENT</span>}
                     {p.status === "A_ENVOYER" && <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-[#64748B] font-medium">PENDING</span>}
                     {p.status === "CONVERTI" && <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-[#7C3AED] font-medium">CLIENT</span>}
+                    {isFollowupCapped(p) && <span title="Already messaged twice — no pre-filled template will load" className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">✓ FU</span>}
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex justify-end">

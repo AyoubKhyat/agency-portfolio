@@ -47,7 +47,7 @@ export async function GET() {
     },
     select: {
       id: true, name: true, sector: true, neighborhood: true,
-      phone: true, instagram: true, hasWebsite: true, website: true,
+      phone: true, whatsappLink: true, instagram: true, hasWebsite: true, website: true,
       qualityLabel: true, score: true, status: true,
       sentAt: true, lastActionAt: true,
       owner: { select: { id: true, fullName: true, avatarInitials: true } },
@@ -60,9 +60,23 @@ export async function GET() {
     },
   });
 
+  // Touch count from the audit log — see queue/route.ts for context. Same cap rule used downstream.
+  const touchRows = hotProspects.length === 0 ? [] : await prisma.prospectActivity.groupBy({
+    by: ["prospectId"],
+    where: {
+      prospectId: { in: hotProspects.map((p) => p.id) },
+      actionType: { in: ["SENT_WHATSAPP", "SENT_INSTAGRAM"] },
+    },
+    _count: { _all: true },
+  });
+  const touchCountByProspect = new Map<string, number>(
+    touchRows.map((r) => [r.prospectId, r._count._all]),
+  );
+
   type Ranked = (typeof hotProspects)[0] & {
     predictionScore: number;
     reasons: string[];
+    whatsappTouchCount: number;
   };
 
   const ranked: Ranked[] = hotProspects.map((p) => {
@@ -110,7 +124,7 @@ export async function GET() {
     }
 
     s = Math.min(100, s);
-    return { ...p, predictionScore: s, reasons };
+    return { ...p, predictionScore: s, reasons, whatsappTouchCount: touchCountByProspect.get(p.id) ?? 0 };
   });
 
   ranked.sort((a, b) => b.predictionScore - a.predictionScore);
