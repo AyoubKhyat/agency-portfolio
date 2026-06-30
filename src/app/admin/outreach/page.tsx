@@ -84,6 +84,48 @@ function relativeDate(iso: string | null): string {
   return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
 }
 
+/* ---------- WhatsApp pre-fill helpers ---------- */
+type Template = { key: string; name: string; channel: string; language: string; subject: string; body: string };
+
+function fillTemplate(body: string, p: { name: string; sector: string; neighborhood: string }): string {
+  return body
+    .replace(/\{\{name\}\}/g, p.name)
+    .replace(/\{\{sector\}\}/g, p.sector || "")
+    .replace(/\{\{city\}\}/g, p.neighborhood || "Marrakech");
+}
+
+function pickTemplate(sector: string, templates: Template[]): Template | null {
+  const s = (sector || "").toLowerCase();
+  if (/spa|hammam/.test(s)) {
+    return templates.find((t) => t.key === "WEBSITE_OFFER_SPA_HAMMAM") ?? null;
+  }
+  // Default fallback chain — extend with more sector branches over time
+  return (
+    templates.find((t) => t.key === "WEBSITE_OFFER") ??
+    templates.find((t) => t.key === "INTRO") ??
+    null
+  );
+}
+
+/** wa.me requires international digits. Stored whatsappLink is already in 212xxx form;
+ *  phone is usually local Moroccan (06/07/05). Prefer the stored link; only synthesize
+ *  from phone when whatsappLink is empty. */
+function buildWaUrl(p: { phone: string | null; whatsappLink: string | null }, body: string): string {
+  let base = "";
+  const stored = (p.whatsappLink || "").trim();
+  if (stored) {
+    // Strip any pre-existing query/trailing slash so we don't double-encode
+    base = stored.split("?")[0].replace(/\/+$/, "");
+  } else if (p.phone) {
+    const digits = p.phone.replace(/\D/g, "");
+    // Moroccan local format: 0X XX XX XX XX (10 digits, leading 0) → drop the 0, prefix 212
+    const intl = digits.length === 10 && digits.startsWith("0") ? "212" + digits.slice(1) : digits;
+    if (intl) base = `https://wa.me/${intl}`;
+  }
+  if (!base) return "";
+  return body ? `${base}?text=${encodeURIComponent(body)}` : base;
+}
+
 /* ============================================================ */
 export default function OutreachCommandCenter() {
   const [tab, setTab] = useState<"all" | "queue" | "predict" | "focus">("queue");
@@ -92,21 +134,24 @@ export default function OutreachCommandCenter() {
   const [scoreboard, setScoreboard] = useState<Scoreboard | null>(null);
   const [predictions, setPredictions] = useState<Prediction[] | null>(null);
   const [coverage, setCoverage] = useState<Coverage | null>(null);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
-    const [q, s, p, c] = await Promise.all([
+    const [q, s, p, c, t] = await Promise.all([
       fetch("/api/admin/outreach/queue").then((r) => r.ok ? r.json() : null),
       fetch("/api/admin/outreach/scoreboard").then((r) => r.ok ? r.json() : null),
       fetch("/api/admin/outreach/predictions").then((r) => r.ok ? r.json() : null),
       fetch("/api/admin/outreach/coverage").then((r) => r.ok ? r.json() : null),
+      fetch("/api/admin/outreach/templates").then((r) => r.ok ? r.json() : null),
     ]);
     if (q) setQueue(q);
     if (s) setScoreboard(s);
     if (p) setPredictions(p.predictions || []);
     if (c) setCoverage(c);
+    if (t) setTemplates(t.templates || []);
     setLoading(false);
   }, []);
 
@@ -177,20 +222,20 @@ export default function OutreachCommandCenter() {
       </div>
 
       {tab === "queue" && (
-        <QueueTab queue={queue} loading={loading && !queue} onAction={markStatus} />
+        <QueueTab queue={queue} loading={loading && !queue} onAction={markStatus} templates={templates} />
       )}
       {tab === "predict" && (
-        <PredictionsTab predictions={predictions} loading={loading && !predictions} onAction={markStatus} />
+        <PredictionsTab predictions={predictions} loading={loading && !predictions} onAction={markStatus} templates={templates} />
       )}
       {tab === "focus" && (
         <FocusTab prospects={
           predictions && predictions.length > 0
             ? predictions
             : allHot.filter((p) => !p.sentAt).slice(0, 50)
-        } onAction={markStatus} />
+        } onAction={markStatus} templates={templates} />
       )}
       {tab === "all" && (
-        <AllHotTab prospects={allHot} loading={loading && allHot.length === 0} onAction={markStatus} />
+        <AllHotTab prospects={allHot} loading={loading && allHot.length === 0} onAction={markStatus} templates={templates} />
       )}
 
       {addOpen && (
@@ -385,14 +430,16 @@ function CoverageStat({ label, value, tone, subtle }: { label: string; value: nu
 /* ============================================================
  * One-click action row (reused everywhere)
  * ============================================================ */
-function ActionRow({ p, onAction, compact }: { p: QueueProspect; onAction: (id: string, status: string | null, actionType: string) => void; compact?: boolean }) {
+function ActionRow({ p, onAction, compact, templates }: { p: QueueProspect; onAction: (id: string, status: string | null, actionType: string) => void; compact?: boolean; templates: Template[] }) {
   const hasPhone = !!(p.phone && p.phone.trim());
   const hasIG = !!(p.instagram && p.instagram.trim());
-  const waUrl = p.whatsappLink || (hasPhone ? `https://wa.me/${(p.phone || "").replace(/\D/g, "")}` : "");
   const igUrl = hasIG ? `https://instagram.com/${(p.instagram || "").replace(/^@/, "")}` : "";
 
   function handleWhatsApp() {
-    if (waUrl) window.open(waUrl, "_blank");
+    const tpl = pickTemplate(p.sector, templates);
+    const body = tpl ? fillTemplate(tpl.body, p) : "";
+    const url = buildWaUrl(p, body);
+    if (url) window.open(url, "_blank");
     onAction(p.id, "ENVOYE", "SENT_WHATSAPP");
   }
   function handleInstagram() {
@@ -437,7 +484,7 @@ function ActionRow({ p, onAction, compact }: { p: QueueProspect; onAction: (id: 
 /* ============================================================
  * Queue tab
  * ============================================================ */
-function QueueTab({ queue, loading, onAction }: { queue: QueueData | null; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void }) {
+function QueueTab({ queue, loading, onAction, templates }: { queue: QueueData | null; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; templates: Template[] }) {
   if (loading || !queue) return <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="os-skeleton h-32 rounded-2xl" />)}</div>;
 
   const sections: Array<keyof QueueData["buckets"]> = ["never_contacted", "due_day_4", "due_day_10", "due_day_20"];
@@ -464,7 +511,7 @@ function QueueTab({ queue, loading, onAction }: { queue: QueueData | null; loadi
             ) : (
               <div className="border-t border-[var(--os-border)] divide-y divide-[var(--os-border)]">
                 {bucket.slice(0, 50).map((p) => (
-                  <ProspectRow key={p.id} p={p} onAction={onAction} />
+                  <ProspectRow key={p.id} p={p} onAction={onAction} templates={templates} />
                 ))}
                 {bucket.length > 50 && (
                   <div className="px-4 py-2 text-[11px] text-[#64748B] text-center">+ {bucket.length - 50} more</div>
@@ -478,7 +525,7 @@ function QueueTab({ queue, loading, onAction }: { queue: QueueData | null; loadi
   );
 }
 
-function ProspectRow({ p, onAction }: { p: QueueProspect; onAction: (id: string, status: string | null, actionType: string) => void }) {
+function ProspectRow({ p, onAction, templates }: { p: QueueProspect; onAction: (id: string, status: string | null, actionType: string) => void; templates: Template[] }) {
   return (
     <div className="px-4 py-3 hover:bg-gray-50/60">
       <div className="flex items-start gap-3 flex-wrap">
@@ -502,7 +549,7 @@ function ProspectRow({ p, onAction }: { p: QueueProspect; onAction: (id: string,
           </div>
         </div>
         <div className="shrink-0">
-          <ActionRow p={p} onAction={onAction} />
+          <ActionRow p={p} onAction={onAction} templates={templates} />
         </div>
       </div>
     </div>
@@ -512,7 +559,7 @@ function ProspectRow({ p, onAction }: { p: QueueProspect; onAction: (id: string,
 /* ============================================================
  * Predictions tab
  * ============================================================ */
-function PredictionsTab({ predictions, loading, onAction }: { predictions: Prediction[] | null; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void }) {
+function PredictionsTab({ predictions, loading, onAction, templates }: { predictions: Prediction[] | null; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; templates: Template[] }) {
   if (loading || !predictions) return <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="os-skeleton h-24 rounded-2xl" />)}</div>;
   if (predictions.length === 0) {
     return (
@@ -543,7 +590,7 @@ function PredictionsTab({ predictions, loading, onAction }: { predictions: Predi
                   <span key={r} className="text-[10.5px] px-1.5 py-0.5 rounded bg-purple-50 text-[#7C3AED] border border-purple-100">{r}</span>
                 ))}
               </div>
-              <ActionRow p={p} onAction={onAction} />
+              <ActionRow p={p} onAction={onAction} templates={templates} />
             </div>
           </div>
         </div>
@@ -555,7 +602,7 @@ function PredictionsTab({ predictions, loading, onAction }: { predictions: Predi
 /* ============================================================
  * Focus tab
  * ============================================================ */
-function FocusTab({ prospects, onAction }: { prospects: QueueProspect[]; onAction: (id: string, status: string | null, actionType: string) => void }) {
+function FocusTab({ prospects, onAction, templates }: { prospects: QueueProspect[]; onAction: (id: string, status: string | null, actionType: string) => void; templates: Template[] }) {
   const [idx, setIdx] = useState(0);
 
   if (prospects.length === 0) {
@@ -604,7 +651,10 @@ function FocusTab({ prospects, onAction }: { prospects: QueueProspect[]; onActio
           {hasPhone && (
             <button
               onClick={() => {
-                window.open(current.whatsappLink || `https://wa.me/${(current.phone || "").replace(/\D/g, "")}`, "_blank");
+                const tpl = pickTemplate(current.sector, templates);
+                const body = tpl ? fillTemplate(tpl.body, current) : "";
+                const url = buildWaUrl(current, body);
+                if (url) window.open(url, "_blank");
                 onAction(current.id, "ENVOYE", "SENT_WHATSAPP");
               }}
               className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-emerald-500 text-white shadow-md shadow-emerald-500/30 hover:shadow-lg"
@@ -687,7 +737,7 @@ function FocusTab({ prospects, onAction }: { prospects: QueueProspect[]; onActio
 /* ============================================================
  * All HOT tab
  * ============================================================ */
-function AllHotTab({ prospects, loading, onAction }: { prospects: QueueProspect[]; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void }) {
+function AllHotTab({ prospects, loading, onAction, templates }: { prospects: QueueProspect[]; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; templates: Template[] }) {
   const [filter, setFilter] = useState("ALL");
   const filtered = useMemo(() => {
     if (filter === "ALL") return prospects;
@@ -760,7 +810,7 @@ function AllHotTab({ prospects, loading, onAction }: { prospects: QueueProspect[
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex justify-end">
-                      <ActionRow p={p} onAction={onAction} compact />
+                      <ActionRow p={p} onAction={onAction} compact templates={templates} />
                     </div>
                   </td>
                 </tr>
