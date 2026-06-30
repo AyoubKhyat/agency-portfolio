@@ -181,7 +181,9 @@ export default function OutreachCommandCenter() {
     if (s) setScoreboard(s);
     if (p) setPredictions(p.predictions || []);
     if (c) setCoverage(c);
-    if (t) setTemplates(t.templates || []);
+    // Templates: must stay an array even if the response is malformed or the endpoint
+    // failed/404'd, otherwise downstream pickTemplate(.find) would throw and block WA opens.
+    setTemplates(Array.isArray(t?.templates) ? t.templates : []);
     setLoading(false);
   }, []);
 
@@ -466,14 +468,28 @@ function ActionRow({ p, onAction, compact, templates }: { p: QueueProspect; onAc
   const igUrl = hasIG ? `https://instagram.com/${(p.instagram || "").replace(/^@/, "")}` : "";
 
   function handleWhatsApp() {
-    const tpl = pickTemplate(p, templates);
-    const body = tpl ? fillTemplate(tpl.body, p) : "";
-    const url = buildWaUrl(p, body);
+    // CRITICAL: open the bare wa.me URL first so a template/render error can never block the click.
+    // Then try to enrich with pre-filled text — any failure falls back silently to the empty composer.
+    let url = buildWaUrl(p, "");
+    try {
+      const tpl = pickTemplate(p, templates || []);
+      if (tpl) {
+        const body = fillTemplate(tpl.body, p);
+        const enriched = buildWaUrl(p, body);
+        if (enriched) url = enriched;
+      }
+    } catch (err) {
+      console.error("[outreach] WhatsApp template pre-fill failed, opening empty composer:", err);
+    }
     if (url) window.open(url, "_blank");
     onAction(p.id, "ENVOYE", "SENT_WHATSAPP");
   }
   function handleInstagram() {
-    if (igUrl) window.open(igUrl, "_blank");
+    try {
+      if (igUrl) window.open(igUrl, "_blank");
+    } catch (err) {
+      console.error("[outreach] Instagram open failed:", err);
+    }
     onAction(p.id, "ENVOYE", "SENT_INSTAGRAM");
   }
 
@@ -687,9 +703,17 @@ function FocusTab({ prospects, onAction, templates }: { prospects: QueueProspect
           {hasPhone && (
             <button
               onClick={() => {
-                const tpl = pickTemplate(current, templates);
-                const body = tpl ? fillTemplate(tpl.body, current) : "";
-                const url = buildWaUrl(current, body);
+                let url = buildWaUrl(current, "");
+                try {
+                  const tpl = pickTemplate(current, templates || []);
+                  if (tpl) {
+                    const body = fillTemplate(tpl.body, current);
+                    const enriched = buildWaUrl(current, body);
+                    if (enriched) url = enriched;
+                  }
+                } catch (err) {
+                  console.error("[outreach] WhatsApp template pre-fill failed, opening empty composer:", err);
+                }
                 if (url) window.open(url, "_blank");
                 onAction(current.id, "ENVOYE", "SENT_WHATSAPP");
               }}
@@ -701,7 +725,11 @@ function FocusTab({ prospects, onAction, templates }: { prospects: QueueProspect
           {hasIG && (
             <button
               onClick={() => {
-                window.open(`https://instagram.com/${(current.instagram || "").replace(/^@/, "")}`, "_blank");
+                try {
+                  window.open(`https://instagram.com/${(current.instagram || "").replace(/^@/, "")}`, "_blank");
+                } catch (err) {
+                  console.error("[outreach] Instagram open failed:", err);
+                }
                 onAction(current.id, "ENVOYE", "SENT_INSTAGRAM");
               }}
               className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md shadow-purple-500/30 hover:shadow-lg"
