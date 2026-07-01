@@ -31,6 +31,7 @@ import { MentionTextarea, HighlightedMentions } from "@/components/admin/mention
 import { ScheduleMeetingModal } from "@/components/admin/schedule-meeting-modal";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PROSPECT_SEGMENTS, SEGMENT_LABELS, SEGMENT_HINTS, SEGMENT_TOKENS, calcRelationshipStrength, type ProspectSegment } from "@/lib/prospect-segments";
 
 const STATUS_LABELS: Record<string, string> = {
   A_ENVOYER: "To Send",
@@ -65,22 +66,30 @@ const ACTION_LABELS: Record<string, string> = {
   STATUS_A_ENVOYER: "reset to To Send",
   STATUS_CONVERTI: "converted to lead",
   STATUS_PAS_DE_WHATSAPP: "marked no WhatsApp",
+  SEGMENT_CHANGED: "changed segment",
   NOTE_ADDED: "added a note",
   UPDATED: "updated details",
   BACKFILL_OWNERSHIP: "was attributed to",
+  MEETING_BOOKED: "booked a meeting",
+  PROPOSAL_SENT: "sent a proposal",
+  PROPOSAL_ACCEPTED: "proposal accepted",
 };
 
 const ACTION_COLORS: Record<string, { bg: string; text: string }> = {
-  SENT_WHATSAPP: { bg: "bg-green-100", text: "text-green-600" },
-  SENT_INSTAGRAM: { bg: "bg-pink-100", text: "text-pink-600" },
-  FOLLOW_UP: { bg: "bg-blue-100", text: "text-blue-600" },
-  MARKED_REPLIED: { bg: "bg-emerald-100", text: "text-emerald-600" },
-  STATUS_REPONDU: { bg: "bg-emerald-100", text: "text-emerald-600" },
-  ASSIGNED: { bg: "bg-violet-100", text: "text-violet-600" },
+  SENT_WHATSAPP: { bg: "bg-emerald-50", text: "text-emerald-600" },
+  SENT_INSTAGRAM: { bg: "bg-pink-50", text: "text-pink-600" },
+  FOLLOW_UP: { bg: "bg-sky-50", text: "text-sky-600" },
+  MARKED_REPLIED: { bg: "bg-emerald-50", text: "text-emerald-600" },
+  STATUS_REPONDU: { bg: "bg-emerald-50", text: "text-emerald-600" },
+  ASSIGNED: { bg: "bg-violet-50", text: "text-violet-600" },
   CREATED: { bg: "bg-slate-100", text: "text-slate-600" },
-  STATUS_CONVERTI: { bg: "bg-amber-100", text: "text-amber-600" },
-  NOTE_ADDED: { bg: "bg-sky-100", text: "text-sky-600" },
-  default: { bg: "bg-gray-100", text: "text-gray-500" },
+  STATUS_CONVERTI: { bg: "bg-amber-50", text: "text-amber-600" },
+  NOTE_ADDED: { bg: "bg-sky-50", text: "text-sky-600" },
+  SEGMENT_CHANGED: { bg: "bg-indigo-50", text: "text-indigo-600" },
+  MEETING_BOOKED: { bg: "bg-cyan-50", text: "text-cyan-600" },
+  PROPOSAL_SENT: { bg: "bg-indigo-50", text: "text-indigo-600" },
+  PROPOSAL_ACCEPTED: { bg: "bg-amber-50", text: "text-amber-600" },
+  default: { bg: "bg-slate-100", text: "text-slate-500" },
 };
 
 const ACTION_ICONS: Record<string, typeof Activity> = {
@@ -92,6 +101,10 @@ const ACTION_ICONS: Record<string, typeof Activity> = {
   CREATED: Plus,
   STATUS_CONVERTI: Trophy,
   NOTE_ADDED: FileText,
+  SEGMENT_CHANGED: Activity,
+  MEETING_BOOKED: CalendarIcon,
+  PROPOSAL_SENT: FileText,
+  PROPOSAL_ACCEPTED: Trophy,
   default: Activity,
 };
 
@@ -124,6 +137,7 @@ type FullProspect = {
   hasWebsite: boolean;
   priority: number;
   status: string;
+  segment: ProspectSegment;
   sentAt: string | null;
   followUpDate: string | null;
   createdAt: string;
@@ -154,6 +168,7 @@ type Prospect = {
   hasWebsite: boolean;
   priority: number;
   status: string;
+  segment: ProspectSegment;
   sentAt: string | null;
   createdAt: string;
   ownerUserId: string | null;
@@ -247,11 +262,11 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
   const [proposals, setProposals] = useState<{ id: string; status: string; amount: number; currency: string; packageName: string | null; createdAt: string }[]>([]);
   const [phoneCopied, setPhoneCopied] = useState(false);
   const [sections, setSections] = useState({
-    overview: true,
-    assignment: true,
-    followUp: true,
+    overview: false,
+    assignment: false,
+    followUp: false,
     notes: true,
-    timeline: false,
+    timeline: true,
   });
   const statusRef = useRef<HTMLDivElement>(null);
   const noteInputRef = useRef<HTMLTextAreaElement>(null);
@@ -318,6 +333,7 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
       hasWebsite: updated.hasWebsite,
       priority: updated.priority,
       status: updated.status,
+      segment: updated.segment,
       sentAt: updated.sentAt,
       createdAt: updated.createdAt,
       ownerUserId: updated.ownerUserId,
@@ -336,6 +352,20 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus, actionType: `STATUS_${newStatus}` }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setProspect(updated);
+      emitUpdate(updated);
+    }
+  }
+
+  async function handleSegmentChange(newSegment: ProspectSegment) {
+    if (!prospect || prospect.segment === newSegment) return;
+    const res = await fetch(`/api/admin/prospecting/${prospect.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ segment: newSegment }),
     });
     if (res.ok) {
       const updated = await res.json();
@@ -422,29 +452,107 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
               </div>
             ) : (
               <>
-                <div className="shrink-0 px-5 pt-5 pb-4 border-b border-[#E5E7EB]">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h2 className="text-[18px] font-bold text-[#0F172A] truncate">{prospect.name}</h2>
-                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        <Badge variant="default" size="sm">{prospect.sector}</Badge>
-                        <Badge
-                          variant={STATUS_BADGE[prospect.status] as "blue" | "amber" | "green" | "red" | "purple"}
-                          size="sm"
-                          dot
+                {/* Relationship Card — the premium summary at the top of the drawer */}
+                {(() => {
+                  const tokens = SEGMENT_TOKENS[prospect.segment];
+                  const strength = calcRelationshipStrength({ segment: prospect.segment, status: prospect.status, lastActionAt: prospect.lastActionAt });
+                  const potentialRevenue = proposals.reduce((sum, p) => p.status !== "REJECTED" ? sum + p.amount : sum, 0);
+                  const currency = proposals[0]?.currency ?? "MAD";
+                  const followUpLabel = getFollowUpStatus(prospect.followUpDate).label;
+                  return (
+                    <div className="shrink-0 px-5 pt-5 pb-4 border-b border-[#E5E7EB]">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={cn("inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10.5px] font-medium border", tokens.chipBg, tokens.chipText, tokens.chipBorder)}>
+                              <span className={cn("w-1.5 h-1.5 rounded-full", tokens.dot)} />
+                              {SEGMENT_LABELS[prospect.segment]}
+                            </span>
+                            <Badge
+                              variant={STATUS_BADGE[prospect.status] as "blue" | "amber" | "green" | "red" | "purple"}
+                              size="sm"
+                              dot
+                            >
+                              {STATUS_LABELS[prospect.status]}
+                            </Badge>
+                          </div>
+                          <h2 className="mt-2 text-[19px] font-semibold text-[#0F172A] tracking-tight truncate">{prospect.name}</h2>
+                          <p className="text-[12px] text-[#64748B] mt-0.5">
+                            {prospect.sector}
+                            {prospect.neighborhood && <span className="text-[#CBD5E1]"> · </span>}
+                            {prospect.neighborhood}
+                          </p>
+                        </div>
+                        <button
+                          onClick={onClose}
+                          className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors shrink-0"
+                          aria-label="Close"
                         >
-                          {STATUS_LABELS[prospect.status]}
-                        </Badge>
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      {/* Metric grid — 5 signals, muted tone-on-tone */}
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        <div className="rounded-lg border border-[#F1F5F9] px-2.5 py-2">
+                          <div className="text-[10px] uppercase tracking-[0.14em] text-[#94A3B8] font-medium">Strength</div>
+                          <div className="mt-1 flex items-center gap-2">
+                            <div className="flex-1 h-1 rounded-full bg-slate-100 overflow-hidden">
+                              <div className={cn("h-full rounded-full", tokens.dot)} style={{ width: `${strength}%` }} />
+                            </div>
+                            <span className="text-[13px] font-semibold text-[#0F172A] tabular-nums">{strength}</span>
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-[#F1F5F9] px-2.5 py-2">
+                          <div className="text-[10px] uppercase tracking-[0.14em] text-[#94A3B8] font-medium">Stage</div>
+                          <div className="mt-1 text-[13px] text-[#0F172A] font-medium">{STATUS_LABELS[prospect.status] ?? prospect.status}</div>
+                        </div>
+                        <div className="rounded-lg border border-[#F1F5F9] px-2.5 py-2">
+                          <div className="text-[10px] uppercase tracking-[0.14em] text-[#94A3B8] font-medium">Last activity</div>
+                          <div className="mt-1 text-[13px] text-[#0F172A] font-medium">{prospect.lastActionAt ? relativeTime(prospect.lastActionAt) : <span className="text-[#94A3B8]">Never</span>}</div>
+                        </div>
+                        <div className="rounded-lg border border-[#F1F5F9] px-2.5 py-2">
+                          <div className="text-[10px] uppercase tracking-[0.14em] text-[#94A3B8] font-medium">Next follow-up</div>
+                          <div className="mt-1 text-[13px] text-[#0F172A] font-medium">{prospect.followUpDate ? followUpLabel : <span className="text-[#94A3B8]">None</span>}</div>
+                        </div>
+                        <div className="rounded-lg border border-[#F1F5F9] px-2.5 py-2 col-span-2">
+                          <div className="text-[10px] uppercase tracking-[0.14em] text-[#94A3B8] font-medium">Potential revenue</div>
+                          <div className="mt-1 flex items-baseline gap-1.5">
+                            <span className="text-[15px] font-semibold text-[#0F172A] tabular-nums">
+                              {potentialRevenue > 0 ? potentialRevenue.toLocaleString() : "—"}
+                            </span>
+                            {potentialRevenue > 0 && <span className="text-[11px] text-[#94A3B8]">{currency}</span>}
+                            {proposals.length > 0 && (
+                              <span className="ml-auto text-[10.5px] text-[#94A3B8]">
+                                {proposals.length} proposal{proposals.length > 1 ? "s" : ""}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Segment picker — sits below the card, kept close for quick re-triage */}
+                      <div className="mt-4">
+                        <label htmlFor={`segment-${prospect.id}`} className="block text-[10px] uppercase tracking-[0.14em] text-[#94A3B8] font-medium mb-1.5">
+                          Segment
+                        </label>
+                        <select
+                          id={`segment-${prospect.id}`}
+                          value={prospect.segment}
+                          onChange={(e) => handleSegmentChange(e.target.value as ProspectSegment)}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] bg-white text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0F172A]/10 focus:border-[#CBD5E1] transition-all"
+                        >
+                          {PROSPECT_SEGMENTS.map((s) => (
+                            <option key={s} value={s}>{SEGMENT_LABELS[s]}</option>
+                          ))}
+                        </select>
+                        <p className="mt-1 text-[10.5px] text-[#94A3B8] leading-snug">
+                          {SEGMENT_HINTS[prospect.segment]}
+                        </p>
                       </div>
                     </div>
-                    <button
-                      onClick={onClose}
-                      className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors shrink-0"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 <div className="shrink-0 px-5 py-3 border-b border-[#E5E7EB]">
                   <div className="flex items-center gap-1.5">
@@ -832,48 +940,93 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                       open={sections.timeline}
                       onToggle={() => toggleSection("timeline")}
                     />
-                    {sections.timeline && (
-                      <div className="pb-3 pl-8">
-                        {!prospect.activities || prospect.activities.length === 0 ? (
-                          <p className="text-[13px] text-[#94A3B8]">No activity yet.</p>
-                        ) : (
-                          <div className="space-y-0">
-                            {prospect.activities.map((a, idx) => {
-                              const colors = ACTION_COLORS[a.actionType] || ACTION_COLORS.default;
-                              const IconComponent = ACTION_ICONS[a.actionType] || ACTION_ICONS.default;
+                    {sections.timeline && (() => {
+                      // Unified timeline — activities + proposals + creation event, sorted newest first.
+                      // Reuses existing data (no schema change, no new fetch).
+                      type TimelineEvent = {
+                        id: string;
+                        at: string;
+                        kind: string;         // maps to ACTION_ICONS / ACTION_COLORS
+                        actor: string | null;
+                        label: string;
+                        detail?: string;
+                      };
+                      const events: TimelineEvent[] = [];
+                      for (const a of prospect.activities ?? []) {
+                        events.push({
+                          id: `a-${a.id}`,
+                          at: a.createdAt,
+                          kind: a.actionType,
+                          actor: a.userName,
+                          label: ACTION_LABELS[a.actionType] ?? a.actionType.replace(/_/g, " ").toLowerCase(),
+                          detail: a.details ?? undefined,
+                        });
+                      }
+                      for (const pr of proposals) {
+                        events.push({
+                          id: `p-${pr.id}`,
+                          at: pr.createdAt,
+                          kind: pr.status === "ACCEPTED" ? "PROPOSAL_ACCEPTED" : "PROPOSAL_SENT",
+                          actor: null,
+                          label: pr.status === "ACCEPTED" ? "proposal accepted" : "proposal sent",
+                          detail: `${pr.packageName ?? "Custom"} · ${pr.amount.toLocaleString()} ${pr.currency}`,
+                        });
+                      }
+                      events.push({
+                        id: "created",
+                        at: prospect.createdAt,
+                        kind: "CREATED",
+                        actor: null,
+                        label: "created",
+                      });
+                      events.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+
+                      if (events.length === 0) {
+                        return <div className="pb-3 pl-8"><p className="text-[13px] text-[#94A3B8]">No activity yet.</p></div>;
+                      }
+                      return (
+                        <div className="pb-3 pl-8">
+                          <div className="relative">
+                            {events.map((e, idx) => {
+                              const colors = ACTION_COLORS[e.kind] || ACTION_COLORS.default;
+                              const IconComponent = ACTION_ICONS[e.kind] || ACTION_ICONS.default;
+                              const isLast = idx === events.length - 1;
                               return (
-                                <div key={a.id} className="flex gap-3 pb-4 relative">
-                                  {idx < prospect.activities.length - 1 && (
-                                    <div className="absolute left-[14px] top-8 bottom-0 w-px bg-[#E5E7EB]" />
+                                <div key={e.id} className="flex gap-3 pb-3.5 relative">
+                                  {!isLast && (
+                                    <div className="absolute left-[11px] top-6 bottom-0 w-px bg-[#F1F5F9]" />
                                   )}
                                   <div
                                     className={cn(
-                                      "flex items-center justify-center w-7 h-7 rounded-full shrink-0",
+                                      "flex items-center justify-center w-[22px] h-[22px] rounded-full shrink-0 border border-white shadow-[0_0_0_1px_rgba(226,232,240,0.9)]",
                                       colors.bg,
-                                      colors.text
+                                      colors.text,
                                     )}
                                   >
-                                    <IconComponent className="w-3.5 h-3.5" />
+                                    <IconComponent className="w-3 h-3" />
                                   </div>
                                   <div className="min-w-0 flex-1 pt-0.5">
-                                    <p className="text-[13px] text-[#475569] leading-snug">
-                                      <span className="font-semibold text-[#0F172A]">{a.userName}</span>{" "}
-                                      {ACTION_LABELS[a.actionType] ?? a.actionType}
-                                    </p>
-                                    {a.details && a.actionType === "NOTE_ADDED" && (
-                                      <p className="text-[12px] text-[#64748B] italic mt-0.5 truncate">
-                                        &ldquo;{a.details}&rdquo;
+                                    <div className="flex items-baseline gap-2 flex-wrap">
+                                      <p className="text-[12.5px] text-[#0F172A] leading-snug">
+                                        {e.actor && <span className="font-semibold">{e.actor}</span>}
+                                        {e.actor && " "}
+                                        <span className="text-[#475569]">{e.label}</span>
+                                      </p>
+                                      <span className="text-[10.5px] text-[#94A3B8] tabular-nums ml-auto">{relativeTime(e.at)}</span>
+                                    </div>
+                                    {e.detail && (
+                                      <p className={cn("text-[11.5px] mt-0.5 leading-snug", e.kind === "NOTE_ADDED" ? "text-[#64748B] italic" : "text-[#64748B]")}>
+                                        {e.kind === "NOTE_ADDED" ? `“${e.detail}”` : e.detail}
                                       </p>
                                     )}
-                                    <p className="text-[11px] text-[#94A3B8] mt-0.5">{relativeTime(a.createdAt)}</p>
                                   </div>
                                 </div>
                               );
                             })}
                           </div>
-                        )}
-                      </div>
-                    )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </>

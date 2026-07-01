@@ -130,20 +130,29 @@ model LeadNote {
   @@map("lead_notes")
 }
 
+enum ProspectSegment {
+  WARM_NETWORK
+  REFERRAL
+  AGENCY_EU
+  LUXURY_BRAND
+  LEGACY_COLD
+}
+
 model Prospect {
-  id           String    @id @default(cuid())
+  id           String          @id @default(cuid())
   name         String
   phone        String
-  whatsappLink String    @map("whatsapp_link")
+  whatsappLink String          @map("whatsapp_link")
   sector       String
-  neighborhood String    @default("")
-  instagram    String    @default("")
-  hasWebsite   Boolean   @default(false) @map("has_website")
-  website      String    @default("")
-  email        String    @default("")
-  qualityLabel String?   @map("quality_label") // HOT | WARM | COLD
-  priority     Int       @default(2)
-  status       String    @default("A_ENVOYER")
+  neighborhood String          @default("")
+  instagram    String          @default("")
+  hasWebsite   Boolean         @default(false) @map("has_website")
+  website      String          @default("")
+  email        String          @default("")
+  qualityLabel String?         @map("quality_label") // HOT | WARM | COLD
+  segment      ProspectSegment @default(LEGACY_COLD)
+  priority     Int             @default(2)
+  status       String          @default("A_ENVOYER")
   sentAt       DateTime? @map("sent_at")
   followUpDate    DateTime? @map("follow_up_date")
   followup1At     DateTime? @map("followup_1_at")
@@ -186,6 +195,7 @@ model Prospect {
   campaign        Campaign? @relation(fields: [campaignId], references: [id])
 
   @@index([campaignId])
+  @@index([segment])
   @@map("prospects")
 }
 

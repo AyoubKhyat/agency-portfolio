@@ -18,6 +18,7 @@ export async function GET(
 
 const patchSchema = z.object({
   status: z.enum(["A_ENVOYER", "ENVOYE", "REPONDU", "PAS_DE_WHATSAPP", "CONVERTI", "MEETING", "PROPOSAL_SENT", "NEGOTIATION", "CLIENT", "LOST"]).optional(),
+  segment: z.enum(["WARM_NETWORK", "REFERRAL", "AGENCY_EU", "LUXURY_BRAND", "LEGACY_COLD"]).optional(),
   ownerUserId: z.string().nullable().optional(),
   followUpDate: z.string().nullable().optional(),
   proposalAmount: z.number().nullable().optional(),
@@ -57,6 +58,20 @@ export async function PATCH(
 
   if (parsed.data.followUpDate !== undefined) {
     await updateProspect(id, { followUpDate: parsed.data.followUpDate ? new Date(parsed.data.followUpDate) : null });
+  }
+
+  if (parsed.data.segment) {
+    const previousSegment = (current as { segment?: string }).segment;
+    await updateProspect(id, { segment: parsed.data.segment });
+    if (previousSegment !== parsed.data.segment) {
+      await logProspectActivity({
+        prospectId: id,
+        userId: session.userId,
+        userName: session.fullName,
+        actionType: "SEGMENT_CHANGED",
+        details: `Segment: ${previousSegment ?? "—"} → ${parsed.data.segment}`,
+      });
+    }
   }
 
   if (parsed.data.proposalAmount !== undefined || parsed.data.proposalDate !== undefined || parsed.data.proposalStatus !== undefined) {

@@ -14,6 +14,8 @@ import {
 import { CommandPalette } from "@/components/admin/command-palette";
 import { cn } from "@/lib/utils";
 
+// Phase 1 pivot: routes hidden from the sidebar but kept alive at their URLs.
+// Hidden groups: solo-team overkill (chat, team, workload, blog).
 const SECTIONS = [
   {
     label: "Overview",
@@ -26,12 +28,9 @@ const SECTIONS = [
     label: "Sales",
     items: [
       { href: "/admin/outreach", label: "Outreach", icon: Flame },
-      { href: "/admin/marrakech-audit", label: "Marrakech Audit", icon: Target },
-      { href: "/admin/city-comparison", label: "City Comparison", icon: Compass },
       { href: "/admin/inbox", label: "Reply Inbox", icon: Inbox },
       { href: "/admin/leads", label: "Leads", icon: Users, badgeKey: "leads" as const },
-      { href: "/admin/prospecting", label: "Prospecting", icon: Target, badgeKey: "prospects" as const },
-      { href: "/admin/prospect-discovery", label: "Prospect Discovery", icon: Compass },
+      { href: "/admin/prospecting", label: "Relationships", icon: Target, badgeKey: "prospects" as const },
       { href: "/admin/sales-playbook", label: "Sales Playbook", icon: BookOpen },
       { href: "/admin/clients", label: "Clients", icon: Building2 },
     ],
@@ -39,12 +38,9 @@ const SECTIONS = [
   {
     label: "Operations",
     items: [
-      { href: "/admin/chat", label: "Chat", icon: MessageSquare, badgeKey: "chat" as const },
       { href: "/admin/tasks", label: "Tasks", icon: CheckSquare, badgeKey: "tasks" as const },
       { href: "/admin/notifications", label: "Notifications", icon: BellRing, badgeKey: "notifications" as const },
       { href: "/admin/activity", label: "Activity Feed", icon: Activity, badgeKey: "activities" as const },
-      { href: "/admin/team", label: "Team", icon: UsersRound, badgeKey: "team" as const },
-      { href: "/admin/workload", label: "Workload", icon: Gauge },
     ],
   },
   {
@@ -59,13 +55,22 @@ const SECTIONS = [
   },
   { label: "Portfolio", items: [
     { href: "/admin/projects", label: "Projects", icon: FolderKanban },
-    { href: "/admin/blog", label: "Blog", icon: PenLine },
   ] },
   { label: "Intelligence", items: [{ href: "/admin/analytics", label: "Analytics", icon: BarChart3 }] },
+  {
+    label: "Legacy",
+    collapsed: true,
+    items: [
+      { href: "/admin/marrakech-audit", label: "Marrakech Audit", icon: Target },
+      { href: "/admin/city-comparison", label: "City Comparison", icon: Compass },
+      { href: "/admin/saturation", label: "Saturation", icon: Gauge },
+      { href: "/admin/data-audit", label: "Data Audit", icon: Shield },
+      { href: "/admin/prospect-discovery", label: "Prospect Discovery", icon: Compass },
+    ],
+  },
 ];
 
 const BOTTOM_NAV = [
-  { href: "/admin/data-audit", label: "Data Audit", icon: Shield },
   { href: "/admin/system-status", label: "System Status", icon: Shield },
   { href: "/admin/webhooks", label: "Webhooks", icon: Webhook },
   { href: "/admin/settings", label: "Settings", icon: Settings },
@@ -234,18 +239,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
-        {SECTIONS.map((section) => (
-          <div key={section.label}>
-            {(!collapsed || isMobileDrawer) && (
-              <div className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] px-2 mb-2">
-                {section.label}
-              </div>
-            )}
+        {SECTIONS.map((section) => {
+          const showLabel = !collapsed || isMobileDrawer;
+          const isCollapsibleGroup = "collapsed" in section && section.collapsed === true && showLabel;
+          const renderItems = () => (
             <div className="space-y-1">
               {section.items.map((item) => {
                 const active = isActive(item.href);
-                const badge = item.badgeKey ? badges[item.badgeKey] : 0;
-                const showLabel = !collapsed || isMobileDrawer;
+                const badge = "badgeKey" in item && item.badgeKey ? badges[item.badgeKey] : 0;
                 return (
                   <Link
                     key={item.href}
@@ -280,8 +281,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 );
               })}
             </div>
-          </div>
-        ))}
+          );
+
+          if (isCollapsibleGroup) {
+            return (
+              <details key={section.label}>
+                <summary className="cursor-pointer text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] px-2 mb-2 hover:text-[#475569] transition-colors select-none">
+                  {section.label}
+                </summary>
+                {renderItems()}
+              </details>
+            );
+          }
+
+          return (
+            <div key={section.label}>
+              {showLabel && (
+                <div className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] px-2 mb-2">
+                  {section.label}
+                </div>
+              )}
+              {renderItems()}
+            </div>
+          );
+        })}
       </nav>
 
       {/* Bottom */}

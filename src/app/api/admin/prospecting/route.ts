@@ -14,10 +14,11 @@ export async function GET(req: Request) {
   const sector = url.searchParams.get("sector") || undefined;
   const search = url.searchParams.get("search") || undefined;
   const qualityLabel = url.searchParams.get("qualityLabel") || undefined;
+  const segment = url.searchParams.get("segment") || undefined;
   let owner = url.searchParams.get("owner") || undefined;
   if (url.searchParams.get("unassigned") === "true") owner = "UNASSIGNED";
 
-  const result = await getProspects(page, status, sector, owner, search, qualityLabel);
+  const result = await getProspects(page, status, sector, owner, search, qualityLabel, segment);
   return NextResponse.json(result);
 }
 

@@ -13,6 +13,7 @@ import { StatCard } from "@/components/admin/stat-card";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ProspectDrawer } from "@/components/admin/prospect-drawer";
 import { cn } from "@/lib/utils";
+import { PROSPECT_SEGMENTS, SEGMENT_LABELS, SEGMENT_TOKENS, type ProspectSegment } from "@/lib/prospect-segments";
 
 type MsgTemplate = (ig: string, followers: string) => string;
 
@@ -104,6 +105,7 @@ type Prospect = {
   id: string; name: string; phone: string; whatsappLink: string;
   sector: string; neighborhood: string; instagram: string;
   hasWebsite: boolean; priority: number; status: string;
+  segment: ProspectSegment;
   email?: string | null; website?: string | null;
   qualityLabel?: "HOT" | "WARM" | "COLD" | null;
   sentAt: string | null; createdAt: string;
@@ -237,6 +239,7 @@ function ProspectingContent() {
   const sectorFilter = searchParams.get("sector") ?? "ALL";
   const ownerFilter = searchParams.get("owner") ?? "ALL";
   const qualityFilter = searchParams.get("qualityLabel") ?? "ALL";
+  const segmentFilter = searchParams.get("segment") ?? "ALL";
   const pageParam = parseInt(searchParams.get("page") ?? "1", 10);
 
   const [prospects, setProspects] = useState<Prospect[]>([]);
@@ -253,6 +256,7 @@ function ProspectingContent() {
   const [scoring, setScoring] = useState(false);
   const [sortByScore, setSortByScore] = useState(false);
   const [scoreFactors, setScoreFactors] = useState<Record<string, string[]>>({});
+  const [kpis, setKpis] = useState<{ warmRelationships: number; agencyOpportunities: number; luxuryBrands: number; legacyCold: number; meetingsScheduled: number; proposalValue: number; pipelineValue: number; clientsWon: number; upcomingFollowups: number; currency: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -266,6 +270,7 @@ function ProspectingContent() {
     fetch("/api/admin/team-stats").then((r) => r.ok ? r.json() : []).then((stats: { user: { id: string; fullName: string; avatarInitials: string }; assigned: number }[]) => {
       setOwnerStats(stats.map((s) => ({ id: s.user.id, fullName: s.user.fullName, avatarInitials: s.user.avatarInitials, count: s.assigned })));
     }).catch(() => {});
+    fetch("/api/admin/prospecting/kpis").then((r) => r.ok ? r.json() : null).then((d) => { if (d) setKpis(d); }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -274,6 +279,7 @@ function ProspectingContent() {
     if (statusFilter !== "ALL") qs.set("status", statusFilter);
     if (sectorFilter !== "ALL") qs.set("sector", sectorFilter);
     if (qualityFilter !== "ALL") qs.set("qualityLabel", qualityFilter);
+    if (segmentFilter !== "ALL") qs.set("segment", segmentFilter);
     if (ownerFilter !== "ALL" && ownerFilter !== "UNASSIGNED") qs.set("owner", ownerFilter);
     if (ownerFilter === "UNASSIGNED") qs.set("unassigned", "true");
     if (debouncedSearch.trim()) qs.set("search", debouncedSearch.trim());
@@ -281,13 +287,14 @@ function ProspectingContent() {
     fetch(`/api/admin/prospecting?${qs}`)
       .then((r) => { if (r.status === 401) { router.push("/admin/login"); return null; } return r.json(); })
       .then((data) => { if (data) { setProspects(data.prospects); setTotal(data.total); setPages(data.pages); } setLoading(false); });
-  }, [statusFilter, sectorFilter, qualityFilter, ownerFilter, debouncedSearch, pageParam, router]);
+  }, [statusFilter, sectorFilter, qualityFilter, segmentFilter, ownerFilter, debouncedSearch, pageParam, router]);
 
-  function navigate(status: string, sector: string, page = 1, owner = ownerFilter, quality = qualityFilter) {
+  function navigate(status: string, sector: string, page = 1, owner = ownerFilter, quality = qualityFilter, segment = segmentFilter) {
     const qs = new URLSearchParams();
     if (status !== "ALL") qs.set("status", status);
     if (sector !== "ALL") qs.set("sector", sector);
     if (quality !== "ALL") qs.set("qualityLabel", quality);
+    if (segment !== "ALL") qs.set("segment", segment);
     if (owner !== "ALL") qs.set("owner", owner);
     if (page > 1) qs.set("page", String(page));
     router.push(`/admin/prospecting${qs.toString() ? `?${qs}` : ""}`);
@@ -466,8 +473,9 @@ function ProspectingContent() {
   return (
     <div>
       <PageHeader
-        title="Prospecting"
+        title="Relationships"
         count={total}
+        subtitle="Every business relationship, one place."
         actions={
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <div className="flex items-center bg-white border border-[var(--os-border)] rounded-lg p-0.5">
@@ -508,6 +516,65 @@ function ProspectingContent() {
           </div>
         }
       />
+
+      {/* KPI strip — 7 tiles, decision-driving metrics only. Agency EU + Luxury stay as segment pills. */}
+      <motion.div
+        initial={{ opacity: 0, y: -4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-5"
+      >
+        {[
+          { label: "Warm Contacts", value: kpis?.warmRelationships ?? 0, tone: "emerald" },
+          { label: "Legacy Cold", value: kpis?.legacyCold ?? 0, tone: "slate" },
+          { label: "Open Proposals", value: kpis ? `${(kpis.proposalValue / 1000).toFixed(0)}k` : "0", suffix: kpis?.currency ?? "MAD", tone: "slate" },
+          { label: "Pipeline", value: kpis ? `${(kpis.pipelineValue / 1000).toFixed(0)}k` : "0", suffix: kpis?.currency ?? "MAD", tone: "slate" },
+          { label: "Meetings", value: kpis?.meetingsScheduled ?? 0, tone: "slate" },
+          { label: "Clients", value: kpis?.clientsWon ?? 0, tone: "emerald" },
+          { label: "Follow-ups", value: kpis?.upcomingFollowups ?? 0, tone: "slate" },
+        ].map((k) => (
+          <div key={k.label} className="rounded-xl border border-[var(--os-border)] bg-white/60 px-3 py-2.5">
+            <div className="text-[10px] uppercase tracking-[0.14em] text-[#94A3B8] font-medium">{k.label}</div>
+            <div className="mt-1 flex items-baseline gap-1">
+              <span className={cn(
+                "text-[18px] font-semibold tabular-nums",
+                k.tone === "emerald" && "text-emerald-700",
+                k.tone === "slate" && "text-[#0F172A]",
+              )}>{k.value}</span>
+              {k.suffix && <span className="text-[10px] text-[#94A3B8] font-medium">{k.suffix}</span>}
+            </div>
+          </div>
+        ))}
+      </motion.div>
+
+      {/* Segment pills — muted, tone-on-tone identity */}
+      <div className="flex items-center gap-1.5 flex-wrap mb-4">
+        {[
+          { value: "ALL" as const, label: "All", dot: "bg-slate-300" },
+          ...PROSPECT_SEGMENTS.map((s) => ({
+            value: s,
+            label: SEGMENT_LABELS[s],
+            dot: SEGMENT_TOKENS[s].dot,
+          })),
+        ].map((seg) => {
+          const active = segmentFilter === seg.value;
+          return (
+            <button
+              key={seg.value}
+              onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, seg.value)}
+              className={cn(
+                "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium border transition-all",
+                active
+                  ? "bg-[#0F172A] text-white border-[#0F172A] shadow-sm"
+                  : "bg-white text-[#475569] border-[var(--os-border)] hover:border-[#CBD5E1] hover:bg-gray-50"
+              )}
+            >
+              <span className={cn("w-1.5 h-1.5 rounded-full", active ? "bg-white/70" : seg.dot)} />
+              {seg.label}
+            </button>
+          );
+        })}
+      </div>
 
       {/* Search */}
       <div className="relative mb-3">
