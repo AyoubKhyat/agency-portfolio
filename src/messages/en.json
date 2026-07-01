@@ -22,6 +22,10 @@
     "cta_title": "Ready to transform your online presence?",
     "cta_subtitle": "Contact us today for a free, no-obligation quote.",
     "cta_button": "Contact Us",
+    "wa_cta_eyebrow": "Direct chat",
+    "wa_cta_title": "Let's talk about your project",
+    "wa_cta_subtitle": "A question, a quote, an idea? Message us directly on WhatsApp — reply within minutes.",
+    "wa_cta_button": "Message on WhatsApp",
     "stats_projects": "Projects delivered",
     "stats_clients": "Happy clients",
     "stats_years": "Years of experience",
@@ -344,7 +348,8 @@
     "online": "Usually replies within minutes",
     "greeting": "Hi! 👋 How can we help you with your project?",
     "reply_time": "Typically replies in a few minutes",
-    "start_chat": "Start a conversation"
+    "start_chat": "Start a conversation",
+    "prefill_message": "Hi Ayoub, I just saw the Ibda3 Digital portfolio and I'd like to discuss a website project."
   },
   "Cookies": {
     "message": "We use cookies to analyze site traffic and improve your experience. You can accept or decline non-essential cookies.",

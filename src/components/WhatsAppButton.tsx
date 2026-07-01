@@ -4,10 +4,12 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { FaWhatsapp } from "react-icons/fa";
 import { HiXMark } from "react-icons/hi2";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function WhatsAppButton() {
   const t = useTranslations("WhatsApp");
   const [open, setOpen] = useState(false);
+  const waUrl = buildWhatsAppUrl(t("prefill_message"));
 
   return (
     <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
@@ -40,7 +42,7 @@ export default function WhatsAppButton() {
               <p className="text-xs text-text-muted mt-1">{t("reply_time")}</p>
             </div>
             <a
-              href="https://wa.me/212625461645"
+              href={waUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-green-500 text-white rounded-xl font-semibold text-sm hover:bg-green-600 transition-colors"

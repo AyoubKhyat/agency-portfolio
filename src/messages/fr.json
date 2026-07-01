@@ -22,6 +22,10 @@
     "cta_title": "Prêt à transformer votre présence en ligne ?",
     "cta_subtitle": "Contactez-nous dès aujourd'hui pour un devis gratuit et sans engagement.",
     "cta_button": "Contactez-nous",
+    "wa_cta_eyebrow": "Discussion directe",
+    "wa_cta_title": "Discutons de votre projet",
+    "wa_cta_subtitle": "Une question, un devis, une idée ? Écrivez-nous directement sur WhatsApp — réponse en quelques minutes.",
+    "wa_cta_button": "Écrire sur WhatsApp",
     "stats_projects": "Projets livrés",
     "stats_clients": "Clients satisfaits",
     "stats_years": "Années d'expérience",
@@ -344,7 +348,8 @@
     "online": "Répond généralement en quelques minutes",
     "greeting": "Bonjour ! 👋 Comment pouvons-nous vous aider avec votre projet ?",
     "reply_time": "Répond en quelques minutes",
-    "start_chat": "Démarrer une conversation"
+    "start_chat": "Démarrer une conversation",
+    "prefill_message": "Bonjour Ayoub, je viens de voir le portfolio d'Ibda3 Digital et je souhaite discuter d'un projet de site web."
   },
   "Cookies": {
     "message": "Nous utilisons des cookies pour analyser le trafic et améliorer votre expérience. Vous pouvez accepter ou refuser les cookies non essentiels.",

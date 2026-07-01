@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
+import { FaWhatsapp } from "react-icons/fa";
 import { Link } from "@/i18n/navigation";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 import AnimatedCounter from "@/components/AnimatedCounter";
@@ -8,6 +9,7 @@ import LogoCarousel from "@/components/LogoCarousel";
 import Testimonials from "@/components/Testimonials";
 import ClientLogos from "@/components/ClientLogos";
 import { getVisibleProjects } from "@/lib/dal";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 const CinematicHero = dynamic(() => import("@/components/CinematicHero"));
 const ServicesScroll = dynamic(() => import("@/components/ServicesScroll"));
@@ -35,6 +37,8 @@ export default async function HomePage({
   const t = await getTranslations({ locale, namespace: "Home" });
   const sTranslations = await getTranslations({ locale, namespace: "Services" });
   const about = await getTranslations({ locale, namespace: "About" });
+  const wa = await getTranslations({ locale, namespace: "WhatsApp" });
+  const waUrl = buildWhatsAppUrl(wa("prefill_message"));
 
   const services = [
     { key: "web", num: "01", title: sTranslations("web_title"), desc: sTranslations("web_desc") },
@@ -175,6 +179,32 @@ export default async function HomePage({
 
       {/* Testimonials */}
       <Testimonials />
+
+      {/* WhatsApp CTA — direct-message shortcut with a pre-filled body */}
+      <section className="relative py-20 md:py-24 bg-background border-t border-line-soft overflow-hidden">
+        <div className="grid-bg opacity-40" />
+        <div className="glow w-[500px] h-[500px] bg-green-500 top-[-100px] right-[-100px] opacity-15" />
+        <FadeIn className="relative max-w-3xl mx-auto px-4 text-center">
+          <span className="inline-block font-mono text-[11px] tracking-[0.18em] uppercase text-green-500">
+            {t("wa_cta_eyebrow")}
+          </span>
+          <h2 className="mt-5 font-serif text-4xl md:text-5xl lg:text-6xl text-foreground leading-[1.05] tracking-tight">
+            {t("wa_cta_title")}
+          </h2>
+          <p className="mt-5 text-base md:text-lg text-text-muted max-w-xl mx-auto leading-relaxed">
+            {t("wa_cta_subtitle")}
+          </p>
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-3 mt-9 px-8 py-4 bg-green-500 text-white rounded-xl font-semibold text-base md:text-lg shadow-lg shadow-green-500/25 hover:bg-green-600 hover:shadow-xl hover:shadow-green-500/30 transition-all active:scale-95"
+          >
+            <FaWhatsapp size={22} />
+            {t("wa_cta_button")}
+          </a>
+        </FadeIn>
+      </section>
 
       {/* CTA */}
       <section className="relative py-24 bg-background overflow-hidden">
