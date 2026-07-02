@@ -22,6 +22,7 @@ import { auditCandidate } from "./audit/mock";
 import { opportunityScore, confidenceScore, suggestSegment } from "./score";
 import { detectDuplicatesBatch } from "./duplicates";
 import { validateAndRepair, isPublishable, type RepairedCandidate } from "./validate";
+import { verifyContacts } from "./verify";
 import { getAiProvider } from "@/lib/ai";
 import type { DiscoveryScoredResult, DiscoverySearchInput } from "./types";
 
@@ -36,11 +37,14 @@ export async function runDiscovery(input: DiscoverySearchInput): Promise<Discove
     .filter(isPublishable);
   if (repaired.length === 0) return [];
 
-  // 2. Audit + dedupe concurrently (no shared dependency).
+  // 2. Audit + dedupe + verify concurrently (no shared dependency).
+  //    Verify runs offline reachability/MX checks; contactless candidates
+  //    (e.g. mock) trigger zero network calls and pass through unchanged.
   const provider = getAiProvider();
-  const [audits, duplicates] = await Promise.all([
+  const [audits, duplicates, verifications] = await Promise.all([
     Promise.all(repaired.map((r) => auditCandidate(r))),
     detectDuplicatesBatch(repaired),
+    Promise.all(repaired.map((r) => verifyContacts(r.verification))),
   ]);
 
   // 3. Outreach previews depend on the audit's suggestedOffer.
@@ -73,7 +77,7 @@ export async function runDiscovery(input: DiscoverySearchInput): Promise<Discove
       aiProvider: provider.name,
       duplicate: duplicates[i],
       validity: r.validity,
-      verification: r.verification,
+      verification: verifications[i],
       whatsappUrl: r.whatsappUrl,
       instagramUrl: r.instagramUrl,
     };
