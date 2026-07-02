@@ -88,7 +88,6 @@ export default function MeetingsPage() {
       if (res.status === 401) { router.push("/admin/login"); return; }
       if (res.ok) setMeetings(await res.json());
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn("[meetings] load failed:", e);
     } finally {
       setLoading(false);

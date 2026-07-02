@@ -60,7 +60,7 @@ export async function PATCH(
 
   // Recalculate totals if items or taxRate changed
   let subtotal = existing.subtotal;
-  let taxRate = data.taxRate ?? existing.taxRate;
+  const taxRate = data.taxRate ?? existing.taxRate;
   let taxAmount = existing.taxAmount;
   let total = existing.total;
 

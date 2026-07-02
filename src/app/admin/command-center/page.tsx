@@ -113,7 +113,6 @@ export default function CommandCenterPage() {
         else if (d?.error) setLoadError(String(d.error));
       })
       .catch((e) => {
-        // eslint-disable-next-line no-console
         console.warn("[command-center] load failed:", e);
         setLoadError(e instanceof Error ? e.message : "Could not load data");
       })

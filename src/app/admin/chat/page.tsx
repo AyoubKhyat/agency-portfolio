@@ -120,7 +120,6 @@ function ChatInner() {
       setChannels(data.channels ?? []);
       setDms(data.dms ?? []);
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn("[chat] loadChannels failed:", e);
     } finally {
       setChannelsLoaded(true);
