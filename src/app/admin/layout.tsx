@@ -14,30 +14,69 @@ import {
 import { CommandPalette } from "@/components/admin/command-palette";
 import { cn } from "@/lib/utils";
 
-// Phase 1 pivot: routes hidden from the sidebar but kept alive at their URLs.
-// Hidden groups: solo-team overkill (chat, team, workload, blog).
-const SECTIONS = [
+// ─────────────────────────────────────────────────────────────────────────
+// FOCUS MODE
+// A stripped-down "open the admin and know what to do next" experience.
+// Nothing is deleted — hidden entries live in HIDDEN_SECTIONS / HIDDEN_BOTTOM_NAV
+// below and all their pages + APIs stay fully intact at their URLs.
+//
+// To RESTORE everything: set FOCUS_MODE = false (shows every hidden entry again).
+// To restore ONE entry: move it from HIDDEN_SECTIONS up into SECTIONS.
+// ─────────────────────────────────────────────────────────────────────────
+const FOCUS_MODE = true;
+
+type BadgeKey = "leads" | "prospects" | "activities" | "team" | "tasks" | "notifications" | "meetings" | "contracts" | "chat";
+type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; badgeKey?: BadgeKey };
+type NavSection = { label: string; collapsed?: boolean; items: NavItem[] };
+
+// Visible in Focus Mode — every page answers one question:
+//   Dashboard → what should I do today?   Relationships → who am I working with?
+//   AI Discovery → who should I contact next?   Clients → active customers.
+//   Projects → delivery.   (Workspace is reachable via buttons, not the sidebar.)
+const SECTIONS: NavSection[] = [
   {
     label: "Overview",
     items: [
-      { href: "/admin/command-center", label: "Command Center", icon: Crown },
-      { href: "/admin",                label: "Dashboard",      icon: LayoutDashboard },
+      { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     ],
   },
   {
     label: "Sales",
     items: [
-      { href: "/admin/outreach", label: "Outreach", icon: Flame },
-      { href: "/admin/inbox", label: "Reply Inbox", icon: Inbox },
-      { href: "/admin/leads", label: "Leads", icon: Users, badgeKey: "leads" as const },
       { href: "/admin/prospecting", label: "Relationships", icon: Target, badgeKey: "prospects" as const },
       { href: "/admin/discovery", label: "AI Discovery", icon: Sparkles },
-      { href: "/admin/sales-playbook", label: "Sales Playbook", icon: BookOpen },
-      { href: "/admin/clients", label: "Clients", icon: Building2 },
     ],
   },
   {
-    label: "Operations",
+    label: "Delivery",
+    items: [
+      { href: "/admin/clients", label: "Clients", icon: Building2 },
+      { href: "/admin/projects", label: "Projects", icon: FolderKanban },
+    ],
+  },
+];
+
+// ── Hidden Features — kept alive, hidden from the sidebar in Focus Mode ──
+// Pages and APIs still work at their URLs; these just don't render while
+// FOCUS_MODE is true. Restore by flipping FOCUS_MODE or moving items up.
+const HIDDEN_SECTIONS: NavSection[] = [
+  {
+    label: "Overview · Hidden",
+    items: [
+      { href: "/admin/command-center", label: "Command Center", icon: Crown },
+    ],
+  },
+  {
+    label: "Sales · Hidden",
+    items: [
+      { href: "/admin/outreach", label: "Outreach", icon: Flame },
+      { href: "/admin/inbox", label: "Reply Inbox", icon: Inbox },
+      { href: "/admin/leads", label: "Leads", icon: Users, badgeKey: "leads" as const },
+      { href: "/admin/sales-playbook", label: "Sales Playbook", icon: BookOpen },
+    ],
+  },
+  {
+    label: "Operations · Hidden",
     items: [
       { href: "/admin/tasks", label: "Tasks", icon: CheckSquare, badgeKey: "tasks" as const },
       { href: "/admin/notifications", label: "Notifications", icon: BellRing, badgeKey: "notifications" as const },
@@ -45,7 +84,7 @@ const SECTIONS = [
     ],
   },
   {
-    label: "Delivery",
+    label: "Delivery · Hidden",
     items: [
       { href: "/admin/meetings", label: "Meetings", icon: Calendar, badgeKey: "meetings" as const },
       { href: "/admin/pipeline", label: "Pipeline", icon: Layers },
@@ -54,12 +93,9 @@ const SECTIONS = [
       { href: "/admin/revenue", label: "Revenue", icon: Banknote },
     ],
   },
-  { label: "Portfolio", items: [
-    { href: "/admin/projects", label: "Projects", icon: FolderKanban },
-  ] },
-  { label: "Intelligence", items: [{ href: "/admin/analytics", label: "Analytics", icon: BarChart3 }] },
+  { label: "Intelligence · Hidden", items: [{ href: "/admin/analytics", label: "Analytics", icon: BarChart3 }] },
   {
-    label: "Legacy",
+    label: "Legacy · Hidden",
     collapsed: true,
     items: [
       { href: "/admin/marrakech-audit", label: "Marrakech Audit", icon: Target },
@@ -71,11 +107,17 @@ const SECTIONS = [
   },
 ];
 
+const VISIBLE_SECTIONS = FOCUS_MODE ? SECTIONS : [...SECTIONS, ...HIDDEN_SECTIONS];
+
+// Bottom nav — Settings stays; developer/technical entries hidden in Focus Mode.
 const BOTTOM_NAV = [
-  { href: "/admin/system-status", label: "System Status", icon: Shield },
-  { href: "/admin/webhooks", label: "Webhooks", icon: Webhook },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
+const HIDDEN_BOTTOM_NAV = [
+  { href: "/admin/system-status", label: "System Status", icon: Shield },
+  { href: "/admin/webhooks", label: "Webhooks", icon: Webhook },
+];
+const VISIBLE_BOTTOM_NAV = FOCUS_MODE ? BOTTOM_NAV : [...BOTTOM_NAV, ...HIDDEN_BOTTOM_NAV];
 
 function getPageTitle(pathname: string): string {
   if (pathname === "/admin") return "Dashboard";
@@ -240,7 +282,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
-        {SECTIONS.map((section) => {
+        {VISIBLE_SECTIONS.map((section) => {
           const showLabel = !collapsed || isMobileDrawer;
           const isCollapsibleGroup = "collapsed" in section && section.collapsed === true && showLabel;
           const renderItems = () => (
@@ -310,7 +352,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Bottom */}
       <div className="border-t border-[var(--os-border)] py-3 px-3 space-y-1">
-        {BOTTOM_NAV.map((item) => {
+        {VISIBLE_BOTTOM_NAV.map((item) => {
           const active = isActive(item.href);
           const showLabel = !collapsed || isMobileDrawer;
           return (

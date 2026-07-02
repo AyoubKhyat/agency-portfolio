@@ -11,6 +11,11 @@ import { PageHeader } from "@/components/admin/page-header";
 import { FunnelChart, PipelineFunnel, LineChart, DonutChart, BarChart, TeamPerformanceChart } from "@/components/admin/charts";
 import Link from "next/link";
 
+// FOCUS MODE — keep only money-making widgets. Set to false to restore the full
+// dashboard (Tasks, Top Sectors, Insights, Analytics charts, CRM Health).
+// Nothing is deleted; the hidden blocks below are gated on this flag.
+const FOCUS_MODE = true;
+
 type StatusCount = { status: string; _count: number };
 type SectorCount = { sector: string; _count: { sector: number } };
 type RecentLead = { id: string; fullName: string; status: string; createdAt: string; subject: string };
@@ -356,8 +361,8 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Tasks */}
-      {tasks && (
+      {/* Tasks — hidden in Focus Mode */}
+      {!FOCUS_MODE && tasks && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
           <TaskWidget
             title="My open tasks"
@@ -425,8 +430,9 @@ export default function DashboardPage() {
         </div>
       ) : null}
 
-      {/* Sector Performance + Recent Leads */}
+      {/* Top Sectors (hidden in Focus Mode) + Recent Leads */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+        {!FOCUS_MODE && (
         <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55, duration: 0.4 }}>
           <h3 className="text-sm font-semibold text-[#0F172A] mb-4">Top Sectors</h3>
           <div className="space-y-2.5">
@@ -450,6 +456,7 @@ export default function DashboardPage() {
             })}
           </div>
         </GlassCard>
+        )}
 
         <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.4 }}>
           <div className="flex items-center justify-between mb-4">
@@ -482,7 +489,8 @@ export default function DashboardPage() {
         </GlassCard>
       </div>
 
-      {/* Insights */}
+      {/* Insights — hidden in Focus Mode */}
+      {!FOCUS_MODE && (
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7, duration: 0.4 }} className="mt-6">
         <GlassCard padding="lg" className="border-purple-200 bg-gradient-to-r from-purple-50 to-white">
           <div className="flex items-start gap-3">
@@ -506,6 +514,7 @@ export default function DashboardPage() {
           </div>
         </GlassCard>
       </motion.div>
+      )}
 
       {/* Recent Wins */}
       {exec?.recentWins && exec.recentWins.length > 0 && (
@@ -532,8 +541,8 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
-      {/* ── Visual Charts ────────────────────────────────────────── */}
-      {charts && (
+      {/* ── Visual Charts (Analytics) — hidden in Focus Mode ──────── */}
+      {!FOCUS_MODE && charts && (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -632,8 +641,8 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
-      {/* CRM Health */}
-      <CRMHealthWidget />
+      {/* CRM Health — hidden in Focus Mode */}
+      {!FOCUS_MODE && <CRMHealthWidget />}
     </div>
   );
 }
