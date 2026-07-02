@@ -257,7 +257,7 @@ function ProspectingContent() {
   const [scoring, setScoring] = useState(false);
   const [sortByScore, setSortByScore] = useState(false);
   const [scoreFactors, setScoreFactors] = useState<Record<string, string[]>>({});
-  const [kpis, setKpis] = useState<{ warmRelationships: number; agencyOpportunities: number; luxuryBrands: number; legacyCold: number; meetingsScheduled: number; proposalValue: number; pipelineValue: number; clientsWon: number; upcomingFollowups: number; currency: string } | null>(null);
+  const [kpis, setKpis] = useState<{ warmRelationships: number; agencyOpportunities: number; luxuryBrands: number; legacyCold: number; meetingsScheduled: number; proposalValue: number; pipelineValue: number; clientsWon: number; upcomingFollowups: number; overdueFollowups: number; currency: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -520,12 +520,12 @@ function ProspectingContent() {
         }
       />
 
-      {/* KPI strip — 7 tiles, decision-driving metrics only. Agency EU + Luxury stay as segment pills. */}
+      {/* KPI strip — 8 tiles, decision-driving metrics only. Agency EU + Luxury stay as segment pills. */}
       <motion.div
         initial={{ opacity: 0, y: -4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-5"
+        className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 mb-5"
       >
         {[
           { label: "Warm Contacts", value: kpis?.warmRelationships ?? 0, tone: "emerald" },
@@ -535,6 +535,7 @@ function ProspectingContent() {
           { label: "Meetings", value: kpis?.meetingsScheduled ?? 0, tone: "slate" },
           { label: "Clients", value: kpis?.clientsWon ?? 0, tone: "emerald" },
           { label: "Follow-ups", value: kpis?.upcomingFollowups ?? 0, tone: "slate", due: "today" as const },
+          { label: "Overdue", value: kpis?.overdueFollowups ?? 0, tone: "amber", due: "overdue" as const },
         ].map((k) => {
           const clickable = "due" in k && k.due;
           const content = (
@@ -545,6 +546,7 @@ function ProspectingContent() {
                   "text-[18px] font-semibold tabular-nums",
                   k.tone === "emerald" && "text-emerald-700",
                   k.tone === "slate" && "text-[#0F172A]",
+                  k.tone === "amber" && "text-amber-700",
                 )}>{k.value}</span>
                 {k.suffix && <span className="text-[10px] text-[#94A3B8] font-medium">{k.suffix}</span>}
               </div>
@@ -552,6 +554,7 @@ function ProspectingContent() {
           );
           if (clickable) {
             const active = dueFilter === k.due;
+            const isOverdue = k.due === "overdue";
             return (
               <button
                 key={k.label}
@@ -560,8 +563,12 @@ function ProspectingContent() {
                 className={cn(
                   "text-left rounded-xl border px-3 py-2.5 transition-all",
                   active
-                    ? "bg-[#0F172A]/[0.04] border-[#0F172A]/20 ring-1 ring-[#0F172A]/10"
-                    : "bg-white/60 border-[var(--os-border)] hover:border-[#CBD5E1] hover:bg-white",
+                    ? isOverdue
+                      ? "bg-amber-50 border-amber-200 ring-1 ring-amber-200/60"
+                      : "bg-[#0F172A]/[0.04] border-[#0F172A]/20 ring-1 ring-[#0F172A]/10"
+                    : isOverdue
+                      ? "bg-amber-50/50 border-amber-100 hover:border-amber-200 hover:bg-amber-50"
+                      : "bg-white/60 border-[var(--os-border)] hover:border-[#CBD5E1] hover:bg-white",
                 )}
               >
                 {content}
@@ -576,16 +583,21 @@ function ProspectingContent() {
         })}
       </motion.div>
 
-      {/* Follow-up workflow filter — quick jump to today's actionable follow-ups */}
-      {dueFilter === "today" && (
+      {/* Follow-up workflow filter — dismiss pill signalling the active due-view */}
+      {(dueFilter === "today" || dueFilter === "overdue") && (
         <div className="mb-3 flex items-center gap-2">
           <button
             type="button"
             onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, "ALL")}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium bg-[#0F172A] text-white border border-[#0F172A] shadow-sm"
+            className={cn(
+              "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium border shadow-sm",
+              dueFilter === "overdue"
+                ? "bg-amber-600 text-white border-amber-600"
+                : "bg-[#0F172A] text-white border-[#0F172A]",
+            )}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
-            Today's follow-ups
+            {dueFilter === "overdue" ? "Overdue follow-ups" : "Today's follow-ups"}
             <X className="w-3.5 h-3.5 opacity-70" />
           </button>
         </div>

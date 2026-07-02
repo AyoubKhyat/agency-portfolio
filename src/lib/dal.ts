@@ -449,12 +449,17 @@ export async function getProspects(page = 1, status?: string, sector?: string, o
   } else if (ownerUserId && ownerUserId !== "ALL") {
     where.ownerUserId = ownerUserId;
   }
-  // Workflow filter: due=today overrides any explicit status filter to enforce
-  // the "active follow-ups only" semantics (excludes won/lost/converted).
-  if (due === "today") {
+  // Workflow filter: due=today | due=overdue override any explicit status filter
+  // to enforce the "active follow-ups only" semantics (excludes won/lost/converted).
+  const isDueFilter = due === "today" || due === "overdue";
+  if (isDueFilter) {
     const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
-    const endOfToday = new Date(); endOfToday.setHours(23, 59, 59, 999);
-    where.followUpDate = { gte: startOfToday, lte: endOfToday };
+    if (due === "today") {
+      const endOfToday = new Date(); endOfToday.setHours(23, 59, 59, 999);
+      where.followUpDate = { gte: startOfToday, lte: endOfToday };
+    } else {
+      where.followUpDate = { lt: startOfToday };
+    }
     where.status = { notIn: ["CONVERTI", "CLIENT", "LOST"] };
   }
   if (search && search.trim()) {
@@ -466,10 +471,16 @@ export async function getProspects(page = 1, status?: string, sector?: string, o
     ];
   }
 
+  // Follow-up views sort oldest-first so the most urgent row rises to the top;
+  // every other view keeps the default newest-first order.
+  const orderBy = isDueFilter
+    ? ({ followUpDate: "asc" } as const)
+    : ({ createdAt: "desc" } as const);
+
   const [prospects, total] = await Promise.all([
     db().prospect.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy,
       take,
       skip,
       include: {

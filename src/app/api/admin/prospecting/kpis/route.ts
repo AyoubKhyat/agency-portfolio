@@ -24,6 +24,7 @@ export async function GET() {
     pipelineValue: 0,
     clientsWon: 0,
     upcomingFollowups: 0,
+    overdueFollowups: 0,
     currency: "MAD",
   };
   if (!hasPrisma()) return NextResponse.json(empty);
@@ -31,8 +32,10 @@ export async function GET() {
   try {
     const now = new Date();
     const in14Days = new Date(now.getTime() + 14 * 86_400_000);
+    const startOfToday = new Date(now); startOfToday.setHours(0, 0, 0, 0);
+    const activeStatusWhere = { notIn: ["CONVERTI", "CLIENT", "LOST"] };
 
-    const [segmentCounts, meetingsScheduled, proposalAgg, clientsWon, upcomingFollowups] = await Promise.all([
+    const [segmentCounts, meetingsScheduled, proposalAgg, clientsWon, upcomingFollowups, overdueFollowups] = await Promise.all([
       prisma.prospect.groupBy({
         by: ["segment"],
         _count: { _all: true },
@@ -48,7 +51,13 @@ export async function GET() {
       prisma.prospect.count({
         where: {
           followUpDate: { gte: now, lte: in14Days },
-          status: { notIn: ["CONVERTI", "CLIENT", "LOST"] },
+          status: activeStatusWhere,
+        },
+      }),
+      prisma.prospect.count({
+        where: {
+          followUpDate: { lt: startOfToday },
+          status: activeStatusWhere,
         },
       }),
     ]);
@@ -71,6 +80,7 @@ export async function GET() {
       pipelineValue: pipelineAgg._sum.amount ?? 0,
       clientsWon,
       upcomingFollowups,
+      overdueFollowups,
       currency: "MAD",
     });
   } catch (err) {
