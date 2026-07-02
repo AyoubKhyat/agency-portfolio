@@ -468,6 +468,13 @@ function ResultCard({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href={`/admin/workspace/discovery/${result.id}`}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-[#475569] bg-white border border-slate-200 hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50 transition-colors"
+            >
+              Open workspace
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
             {isDuplicate && dup.prospectId && (
               <Link
                 href={`/admin/prospecting/${dup.prospectId}`}

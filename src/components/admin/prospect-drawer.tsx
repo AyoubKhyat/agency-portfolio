@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   X,
@@ -22,6 +23,7 @@ import {
   Activity,
   Loader2,
   AlertCircle,
+  Maximize2,
 } from "lucide-react";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { Badge } from "@/components/admin/badge";
@@ -483,13 +485,23 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                             {prospect.neighborhood}
                           </p>
                         </div>
-                        <button
-                          onClick={onClose}
-                          className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors shrink-0"
-                          aria-label="Close"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Link
+                            href={`/admin/workspace/prospect/${prospect.id}`}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-semibold text-[#475569] bg-white border border-[#E5E7EB] hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50 transition-colors"
+                            title="Open full workspace"
+                          >
+                            <Maximize2 className="w-3.5 h-3.5" />
+                            Open Workspace
+                          </Link>
+                          <button
+                            onClick={onClose}
+                            className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
+                            aria-label="Close"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
                       </div>
 
                       {/* Metric grid — 5 signals, muted tone-on-tone */}
