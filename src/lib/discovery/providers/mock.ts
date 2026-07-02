@@ -1,13 +1,13 @@
 /**
  * Mock discovery provider — Phase 2.1.
  *
- * No real scraping, no Google API, no LLM. Given a natural-language query
- * like "Luxury hotels in Nice", it returns a plausible-looking set of
- * candidate businesses so the rest of the pipeline (audit → score → dedupe
- * → import) can be built and tested end-to-end.
+ * Deterministic-ish generation driven by the query text. For every business:
+ *   name → slug → domain (country-appropriate TLD) → email → IG handle →
+ *   phone (country dial code) → source URL.
  *
- * Real providers (Google Places, LLM-powered web crawl) will slot in behind
- * the same interface later.
+ * Consistency is the priority: a French luxury hotel gets a `.fr` domain, a
+ * `+33` phone, an IG handle derived from the same slug, and a mailbox at the
+ * same domain. No mismatched combinations.
  */
 
 import type { DiscoveryCandidate, DiscoverySearchInput } from "../types";
@@ -25,6 +25,7 @@ const CITY_COUNTRY: Record<string, string> = {
   lyon: "France",
   marseille: "France",
   cannes: "France",
+  bordeaux: "France",
   monaco: "Monaco",
   marrakech: "Morocco",
   casablanca: "Morocco",
@@ -32,6 +33,7 @@ const CITY_COUNTRY: Record<string, string> = {
   rabat: "Morocco",
   milan: "Italy",
   rome: "Italy",
+  florence: "Italy",
   barcelona: "Spain",
   madrid: "Spain",
   london: "United Kingdom",
@@ -42,7 +44,32 @@ const CITY_COUNTRY: Record<string, string> = {
   amsterdam: "Netherlands",
 };
 
-/** Sector aliases → canonical label. */
+const COUNTRY_TLD: Record<string, string> = {
+  France: "fr",
+  Monaco: "mc",
+  Morocco: "ma",
+  Italy: "it",
+  Spain: "es",
+  "United Kingdom": "co.uk",
+  "United Arab Emirates": "ae",
+  Switzerland: "ch",
+  Belgium: "be",
+  Netherlands: "nl",
+};
+
+const COUNTRY_DIAL: Record<string, string> = {
+  France: "33",
+  Monaco: "377",
+  Morocco: "212",
+  Italy: "39",
+  Spain: "34",
+  "United Kingdom": "44",
+  "United Arab Emirates": "971",
+  Switzerland: "41",
+  Belgium: "32",
+  Netherlands: "31",
+};
+
 const SECTOR_ALIASES: Array<[RegExp, string]> = [
   [/luxury hotel|palace hotel|5[- ]?star/i, "Luxury Hotels"],
   [/hotel|riad|guest house|guesthouse|boutique hotel/i, "Hotels"],
@@ -64,27 +91,19 @@ function parseQuery(raw: string): ParsedQuery {
 
   let sector = "Businesses";
   for (const [pattern, label] of SECTOR_ALIASES) {
-    if (pattern.test(q)) {
-      sector = label;
-      break;
-    }
+    if (pattern.test(q)) { sector = label; break; }
   }
 
   let city = "";
-  let country = "";
   const inMatch = q.match(/\bin\s+([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-'\s]{1,40})$/i);
   if (inMatch) {
     city = inMatch[1].trim().replace(/\.$/, "");
   } else {
     for (const key of Object.keys(CITY_COUNTRY)) {
-      if (lower.includes(key)) {
-        city = key.charAt(0).toUpperCase() + key.slice(1);
-        break;
-      }
+      if (lower.includes(key)) { city = key.charAt(0).toUpperCase() + key.slice(1); break; }
     }
   }
-  const cityKey = city.toLowerCase();
-  country = CITY_COUNTRY[cityKey] ?? "";
+  const country = CITY_COUNTRY[city.toLowerCase()] ?? "";
   if (city) city = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
 
   let tier: ParsedQuery["tier"] = "standard";
@@ -94,19 +113,7 @@ function parseQuery(raw: string): ParsedQuery {
   return { sector, city, country, tier };
 }
 
-/** Deterministic-ish pseudo-random from a string seed. */
-function hash(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function pick<T>(seed: number, arr: readonly T[]): T {
-  return arr[seed % arr.length];
-}
+/* ─────────────────────────── Name pools ─────────────────────────── */
 
 const LUXURY_HOTEL_NAMES = [
   "Villa Belrose", "Le Grand Palais", "Château d'Azur", "Maison Bellevue",
@@ -122,14 +129,14 @@ const HOTEL_NAMES = [
   "Hôtel Central", "Auberge du Marché", "Maison des Arts",
 ];
 const WEB_AGENCY_NAMES = [
-  "Studio Nord", "Kaléido", "Atelier Pixel", "Maison Digitale",
+  "Studio Nord", "Kaleido", "Atelier Pixel", "Maison Digitale",
   "Fabrique 21", "Studio Vertical", "Nouvelle Vague", "Studio Brut",
-  "Collectif Neuf", "Atelier Signal", "Studio Cinq", "Prisme.co",
+  "Collectif Neuf", "Atelier Signal", "Studio Cinq", "Prisme",
   "Studio Ombre", "Atelier Vif", "Studio Onze", "Maison Neuve",
   "Studio Cent", "Atelier Rouge", "Collectif Vertigo",
 ];
 const ARCH_NAMES = [
-  "Studio Volet", "Atelier Nord", "Maison Verticale", "Studio Métrique",
+  "Studio Volet", "Atelier Nord", "Maison Verticale", "Studio Metrique",
   "Atelier Prisme", "Cabinet Bellini", "Studio Ligne", "Atelier Ombres",
   "Studio Verticale", "Atelier Terre", "Bureau Vertigo", "Studio Blanc",
   "Cabinet Duvivier", "Atelier Onde", "Studio Sud",
@@ -142,7 +149,7 @@ const RESTAURANT_NAMES = [
 ];
 const GENERIC_NAMES = [
   "Maison Aurel", "Studio Vent", "Atelier Sud", "Collectif Rive",
-  "Studio Neuf", "Maison Blanche", "Cabinet Vert", "Atelier Zéro",
+  "Studio Neuf", "Maison Blanche", "Cabinet Vert", "Atelier Zero",
   "Studio Trois", "Maison Onde", "Atelier Vertigo", "Cabinet Onze",
   "Studio Duvivier", "Atelier Neuf", "Maison Sereno",
 ];
@@ -156,42 +163,83 @@ function namesForSector(sector: string): readonly string[] {
   return GENERIC_NAMES;
 }
 
+/* ─────────────────────────── Consistency helpers ─────────────────────────── */
+
 function slug(s: string): string {
   return s
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[̀-ͯ]/g, "")   // strip diacritics
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
 
+/** Instagram handles can't have hyphens — use dots as separator. */
+function handleFromSlug(s: string): string {
+  return s.replace(/-/g, ".").replace(/^\.+|\.+$/g, "").replace(/\.+/g, ".").slice(0, 30);
+}
+
+function domainFromSlug(s: string, country: string): string {
+  const tld = COUNTRY_TLD[country] ?? "com";
+  const compact = s.replace(/-/g, "");
+  return `${compact}.${tld}`;
+}
+
+function emailForDomain(domain: string): string {
+  return `contact@${domain}`;
+}
+
+function hash(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/**
+ * Country-appropriate phone with subscriber digits derived from the same seed
+ * — so the identity stays coherent (same "brand seed" → same phone).
+ */
 function phoneForCountry(country: string, seed: number): string {
+  const dial = COUNTRY_DIAL[country] ?? "33";
+  const subLen = subscriberLength(country);
+  const rand = seededDigits(seed, subLen);
+  // Guarantee first digit is not zero for E.164 correctness.
+  const first = ((rand[0] as unknown as number) === 0 ? 1 : rand[0]);
+  const rest = rand.slice(1);
+  const subscriber = `${first}${rest}`;
+  return `+${dial}${subscriber}`;
+}
+
+function subscriberLength(country: string): number {
   switch (country) {
-    case "France":            return `+33 4 ${String(90_000_00 + (seed % 9_999_99)).padStart(7, "0").replace(/(\d{2})(\d{2})(\d{3})/, "$1 $2 $3")}`;
-    case "Monaco":            return `+377 9 ${String(70_00_00 + (seed % 9_99_99)).padStart(6, "0").replace(/(\d{2})(\d{2})(\d{2})/, "$1 $2 $3")}`;
-    case "Morocco":           return `+212 6 ${String(20_00_00_00 + (seed % 9_99_99_99)).padStart(8, "0").replace(/(\d{2})(\d{2})(\d{2})(\d{2})/, "$1 $2 $3 $4")}`;
-    case "Italy":             return `+39 0${(seed % 9) + 1} ${String(1_000_000 + (seed % 9_999_999)).padStart(7, "0")}`;
-    case "Spain":             return `+34 9${(seed % 9) + 1} ${String(100_00_00 + (seed % 9_99_99_99)).padStart(7, "0")}`;
-    case "United Kingdom":    return `+44 20 ${String(7_000_0000 + (seed % 999_9999)).padStart(8, "0").replace(/(\d{4})(\d{4})/, "$1 $2")}`;
-    case "United Arab Emirates": return `+971 4 ${String(300_0000 + (seed % 999_9999)).padStart(7, "0")}`;
-    case "Switzerland":       return `+41 22 ${String(700_0000 + (seed % 999_9999)).padStart(7, "0")}`;
-    default:                  return `+33 4 ${String(90_00_00_00 + (seed % 9_99_99_99)).padStart(8, "0").replace(/(\d{2})(\d{2})(\d{2})(\d{2})/, "$1 $2 $3 $4")}`;
+    case "France": return 9;
+    case "Monaco": return 8;
+    case "Morocco": return 9;
+    case "Italy": return 10;
+    case "Spain": return 9;
+    case "United Kingdom": return 10;
+    case "United Arab Emirates": return 8;
+    case "Switzerland": return 9;
+    case "Belgium": return 9;
+    case "Netherlands": return 9;
+    default: return 9;
   }
 }
 
-function domainTld(country: string): string {
-  switch (country) {
-    case "France":            return "fr";
-    case "Monaco":            return "mc";
-    case "Morocco":           return "ma";
-    case "Italy":             return "it";
-    case "Spain":             return "es";
-    case "United Kingdom":    return "co.uk";
-    case "United Arab Emirates": return "ae";
-    case "Switzerland":       return "ch";
-    default:                  return "com";
+function seededDigits(seed: number, count: number): string {
+  const out: string[] = [];
+  let s = seed >>> 0;
+  for (let i = 0; i < count; i++) {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+    out.push(String(s % 10));
   }
+  return out.join("");
 }
+
+/* ─────────────────────────── Provider ─────────────────────────── */
 
 export async function mockDiscoverySearch({ query, limit = 8 }: DiscoverySearchInput): Promise<DiscoveryCandidate[]> {
   const q = parseQuery(query);
@@ -201,25 +249,34 @@ export async function mockDiscoverySearch({ query, limit = 8 }: DiscoverySearchI
 
   const out: DiscoveryCandidate[] = [];
   const used = new Set<string>();
+
   for (let i = 0; out.length < size && i < size * 4; i++) {
-    const seed = hash(`${query}|${i}`);
-    let name = pick(seed + i, pool);
-    // Vary a couple to avoid boring reuse in a small pool.
-    if (used.has(name)) name = `${name} ${pick(seed, ["Studio", "Atelier", "House", "Group"])}`;
+    const pickSeed = hash(`${query}|pick|${i}`);
+    let name = pool[pickSeed % pool.length];
+    if (used.has(name)) {
+      // Suffix to keep uniqueness without recycling the same 8 names.
+      const suffixes = ["Studio", "House", "Group", "Collective", "Atelier"];
+      name = `${name} ${suffixes[pickSeed % suffixes.length]}`;
+    }
     if (used.has(name)) continue;
     used.add(name);
 
-    const nameSlug = slug(name);
-    const tld = domainTld(q.country);
-    const hasWebsite = seed % 5 !== 0; // ~80% have a website
-    const hasEmail = seed % 3 !== 0;
-    const hasInstagram = seed % 4 !== 0;
+    // The identity seed drives all coherent properties of this business.
+    const idSeed = hash(`${name}|${q.city}|${q.country}`);
 
-    const domain = `${nameSlug}.${tld}`;
-    const website = hasWebsite ? `https://${domain}` : "";
-    const email = hasEmail ? `contact@${domain}` : "";
-    const instagram = hasInstagram ? nameSlug.replace(/-/g, ".") : "";
-    const phone = phoneForCountry(q.country, seed + baseSeed);
+    const nameSlug = slug(name);
+    if (!nameSlug) continue;
+
+    const handle = handleFromSlug(nameSlug);
+    const domain = domainFromSlug(nameSlug, q.country);
+    const email = emailForDomain(domain);
+    const phone = phoneForCountry(q.country || "France", idSeed + baseSeed);
+
+    // Every field is populated for the mock — realistic completeness.
+    // Validation downstream still gates the UI; this is just the raw input.
+    const website = `https://${domain}`;
+    const instagram = handle;
+    const sourceUrl = `https://www.google.com/search?q=${encodeURIComponent(`${name} ${q.city || ""}`.trim())}`;
 
     out.push({
       name,
@@ -230,11 +287,9 @@ export async function mockDiscoverySearch({ query, limit = 8 }: DiscoverySearchI
       city: q.city || "",
       country: q.country || "",
       sector: q.sector,
-      sourceUrl: `https://www.google.com/search?q=${encodeURIComponent(name + " " + (q.city || ""))}`,
+      sourceUrl,
     });
   }
 
   return out;
 }
-
-export { parseQuery as __parseQueryForTests };

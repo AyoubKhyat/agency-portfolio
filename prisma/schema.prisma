@@ -693,9 +693,31 @@ model DiscoveryResult {
 
   aiSummary        String   @default("") @map("ai_summary")
   suggestedOffer   String   @default("") @map("suggested_offer")
+  websiteSummary   String   @default("") @map("website_summary")
+  opportunityExplanation String @default("") @map("opportunity_explanation")
   opportunityScore Int      @default(0) @map("opportunity_score") // 0-100
   confidenceScore  Int      @default(0) @map("confidence_score")  // 0-100
   suggestedSegment ProspectSegment @default(LEGACY_COLD) @map("suggested_segment")
+
+  // Per-field validity flags — the UI hides CTAs when a field is invalid,
+  // so no broken buttons ever reach the user.
+  websiteValid     Boolean  @default(false) @map("website_valid")
+  emailValid       Boolean  @default(false) @map("email_valid")
+  phoneValid       Boolean  @default(false) @map("phone_valid")
+  instagramValid   Boolean  @default(false) @map("instagram_valid")
+  whatsappValid    Boolean  @default(false) @map("whatsapp_valid")
+  sourceValid      Boolean  @default(false) @map("source_valid")
+
+  // Canonical URLs derived at generation time (Instagram, WhatsApp).
+  whatsappUrl      String   @default("") @map("whatsapp_url")
+  instagramUrl     String   @default("") @map("instagram_url")
+
+  // Outreach previews cached so the "Preview Email/WhatsApp" click doesn't
+  // hit the AI provider each time.
+  emailSubject     String   @default("") @map("email_subject")
+  emailBody        String   @default("") @map("email_body")
+  whatsappBody     String   @default("") @map("whatsapp_body")
+  aiProvider       String   @default("MOCK") @map("ai_provider") // MOCK | OPENAI | GEMINI | ANTHROPIC
 
   duplicateStatus  String   @default("NEW") @map("duplicate_status") // NEW | EXISTS | POSSIBLE
   duplicateReason  String?  @map("duplicate_reason")

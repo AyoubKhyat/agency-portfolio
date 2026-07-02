@@ -1,13 +1,14 @@
 /**
- * AI Business Development Agent — Phase 2.1 shared types.
+ * AI Business Development Agent — shared types.
  *
- * A "candidate" is the raw shape returned by a provider (search step).
- * A "result" is the enriched shape returned by the agent after audit + score +
- * duplicate check — that's what the UI renders and what gets persisted as
- * DiscoveryResult.
+ *   - DiscoveryCandidate: raw shape returned by any provider (search step).
+ *   - RepairedCandidate  : after validate + repair (see ./validate.ts).
+ *   - DiscoveryScoredResult: full enriched record — audit + score + dedupe.
+ *   - DiscoveryResultDTO   : same, plus persistence identifiers, sent to UI.
  */
 
 import type { ProspectSegment } from "@/lib/prospect-segments";
+import type { AiProviderName } from "@/lib/ai/types";
 
 export type DiscoveryCandidate = {
   name: string;
@@ -24,6 +25,8 @@ export type DiscoveryCandidate = {
 export type DiscoveryAudit = {
   aiSummary: string;
   suggestedOffer: string;
+  websiteSummary: string;
+  opportunityExplanation: string;
 };
 
 export type DuplicateStatus = "NEW" | "EXISTS" | "POSSIBLE";
@@ -35,11 +38,30 @@ export type DiscoveryDuplicateMatch = {
   prospectName: string | null;
 };
 
-export type DiscoveryScoredResult = DiscoveryCandidate & DiscoveryAudit & {
+export type FieldValidity = {
+  website: boolean;
+  email: boolean;
+  phone: boolean;
+  instagram: boolean;
+  whatsapp: boolean;
+  sourceUrl: boolean;
+};
+
+export type OutreachDrafts = {
+  emailSubject: string;
+  emailBody: string;
+  whatsappBody: string;
+};
+
+export type DiscoveryScoredResult = DiscoveryCandidate & DiscoveryAudit & OutreachDrafts & {
   opportunityScore: number; // 0-100
   confidenceScore: number;  // 0-100
   suggestedSegment: ProspectSegment;
+  aiProvider: AiProviderName;
   duplicate: DiscoveryDuplicateMatch;
+  validity: FieldValidity;
+  whatsappUrl: string;
+  instagramUrl: string;
 };
 
 /** Persisted shape returned by the API to the client. */

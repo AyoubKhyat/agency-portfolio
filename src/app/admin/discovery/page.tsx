@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Sparkles, Globe, Phone, Mail, AtSign, ExternalLink,
   CheckCircle2, AlertTriangle, ArrowUpRight, Loader2, Zap, Wand2,
+  MessageCircle, MailPlus, X, Copy, Check,
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { SEGMENT_LABELS, SEGMENT_TOKENS, type ProspectSegment } from "@/lib/prospect-segments";
@@ -25,9 +26,15 @@ type SearchState =
   | { kind: "results"; query: string; results: DiscoveryResultDTO[] }
   | { kind: "error"; query: string; message: string };
 
+type PreviewModal =
+  | null
+  | { kind: "email"; result: DiscoveryResultDTO; subject: string; body: string }
+  | { kind: "whatsapp"; result: DiscoveryResultDTO; body: string };
+
 export default function DiscoveryPage() {
   const [query, setQuery] = useState("");
   const [state, setState] = useState<SearchState>({ kind: "idle" });
+  const [preview, setPreview] = useState<PreviewModal>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
@@ -224,7 +231,13 @@ export default function DiscoveryPage() {
       {state.kind === "results" && state.results.length > 0 && (
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           {state.results.map((r, i) => (
-            <ResultCard key={r.id} result={r} delay={i * 0.03} onImported={handleImported} />
+            <ResultCard
+              key={r.id}
+              result={r}
+              delay={i * 0.03}
+              onImported={handleImported}
+              onPreview={setPreview}
+            />
           ))}
         </div>
       )}
@@ -234,6 +247,9 @@ export default function DiscoveryPage() {
           <div className="text-[14px] text-[var(--os-text-muted)]">No businesses matched that query. Try a broader term.</div>
         </div>
       )}
+
+      {/* Preview modal */}
+      <PreviewModal preview={preview} onClose={() => setPreview(null)} />
     </div>
   );
 }
@@ -244,13 +260,16 @@ function ResultCard({
   result,
   delay,
   onImported,
+  onPreview,
 }: {
   result: DiscoveryResultDTO;
   delay: number;
   onImported: (id: string, prospectId: string) => void;
+  onPreview: (m: PreviewModal) => void;
 }) {
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState<null | "email" | "whatsapp">(null);
   const dup = result.duplicate;
   const seg = result.suggestedSegment as ProspectSegment;
   const segTok = SEGMENT_TOKENS[seg];
@@ -283,6 +302,28 @@ function ResultCard({
       setImporting(false);
     }
   }
+
+  async function handlePreview(channel: "email" | "whatsapp") {
+    setPreviewLoading(channel);
+    try {
+      const res = await fetch("/api/admin/discovery/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ discoveryResultId: result.id, channel }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Preview failed");
+      if (channel === "email") onPreview({ kind: "email", result, subject: data.subject, body: data.body });
+      else onPreview({ kind: "whatsapp", result, body: data.body });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Preview failed");
+    } finally {
+      setPreviewLoading(null);
+    }
+  }
+
+  const canPreviewEmail = result.validity.email;
+  const canPreviewWhatsapp = result.validity.whatsapp;
 
   return (
     <motion.div
@@ -337,13 +378,43 @@ function ResultCard({
           </div>
         )}
 
-        {/* Contact strip */}
+        {/* Contact strip — only valid fields render as click-throughs */}
         <div className="mt-4 flex flex-wrap gap-2">
-          <ContactChip icon={Globe}    href={result.website}                            label={hostOnly(result.website)}     empty="No website" />
-          <ContactChip icon={Phone}    href={result.phone ? `tel:${result.phone}` : ""} label={result.phone}                  empty="No phone" />
-          <ContactChip icon={Mail}     href={result.email ? `mailto:${result.email}` : ""} label={result.email}               empty="No email" />
-          <ContactChip icon={AtSign} href={result.instagram ? `https://instagram.com/${cleanIg(result.instagram)}` : ""} label={result.instagram ? `@${cleanIg(result.instagram)}` : ""} empty="No IG" />
+          {result.validity.website && result.website && (
+            <ContactChip icon={Globe} href={result.website} label={hostOnly(result.website)} />
+          )}
+          {result.validity.phone && result.phone && (
+            <ContactChip icon={Phone} href={`tel:${result.phone.replace(/\s+/g, "")}`} label={result.phone} />
+          )}
+          {result.validity.email && result.email && (
+            <ContactChip icon={Mail} href={`mailto:${result.email}`} label={result.email} />
+          )}
+          {result.validity.instagram && result.instagram && (
+            <ContactChip icon={AtSign} href={result.instagramUrl} label={`@${result.instagram}`} />
+          )}
         </div>
+
+        {/* Preview outreach — always available when the corresponding channel is valid */}
+        {(canPreviewEmail || canPreviewWhatsapp) && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {canPreviewEmail && (
+              <PreviewButton
+                icon={MailPlus}
+                label="Preview email"
+                loading={previewLoading === "email"}
+                onClick={() => handlePreview("email")}
+              />
+            )}
+            {canPreviewWhatsapp && (
+              <PreviewButton
+                icon={MessageCircle}
+                label="Preview WhatsApp"
+                loading={previewLoading === "whatsapp"}
+                onClick={() => handlePreview("whatsapp")}
+              />
+            )}
+          </div>
+        )}
 
         {/* Segment + confidence + source */}
         <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px]">
@@ -354,7 +425,7 @@ function ResultCard({
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-600 font-semibold">
             Conf {conf}
           </span>
-          {result.sourceUrl && (
+          {result.validity.sourceUrl && result.sourceUrl && (
             <a
               href={result.sourceUrl}
               target="_blank"
@@ -369,7 +440,6 @@ function ResultCard({
 
         {/* Actions */}
         <div className="mt-5 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
-          {/* Duplicate / new tag */}
           <div className="min-w-0">
             {dup.status === "EXISTS" && (
               <div className="flex items-center gap-1.5 text-[12px] text-amber-800 font-medium">
@@ -453,32 +523,207 @@ function ResultCard({
   );
 }
 
+/* ─────────────────────────── Chips + preview UI ─────────────────────────── */
+
 function ContactChip({
   icon: Icon,
   href,
   label,
-  empty,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   href: string;
   label: string;
-  empty: string;
 }) {
-  const has = Boolean(href && label);
-  const inner = (
-    <span className={cn(
-      "inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11.5px] max-w-[220px]",
-      has ? "bg-slate-50 text-slate-700 border border-slate-200 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200 transition-colors" : "bg-slate-50/50 text-slate-400 border border-dashed border-slate-200"
-    )}>
-      <Icon className="w-3 h-3 shrink-0" />
-      <span className="truncate">{has ? label : empty}</span>
-    </span>
-  );
-  if (!has) return inner;
   return (
     <a href={href} target="_blank" rel="noreferrer" className="min-w-0">
-      {inner}
+      <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11.5px] max-w-[220px] bg-slate-50 text-slate-700 border border-slate-200 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200 transition-colors">
+        <Icon className="w-3 h-3 shrink-0" />
+        <span className="truncate">{label}</span>
+      </span>
     </a>
+  );
+}
+
+function PreviewButton({
+  icon: Icon,
+  label,
+  loading,
+  onClick,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  loading: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={loading}
+      className={cn(
+        "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[12px] font-medium border transition-all",
+        loading
+          ? "bg-slate-50 text-slate-400 border-slate-200 cursor-wait"
+          : "bg-white text-slate-700 border-slate-200 hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50"
+      )}
+    >
+      {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Icon className="w-3 h-3" />}
+      {label}
+    </button>
+  );
+}
+
+function PreviewModal({
+  preview,
+  onClose,
+}: {
+  preview: PreviewModal;
+  onClose: () => void;
+}) {
+  const [copied, setCopied] = useState<"subject" | "body" | "message" | null>(null);
+
+  useEffect(() => {
+    if (!preview) return;
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [preview, onClose]);
+
+  async function copy(key: "subject" | "body" | "message", text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(key);
+      setTimeout(() => setCopied(null), 1400);
+    } catch { /* ignore */ }
+  }
+
+  return (
+    <AnimatePresence>
+      {preview && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+            className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-[var(--os-border)] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-2 min-w-0">
+                {preview.kind === "email" ? (
+                  <MailPlus className="w-4 h-4 text-purple-600 shrink-0" />
+                ) : (
+                  <MessageCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                )}
+                <div className="min-w-0">
+                  <div className="text-[13px] font-semibold text-[#0F172A]">
+                    {preview.kind === "email" ? "Email preview" : "WhatsApp preview"}
+                  </div>
+                  <div className="text-[11.5px] text-[var(--os-text-muted)] truncate">
+                    Draft for {preview.result.name}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+                aria-label="Close preview"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="max-h-[70vh] overflow-y-auto px-5 py-4 space-y-4">
+              {preview.kind === "email" && (
+                <>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Subject</div>
+                      <button
+                        onClick={() => copy("subject", preview.subject)}
+                        className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-purple-700 transition-colors"
+                      >
+                        {copied === "subject" ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                        {copied === "subject" ? "Copied" : "Copy"}
+                      </button>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[13px] text-[#0F172A] font-medium">
+                      {preview.subject}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Body</div>
+                      <button
+                        onClick={() => copy("body", preview.body)}
+                        className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-purple-700 transition-colors"
+                      >
+                        {copied === "body" ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                        {copied === "body" ? "Copied" : "Copy"}
+                      </button>
+                    </div>
+                    <pre className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[12.5px] leading-relaxed text-[#0F172A] whitespace-pre-wrap font-sans">
+{preview.body}
+                    </pre>
+                  </div>
+                </>
+              )}
+
+              {preview.kind === "whatsapp" && (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Message</div>
+                    <button
+                      onClick={() => copy("message", preview.body)}
+                      className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-purple-700 transition-colors"
+                    >
+                      {copied === "message" ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                      {copied === "message" ? "Copied" : "Copy"}
+                    </button>
+                  </div>
+                  <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 px-3 py-3 text-[13px] leading-relaxed text-[#0F172A] whitespace-pre-wrap">
+                    {preview.body}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/60 flex items-center justify-between">
+              <div className="text-[11px] text-[var(--os-text-muted)]">
+                Preview only — nothing is sent from here.
+              </div>
+              {preview.kind === "whatsapp" && preview.result.whatsappUrl && (
+                <a
+                  href={`${preview.result.whatsappUrl}${preview.result.whatsappUrl.includes("?") ? "&" : "?"}text=${encodeURIComponent(preview.body)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  Open in WhatsApp
+                </a>
+              )}
+              {preview.kind === "email" && preview.result.email && (
+                <a
+                  href={`mailto:${preview.result.email}?subject=${encodeURIComponent(preview.subject)}&body=${encodeURIComponent(preview.body)}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  Open in mail client
+                </a>
+              )}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -489,8 +734,4 @@ function hostOnly(url: string): string {
   } catch {
     return url;
   }
-}
-
-function cleanIg(s: string): string {
-  return s.replace(/^@/, "").replace(/^.*instagram\.com\//, "").replace(/[/?#].*$/, "");
 }

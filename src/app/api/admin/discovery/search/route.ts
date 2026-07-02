@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   const scored = await runDiscovery(parsed.data);
 
   if (!hasPrisma()) {
-    // No DB — surface results in-memory only. The UI still renders.
+    // DB unavailable — surface results in-memory only. UI still renders.
     const dtos: DiscoveryResultDTO[] = scored.map((r, i) => ({
       ...r,
       id: `ephemeral-${i}`,
@@ -34,7 +34,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ results: dtos, sweepId: null });
   }
 
-  // Persist the sweep + results so the timeline can reference them later.
   const sweep = await prisma.discoverySweep.create({
     data: {
       provider: "AI_MOCK",
@@ -71,9 +70,23 @@ export async function POST(req: Request) {
           sourceUrl: r.sourceUrl,
           aiSummary: r.aiSummary,
           suggestedOffer: r.suggestedOffer,
+          websiteSummary: r.websiteSummary,
+          opportunityExplanation: r.opportunityExplanation,
           opportunityScore: r.opportunityScore,
           confidenceScore: r.confidenceScore,
           suggestedSegment: r.suggestedSegment,
+          websiteValid: r.validity.website,
+          emailValid: r.validity.email,
+          phoneValid: r.validity.phone,
+          instagramValid: r.validity.instagram,
+          whatsappValid: r.validity.whatsapp,
+          sourceValid: r.validity.sourceUrl,
+          whatsappUrl: r.whatsappUrl,
+          instagramUrl: r.instagramUrl,
+          emailSubject: r.emailSubject,
+          emailBody: r.emailBody,
+          whatsappBody: r.whatsappBody,
+          aiProvider: r.aiProvider,
           duplicateStatus: r.duplicate.status,
           duplicateReason: r.duplicate.reason ?? null,
           duplicateProspectId: r.duplicate.prospectId ?? null,
