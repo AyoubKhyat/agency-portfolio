@@ -240,6 +240,7 @@ function ProspectingContent() {
   const ownerFilter = searchParams.get("owner") ?? "ALL";
   const qualityFilter = searchParams.get("qualityLabel") ?? "ALL";
   const segmentFilter = searchParams.get("segment") ?? "ALL";
+  const dueFilter = searchParams.get("due") ?? "ALL";
   const pageParam = parseInt(searchParams.get("page") ?? "1", 10);
 
   const [prospects, setProspects] = useState<Prospect[]>([]);
@@ -280,6 +281,7 @@ function ProspectingContent() {
     if (sectorFilter !== "ALL") qs.set("sector", sectorFilter);
     if (qualityFilter !== "ALL") qs.set("qualityLabel", qualityFilter);
     if (segmentFilter !== "ALL") qs.set("segment", segmentFilter);
+    if (dueFilter !== "ALL") qs.set("due", dueFilter);
     if (ownerFilter !== "ALL" && ownerFilter !== "UNASSIGNED") qs.set("owner", ownerFilter);
     if (ownerFilter === "UNASSIGNED") qs.set("unassigned", "true");
     if (debouncedSearch.trim()) qs.set("search", debouncedSearch.trim());
@@ -287,14 +289,15 @@ function ProspectingContent() {
     fetch(`/api/admin/prospecting?${qs}`)
       .then((r) => { if (r.status === 401) { router.push("/admin/login"); return null; } return r.json(); })
       .then((data) => { if (data) { setProspects(data.prospects); setTotal(data.total); setPages(data.pages); } setLoading(false); });
-  }, [statusFilter, sectorFilter, qualityFilter, segmentFilter, ownerFilter, debouncedSearch, pageParam, router]);
+  }, [statusFilter, sectorFilter, qualityFilter, segmentFilter, dueFilter, ownerFilter, debouncedSearch, pageParam, router]);
 
-  function navigate(status: string, sector: string, page = 1, owner = ownerFilter, quality = qualityFilter, segment = segmentFilter) {
+  function navigate(status: string, sector: string, page = 1, owner = ownerFilter, quality = qualityFilter, segment = segmentFilter, due = dueFilter) {
     const qs = new URLSearchParams();
     if (status !== "ALL") qs.set("status", status);
     if (sector !== "ALL") qs.set("sector", sector);
     if (quality !== "ALL") qs.set("qualityLabel", quality);
     if (segment !== "ALL") qs.set("segment", segment);
+    if (due !== "ALL") qs.set("due", due);
     if (owner !== "ALL") qs.set("owner", owner);
     if (page > 1) qs.set("page", String(page));
     router.push(`/admin/prospecting${qs.toString() ? `?${qs}` : ""}`);
@@ -531,21 +534,62 @@ function ProspectingContent() {
           { label: "Pipeline", value: kpis ? `${(kpis.pipelineValue / 1000).toFixed(0)}k` : "0", suffix: kpis?.currency ?? "MAD", tone: "slate" },
           { label: "Meetings", value: kpis?.meetingsScheduled ?? 0, tone: "slate" },
           { label: "Clients", value: kpis?.clientsWon ?? 0, tone: "emerald" },
-          { label: "Follow-ups", value: kpis?.upcomingFollowups ?? 0, tone: "slate" },
-        ].map((k) => (
-          <div key={k.label} className="rounded-xl border border-[var(--os-border)] bg-white/60 px-3 py-2.5">
-            <div className="text-[10px] uppercase tracking-[0.14em] text-[#94A3B8] font-medium">{k.label}</div>
-            <div className="mt-1 flex items-baseline gap-1">
-              <span className={cn(
-                "text-[18px] font-semibold tabular-nums",
-                k.tone === "emerald" && "text-emerald-700",
-                k.tone === "slate" && "text-[#0F172A]",
-              )}>{k.value}</span>
-              {k.suffix && <span className="text-[10px] text-[#94A3B8] font-medium">{k.suffix}</span>}
+          { label: "Follow-ups", value: kpis?.upcomingFollowups ?? 0, tone: "slate", due: "today" as const },
+        ].map((k) => {
+          const clickable = "due" in k && k.due;
+          const content = (
+            <>
+              <div className="text-[10px] uppercase tracking-[0.14em] text-[#94A3B8] font-medium">{k.label}</div>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className={cn(
+                  "text-[18px] font-semibold tabular-nums",
+                  k.tone === "emerald" && "text-emerald-700",
+                  k.tone === "slate" && "text-[#0F172A]",
+                )}>{k.value}</span>
+                {k.suffix && <span className="text-[10px] text-[#94A3B8] font-medium">{k.suffix}</span>}
+              </div>
+            </>
+          );
+          if (clickable) {
+            const active = dueFilter === k.due;
+            return (
+              <button
+                key={k.label}
+                type="button"
+                onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, k.due)}
+                className={cn(
+                  "text-left rounded-xl border px-3 py-2.5 transition-all",
+                  active
+                    ? "bg-[#0F172A]/[0.04] border-[#0F172A]/20 ring-1 ring-[#0F172A]/10"
+                    : "bg-white/60 border-[var(--os-border)] hover:border-[#CBD5E1] hover:bg-white",
+                )}
+              >
+                {content}
+              </button>
+            );
+          }
+          return (
+            <div key={k.label} className="rounded-xl border border-[var(--os-border)] bg-white/60 px-3 py-2.5">
+              {content}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </motion.div>
+
+      {/* Follow-up workflow filter — quick jump to today's actionable follow-ups */}
+      {dueFilter === "today" && (
+        <div className="mb-3 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, "ALL")}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium bg-[#0F172A] text-white border border-[#0F172A] shadow-sm"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
+            Today's follow-ups
+            <X className="w-3.5 h-3.5 opacity-70" />
+          </button>
+        </div>
+      )}
 
       {/* Segment pills — muted, tone-on-tone identity */}
       <div className="flex items-center gap-1.5 flex-wrap mb-4">

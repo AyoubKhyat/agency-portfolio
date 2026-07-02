@@ -436,7 +436,7 @@ export async function updateUser(id: string, data: {
 
 // ─── Prospecting ────────────────────────────────────────────────
 
-export async function getProspects(page = 1, status?: string, sector?: string, ownerUserId?: string, search?: string, qualityLabel?: string, segment?: string) {
+export async function getProspects(page = 1, status?: string, sector?: string, ownerUserId?: string, search?: string, qualityLabel?: string, segment?: string, due?: string) {
   const take = 20;
   const skip = (page - 1) * take;
   const where: Record<string, unknown> = {};
@@ -448,6 +448,14 @@ export async function getProspects(page = 1, status?: string, sector?: string, o
     where.ownerUserId = null;
   } else if (ownerUserId && ownerUserId !== "ALL") {
     where.ownerUserId = ownerUserId;
+  }
+  // Workflow filter: due=today overrides any explicit status filter to enforce
+  // the "active follow-ups only" semantics (excludes won/lost/converted).
+  if (due === "today") {
+    const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(); endOfToday.setHours(23, 59, 59, 999);
+    where.followUpDate = { gte: startOfToday, lte: endOfToday };
+    where.status = { notIn: ["CONVERTI", "CLIENT", "LOST"] };
   }
   if (search && search.trim()) {
     where.OR = [
