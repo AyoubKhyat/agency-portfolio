@@ -650,11 +650,12 @@ model DailyTarget {
 
 model DiscoverySweep {
   id              String    @id @default(cuid())
-  provider        String    // "GOOGLE" | "OSM"
+  provider        String    // "GOOGLE" | "OSM" | "AI_MOCK"
   city            String    // city KEY (e.g. MARRAKECH) for stable matching
   sector          String    // sector KEY
   neighborhood    String?   // null = city-wide query
   keyword         String?
+  query           String?   // natural-language query for AI-Discovery sweeps
   resultCount     Int       @default(0) @map("result_count")
   uniqueCount     Int       @default(0) @map("unique_count")
   importedCount   Int       @default(0) @map("imported_count")
@@ -666,9 +667,53 @@ model DiscoverySweep {
   startedById     String?   @map("started_by_id")
   startedByName   String?   @map("started_by_name")
 
+  results         DiscoveryResult[]
+
   @@index([city, sector, neighborhood, startedAt])
   @@index([startedAt])
   @@map("discovery_sweeps")
+}
+
+/// A single business surfaced by the AI Business Development Agent.
+/// Enriched with audit + score + suggested-segment before being surfaced,
+/// then optionally converted into a Prospect via import.
+model DiscoveryResult {
+  id               String   @id @default(cuid())
+  sweepId          String?  @map("sweep_id")
+
+  name             String
+  website          String   @default("")
+  phone            String   @default("")
+  email            String   @default("")
+  instagram        String   @default("")
+  city             String   @default("")
+  country          String   @default("")
+  sector           String   @default("")
+  sourceUrl        String   @default("") @map("source_url")
+
+  aiSummary        String   @default("") @map("ai_summary")
+  suggestedOffer   String   @default("") @map("suggested_offer")
+  opportunityScore Int      @default(0) @map("opportunity_score") // 0-100
+  confidenceScore  Int      @default(0) @map("confidence_score")  // 0-100
+  suggestedSegment ProspectSegment @default(LEGACY_COLD) @map("suggested_segment")
+
+  duplicateStatus  String   @default("NEW") @map("duplicate_status") // NEW | EXISTS | POSSIBLE
+  duplicateReason  String?  @map("duplicate_reason")
+  duplicateProspectId String? @map("duplicate_prospect_id")
+
+  importedProspectId String? @map("imported_prospect_id")
+  importedAt         DateTime? @map("imported_at")
+  importedById       String?   @map("imported_by_id")
+  importedByName     String?   @map("imported_by_name")
+
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  sweep DiscoverySweep? @relation(fields: [sweepId], references: [id], onDelete: SetNull)
+
+  @@index([sweepId])
+  @@index([duplicateStatus])
+  @@index([createdAt])
+  @@map("discovery_results")
 }
 
 model SalesScript {
