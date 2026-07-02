@@ -699,14 +699,22 @@ model DiscoveryResult {
   confidenceScore  Int      @default(0) @map("confidence_score")  // 0-100
   suggestedSegment ProspectSegment @default(LEGACY_COLD) @map("suggested_segment")
 
-  // Per-field validity flags — the UI hides CTAs when a field is invalid,
-  // so no broken buttons ever reach the user.
+  // Per-field validity flags — LEGACY (kept for back-compat during migration).
+  // Superseded by the *_status columns below, which are the source of truth.
   websiteValid     Boolean  @default(false) @map("website_valid")
   emailValid       Boolean  @default(false) @map("email_valid")
   phoneValid       Boolean  @default(false) @map("phone_valid")
   instagramValid   Boolean  @default(false) @map("instagram_valid")
   whatsappValid    Boolean  @default(false) @map("whatsapp_valid")
   sourceValid      Boolean  @default(false) @map("source_valid")
+
+  // Per-field verification status — source of truth.
+  // MISSING | INVALID | UNVERIFIED | VERIFIED | UNAVAILABLE
+  websiteStatus    String   @default("MISSING") @map("website_status")
+  emailStatus      String   @default("MISSING") @map("email_status")
+  phoneStatus      String   @default("MISSING") @map("phone_status")
+  whatsappStatus   String   @default("MISSING") @map("whatsapp_status")
+  instagramStatus  String   @default("MISSING") @map("instagram_status")
 
   // Canonical URLs derived at generation time (Instagram, WhatsApp).
   whatsappUrl      String   @default("") @map("whatsapp_url")

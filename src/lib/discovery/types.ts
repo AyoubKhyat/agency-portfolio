@@ -47,6 +47,39 @@ export type FieldValidity = {
   sourceUrl: boolean;
 };
 
+/* ─────────────────────────── Verification model ───────────────────────────
+ * Philosophy: never invent contact info. Every contact method carries a
+ * verification status — the source of truth for whether the UI may render a
+ * click-through. Format checks can only reach UNVERIFIED; real existence checks
+ * (added in later steps) reach VERIFIED / UNAVAILABLE.
+ *
+ *   MISSING     — no value from the source
+ *   INVALID     — value present but malformed (failed format)
+ *   UNVERIFIED  — format-valid, existence NOT confirmed
+ *   VERIFIED    — positively confirmed to exist / be reachable
+ *   UNAVAILABLE — positively confirmed NOT usable (dead domain, 404, not on WhatsApp)
+ */
+export type VerificationStatus =
+  | "MISSING"
+  | "INVALID"
+  | "UNVERIFIED"
+  | "VERIFIED"
+  | "UNAVAILABLE";
+
+/** How a status was determined. FORMAT is offline; the rest are real checks. */
+export type VerificationMethod = "FORMAT" | "DNS" | "HTTP" | "MX" | "API" | "MANUAL";
+
+export type VerifiedContact = {
+  value: string;
+  status: VerificationStatus;
+  method: VerificationMethod | null;
+  checkedAt: string | null;
+};
+
+export type ContactChannel = "website" | "email" | "phone" | "whatsapp" | "instagram";
+
+export type ContactVerification = Record<ContactChannel, VerifiedContact>;
+
 export type OutreachDrafts = {
   emailSubject: string;
   emailBody: string;
@@ -59,7 +92,8 @@ export type DiscoveryScoredResult = DiscoveryCandidate & DiscoveryAudit & Outrea
   suggestedSegment: ProspectSegment;
   aiProvider: AiProviderName;
   duplicate: DiscoveryDuplicateMatch;
-  validity: FieldValidity;
+  validity: FieldValidity;            // legacy booleans (back-compat)
+  verification: ContactVerification;  // source of truth going forward
   whatsappUrl: string;
   instagramUrl: string;
 };

@@ -13,7 +13,9 @@
  * and belongs to a future "verify" pass.
  */
 
-import type { DiscoveryCandidate } from "./types";
+import type {
+  DiscoveryCandidate, ContactVerification, VerificationStatus, VerifiedContact,
+} from "./types";
 
 export type FieldValidity = {
   website: boolean;
@@ -27,8 +29,23 @@ export type FieldValidity = {
 export type RepairedCandidate = DiscoveryCandidate & {
   whatsappUrl: string;
   instagramUrl: string;
-  validity: FieldValidity;
+  validity: FieldValidity;            // legacy booleans (back-compat)
+  verification: ContactVerification;  // per-field verification status
 };
+
+/**
+ * Format checks can only ever reach UNVERIFIED — they prove the value is
+ * well-formed, never that it exists. Existence checks (later steps) upgrade to
+ * VERIFIED or downgrade to UNAVAILABLE.
+ */
+function formatStatus(raw: string, valid: boolean): VerificationStatus {
+  if (!(raw || "").trim()) return "MISSING";
+  return valid ? "UNVERIFIED" : "INVALID";
+}
+
+function formatContact(value: string, status: VerificationStatus): VerifiedContact {
+  return { value, status, method: status === "MISSING" ? null : "FORMAT", checkedAt: null };
+}
 
 /* ─────────────────────────── URL / domain ─────────────────────────── */
 
@@ -205,6 +222,19 @@ export function validateAndRepair(candidate: DiscoveryCandidate): RepairedCandid
   const sourceUrl = repairSourceUrl(candidate.sourceUrl);
   const whatsappUrl = phone.valid ? buildWhatsAppUrl(phone.e164) : "";
 
+  // WhatsApp is NEVER derived from the phone being format-valid. Having a phone
+  // only makes WhatsApp UNVERIFIED (a candidate to check later); it is never
+  // VERIFIED until a real check (or a manual confirmation) says so.
+  const whatsappStatus: VerificationStatus = phone.valid ? "UNVERIFIED" : "MISSING";
+
+  const verification: ContactVerification = {
+    website: formatContact(website.url, formatStatus(candidate.website, website.valid)),
+    email: formatContact(email.email, formatStatus(candidate.email, email.valid)),
+    phone: formatContact(phone.phone, formatStatus(candidate.phone, phone.valid)),
+    whatsapp: { value: whatsappUrl, status: whatsappStatus, method: null, checkedAt: null },
+    instagram: formatContact(instagram.handle, formatStatus(candidate.instagram, instagram.valid)),
+  };
+
   return {
     name: candidate.name.trim(),
     sector: candidate.sector.trim(),
@@ -222,18 +252,20 @@ export function validateAndRepair(candidate: DiscoveryCandidate): RepairedCandid
       email: email.valid,
       phone: phone.valid,
       instagram: instagram.valid,
-      whatsapp: phone.valid,
+      // Stop deriving WhatsApp from phone — never auto-true anymore.
+      whatsapp: false,
       sourceUrl: sourceUrl.valid,
     },
+    verification,
   };
 }
 
 /**
- * A repaired candidate is considered publishable if at least the name is set
- * and there's one usable contact channel. If we can't reach them at all, the
- * card is worthless — skip it in the pipeline.
+ * Honesty-first: a named business is worth showing even with zero contact
+ * channels — it's surfaced as a lead with unverified/missing contacts (clearly
+ * marked in the UI), never dropped and never padded with invented data.
+ * Contacts get discovered/verified later; absence is not disqualifying.
  */
 export function isPublishable(r: RepairedCandidate): boolean {
-  if (!r.name) return false;
-  return r.validity.phone || r.validity.email || r.validity.instagram || r.validity.website;
+  return Boolean(r.name);
 }

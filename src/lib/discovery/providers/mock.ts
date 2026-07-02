@@ -1,13 +1,15 @@
 /**
- * Mock discovery provider — Phase 2.1.
+ * Mock discovery provider — honesty-first (Phase 2.2 verification redesign).
  *
- * Deterministic-ish generation driven by the query text. For every business:
- *   name → slug → domain (country-appropriate TLD) → email → IG handle →
- *   phone (country dial code) → source URL.
+ * A mock must NEVER fabricate contact information. It generates a realistic
+ * business identity only:
+ *   name → sector → city → country → source/search URL
+ * Every contact field (website, email, phone, Instagram, WhatsApp) is left
+ * EMPTY, so downstream validation marks it MISSING and the UI shows nothing
+ * clickable. Real contacts only ever come from real, verified sources.
  *
- * Consistency is the priority: a French luxury hotel gets a `.fr` domain, a
- * `+33` phone, an IG handle derived from the same slug, and a mailbox at the
- * same domain. No mismatched combinations.
+ * AI summary, suggested offer and scores are added later in the pipeline
+ * (audit + score stages), not here.
  */
 
 import type { DiscoveryCandidate, DiscoverySearchInput } from "../types";
@@ -42,32 +44,6 @@ const CITY_COUNTRY: Record<string, string> = {
   zurich: "Switzerland",
   brussels: "Belgium",
   amsterdam: "Netherlands",
-};
-
-const COUNTRY_TLD: Record<string, string> = {
-  France: "fr",
-  Monaco: "mc",
-  Morocco: "ma",
-  Italy: "it",
-  Spain: "es",
-  "United Kingdom": "co.uk",
-  "United Arab Emirates": "ae",
-  Switzerland: "ch",
-  Belgium: "be",
-  Netherlands: "nl",
-};
-
-const COUNTRY_DIAL: Record<string, string> = {
-  France: "33",
-  Monaco: "377",
-  Morocco: "212",
-  Italy: "39",
-  Spain: "34",
-  "United Kingdom": "44",
-  "United Arab Emirates": "971",
-  Switzerland: "41",
-  Belgium: "32",
-  Netherlands: "31",
 };
 
 const SECTOR_ALIASES: Array<[RegExp, string]> = [
@@ -163,32 +139,6 @@ function namesForSector(sector: string): readonly string[] {
   return GENERIC_NAMES;
 }
 
-/* ─────────────────────────── Consistency helpers ─────────────────────────── */
-
-function slug(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")   // strip diacritics
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-/** Instagram handles can't have hyphens — use dots as separator. */
-function handleFromSlug(s: string): string {
-  return s.replace(/-/g, ".").replace(/^\.+|\.+$/g, "").replace(/\.+/g, ".").slice(0, 30);
-}
-
-function domainFromSlug(s: string, country: string): string {
-  const tld = COUNTRY_TLD[country] ?? "com";
-  const compact = s.replace(/-/g, "");
-  return `${compact}.${tld}`;
-}
-
-function emailForDomain(domain: string): string {
-  return `contact@${domain}`;
-}
-
 function hash(s: string): number {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) {
@@ -198,54 +148,12 @@ function hash(s: string): number {
   return h >>> 0;
 }
 
-/**
- * Country-appropriate phone with subscriber digits derived from the same seed
- * — so the identity stays coherent (same "brand seed" → same phone).
- */
-function phoneForCountry(country: string, seed: number): string {
-  const dial = COUNTRY_DIAL[country] ?? "33";
-  const subLen = subscriberLength(country);
-  const rand = seededDigits(seed, subLen);
-  // Guarantee first digit is not zero for E.164 correctness.
-  const first = ((rand[0] as unknown as number) === 0 ? 1 : rand[0]);
-  const rest = rand.slice(1);
-  const subscriber = `${first}${rest}`;
-  return `+${dial}${subscriber}`;
-}
-
-function subscriberLength(country: string): number {
-  switch (country) {
-    case "France": return 9;
-    case "Monaco": return 8;
-    case "Morocco": return 9;
-    case "Italy": return 10;
-    case "Spain": return 9;
-    case "United Kingdom": return 10;
-    case "United Arab Emirates": return 8;
-    case "Switzerland": return 9;
-    case "Belgium": return 9;
-    case "Netherlands": return 9;
-    default: return 9;
-  }
-}
-
-function seededDigits(seed: number, count: number): string {
-  const out: string[] = [];
-  let s = seed >>> 0;
-  for (let i = 0; i < count; i++) {
-    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
-    out.push(String(s % 10));
-  }
-  return out.join("");
-}
-
 /* ─────────────────────────── Provider ─────────────────────────── */
 
 export async function mockDiscoverySearch({ query, limit = 8 }: DiscoverySearchInput): Promise<DiscoveryCandidate[]> {
   const q = parseQuery(query);
   const pool = namesForSector(q.sector);
   const size = Math.max(3, Math.min(limit, 12));
-  const baseSeed = hash(query.trim().toLowerCase());
 
   const out: DiscoveryCandidate[] = [];
   const used = new Set<string>();
@@ -254,36 +162,22 @@ export async function mockDiscoverySearch({ query, limit = 8 }: DiscoverySearchI
     const pickSeed = hash(`${query}|pick|${i}`);
     let name = pool[pickSeed % pool.length];
     if (used.has(name)) {
-      // Suffix to keep uniqueness without recycling the same 8 names.
       const suffixes = ["Studio", "House", "Group", "Collective", "Atelier"];
       name = `${name} ${suffixes[pickSeed % suffixes.length]}`;
     }
     if (used.has(name)) continue;
     used.add(name);
 
-    // The identity seed drives all coherent properties of this business.
-    const idSeed = hash(`${name}|${q.city}|${q.country}`);
-
-    const nameSlug = slug(name);
-    if (!nameSlug) continue;
-
-    const handle = handleFromSlug(nameSlug);
-    const domain = domainFromSlug(nameSlug, q.country);
-    const email = emailForDomain(domain);
-    const phone = phoneForCountry(q.country || "France", idSeed + baseSeed);
-
-    // Every field is populated for the mock — realistic completeness.
-    // Validation downstream still gates the UI; this is just the raw input.
-    const website = `https://${domain}`;
-    const instagram = handle;
+    // The ONLY link a mock may emit is a neutral search URL — never a
+    // fabricated website. Every contact field stays empty (→ MISSING).
     const sourceUrl = `https://www.google.com/search?q=${encodeURIComponent(`${name} ${q.city || ""}`.trim())}`;
 
     out.push({
       name,
-      website,
-      phone,
-      email,
-      instagram,
+      website: "",
+      phone: "",
+      email: "",
+      instagram: "",
       city: q.city || "",
       country: q.country || "",
       sector: q.sector,

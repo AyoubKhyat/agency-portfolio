@@ -9,6 +9,7 @@
  */
 
 import type { ProspectSegment } from "@/lib/prospect-segments";
+import type { VerificationStatus } from "@/lib/discovery/types";
 
 export type WorkspaceSource = "discovery" | "prospect";
 
@@ -29,14 +30,14 @@ export type WorkspaceStage =
 export type ProjectSize = "Small" | "Medium" | "Large" | "Enterprise";
 
 /**
- * A single contact field. `href` is null when the value is missing or fails
- * validation — the UI then renders plain muted text (never a broken link).
+ * A single contact field. `href` is set ONLY when the field is VERIFIED —
+ * otherwise the UI shows the value as non-clickable (Unverified) or hides it.
  */
 export type WorkspaceContactField = {
   label: string;
   value: string;
   href: string | null;
-  valid: boolean;
+  status: VerificationStatus;
 };
 
 export type WorkspaceScores = {

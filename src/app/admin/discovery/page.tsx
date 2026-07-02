@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { SEGMENT_LABELS, SEGMENT_TOKENS, type ProspectSegment } from "@/lib/prospect-segments";
-import type { DiscoveryResultDTO } from "@/lib/discovery/types";
+import type { DiscoveryResultDTO, VerifiedContact } from "@/lib/discovery/types";
 import { cn } from "@/lib/utils";
 
 const EXAMPLES = [
@@ -322,8 +322,10 @@ function ResultCard({
     }
   }
 
-  const canPreviewEmail = result.validity.email;
-  const canPreviewWhatsapp = result.validity.whatsapp;
+  // Email preview allowed when there's an address to draft toward; WhatsApp
+  // outreach only when positively VERIFIED (never assumed from a phone number).
+  const canPreviewEmail = result.verification.email.status === "VERIFIED" || result.verification.email.status === "UNVERIFIED";
+  const canPreviewWhatsapp = result.verification.whatsapp.status === "VERIFIED";
 
   return (
     <motion.div
@@ -378,20 +380,13 @@ function ResultCard({
           </div>
         )}
 
-        {/* Contact strip — only valid fields render as click-throughs */}
+        {/* Contact strip — VERIFIED = clickable, UNVERIFIED = shown (not clickable),
+            MISSING/INVALID = hidden. Never a click-through to unverified data. */}
         <div className="mt-4 flex flex-wrap gap-2">
-          {result.validity.website && result.website && (
-            <ContactChip icon={Globe} href={result.website} label={hostOnly(result.website)} />
-          )}
-          {result.validity.phone && result.phone && (
-            <ContactChip icon={Phone} href={`tel:${result.phone.replace(/\s+/g, "")}`} label={result.phone} />
-          )}
-          {result.validity.email && result.email && (
-            <ContactChip icon={Mail} href={`mailto:${result.email}`} label={result.email} />
-          )}
-          {result.validity.instagram && result.instagram && (
-            <ContactChip icon={AtSign} href={result.instagramUrl} label={`@${result.instagram}`} />
-          )}
+          <StatusChip icon={Globe} field={result.verification.website} href={result.website} label={hostOnly(result.website)} />
+          <StatusChip icon={Phone} field={result.verification.phone} href={`tel:${result.phone.replace(/\s+/g, "")}`} label={result.phone} />
+          <StatusChip icon={Mail} field={result.verification.email} href={`mailto:${result.email}`} label={result.email} />
+          <StatusChip icon={AtSign} field={result.verification.instagram} href={result.instagramUrl} label={result.instagram ? `@${result.instagram}` : ""} />
         </div>
 
         {/* Preview outreach — always available when the corresponding channel is valid */}
@@ -551,6 +546,45 @@ function ContactChip({
   );
 }
 
+function StatusChip({
+  icon: Icon,
+  field,
+  href,
+  label,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  field: VerifiedContact;
+  href: string;
+  label: string;
+}) {
+  if (field.status === "MISSING" || field.status === "INVALID") return null;
+
+  if (field.status === "VERIFIED") {
+    return <ContactChip icon={Icon} href={href} label={label} />;
+  }
+
+  if (field.status === "UNAVAILABLE") {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11.5px] max-w-[220px] bg-slate-50 text-slate-400 border border-slate-200 line-through">
+        <Icon className="w-3 h-3 shrink-0" />
+        <span className="truncate">{label || "unavailable"}</span>
+      </span>
+    );
+  }
+
+  // UNVERIFIED — visible but not clickable.
+  return (
+    <span
+      title="Unverified — not confirmed to exist"
+      className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11.5px] max-w-[240px] bg-white text-slate-500 border border-dashed border-slate-300"
+    >
+      <Icon className="w-3 h-3 shrink-0" />
+      <span className="truncate">{label}</span>
+      <span className="shrink-0 text-[9px] font-semibold px-1 py-0.5 rounded bg-slate-100 text-slate-500">Unverified</span>
+    </span>
+  );
+}
+
 function PreviewButton({
   icon: Icon,
   label,
@@ -706,7 +740,7 @@ function PreviewModal({
               <div className="text-[11px] text-[var(--os-text-muted)]">
                 Preview only — nothing is sent from here.
               </div>
-              {preview.kind === "whatsapp" && preview.result.whatsappUrl && (
+              {preview.kind === "whatsapp" && preview.result.verification.whatsapp.status === "VERIFIED" && preview.result.whatsappUrl && (
                 <a
                   href={`${preview.result.whatsappUrl}${preview.result.whatsappUrl.includes("?") ? "&" : "?"}text=${encodeURIComponent(preview.body)}`}
                   target="_blank"
@@ -717,7 +751,7 @@ function PreviewModal({
                   Open in WhatsApp
                 </a>
               )}
-              {preview.kind === "email" && preview.result.email && (
+              {preview.kind === "email" && preview.result.verification.email.status === "VERIFIED" && preview.result.email && (
                 <a
                   href={`mailto:${preview.result.email}?subject=${encodeURIComponent(preview.subject)}&body=${encodeURIComponent(preview.body)}`}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors"

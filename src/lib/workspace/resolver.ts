@@ -20,8 +20,19 @@ import type {
   WorkspacePriority,
   WorkspaceStage,
 } from "@/lib/workspace/types";
+import type { VerificationStatus } from "@/lib/discovery/types";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const VALID_STATUSES: VerificationStatus[] = ["MISSING", "INVALID", "UNVERIFIED", "VERIFIED", "UNAVAILABLE"];
+
+/** Coerce a DB status string into a VerificationStatus (defensive). */
+function asStatus(s: string | null | undefined): VerificationStatus {
+  return VALID_STATUSES.includes(s as VerificationStatus) ? (s as VerificationStatus) : "MISSING";
+}
+
+/** A prospect's own fields carry no verification yet → present = UNVERIFIED. */
+function presenceStatus(value: string): VerificationStatus {
+  return value && value.trim() ? "UNVERIFIED" : "MISSING";
+}
 
 function iso(d: Date | null | undefined): string | null {
   return d ? d.toISOString() : null;
@@ -66,11 +77,12 @@ function stageFromProspect(p: {
 function contact(
   label: string,
   value: string,
-  valid: boolean,
+  status: VerificationStatus,
   href: string | null,
 ): WorkspaceContactField {
-  const has = Boolean(value) && valid;
-  return { label, value: value || "", valid: has, href: has ? href : null };
+  // Only a VERIFIED field is ever clickable.
+  const clickable = status === "VERIFIED" && Boolean(value);
+  return { label, value: value || "", status, href: clickable ? href : null };
 }
 
 /* ─────────────────────────── Discovery ─────────────────────────── */
@@ -85,10 +97,10 @@ export async function getDiscoveryWorkspace(id: string): Promise<LeadWorkspace |
   const igUrl = r.instagramUrl || (r.instagram ? `https://instagram.com/${r.instagram.replace(/^@/, "")}` : "");
 
   const contacts: WorkspaceContactField[] = [
-    contact("Website", r.website, r.websiteValid, ensureHttp(r.website)),
-    contact("Instagram", r.instagram ? `@${r.instagram.replace(/^@/, "")}` : "", r.instagramValid, igUrl),
-    contact("Email", r.email, r.emailValid, `mailto:${r.email}`),
-    contact("Phone", r.phone, r.phoneValid, `tel:${r.phone.replace(/\s+/g, "")}`),
+    contact("Website", r.website, asStatus(r.websiteStatus), ensureHttp(r.website)),
+    contact("Instagram", r.instagram ? `@${r.instagram.replace(/^@/, "")}` : "", asStatus(r.instagramStatus), igUrl),
+    contact("Email", r.email, asStatus(r.emailStatus), `mailto:${r.email}`),
+    contact("Phone", r.phone, asStatus(r.phoneStatus), `tel:${r.phone.replace(/\s+/g, "")}`),
   ];
 
   const hasAi = Boolean(
@@ -154,10 +166,10 @@ export async function getProspectWorkspace(id: string): Promise<LeadWorkspace | 
   const igUrl = p.instagram ? `https://instagram.com/${p.instagram.replace(/^@/, "")}` : "";
 
   const contacts: WorkspaceContactField[] = [
-    contact("Website", p.website, Boolean(p.website) && /\./.test(p.website), ensureHttp(p.website)),
-    contact("Instagram", p.instagram ? `@${p.instagram.replace(/^@/, "")}` : "", Boolean(p.instagram), igUrl),
-    contact("Email", p.email, EMAIL_RE.test(p.email || ""), `mailto:${p.email}`),
-    contact("Phone", p.phone, Boolean(p.phone), `tel:${p.phone.replace(/\s+/g, "")}`),
+    contact("Website", p.website, presenceStatus(p.website), ensureHttp(p.website)),
+    contact("Instagram", p.instagram ? `@${p.instagram.replace(/^@/, "")}` : "", presenceStatus(p.instagram), igUrl),
+    contact("Email", p.email, presenceStatus(p.email), `mailto:${p.email}`),
+    contact("Phone", p.phone, presenceStatus(p.phone), `tel:${p.phone.replace(/\s+/g, "")}`),
   ];
 
   const service = origin?.suggestedOffer || (p.hasWebsite ? "Website revamp / SEO" : "Website / online presence");

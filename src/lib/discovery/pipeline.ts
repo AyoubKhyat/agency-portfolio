@@ -73,6 +73,7 @@ export async function runDiscovery(input: DiscoverySearchInput): Promise<Discove
       aiProvider: provider.name,
       duplicate: duplicates[i],
       validity: r.validity,
+      verification: r.verification,
       whatsappUrl: r.whatsappUrl,
       instagramUrl: r.instagramUrl,
     };

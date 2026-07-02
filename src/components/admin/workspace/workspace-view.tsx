@@ -781,9 +781,15 @@ function IdentityCard({ data }: { data: LeadWorkspace }) {
         <ScoreCell label="Confidence" value={data.scores.confidence} />
       </div>
 
-      {/* Contacts */}
+      {/* Contacts — MISSING/INVALID hidden; only VERIFIED is clickable */}
       <div className="p-2">
-        {data.contacts.map((c) => <ContactRow key={c.label} contact={c} />)}
+        {(() => {
+          const visible = data.contacts.filter((c) => c.status !== "MISSING" && c.status !== "INVALID");
+          if (visible.length === 0) {
+            return <div className="px-3 py-3 text-[12px] text-[var(--os-text-dim)]">No contact details yet.</div>;
+          }
+          return visible.map((c) => <ContactRow key={c.label} contact={c} />);
+        })()}
       </div>
     </section>
   );
@@ -809,14 +815,19 @@ function ContactRow({ contact: c }: { contact: WorkspaceContactField }) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-[10.5px] uppercase tracking-wide text-[var(--os-text-dim)] font-medium">{c.label}</div>
-        {c.href ? (
+        {c.status === "VERIFIED" && c.href ? (
           <a href={c.href} target={external ? "_blank" : undefined} rel="noreferrer"
             className="text-[13px] text-[var(--os-purple)] hover:opacity-80 transition-opacity inline-flex items-center gap-1 max-w-full">
             <span className="truncate">{c.value}</span>
-            {external && <ExternalLink className="w-3 h-3 shrink-0 opacity-50" />}
+            {external ? <ExternalLink className="w-3 h-3 shrink-0 opacity-50" /> : <Check className="w-3 h-3 shrink-0 text-emerald-500" />}
           </a>
+        ) : c.status === "UNAVAILABLE" ? (
+          <div className="text-[13px] text-[var(--os-text-dim)] line-through">{c.value || "Unavailable"}</div>
         ) : (
-          <div className="text-[13px] text-[var(--os-text-dim)]">{c.value || "—"}</div>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-[13px] text-[var(--os-text-muted)] truncate">{c.value || "—"}</span>
+            <span className="shrink-0 text-[9px] font-medium px-1.5 py-0.5 rounded bg-[var(--os-surface-2)] border border-[var(--os-border)] text-[var(--os-text-dim)]">Unverified</span>
+          </div>
         )}
       </div>
     </div>
