@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
-import { runDiscovery } from "@/lib/discovery/pipeline";
+import { runDiscovery, activeLeadSource } from "@/lib/discovery/pipeline";
 import type { DiscoveryResultDTO } from "@/lib/discovery/types";
 
 const schema = z.object({
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
   const sweep = await prisma.discoverySweep.create({
     data: {
-      provider: "AI_MOCK",
+      provider: activeLeadSource() === "OSM" ? "OSM" : "AI_MOCK",
       city: "",
       sector: "",
       neighborhood: null,

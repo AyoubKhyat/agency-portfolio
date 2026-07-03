@@ -6,6 +6,7 @@ import { scoreProspect } from "@/lib/prospect-scoring";
 import { computeQualityLabel } from "@/lib/prospect-quality";
 import { classify } from "@/lib/discovery-duplicates";
 import { CITIES, SECTORS, type DiscoveryCandidate } from "@/lib/discovery-providers";
+import { repairInstagram } from "@/lib/discovery/validate";
 
 const candidateSchema = z.object({
   sourceId: z.string(),
@@ -67,6 +68,7 @@ export async function POST(req: Request) {
       phone: cand.phone ?? null,
       whatsapp: cand.whatsapp ?? null,
       website: cand.website ?? null,
+      email: cand.email ?? null,
       instagram: cand.instagram ?? null,
       facebook: cand.facebook ?? null,
       mapsUrl: cand.mapsUrl ?? null,
@@ -83,12 +85,17 @@ export async function POST(req: Request) {
       continue;
     }
 
-    // Build prospect data
+    // Build prospect data.
+    // WhatsApp is NEVER derived from the phone — only an explicit, real
+    // whatsapp link from the source counts, and even that is UNVERIFIED until
+    // manually confirmed. No source-provided link → empty (button hidden).
     const phone = cand.phone || "";
-    const whatsappLink = cand.whatsapp || (phone ? `https://wa.me/${phone.replace(/\D/g, "")}` : "");
+    const whatsappLink = cand.whatsapp || "";
     const website = cand.website || "";
     const email = cand.email || "";
-    const instagram = cand.instagram || "";
+    // Normalize to a bare handle so a later "Confirm Instagram" yields a valid
+    // link; format-invalid handles are dropped (empty → button hidden).
+    const instagram = repairInstagram(cand.instagram || "").handle;
     const sectorLabel = sectorDef?.label || cand.sector;
     const cityLabel = cityDef?.label || cand.city;
 

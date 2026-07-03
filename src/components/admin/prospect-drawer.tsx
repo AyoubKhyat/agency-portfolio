@@ -137,6 +137,8 @@ type FullProspect = {
   neighborhood: string;
   instagram: string;
   hasWebsite: boolean;
+  whatsappStatus: string;
+  instagramStatus: string;
   priority: number;
   status: string;
   segment: ProspectSegment;
@@ -168,6 +170,8 @@ type Prospect = {
   neighborhood: string;
   instagram: string;
   hasWebsite: boolean;
+  whatsappStatus: string;
+  instagramStatus: string;
   priority: number;
   status: string;
   segment: ProspectSegment;
@@ -333,6 +337,8 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
       neighborhood: updated.neighborhood,
       instagram: updated.instagram,
       hasWebsite: updated.hasWebsite,
+      whatsappStatus: updated.whatsappStatus,
+      instagramStatus: updated.instagramStatus,
       priority: updated.priority,
       status: updated.status,
       segment: updated.segment,
@@ -368,6 +374,26 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ segment: newSegment }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setProspect(updated);
+      emitUpdate(updated);
+    }
+  }
+
+  // Manual contact verification. WhatsApp/Instagram can't be auto-verified
+  // (no scraping, no paid API), so the human confirms once, then the button
+  // appears. Toggling back to UNVERIFIED hides it again.
+  async function setChannelStatus(
+    channel: "whatsappStatus" | "instagramStatus",
+    value: "VERIFIED" | "UNVERIFIED",
+  ) {
+    if (!prospect) return;
+    const res = await fetch(`/api/admin/prospecting/${prospect.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [channel]: value }),
     });
     if (res.ok) {
       const updated = await res.json();
@@ -568,25 +594,48 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
 
                 <div className="shrink-0 px-5 py-3 border-b border-[#E5E7EB]">
                   <div className="flex items-center gap-1.5">
-                    <a
-                      href={prospect.whatsappLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center w-9 h-9 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
-                      title="WhatsApp"
-                    >
-                      <FaWhatsapp className="w-4 h-4" />
-                    </a>
-                    {prospect.instagram && (
+                    {/* WhatsApp — shown only once manually confirmed as verified.
+                        Otherwise a dashed "Confirm" affordance (never a dead link). */}
+                    {prospect.whatsappStatus === "VERIFIED" && prospect.whatsappLink ? (
                       <a
-                        href={`https://ig.me/m/${prospect.instagram.replace(/^@/, "")}`}
+                        href={prospect.whatsappLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center w-9 h-9 rounded-xl bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors"
-                        title="Instagram DM"
+                        className="flex items-center justify-center w-9 h-9 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
+                        title="WhatsApp (verified)"
                       >
-                        <FaInstagram className="w-4 h-4" />
+                        <FaWhatsapp className="w-4 h-4" />
                       </a>
+                    ) : prospect.phone ? (
+                      <button
+                        onClick={() => setChannelStatus("whatsappStatus", "VERIFIED")}
+                        className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#F1F5F9] text-[#94A3B8] border border-dashed border-[#CBD5E1] hover:bg-green-50 hover:text-green-600 hover:border-green-300 transition-colors"
+                        title="Confirm WhatsApp — not verified. Click only after you've checked this number is on WhatsApp."
+                      >
+                        <FaWhatsapp className="w-4 h-4" />
+                      </button>
+                    ) : null}
+                    {/* Instagram — same rule: hidden until confirmed (no scraping). */}
+                    {prospect.instagram && (
+                      prospect.instagramStatus === "VERIFIED" ? (
+                        <a
+                          href={`https://ig.me/m/${prospect.instagram.replace(/^@/, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center w-9 h-9 rounded-xl bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors"
+                          title="Instagram DM (verified)"
+                        >
+                          <FaInstagram className="w-4 h-4" />
+                        </a>
+                      ) : (
+                        <button
+                          onClick={() => setChannelStatus("instagramStatus", "VERIFIED")}
+                          className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#F1F5F9] text-[#94A3B8] border border-dashed border-[#CBD5E1] hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300 transition-colors"
+                          title={`Confirm Instagram — not verified. Click only after you've checked @${prospect.instagram.replace(/^@/, "")} exists.`}
+                        >
+                          <FaInstagram className="w-4 h-4" />
+                        </button>
+                      )
                     )}
                     <button
                       onClick={handleCopyPhone}
@@ -697,26 +746,47 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                           </div>
                           <div>
                             <p className="text-[11px] text-[#94A3B8] uppercase tracking-wider mb-0.5">WhatsApp</p>
-                            <a
-                              href={prospect.whatsappLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[13px] text-green-600 hover:text-green-700 transition-colors truncate block"
-                            >
-                              Open link
-                            </a>
+                            {prospect.whatsappStatus === "VERIFIED" && prospect.whatsappLink ? (
+                              <a
+                                href={prospect.whatsappLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[13px] text-green-600 hover:text-green-700 transition-colors truncate block"
+                              >
+                                Open link
+                              </a>
+                            ) : prospect.phone ? (
+                              <button
+                                onClick={() => setChannelStatus("whatsappStatus", "VERIFIED")}
+                                className="text-[13px] text-[#94A3B8] hover:text-green-600 underline decoration-dashed underline-offset-2 transition-colors"
+                              >
+                                Confirm WhatsApp
+                              </button>
+                            ) : (
+                              <span className="text-[13px] text-[#94A3B8]">--</span>
+                            )}
                           </div>
                           <div>
                             <p className="text-[11px] text-[#94A3B8] uppercase tracking-wider mb-0.5">Instagram</p>
                             {prospect.instagram ? (
-                              <a
-                                href={`https://instagram.com/${prospect.instagram.replace(/^@/, "")}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[13px] text-purple-600 hover:text-purple-700 transition-colors"
-                              >
-                                @{prospect.instagram.replace(/^@/, "")}
-                              </a>
+                              prospect.instagramStatus === "VERIFIED" ? (
+                                <a
+                                  href={`https://instagram.com/${prospect.instagram.replace(/^@/, "")}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[13px] text-purple-600 hover:text-purple-700 transition-colors"
+                                >
+                                  @{prospect.instagram.replace(/^@/, "")}
+                                </a>
+                              ) : (
+                                <button
+                                  onClick={() => setChannelStatus("instagramStatus", "VERIFIED")}
+                                  className="text-[13px] text-[#94A3B8] hover:text-purple-600 underline decoration-dashed underline-offset-2 transition-colors"
+                                  title={`Confirm @${prospect.instagram.replace(/^@/, "")} exists before showing the link`}
+                                >
+                                  Confirm @{prospect.instagram.replace(/^@/, "")}
+                                </button>
+                              )
                             ) : (
                               <span className="text-[13px] text-[#94A3B8]">--</span>
                             )}

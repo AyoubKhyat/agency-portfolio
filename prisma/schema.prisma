@@ -149,6 +149,12 @@ model Prospect {
   hasWebsite   Boolean         @default(false) @map("has_website")
   website      String          @default("")
   email        String          @default("")
+  // Contact verification — WhatsApp/Instagram can never be auto-verified (no
+  // scraping, no paid API), so both default UNVERIFIED and only a manual
+  // "Confirm" action promotes them to VERIFIED. The UI hides the button unless
+  // VERIFIED. UNAVAILABLE = positively known bad (e.g. cleared by a pass).
+  whatsappStatus  String       @default("UNVERIFIED") @map("whatsapp_status")  // UNVERIFIED | VERIFIED | UNAVAILABLE
+  instagramStatus String       @default("UNVERIFIED") @map("instagram_status") // UNVERIFIED | VERIFIED | UNAVAILABLE
   qualityLabel String?         @map("quality_label") // HOT | WARM | COLD
   segment      ProspectSegment @default(LEGACY_COLD)
   priority     Int             @default(2)

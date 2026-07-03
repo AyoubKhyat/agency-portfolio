@@ -104,7 +104,8 @@ const SECTORS = [
 type Prospect = {
   id: string; name: string; phone: string; whatsappLink: string;
   sector: string; neighborhood: string; instagram: string;
-  hasWebsite: boolean; priority: number; status: string;
+  hasWebsite: boolean; whatsappStatus: string; instagramStatus: string;
+  priority: number; status: string;
   segment: ProspectSegment;
   email?: string | null; website?: string | null;
   qualityLabel?: "HOT" | "WARM" | "COLD" | null;
@@ -329,6 +330,13 @@ function ProspectingContent() {
     if (!digits) { alert("No phone number."); return; }
     const landline = isLandline(p.phone);
     if (landline) { navigator.clipboard.writeText(msg).catch(() => {}); alert("Numéro fixe — message copié ! Appelez le " + p.phone); return; }
+    // Never open a WhatsApp link that hasn't been confirmed as reachable —
+    // copy the message instead so the rep can send it after confirming.
+    if (p.whatsappStatus !== "VERIFIED") {
+      navigator.clipboard.writeText(msg).catch(() => {});
+      alert("WhatsApp not confirmed for this prospect. Open it and use \"Confirm WhatsApp\" first — message copied to clipboard.");
+      return;
+    }
     let phone = digits;
     if (phone.startsWith("0")) phone = "212" + phone.slice(1);
     else if (!phone.startsWith("212") && !phone.startsWith("33")) phone = "212" + phone;
@@ -343,6 +351,11 @@ function ProspectingContent() {
     const handle = p.instagram.replace(/^@/, "");
     navigator.clipboard.writeText(msg).catch(() => {});
     setCopied(p.id); setTimeout(() => setCopied(null), 3000);
+    // Only open the DM link once the handle has been confirmed to exist.
+    if (p.instagramStatus !== "VERIFIED") {
+      alert(`Instagram @${handle} not confirmed. Open the prospect and use "Confirm Instagram" first — message copied to clipboard.`);
+      return;
+    }
     openLink(`https://ig.me/m/${handle}`);
     await markSent(p, "SENT_INSTAGRAM");
   }
@@ -360,16 +373,22 @@ function ProspectingContent() {
     const msg = getFollowupMessage(p);
     const digits = p.phone?.replace(/\D/g, "") || "";
     const landline = isLandline(p.phone);
-    if (digits && !landline) {
+    if (digits && !landline && p.whatsappStatus === "VERIFIED") {
       let phone = digits;
       if (phone.startsWith("0")) phone = "212" + phone.slice(1);
       else if (!phone.startsWith("212") && !phone.startsWith("33")) phone = "212" + phone;
       openLink(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);
-    } else if (p.instagram) {
+    } else if (p.instagram && p.instagramStatus === "VERIFIED") {
       const handle = p.instagram.replace(/^@/, "");
       navigator.clipboard.writeText(msg).catch(() => {});
       openLink(`https://ig.me/m/${handle}`);
-    } else { return; }
+    } else {
+      // No verified channel — copy the follow-up so it can still be sent
+      // manually after confirming, but never open a dead link.
+      navigator.clipboard.writeText(msg).catch(() => {});
+      alert("No confirmed WhatsApp/Instagram for this prospect. Follow-up message copied — confirm a channel on the prospect to enable one-click send.");
+      return;
+    }
     const res = await fetch(`/api/admin/prospecting/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "ENVOYE", actionType: "FOLLOW_UP" }) });
     if (res.ok) {
       const updated = await res.json();

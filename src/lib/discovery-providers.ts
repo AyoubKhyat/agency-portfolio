@@ -19,6 +19,7 @@ export type DiscoveryCandidate = {
   phone: string | null;
   whatsapp: string | null;
   website: string | null;
+  email: string | null;
   instagram: string | null;
   facebook: string | null;
   mapsUrl: string | null;
@@ -244,8 +245,10 @@ class GooglePlacesProvider implements DiscoveryProvider {
         city: city.label,
         neighborhood: query.neighborhood,
         phone,
-        whatsapp: whatsappLinkFromPhone(phone),
+        // Never derive WhatsApp from a phone — Places has no WhatsApp signal.
+        whatsapp: null,
         website: p.websiteUri || null,
+        email: null,
         instagram: null,
         facebook: null,
         mapsUrl: p.googleMapsUri || null,
@@ -376,7 +379,7 @@ async function callOverpass(queryStr: string): Promise<OsmElement[]> {
   throw lastError ?? new OverpassError("OSM_UNAVAILABLE", "All OpenStreetMap endpoints failed.");
 }
 
-class OsmProvider implements DiscoveryProvider {
+export class OsmProvider implements DiscoveryProvider {
   readonly name = "OSM" as const;
 
   async search(query: DiscoverySearchQuery): Promise<DiscoveryCandidate[]> {
@@ -413,6 +416,10 @@ out tags center 60;`;
       const phoneRaw = tags["phone"] || tags["contact:phone"] || tags["telephone"] || null;
       const phone = normalizePhoneMA(phoneRaw);
       const neighborhood = tags["addr:suburb"] || tags["addr:neighbourhood"] || tags["addr:city"] || null;
+      // WhatsApp is ONLY real when the mapper explicitly tagged it — never
+      // derived from the phone. Absent tag → null (button stays hidden).
+      const whatsappRaw = tags["contact:whatsapp"] || tags["whatsapp"] || null;
+      const whatsapp = whatsappRaw ? whatsappLinkFromPhone(normalizePhoneMA(whatsappRaw)) : null;
 
       candidates.push({
         sourceId: `${el.type}/${el.id}`,
@@ -422,9 +429,10 @@ out tags center 60;`;
         city: city.label,
         neighborhood: query.neighborhood || neighborhood,
         phone,
-        whatsapp: whatsappLinkFromPhone(phone),
+        whatsapp,
         website: tags["website"] || tags["contact:website"] || null,
-        instagram: tags["contact:instagram"] || null,
+        email: tags["email"] || tags["contact:email"] || null,
+        instagram: tags["contact:instagram"] || tags["instagram"] || null,
         facebook: tags["contact:facebook"] || null,
         mapsUrl: lat && lon ? `https://www.openstreetmap.org/${el.type}/${el.id}` : null,
         rating: null,

@@ -546,8 +546,9 @@ export async function createProspect(data: {
   sentAt?: Date | null;
   ownerUserId?: string;
 }) {
-  const phone = data.phone.replace(/\D/g, "");
-  const whatsappLink = data.whatsappLink || `https://wa.me/${phone}`;
+  // Never derive WhatsApp from the phone. Only an explicitly supplied link is
+  // stored, and it stays UNVERIFIED (schema default) until manually confirmed.
+  const whatsappLink = data.whatsappLink || "";
   return db().prospect.create({
     data: {
       name: data.name,

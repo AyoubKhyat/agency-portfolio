@@ -24,6 +24,10 @@ const patchSchema = z.object({
   proposalAmount: z.number().nullable().optional(),
   proposalDate: z.string().nullable().optional(),
   proposalStatus: z.enum(["DRAFT", "SENT", "ACCEPTED", "REJECTED"]).nullable().optional(),
+  // Manual contact verification — the ONLY way WhatsApp/Instagram reach VERIFIED
+  // (no scraping, no paid API). Toggled from the prospect drawer.
+  whatsappStatus: z.enum(["UNVERIFIED", "VERIFIED", "UNAVAILABLE"]).optional(),
+  instagramStatus: z.enum(["UNVERIFIED", "VERIFIED", "UNAVAILABLE"]).optional(),
   actionType: z.string().optional(),
   details: z.string().optional(),
 });
@@ -72,6 +76,28 @@ export async function PATCH(
         details: `Segment: ${previousSegment ?? "—"} → ${parsed.data.segment}`,
       });
     }
+  }
+
+  if (parsed.data.whatsappStatus !== undefined) {
+    await updateProspect(id, { whatsappStatus: parsed.data.whatsappStatus });
+    await logProspectActivity({
+      prospectId: id,
+      userId: session.userId,
+      userName: session.fullName,
+      actionType: parsed.data.whatsappStatus === "VERIFIED" ? "CONFIRMED_WHATSAPP" : "UNCONFIRMED_WHATSAPP",
+      details: `WhatsApp marked ${parsed.data.whatsappStatus}`,
+    });
+  }
+
+  if (parsed.data.instagramStatus !== undefined) {
+    await updateProspect(id, { instagramStatus: parsed.data.instagramStatus });
+    await logProspectActivity({
+      prospectId: id,
+      userId: session.userId,
+      userName: session.fullName,
+      actionType: parsed.data.instagramStatus === "VERIFIED" ? "CONFIRMED_INSTAGRAM" : "UNCONFIRMED_INSTAGRAM",
+      details: `Instagram marked ${parsed.data.instagramStatus}`,
+    });
   }
 
   if (parsed.data.proposalAmount !== undefined || parsed.data.proposalDate !== undefined || parsed.data.proposalStatus !== undefined) {
@@ -166,10 +192,14 @@ export async function PUT(
     return NextResponse.json({ error: errors.join("; ") }, { status: 400 });
   }
 
-  const phone = parsed.data.phone.replace(/\D/g, "");
-  const whatsappLink = parsed.data.whatsappLink || `https://wa.me/${phone}`;
+  // Do not fabricate a WhatsApp link from the phone. Only overwrite the link
+  // when one is explicitly provided; otherwise leave the stored value (and its
+  // verification status) untouched so an edit can't silently wipe a confirmed
+  // link — and it can never invent one.
+  const data: Record<string, unknown> = { ...parsed.data };
+  if (parsed.data.whatsappLink === undefined) delete data.whatsappLink;
 
-  const prospect = await updateProspect(id, { ...parsed.data, whatsappLink });
+  const prospect = await updateProspect(id, data);
 
   await logProspectActivity({
     prospectId: id,

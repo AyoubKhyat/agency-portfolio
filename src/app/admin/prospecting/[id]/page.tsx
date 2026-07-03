@@ -32,7 +32,8 @@ type TeamUser = { id: string; fullName: string; avatarInitials: string };
 type SentBy = { id: string; fullName: string; avatarInitials: string } | null;
 type Prospect = {
   id: string; name: string; phone: string; whatsappLink: string; sector: string; neighborhood: string; instagram: string;
-  hasWebsite: boolean; priority: number; status: string; sentAt: string | null; createdAt: string; owner: Owner | null;
+  hasWebsite: boolean; whatsappStatus: string; instagramStatus: string;
+  priority: number; status: string; sentAt: string | null; createdAt: string; owner: Owner | null;
   sentByUser: SentBy; sentByName: string | null;
   contactedByName: string | null; contactedAt: string | null; lastActionByName: string | null; lastActionAt: string | null;
   notes: Note[]; activities: Activity[];
@@ -126,10 +127,12 @@ export default function ProspectDetailPage() {
               <HiOutlinePhone className="w-4 h-4" /> {prospect.phone}
             </a>
           )}
-          <a href={prospect.whatsappLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 bg-green-50 border border-green-200 rounded-xl text-[13px] font-medium text-green-700 hover:bg-green-100 transition-colors">
-            <FaWhatsapp className="w-4 h-4" /> WhatsApp
-          </a>
-          {prospect.instagram && (
+          {prospect.whatsappStatus === "VERIFIED" && prospect.whatsappLink && (
+            <a href={prospect.whatsappLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 bg-green-50 border border-green-200 rounded-xl text-[13px] font-medium text-green-700 hover:bg-green-100 transition-colors">
+              <FaWhatsapp className="w-4 h-4" /> WhatsApp
+            </a>
+          )}
+          {prospect.instagram && prospect.instagramStatus === "VERIFIED" && (
             <a href={`https://instagram.com/${prospect.instagram.replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 bg-purple-50 border border-purple-200 rounded-xl text-[13px] font-medium text-purple-700 hover:bg-purple-100 transition-colors">
               <FaInstagram className="w-4 h-4" /> @{prospect.instagram.replace(/^@/, "")}
             </a>

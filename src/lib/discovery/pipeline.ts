@@ -18,6 +18,7 @@
  */
 
 import { mockDiscoverySearch } from "./providers/mock";
+import { overpassDiscoverySearch } from "./providers/overpass";
 import { auditCandidate } from "./audit/mock";
 import { opportunityScore, confidenceScore, suggestSegment } from "./score";
 import { detectDuplicatesBatch } from "./duplicates";
@@ -26,8 +27,19 @@ import { verifyContacts } from "./verify";
 import { getAiProvider } from "@/lib/ai";
 import type { DiscoveryScoredResult, DiscoverySearchInput } from "./types";
 
+/**
+ * Which lead source is active. Overpass/OSM (real businesses) is the default;
+ * the mock is a dev-only fallback, gated behind DISCOVERY_USE_MOCK=1 so it can
+ * never silently fabricate data in production.
+ */
+export function activeLeadSource(): "OSM" | "MOCK" {
+  return process.env.DISCOVERY_USE_MOCK === "1" ? "MOCK" : "OSM";
+}
+
 export async function runDiscovery(input: DiscoverySearchInput): Promise<DiscoveryScoredResult[]> {
-  const rawCandidates = await mockDiscoverySearch(input);
+  const rawCandidates = activeLeadSource() === "MOCK"
+    ? await mockDiscoverySearch(input)
+    : await overpassDiscoverySearch(input);
   if (rawCandidates.length === 0) return [];
 
   // 1. Validate + repair every candidate; drop anything unpublishable
