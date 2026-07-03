@@ -23,15 +23,40 @@
  */
 
 import {
-  OsmProvider,
   CITIES,
   SECTORS,
-  type DiscoveryCandidate as OsmCandidate,
+  normalizePhoneMA,
+  osmFetchWithMeta,
   type SectorDef,
 } from "@/lib/discovery-providers";
 import type { DiscoveryCandidate, DiscoverySearchInput } from "../types";
 
 type CityDef = (typeof CITIES)[number];
+
+/** Provider-stage slice of the debug trace (pipeline fills the rest). */
+export type OverpassDebug = {
+  sector: string;
+  city: string;
+  country: string;
+  resolved: boolean;
+  unsupportedReason: string | null;
+  endpoint: string | null;
+  overpassQuery: string | null;
+  httpStatus: number | null;
+  attempts: number;
+  error: string | null;
+  elementCount: number;
+  rawCount: number;
+};
+
+export type OverpassSearchResult = {
+  candidates: DiscoveryCandidate[];
+  debug: OverpassDebug;
+};
+
+const EUROPE_SOON = "European cities are coming soon. Current OSM discovery supports Morocco first.";
+const NO_SECTOR = "Couldn't identify a business type — try e.g. \"hotels in Marrakech\" or \"dentists in Marrakech\".";
+const UNPARSEABLE = "Couldn't understand that query — try a type + Moroccan city, e.g. \"hotels in Marrakech\".";
 
 /** Common alternate spellings → canonical city key. */
 const CITY_ALIASES: Record<string, string> = {
@@ -87,36 +112,75 @@ export function canResolveOverpassQuery(query: string): boolean {
   return Boolean(resolveCity(query) && resolveSector(query));
 }
 
+/** Build the bounded Overpass QL for a city (by wikidata area) + sector tags. */
+function buildOverpassQuery(wikidata: string, sector: SectorDef): string {
+  const tagClauses = sector.osmTags
+    .flatMap((t) => [`node["${t.key}"="${t.value}"](area.s);`, `way["${t.key}"="${t.value}"](area.s);`])
+    .join("\n  ");
+  return `[out:json][timeout:25];\narea["wikidata"="${wikidata}"]->.s;\n(\n  ${tagClauses}\n);\nout tags center 60;`;
+}
+
 export async function overpassDiscoverySearch(
   { query, limit = 8 }: DiscoverySearchInput,
-): Promise<DiscoveryCandidate[]> {
+): Promise<OverpassSearchResult> {
   const city = resolveCity(query);
   const sector = resolveSector(query);
-  if (!city || !sector) return []; // unbounded → refuse; no junk
 
-  let raw: OsmCandidate[];
-  try {
-    raw = await new OsmProvider().search({
-      city: city.key,
-      sector: sector.key,
-      neighborhood: null,
-      keyword: null,
-    });
-  } catch {
-    // OverpassError / network failure → degrade to empty, never crash pipeline.
-    return [];
+  const debug: OverpassDebug = {
+    sector: sector?.label ?? "",
+    city: city?.label ?? "",
+    country: city ? "Morocco" : "",
+    resolved: Boolean(city && sector),
+    unsupportedReason: null,
+    endpoint: null,
+    overpassQuery: null,
+    httpStatus: null,
+    attempts: 0,
+    error: null,
+    elementCount: 0,
+    rawCount: 0,
+  };
+
+  // Refuse unbounded searches — but say WHY (never a silent empty).
+  if (!city || !sector) {
+    // A recognized business type + an unknown city ⇒ almost always a non-Morocco
+    // city (Nice/Paris/…). Neither recognized ⇒ the query itself is unparseable.
+    debug.unsupportedReason = !city && !sector ? UNPARSEABLE : !city ? EUROPE_SOON : NO_SECTOR;
+    return { candidates: [], debug };
   }
 
-  const size = Math.max(3, Math.min(limit, 12));
-  return raw.slice(0, size).map((c): DiscoveryCandidate => ({
-    name: c.name,
-    website: c.website ?? "",
-    email: c.email ?? "",
-    phone: c.phone ?? "",
-    instagram: c.instagram ?? "",
-    city: c.city,
-    country: "Morocco", // CITIES are all Moroccan
-    sector: sector.label,
-    sourceUrl: c.mapsUrl ?? "",
-  }));
+  const overpassQuery = buildOverpassQuery(city.wikidata, sector);
+  debug.overpassQuery = overpassQuery;
+
+  const meta = await osmFetchWithMeta(overpassQuery, { retries: 2 });
+  debug.endpoint = meta.endpoint;
+  debug.httpStatus = meta.status;
+  debug.attempts = meta.attempts;
+  debug.error = meta.error;
+  debug.elementCount = meta.elements.length;
+
+  const candidates: DiscoveryCandidate[] = [];
+  for (const el of meta.elements) {
+    const tags = el.tags || {};
+    const name = tags["name"] || tags["brand"] || tags["operator"];
+    if (!name) continue; // skip unnamed
+    if (sector.osmNameFilter && !sector.osmNameFilter.test(name)) continue;
+
+    const phoneRaw = tags["phone"] || tags["contact:phone"] || tags["telephone"] || null;
+    candidates.push({
+      name,
+      website: tags["website"] || tags["contact:website"] || "",
+      email: tags["email"] || tags["contact:email"] || "",
+      phone: normalizePhoneMA(phoneRaw) || "",
+      instagram: tags["contact:instagram"] || tags["instagram"] || "",
+      city: city.label,
+      country: "Morocco", // CITIES are all Moroccan
+      sector: sector.label,
+      sourceUrl: `https://www.openstreetmap.org/${el.type}/${el.id}`,
+    });
+  }
+
+  const sliced = candidates.slice(0, Math.max(3, Math.min(limit, 12)));
+  debug.rawCount = sliced.length;
+  return { candidates: sliced, debug };
 }

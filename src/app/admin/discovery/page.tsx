@@ -6,24 +6,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Sparkles, Globe, Phone, Mail, AtSign, ExternalLink,
   CheckCircle2, AlertTriangle, ArrowUpRight, Loader2, Zap, Wand2,
-  MessageCircle, MailPlus, X, Copy, Check,
+  MessageCircle, MailPlus, X, Copy, Check, Bug, ChevronDown,
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { SEGMENT_LABELS, SEGMENT_TOKENS, type ProspectSegment } from "@/lib/prospect-segments";
-import type { DiscoveryResultDTO, VerifiedContact } from "@/lib/discovery/types";
+import type { DiscoveryResultDTO, VerifiedContact, DiscoveryDebug } from "@/lib/discovery/types";
 import { cn } from "@/lib/utils";
 
+// OSM discovery currently covers Moroccan cities only — keep examples working.
 const EXAMPLES = [
-  "Luxury hotels in Nice",
-  "Web agencies in Lyon",
-  "Architecture studios in Paris",
-  "Premium restaurants in Marrakech",
+  "hotels in Marrakech",
+  "riads in Marrakech",
+  "restaurants in Marrakech",
+  "spas in Marrakech",
+  "dentists in Marrakech",
 ];
 
 type SearchState =
   | { kind: "idle" }
   | { kind: "loading"; query: string }
-  | { kind: "results"; query: string; results: DiscoveryResultDTO[] }
+  | { kind: "results"; query: string; results: DiscoveryResultDTO[]; reason: string | null }
   | { kind: "error"; query: string; message: string };
 
 type PreviewModal =
@@ -35,6 +37,9 @@ export default function DiscoveryPage() {
   const [query, setQuery] = useState("");
   const [state, setState] = useState<SearchState>({ kind: "idle" });
   const [preview, setPreview] = useState<PreviewModal>(null);
+  const [debugMode, setDebugMode] = useState(false);
+  const [debugOpen, setDebugOpen] = useState(true);
+  const [debug, setDebug] = useState<DiscoveryDebug | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
@@ -43,18 +48,20 @@ export default function DiscoveryPage() {
     const trimmed = q.trim();
     if (trimmed.length < 3) return;
     setState({ kind: "loading", query: trimmed });
+    setDebug(null);
     try {
       const res = await fetch("/api/admin/discovery/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: trimmed }),
+        body: JSON.stringify({ query: trimmed, debug: debugMode }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || `Request failed (${res.status})`);
       }
-      const data: { results: DiscoveryResultDTO[] } = await res.json();
-      setState({ kind: "results", query: trimmed, results: data.results });
+      const data: { results: DiscoveryResultDTO[]; reason?: string | null; debug?: DiscoveryDebug } = await res.json();
+      setDebug(data.debug ?? null);
+      setState({ kind: "results", query: trimmed, results: data.results, reason: data.reason ?? null });
     } catch (err) {
       setState({ kind: "error", query: trimmed, message: err instanceof Error ? err.message : "Something went wrong" });
     }
@@ -133,7 +140,7 @@ export default function DiscoveryPage() {
         </div>
 
         {/* Example chips */}
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="text-[11px] text-[var(--os-text-muted)] font-medium px-1 pt-1.5">Try:</span>
           {EXAMPLES.map((ex) => (
             <button
@@ -145,8 +152,77 @@ export default function DiscoveryPage() {
               {ex}
             </button>
           ))}
+          {/* Developer-only Debug Mode toggle — subtle, far right */}
+          <button
+            type="button"
+            onClick={() => setDebugMode((v) => !v)}
+            title="Toggle developer debug trace"
+            className={cn(
+              "ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all",
+              debugMode
+                ? "border-slate-300 bg-slate-800 text-white"
+                : "border-[var(--os-border)] bg-white text-[#94A3B8] hover:text-slate-600 hover:border-slate-200"
+            )}
+          >
+            <Bug className="w-3 h-3" /> Debug
+          </button>
         </div>
       </motion.form>
+
+      {/* Debug panel — collapsible, developer-only. Shows every pipeline stage. */}
+      {debugMode && debug && (
+        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden font-mono">
+          <button
+            type="button"
+            onClick={() => setDebugOpen((v) => !v)}
+            className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-[12px] font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <Bug className="w-3.5 h-3.5 text-slate-500" />
+            Discovery debug trace
+            <span className={cn("ml-2 px-1.5 py-0.5 rounded text-[10px]", debug.error ? "bg-red-100 text-red-700" : debug.finalCount > 0 ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700")}>
+              {debug.error ? "ERROR" : debug.finalCount > 0 ? `${debug.finalCount} shown` : "0 results"}
+            </span>
+            <ChevronDown className={cn("w-4 h-4 ml-auto text-slate-400 transition-transform", debugOpen ? "" : "-rotate-90")} />
+          </button>
+          {debugOpen && (
+            <div className="px-4 pb-3 text-[11.5px] text-slate-600 space-y-1.5">
+              {([
+                ["1 · parsed query", debug.query],
+                ["   sector", debug.sector || "—"],
+                ["   city", debug.city || "—"],
+                ["   country", debug.country || "—"],
+                ["   lead source", debug.source],
+                ["2 · overpass endpoint", debug.endpoint || "—"],
+                ["   attempts", String(debug.attempts)],
+                ["3 · http status", debug.httpStatus === null ? "—" : String(debug.httpStatus)],
+                ["6 · elements returned", String(debug.elementCount)],
+                ["7 · raw candidates", String(debug.rawCount)],
+                ["7b · normalized", String(debug.normalizedCount)],
+                ["8 · verified", String(debug.verifiedCount)],
+                ["9 · after dedupe", String(debug.dedupeCount)],
+                ["10 · final (UI)", String(debug.finalCount)],
+              ] as [string, string][]).map(([k, v]) => (
+                <div key={k} className="flex gap-3">
+                  <span className="text-slate-400 whitespace-pre shrink-0 w-40">{k}</span>
+                  <span className="text-slate-800 break-all">{v}</span>
+                </div>
+              ))}
+              {debug.unsupportedReason && (
+                <div className="flex gap-3"><span className="text-slate-400 w-40 shrink-0">note</span><span className="text-amber-700 break-all">{debug.unsupportedReason}</span></div>
+              )}
+              {debug.error && (
+                <div className="flex gap-3"><span className="text-slate-400 w-40 shrink-0">error</span><span className="text-red-700 break-all">{debug.error}</span></div>
+              )}
+              {debug.overpassQuery && (
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-slate-500 hover:text-slate-700">4 · overpass query sent</summary>
+                  <pre className="mt-1 p-2 rounded bg-slate-900 text-slate-200 text-[10.5px] overflow-x-auto whitespace-pre-wrap">{debug.overpassQuery}</pre>
+                </details>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Results header */}
       <AnimatePresence mode="wait">
@@ -243,8 +319,23 @@ export default function DiscoveryPage() {
       )}
 
       {state.kind === "results" && state.results.length === 0 && (
-        <div className="mt-12 text-center">
-          <div className="text-[14px] text-[var(--os-text-muted)]">No businesses matched that query. Try a broader term.</div>
+        <div className="mt-10">
+          {state.reason ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+                <div>
+                  <div className="font-semibold text-amber-800 text-[14px]">Couldn&apos;t bring back businesses</div>
+                  <div className="text-amber-700 text-[13px] mt-1">{state.reason}</div>
+                  <div className="text-amber-600/80 text-[12px] mt-2">Turn on <span className="font-semibold">Debug</span> above to see the full pipeline trace.</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <div className="text-[14px] text-[var(--os-text-muted)]">No businesses matched that query. Try a broader term.</div>
+            </div>
+          )}
         </div>
       )}
 

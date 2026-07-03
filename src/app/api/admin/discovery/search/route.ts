@@ -8,6 +8,7 @@ import type { DiscoveryResultDTO } from "@/lib/discovery/types";
 const schema = z.object({
   query: z.string().min(3).max(200),
   limit: z.number().int().min(3).max(12).optional(),
+  debug: z.boolean().optional(),
 });
 
 export async function POST(req: Request) {
@@ -20,7 +21,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid query" }, { status: 400 });
   }
 
-  const scored = await runDiscovery(parsed.data);
+  const { results: scored, debug } = await runDiscovery({ query: parsed.data.query, limit: parsed.data.limit });
+  // Full trace only in Debug Mode, but ALWAYS surface a one-line reason so the
+  // empty state can explain itself instead of "No businesses matched".
+  const debugPayload = parsed.data.debug ? debug : undefined;
+  const reason = debug.error ?? debug.unsupportedReason ?? null;
 
   if (!hasPrisma()) {
     // DB unavailable — surface results in-memory only. UI still renders.
@@ -31,7 +36,7 @@ export async function POST(req: Request) {
       importedProspectId: null,
       createdAt: new Date().toISOString(),
     }));
-    return NextResponse.json({ results: dtos, sweepId: null });
+    return NextResponse.json({ results: dtos, sweepId: null, debug: debugPayload, reason });
   }
 
   const sweep = await prisma.discoverySweep.create({
@@ -46,7 +51,10 @@ export async function POST(req: Request) {
       uniqueCount: scored.filter((r) => r.duplicate.status !== "EXISTS").length,
       duplicateCount: scored.filter((r) => r.duplicate.status === "EXISTS").length,
       importedCount: 0,
-      status: "COMPLETED",
+      // Honest status: a swallowed provider error is a FAILED sweep, not an
+      // empty COMPLETED one — so the reason is recorded, never hidden.
+      status: debug.error ? "FAILED" : "COMPLETED",
+      error: debug.error ?? debug.unsupportedReason ?? null,
       completedAt: new Date(),
       startedById: session.userId,
       startedByName: session.fullName,
@@ -108,5 +116,5 @@ export async function POST(req: Request) {
     createdAt: row.createdAt.toISOString(),
   }));
 
-  return NextResponse.json({ results: dtos, sweepId: sweep.id });
+  return NextResponse.json({ results: dtos, sweepId: sweep.id, debug: debugPayload, reason });
 }

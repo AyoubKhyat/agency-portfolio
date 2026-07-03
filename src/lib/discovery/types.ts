@@ -110,3 +110,34 @@ export type DiscoverySearchInput = {
   query: string;
   limit?: number;
 };
+
+/* ─────────────────────────── Debug trace ───────────────────────────
+ * Per-search diagnostics, surfaced to the developer-only Debug panel and used
+ * to render an honest empty/error state (never a bare "no results"). Every
+ * field maps to a pipeline stage so a zero can be traced to its exact cause.
+ */
+export type DiscoveryDebug = {
+  source: "OSM" | "MOCK";
+  query: string;
+  sector: string;                    // resolved sector label ("" if unresolved)
+  city: string;                      // resolved city label   ("" if unresolved)
+  country: string;                   // resolved country      ("" if unresolved)
+  resolved: boolean;                 // could map query → city + sector
+  unsupportedReason: string | null;  // e.g. European-cities-coming-soon
+  endpoint: string | null;           // Overpass endpoint that answered/last tried
+  overpassQuery: string | null;      // the exact Overpass QL sent
+  httpStatus: number | null;         // last HTTP status seen
+  attempts: number;                  // request attempts incl. retries
+  error: string | null;              // real failure reason (throttle/timeout/…)
+  elementCount: number;              // [6] raw OSM elements returned
+  rawCount: number;                  // [7] candidates from the provider
+  normalizedCount: number;           // [7b] after validate + repair
+  verifiedCount: number;             // [8] after verification stage
+  dedupeCount: number;               // [9] unique (non-duplicate) count
+  finalCount: number;                // [10] surfaced in the UI
+};
+
+export type DiscoveryRunResult = {
+  results: DiscoveryScoredResult[];
+  debug: DiscoveryDebug;
+};

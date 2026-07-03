@@ -25,7 +25,7 @@ import { detectDuplicatesBatch } from "./duplicates";
 import { validateAndRepair, isPublishable, type RepairedCandidate } from "./validate";
 import { verifyContacts } from "./verify";
 import { getAiProvider } from "@/lib/ai";
-import type { DiscoveryScoredResult, DiscoverySearchInput } from "./types";
+import type { DiscoverySearchInput, DiscoveryDebug, DiscoveryRunResult } from "./types";
 
 /**
  * Which lead source is active. Overpass/OSM (real businesses) is the default;
@@ -36,18 +36,38 @@ export function activeLeadSource(): "OSM" | "MOCK" {
   return process.env.DISCOVERY_USE_MOCK === "1" ? "MOCK" : "OSM";
 }
 
-export async function runDiscovery(input: DiscoverySearchInput): Promise<DiscoveryScoredResult[]> {
-  const rawCandidates = activeLeadSource() === "MOCK"
-    ? await mockDiscoverySearch(input)
-    : await overpassDiscoverySearch(input);
-  if (rawCandidates.length === 0) return [];
+export async function runDiscovery(input: DiscoverySearchInput): Promise<DiscoveryRunResult> {
+  const source = activeLeadSource();
 
-  // 1. Validate + repair every candidate; drop anything unpublishable
-  //    (no name or zero contact channels).
+  // Lead Source — real Overpass by default (with its own debug trace); mock is
+  // dev-only and reports a minimal trace so the panel behaves identically.
+  let rawCandidates;
+  const debug: DiscoveryDebug = {
+    source, query: input.query,
+    sector: "", city: "", country: "", resolved: true, unsupportedReason: null,
+    endpoint: null, overpassQuery: null, httpStatus: null, attempts: 0, error: null,
+    elementCount: 0, rawCount: 0, normalizedCount: 0, verifiedCount: 0, dedupeCount: 0, finalCount: 0,
+  };
+
+  if (source === "MOCK") {
+    rawCandidates = await mockDiscoverySearch(input);
+    debug.endpoint = "MOCK";
+    debug.elementCount = rawCandidates.length;
+    debug.rawCount = rawCandidates.length;
+  } else {
+    const r = await overpassDiscoverySearch(input);
+    rawCandidates = r.candidates;
+    Object.assign(debug, r.debug); // merge provider-stage fields into the trace
+  }
+
+  if (rawCandidates.length === 0) return { results: [], debug };
+
+  // 1. Normalize — validate + repair; drop anything unpublishable (no name).
   const repaired: RepairedCandidate[] = rawCandidates
     .map(validateAndRepair)
     .filter(isPublishable);
-  if (repaired.length === 0) return [];
+  debug.normalizedCount = repaired.length;
+  if (repaired.length === 0) return { results: [], debug };
 
   // 2. Audit + dedupe + verify concurrently (no shared dependency).
   //    Verify runs offline reachability/MX checks; contactless candidates
@@ -58,6 +78,8 @@ export async function runDiscovery(input: DiscoverySearchInput): Promise<Discove
     detectDuplicatesBatch(repaired),
     Promise.all(repaired.map((r) => verifyContacts(r.verification))),
   ]);
+  debug.verifiedCount = verifications.length;
+  debug.dedupeCount = duplicates.filter((d) => d.status !== "EXISTS").length;
 
   // 3. Outreach previews depend on the audit's suggestedOffer.
   const outreachPromises = repaired.map((r, i) => {
@@ -71,7 +93,7 @@ export async function runDiscovery(input: DiscoverySearchInput): Promise<Discove
   const outreach = await Promise.all(outreachPromises);
 
   // 4. Score + assemble the final scored records.
-  return repaired.map((r, i) => {
+  const results = repaired.map((r, i) => {
     const bareCandidate = {
       name: r.name, website: r.website, phone: r.phone, email: r.email,
       instagram: r.instagram, city: r.city, country: r.country,
@@ -94,4 +116,7 @@ export async function runDiscovery(input: DiscoverySearchInput): Promise<Discove
       instagramUrl: r.instagramUrl,
     };
   });
+
+  debug.finalCount = results.length;
+  return { results, debug };
 }

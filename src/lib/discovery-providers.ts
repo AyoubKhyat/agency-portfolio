@@ -279,7 +279,7 @@ export class OverpassError extends Error {
   }
 }
 
-type OsmElement = {
+export type OsmElement = {
   type: "node" | "way" | "relation";
   id: number;
   lat?: number;
@@ -287,6 +287,93 @@ type OsmElement = {
   center?: { lat: number; lon: number };
   tags?: Record<string, string>;
 };
+
+/* ---------- Reliable, observable Overpass fetch (retry + backoff) ----------
+ * Non-throwing sibling of callOverpass(): tries each endpoint with a few
+ * backed-off retries on throttling/timeouts, and ALWAYS reports what happened
+ * (endpoint, status, error, attempts) so the AI-Discovery Debug panel can show
+ * the real reason instead of silently returning zero results. Used by the
+ * AI-Discovery Overpass provider; the bulk-sweep OsmProvider keeps callOverpass.
+ */
+export type OsmFetchMeta = {
+  elements: OsmElement[];
+  endpoint: string | null;
+  status: number | null;
+  error: string | null;
+  attempts: number;
+};
+
+const overpassDelay = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+// Exponential-ish with jitter: ~0.5s, ~1.5s, ~2.5s.
+const overpassBackoff = (attempt: number): number => 500 + attempt * 1000 + Math.floor(Math.random() * 250);
+
+export async function osmFetchWithMeta(queryStr: string, opts?: { retries?: number }): Promise<OsmFetchMeta> {
+  const retries = opts?.retries ?? 2;
+  let lastStatus: number | null = null;
+  let lastError: string | null = null;
+  let lastEndpoint: string | null = null;
+  let attempts = 0;
+
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      attempts++;
+      lastEndpoint = endpoint;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30_000);
+      try {
+        let res: Response;
+        try {
+          res = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              "Accept": "application/json",
+              "User-Agent": OVERPASS_UA,
+            },
+            body: "data=" + encodeURIComponent(queryStr),
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeout);
+        }
+        lastStatus = res.status;
+
+        // Retryable: rate-limit / transient upstream. Back off, same endpoint.
+        if (res.status === 429 || res.status === 502 || res.status === 503 || res.status === 504) {
+          lastError = `HTTP ${res.status} — Overpass throttled/unavailable`;
+          if (attempt < retries) { await overpassDelay(overpassBackoff(attempt)); continue; }
+          break; // retries exhausted → next endpoint
+        }
+
+        const ct = res.headers.get("content-type") || "";
+        const isJson = ct.includes("application/json") || ct.includes("text/javascript");
+        if (!res.ok || !isJson) {
+          const body = await res.text().catch(() => "");
+          const snippet = body.slice(0, 140).replace(/\s+/g, " ").trim();
+          lastError = `HTTP ${res.status} — non-JSON response${snippet ? `: ${snippet}` : ""}`;
+          // 406 / HTML blocks are sometimes transient — retry once before bailing.
+          if ((res.status === 406 || body.startsWith("<!DOCTYPE") || body.includes("<html")) && attempt < retries) {
+            await overpassDelay(overpassBackoff(attempt)); continue;
+          }
+          break;
+        }
+
+        const data = (await res.json()) as { elements?: OsmElement[]; remark?: string };
+        if (data.remark && /timed out|memory|killed/i.test(data.remark)) {
+          lastError = `Overpass exceeded limits (query too broad): ${data.remark}`;
+          break; // retrying won't help — try the other endpoint
+        }
+        return { elements: data.elements || [], endpoint, status: res.status, error: null, attempts };
+      } catch (err) {
+        const e = err as { name?: string; message?: string };
+        lastError = e?.name === "AbortError" ? "Request timed out after 30s" : (e?.message || "network error");
+        if (attempt < retries) { await overpassDelay(overpassBackoff(attempt)); continue; }
+      }
+    }
+  }
+
+  return { elements: [], endpoint: lastEndpoint, status: lastStatus, error: lastError ?? "All Overpass endpoints failed", attempts };
+}
 
 async function callOverpass(queryStr: string): Promise<OsmElement[]> {
   let lastError: OverpassError | null = null;
