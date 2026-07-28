@@ -28,33 +28,33 @@ model User {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  ownedProspects      Prospect[]          @relation("ProspectOwner")
-  sentProspects       Prospect[]          @relation("ProspectSentBy")
-  contactedProspects  Prospect[]          @relation("ProspectContactedBy")
-  lastActionProspects Prospect[]          @relation("ProspectLastActionBy")
+  ownedProspects      Prospect[]         @relation("ProspectOwner")
+  sentProspects       Prospect[]         @relation("ProspectSentBy")
+  contactedProspects  Prospect[]         @relation("ProspectContactedBy")
+  lastActionProspects Prospect[]         @relation("ProspectLastActionBy")
   activities          ProspectActivity[]
-  ownedClients        Client[]            @relation("ClientAccountManager")
-  ownedTasks          Task[]              @relation("TaskOwner")
-  createdTasks        Task[]              @relation("TaskCreator")
-  ownedMeetings       Meeting[]           @relation("MeetingOwner")
+  ownedClients        Client[]           @relation("ClientAccountManager")
+  ownedTasks          Task[]             @relation("TaskOwner")
+  createdTasks        Task[]             @relation("TaskCreator")
+  ownedMeetings       Meeting[]          @relation("MeetingOwner")
   chatChannels        ChannelMember[]
-  outreachMessages    OutreachMessage[]   @relation("OutreachMessageSender")
-  campaigns           Campaign[]          @relation("CampaignOwner")
+  outreachMessages    OutreachMessage[]  @relation("OutreachMessageSender")
+  campaigns           Campaign[]         @relation("CampaignOwner")
   dailyTargets        DailyTarget[]
 
   @@map("users")
 }
 
 model Project {
-  id        String  @id @default(cuid())
-  slug      String  @unique
+  id        String   @id @default(cuid())
+  slug      String   @unique
   category  String
   url       String
   image     String
   tag       String
-  visible   Boolean @default(true)
-  status    String  @default("DRAFT") // DRAFT | IN_PROGRESS | REVIEW | COMPLETED | PUBLISHED
-  sortOrder Int     @default(0) @map("sort_order")
+  visible   Boolean  @default(true)
+  status    String   @default("DRAFT") // DRAFT | IN_PROGRESS | REVIEW | COMPLETED | PUBLISHED
+  sortOrder Int      @default(0) @map("sort_order")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -102,15 +102,15 @@ model ProjectTranslation {
 }
 
 model Lead {
-  id             String  @id @default(cuid())
-  fullName       String  @map("full_name")
+  id             String   @id @default(cuid())
+  fullName       String   @map("full_name")
   email          String
   phone          String?
   subject        String
   message        String
-  status         String  @default("NEW")
-  assignedToId   String? @map("assigned_to_id")
-  assignedToName String? @map("assigned_to_name")
+  status         String   @default("NEW")
+  assignedToId   String?  @map("assigned_to_id")
+  assignedToName String?  @map("assigned_to_name")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -120,14 +120,27 @@ model Lead {
 }
 
 model LeadNote {
-  id       String   @id @default(cuid())
-  leadId   String   @map("lead_id")
-  content  String
+  id        String   @id @default(cuid())
+  leadId    String   @map("lead_id")
+  content   String
   createdAt DateTime @default(now()) @map("created_at")
 
   lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
   @@map("lead_notes")
+}
+
+model ChatConversation {
+  id        String   @id @default(cuid())
+  messages  Json // [{role: "user"|"assistant", content: string, ts: string}]
+  locale    String?
+  ipHash    String?  @map("ip_hash")
+  leadId    String?  @map("lead_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([leadId])
+  @@map("chat_conversations")
 }
 
 enum ProspectSegment {
@@ -139,66 +152,66 @@ enum ProspectSegment {
 }
 
 model Prospect {
-  id           String          @id @default(cuid())
-  name         String
-  phone        String
-  whatsappLink String          @map("whatsapp_link")
-  sector       String
-  neighborhood String          @default("")
-  instagram    String          @default("")
-  hasWebsite   Boolean         @default(false) @map("has_website")
-  website      String          @default("")
-  email        String          @default("")
+  id              String          @id @default(cuid())
+  name            String
+  phone           String
+  whatsappLink    String          @map("whatsapp_link")
+  sector          String
+  neighborhood    String          @default("")
+  instagram       String          @default("")
+  hasWebsite      Boolean         @default(false) @map("has_website")
+  website         String          @default("")
+  email           String          @default("")
   // Contact verification — WhatsApp/Instagram can never be auto-verified (no
   // scraping, no paid API), so both default UNVERIFIED and only a manual
   // "Confirm" action promotes them to VERIFIED. The UI hides the button unless
   // VERIFIED. UNAVAILABLE = positively known bad (e.g. cleared by a pass).
-  whatsappStatus  String       @default("UNVERIFIED") @map("whatsapp_status")  // UNVERIFIED | VERIFIED | UNAVAILABLE
-  instagramStatus String       @default("UNVERIFIED") @map("instagram_status") // UNVERIFIED | VERIFIED | UNAVAILABLE
-  qualityLabel String?         @map("quality_label") // HOT | WARM | COLD
-  segment      ProspectSegment @default(LEGACY_COLD)
-  priority     Int             @default(2)
-  status       String          @default("A_ENVOYER")
-  sentAt       DateTime? @map("sent_at")
-  followUpDate    DateTime? @map("follow_up_date")
-  followup1At     DateTime? @map("followup_1_at")
-  followup2At     DateTime? @map("followup_2_at")
-  followup3At     DateTime? @map("followup_3_at")
-  proposalAmount  Float?    @map("proposal_amount")
-  proposalDate    DateTime? @map("proposal_date")
-  proposalStatus  String?   @map("proposal_status")
-  score           Int?      @default(0)
-  scoreLabel      String?   @map("score_label")
-  scoredAt        DateTime? @map("scored_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  whatsappStatus  String          @default("UNVERIFIED") @map("whatsapp_status") // UNVERIFIED | VERIFIED | UNAVAILABLE
+  instagramStatus String          @default("UNVERIFIED") @map("instagram_status") // UNVERIFIED | VERIFIED | UNAVAILABLE
+  qualityLabel    String?         @map("quality_label") // HOT | WARM | COLD
+  segment         ProspectSegment @default(LEGACY_COLD)
+  priority        Int             @default(2)
+  status          String          @default("A_ENVOYER")
+  sentAt          DateTime?       @map("sent_at")
+  followUpDate    DateTime?       @map("follow_up_date")
+  followup1At     DateTime?       @map("followup_1_at")
+  followup2At     DateTime?       @map("followup_2_at")
+  followup3At     DateTime?       @map("followup_3_at")
+  proposalAmount  Float?          @map("proposal_amount")
+  proposalDate    DateTime?       @map("proposal_date")
+  proposalStatus  String?         @map("proposal_status")
+  score           Int?            @default(0)
+  scoreLabel      String?         @map("score_label")
+  scoredAt        DateTime?       @map("scored_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
 
-  ownerUserId         String?   @map("owner_user_id")
-  sentByUserId        String?   @map("sent_by_user_id")
-  sentByName          String?   @map("sent_by_name")
-  contactedByUserId   String?   @map("contacted_by_user_id")
-  contactedByName     String?   @map("contacted_by_name")
-  contactedAt         DateTime? @map("contacted_at")
-  lastActionByUserId  String?   @map("last_action_by_user_id")
-  lastActionByName    String?   @map("last_action_by_name")
-  lastActionAt        DateTime? @map("last_action_at")
+  ownerUserId        String?   @map("owner_user_id")
+  sentByUserId       String?   @map("sent_by_user_id")
+  sentByName         String?   @map("sent_by_name")
+  contactedByUserId  String?   @map("contacted_by_user_id")
+  contactedByName    String?   @map("contacted_by_name")
+  contactedAt        DateTime? @map("contacted_at")
+  lastActionByUserId String?   @map("last_action_by_user_id")
+  lastActionByName   String?   @map("last_action_by_name")
+  lastActionAt       DateTime? @map("last_action_at")
 
-  owner           User?  @relation("ProspectOwner", fields: [ownerUserId], references: [id])
-  sentByUser      User?  @relation("ProspectSentBy", fields: [sentByUserId], references: [id])
-  contactedByUser User?  @relation("ProspectContactedBy", fields: [contactedByUserId], references: [id])
+  owner            User? @relation("ProspectOwner", fields: [ownerUserId], references: [id])
+  sentByUser       User? @relation("ProspectSentBy", fields: [sentByUserId], references: [id])
+  contactedByUser  User? @relation("ProspectContactedBy", fields: [contactedByUserId], references: [id])
   lastActionByUser User? @relation("ProspectLastActionBy", fields: [lastActionByUserId], references: [id])
 
-  notes      ProspectNote[]
-  activities ProspectActivity[]
-  proposals  Proposal[]
-  spawnedClients Client[] @relation("ClientFromProspect")
-  meetings   Meeting[]
-  contracts  Contract[]
+  notes            ProspectNote[]
+  activities       ProspectActivity[]
+  proposals        Proposal[]
+  spawnedClients   Client[]           @relation("ClientFromProspect")
+  meetings         Meeting[]
+  contracts        Contract[]
   outreachMessages OutreachMessage[]
 
-  campaignId      String?  @map("campaign_id")
-  source          String?  @default("MANUAL") // MANUAL, DISCOVERY_GOOGLE, DISCOVERY_OSM, IMPORT
-  campaign        Campaign? @relation(fields: [campaignId], references: [id])
+  campaignId String?   @map("campaign_id")
+  source     String?   @default("MANUAL") // MANUAL, DISCOVERY_GOOGLE, DISCOVERY_OSM, IMPORT
+  campaign   Campaign? @relation(fields: [campaignId], references: [id])
 
   @@index([campaignId])
   @@index([segment])
@@ -236,26 +249,26 @@ model ProspectActivity {
 }
 
 model Proposal {
-  id            String   @id @default(cuid())
-  prospectId    String   @map("prospect_id")
-  clientId      String?  @map("client_id")
-  contactPerson String   @default("") @map("contact_person")
+  id            String    @id @default(cuid())
+  prospectId    String    @map("prospect_id")
+  clientId      String?   @map("client_id")
+  contactPerson String    @default("") @map("contact_person")
   services      String
   amount        Float
-  currency      String   @default("MAD")
-  timeline      String   @default("")
-  paymentTerms  String   @default("") @map("payment_terms")
-  notes         String   @default("")
-  packageName   String?  @map("package_name")
-  status        String   @default("DRAFT")
+  currency      String    @default("MAD")
+  timeline      String    @default("")
+  paymentTerms  String    @default("") @map("payment_terms")
+  notes         String    @default("")
+  packageName   String?   @map("package_name")
+  status        String    @default("DRAFT")
   sentAt        DateTime? @map("sent_at")
-  createdById   String   @map("created_by_id")
-  createdByName String   @map("created_by_name")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdById   String    @map("created_by_id")
+  createdByName String    @map("created_by_name")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  prospect Prospect @relation(fields: [prospectId], references: [id], onDelete: Cascade)
-  client   Client?  @relation(fields: [clientId], references: [id])
+  prospect  Prospect   @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  client    Client?    @relation(fields: [clientId], references: [id])
   contracts Contract[]
 
   @@map("proposals")
@@ -275,30 +288,30 @@ model Notification {
 }
 
 model ClientProject {
-  id           String    @id @default(cuid())
-  name         String
-  clientName   String    @map("client_name")
-  clientId     String?   @map("client_id")
-  description  String    @default("")
-  services     String    @default("")
-  status       String    @default("NEW")
-  priority     String    @default("MEDIUM")
-  budget       Float     @default(0)
-  amountPaid   Float     @default(0) @map("amount_paid")
-  currency     String    @default("MAD")
-  startDate    DateTime? @map("start_date")
-  dueDate      DateTime? @map("due_date")
-  completedAt  DateTime? @map("completed_at")
-  progress     Int       @default(0)
-  ownerUserId  String?   @map("owner_user_id")
-  ownerName    String?   @map("owner_name")
-  prospectId   String?   @map("prospect_id")
-  proposalId   String?   @map("proposal_id")
-  sortOrder    Int       @default(0) @map("sort_order")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  id          String    @id @default(cuid())
+  name        String
+  clientName  String    @map("client_name")
+  clientId    String?   @map("client_id")
+  description String    @default("")
+  services    String    @default("")
+  status      String    @default("NEW")
+  priority    String    @default("MEDIUM")
+  budget      Float     @default(0)
+  amountPaid  Float     @default(0) @map("amount_paid")
+  currency    String    @default("MAD")
+  startDate   DateTime? @map("start_date")
+  dueDate     DateTime? @map("due_date")
+  completedAt DateTime? @map("completed_at")
+  progress    Int       @default(0)
+  ownerUserId String?   @map("owner_user_id")
+  ownerName   String?   @map("owner_name")
+  prospectId  String?   @map("prospect_id")
+  proposalId  String?   @map("proposal_id")
+  sortOrder   Int       @default(0) @map("sort_order")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  client       Client?   @relation(fields: [clientId], references: [id])
+  client Client? @relation(fields: [clientId], references: [id])
 
   @@map("client_projects")
 }
@@ -334,22 +347,22 @@ model Client {
 }
 
 model Meeting {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
-  clientId    String?  @map("client_id")
-  prospectId  String?  @map("prospect_id")
-  ownerId     String?  @map("owner_id")
-  ownerName   String?  @map("owner_name")
-  type        String   @default("CALL")      // CALL | GOOGLE_MEET | ZOOM | WHATSAPP | IN_PERSON
-  status      String   @default("SCHEDULED") // SCHEDULED | COMPLETED | CANCELLED | NO_SHOW
-  startAt     DateTime @map("start_at")
+  clientId    String?   @map("client_id")
+  prospectId  String?   @map("prospect_id")
+  ownerId     String?   @map("owner_id")
+  ownerName   String?   @map("owner_name")
+  type        String    @default("CALL") // CALL | GOOGLE_MEET | ZOOM | WHATSAPP | IN_PERSON
+  status      String    @default("SCHEDULED") // SCHEDULED | COMPLETED | CANCELLED | NO_SHOW
+  startAt     DateTime  @map("start_at")
   endAt       DateTime? @map("end_at")
-  notes       String   @default("")
-  outcome     String   @default("")
-  nextAction  String   @default("") @map("next_action")
-  createdById String?  @map("created_by_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  notes       String    @default("")
+  outcome     String    @default("")
+  nextAction  String    @default("") @map("next_action")
+  createdById String?   @map("created_by_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   client   Client?   @relation(fields: [clientId], references: [id])
   prospect Prospect? @relation(fields: [prospectId], references: [id])
@@ -376,11 +389,11 @@ model Contract {
   signedDate    DateTime? @map("signed_date")
   startDate     DateTime? @map("start_date")
   endDate       DateTime? @map("end_date")
-  signatureData  String?   @map("signature_data")
-  signedAt       DateTime? @map("signed_at")
-  signedByName   String?   @map("signed_by_name")
-  signedByEmail  String?   @map("signed_by_email")
-  signatureIp    String?   @map("signature_ip")
+  signatureData String?   @map("signature_data")
+  signedAt      DateTime? @map("signed_at")
+  signedByName  String?   @map("signed_by_name")
+  signedByEmail String?   @map("signed_by_email")
+  signatureIp   String?   @map("signature_ip")
   createdById   String?   @map("created_by_id")
   createdByName String?   @map("created_by_name")
   createdAt     DateTime  @default(now()) @map("created_at")
@@ -431,7 +444,7 @@ model ChatMessage {
   authorId    String   @map("author_id")
   authorName  String   @map("author_name")
   content     String
-  attachType  String?  @map("attach_type")  // PROSPECT | CLIENT | PROJECT | TASK | MEETING
+  attachType  String?  @map("attach_type") // PROSPECT | CLIENT | PROJECT | TASK | MEETING
   attachId    String?  @map("attach_id")
   attachLabel String?  @map("attach_label")
   attachHref  String?  @map("attach_href")
@@ -465,10 +478,10 @@ model AuditLog {
   id        String   @id @default(cuid())
   userId    String   @map("user_id")
   userName  String   @map("user_name")
-  action    String   // LOGIN, LOGOUT, CREATE_PROJECT, UPDATE_PROJECT, DELETE_PROJECT, UPDATE_LEAD, RESET_PASSWORD, etc.
-  entity    String?  // "project", "lead", "prospect", "user", etc.
+  action    String // LOGIN, LOGOUT, CREATE_PROJECT, UPDATE_PROJECT, DELETE_PROJECT, UPDATE_LEAD, RESET_PASSWORD, etc.
+  entity    String? // "project", "lead", "prospect", "user", etc.
   entityId  String?  @map("entity_id")
-  details   String?  // JSON string with extra info
+  details   String? // JSON string with extra info
   ipAddress String?  @map("ip_address")
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -505,25 +518,25 @@ model ClientActivity {
 }
 
 model Task {
-  id          String    @id @default(cuid())
-  title       String
-  description String    @default("")
-  priority    String    @default("MEDIUM") // LOW | MEDIUM | HIGH | URGENT
-  status      String    @default("TODO")   // TODO | IN_PROGRESS | BLOCKED | DONE
-  dueDate     DateTime? @map("due_date")
-  parentType  String?   @map("parent_type") // PROSPECT | CLIENT | PROJECT | PROPOSAL
-  parentId    String?   @map("parent_id")
-  parentLabel String?   @map("parent_label") // denormalized display name
-  ownerId     String?   @map("owner_id")
-  ownerName   String?   @map("owner_name")
-  createdById String?   @map("created_by_id")
-  createdByName String? @map("created_by_name")
-  completedAt DateTime? @map("completed_at")
-  completedById String? @map("completed_by_id")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id            String    @id @default(cuid())
+  title         String
+  description   String    @default("")
+  priority      String    @default("MEDIUM") // LOW | MEDIUM | HIGH | URGENT
+  status        String    @default("TODO") // TODO | IN_PROGRESS | BLOCKED | DONE
+  dueDate       DateTime? @map("due_date")
+  parentType    String?   @map("parent_type") // PROSPECT | CLIENT | PROJECT | PROPOSAL
+  parentId      String?   @map("parent_id")
+  parentLabel   String?   @map("parent_label") // denormalized display name
+  ownerId       String?   @map("owner_id")
+  ownerName     String?   @map("owner_name")
+  createdById   String?   @map("created_by_id")
+  createdByName String?   @map("created_by_name")
+  completedAt   DateTime? @map("completed_at")
+  completedById String?   @map("completed_by_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  owner   User? @relation("TaskOwner",   fields: [ownerId],     references: [id])
+  owner   User? @relation("TaskOwner", fields: [ownerId], references: [id])
   creator User? @relation("TaskCreator", fields: [createdById], references: [id])
 
   @@index([ownerId, status])
@@ -540,7 +553,7 @@ model Invoice {
   clientEmail   String?   @map("client_email")
   clientPhone   String?   @map("client_phone")
   clientAddress String?   @map("client_address")
-  items         String    // JSON array: [{description, quantity, unitPrice, total}]
+  items         String // JSON array: [{description, quantity, unitPrice, total}]
   subtotal      Float     @default(0)
   taxRate       Float     @default(20) @map("tax_rate")
   taxAmount     Float     @default(0) @map("tax_amount")
@@ -565,7 +578,7 @@ model BlogPost {
   locale    String   @default("fr")
   title     String
   excerpt   String
-  content   String   // markdown content
+  content   String // markdown content
   category  String
   readTime  Int      @default(5) @map("read_time")
   author    String   @default("Ibda3 Digital")
@@ -583,9 +596,9 @@ model Webhook {
   id        String   @id @default(cuid())
   name      String
   url       String
-  events    String   // comma-separated: "lead.new,prospect.created,proposal.sent"
+  events    String // comma-separated: "lead.new,prospect.created,proposal.sent"
   isActive  Boolean  @default(true) @map("is_active")
-  secret    String?  // optional HMAC-SHA256 signing secret
+  secret    String? // optional HMAC-SHA256 signing secret
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -630,24 +643,24 @@ model Campaign {
   createdByName String?  @map("created_by_name")
   createdAt     DateTime @default(now()) @map("created_at")
 
-  template      OutreachTemplate? @relation(fields: [templateId], references: [id])
-  owner         User?    @relation("CampaignOwner", fields: [ownerId], references: [id])
-  prospects     Prospect[]
+  template  OutreachTemplate? @relation(fields: [templateId], references: [id])
+  owner     User?             @relation("CampaignOwner", fields: [ownerId], references: [id])
+  prospects Prospect[]
 
   @@index([ownerId])
   @@map("campaigns")
 }
 
 model DailyTarget {
-  id              String   @id @default(cuid())
-  userId          String   @map("user_id")
-  date            DateTime @db.Date
-  targetImports   Int      @default(0) @map("target_imports")
-  targetContacts  Int      @default(0) @map("target_contacts")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  date           DateTime @db.Date
+  targetImports  Int      @default(0) @map("target_imports")
+  targetContacts Int      @default(0) @map("target_contacts")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  user            User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
   @@index([date])
@@ -655,25 +668,25 @@ model DailyTarget {
 }
 
 model DiscoverySweep {
-  id              String    @id @default(cuid())
-  provider        String    // "GOOGLE" | "OSM" | "AI_MOCK"
-  city            String    // city KEY (e.g. MARRAKECH) for stable matching
-  sector          String    // sector KEY
-  neighborhood    String?   // null = city-wide query
-  keyword         String?
-  query           String?   // natural-language query for AI-Discovery sweeps
-  resultCount     Int       @default(0) @map("result_count")
-  uniqueCount     Int       @default(0) @map("unique_count")
-  importedCount   Int       @default(0) @map("imported_count")
-  duplicateCount  Int       @default(0) @map("duplicate_count")
-  status          String    @default("COMPLETED") // COMPLETED | FAILED | CANCELLED
-  error           String?
-  startedAt       DateTime  @default(now()) @map("started_at")
-  completedAt     DateTime? @map("completed_at")
-  startedById     String?   @map("started_by_id")
-  startedByName   String?   @map("started_by_name")
+  id             String    @id @default(cuid())
+  provider       String // "GOOGLE" | "OSM" | "AI_MOCK"
+  city           String // city KEY (e.g. MARRAKECH) for stable matching
+  sector         String // sector KEY
+  neighborhood   String? // null = city-wide query
+  keyword        String?
+  query          String? // natural-language query for AI-Discovery sweeps
+  resultCount    Int       @default(0) @map("result_count")
+  uniqueCount    Int       @default(0) @map("unique_count")
+  importedCount  Int       @default(0) @map("imported_count")
+  duplicateCount Int       @default(0) @map("duplicate_count")
+  status         String    @default("COMPLETED") // COMPLETED | FAILED | CANCELLED
+  error          String?
+  startedAt      DateTime  @default(now()) @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+  startedById    String?   @map("started_by_id")
+  startedByName  String?   @map("started_by_name")
 
-  results         DiscoveryResult[]
+  results DiscoveryResult[]
 
   @@index([city, sector, neighborhood, startedAt])
   @@index([startedAt])
@@ -684,65 +697,65 @@ model DiscoverySweep {
 /// Enriched with audit + score + suggested-segment before being surfaced,
 /// then optionally converted into a Prospect via import.
 model DiscoveryResult {
-  id               String   @id @default(cuid())
-  sweepId          String?  @map("sweep_id")
+  id      String  @id @default(cuid())
+  sweepId String? @map("sweep_id")
 
-  name             String
-  website          String   @default("")
-  phone            String   @default("")
-  email            String   @default("")
-  instagram        String   @default("")
-  city             String   @default("")
-  country          String   @default("")
-  sector           String   @default("")
-  sourceUrl        String   @default("") @map("source_url")
+  name      String
+  website   String @default("")
+  phone     String @default("")
+  email     String @default("")
+  instagram String @default("")
+  city      String @default("")
+  country   String @default("")
+  sector    String @default("")
+  sourceUrl String @default("") @map("source_url")
 
-  aiSummary        String   @default("") @map("ai_summary")
-  suggestedOffer   String   @default("") @map("suggested_offer")
-  websiteSummary   String   @default("") @map("website_summary")
-  opportunityExplanation String @default("") @map("opportunity_explanation")
-  opportunityScore Int      @default(0) @map("opportunity_score") // 0-100
-  confidenceScore  Int      @default(0) @map("confidence_score")  // 0-100
-  suggestedSegment ProspectSegment @default(LEGACY_COLD) @map("suggested_segment")
+  aiSummary              String          @default("") @map("ai_summary")
+  suggestedOffer         String          @default("") @map("suggested_offer")
+  websiteSummary         String          @default("") @map("website_summary")
+  opportunityExplanation String          @default("") @map("opportunity_explanation")
+  opportunityScore       Int             @default(0) @map("opportunity_score") // 0-100
+  confidenceScore        Int             @default(0) @map("confidence_score") // 0-100
+  suggestedSegment       ProspectSegment @default(LEGACY_COLD) @map("suggested_segment")
 
   // Per-field validity flags — LEGACY (kept for back-compat during migration).
   // Superseded by the *_status columns below, which are the source of truth.
-  websiteValid     Boolean  @default(false) @map("website_valid")
-  emailValid       Boolean  @default(false) @map("email_valid")
-  phoneValid       Boolean  @default(false) @map("phone_valid")
-  instagramValid   Boolean  @default(false) @map("instagram_valid")
-  whatsappValid    Boolean  @default(false) @map("whatsapp_valid")
-  sourceValid      Boolean  @default(false) @map("source_valid")
+  websiteValid   Boolean @default(false) @map("website_valid")
+  emailValid     Boolean @default(false) @map("email_valid")
+  phoneValid     Boolean @default(false) @map("phone_valid")
+  instagramValid Boolean @default(false) @map("instagram_valid")
+  whatsappValid  Boolean @default(false) @map("whatsapp_valid")
+  sourceValid    Boolean @default(false) @map("source_valid")
 
   // Per-field verification status — source of truth.
   // MISSING | INVALID | UNVERIFIED | VERIFIED | UNAVAILABLE
-  websiteStatus    String   @default("MISSING") @map("website_status")
-  emailStatus      String   @default("MISSING") @map("email_status")
-  phoneStatus      String   @default("MISSING") @map("phone_status")
-  whatsappStatus   String   @default("MISSING") @map("whatsapp_status")
-  instagramStatus  String   @default("MISSING") @map("instagram_status")
+  websiteStatus   String @default("MISSING") @map("website_status")
+  emailStatus     String @default("MISSING") @map("email_status")
+  phoneStatus     String @default("MISSING") @map("phone_status")
+  whatsappStatus  String @default("MISSING") @map("whatsapp_status")
+  instagramStatus String @default("MISSING") @map("instagram_status")
 
   // Canonical URLs derived at generation time (Instagram, WhatsApp).
-  whatsappUrl      String   @default("") @map("whatsapp_url")
-  instagramUrl     String   @default("") @map("instagram_url")
+  whatsappUrl  String @default("") @map("whatsapp_url")
+  instagramUrl String @default("") @map("instagram_url")
 
   // Outreach previews cached so the "Preview Email/WhatsApp" click doesn't
   // hit the AI provider each time.
-  emailSubject     String   @default("") @map("email_subject")
-  emailBody        String   @default("") @map("email_body")
-  whatsappBody     String   @default("") @map("whatsapp_body")
-  aiProvider       String   @default("MOCK") @map("ai_provider") // MOCK | OPENAI | GEMINI | ANTHROPIC
+  emailSubject String @default("") @map("email_subject")
+  emailBody    String @default("") @map("email_body")
+  whatsappBody String @default("") @map("whatsapp_body")
+  aiProvider   String @default("MOCK") @map("ai_provider") // MOCK | OPENAI | GEMINI | ANTHROPIC
 
-  duplicateStatus  String   @default("NEW") @map("duplicate_status") // NEW | EXISTS | POSSIBLE
-  duplicateReason  String?  @map("duplicate_reason")
+  duplicateStatus     String  @default("NEW") @map("duplicate_status") // NEW | EXISTS | POSSIBLE
+  duplicateReason     String? @map("duplicate_reason")
   duplicateProspectId String? @map("duplicate_prospect_id")
 
-  importedProspectId String? @map("imported_prospect_id")
+  importedProspectId String?   @map("imported_prospect_id")
   importedAt         DateTime? @map("imported_at")
   importedById       String?   @map("imported_by_id")
   importedByName     String?   @map("imported_by_name")
 
-  createdAt        DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   sweep DiscoverySweep? @relation(fields: [sweepId], references: [id], onDelete: SetNull)
 
@@ -754,7 +767,7 @@ model DiscoveryResult {
 
 model SalesScript {
   id        String   @id @default(cuid())
-  category  String   // WHATSAPP, INSTAGRAM_DM, CALL, OBJECTION_HANDLING
+  category  String // WHATSAPP, INSTAGRAM_DM, CALL, OBJECTION_HANDLING
   title     String
   body      String
   tags      String   @default("") // comma-separated
@@ -768,23 +781,23 @@ model SalesScript {
 }
 
 model OutreachMessage {
-  id           String    @id @default(cuid())
-  prospectId   String    @map("prospect_id")
-  templateId   String?   @map("template_id")
-  templateKey  String?   @map("template_key")
-  channel      String    @default("WHATSAPP")
-  body         String
-  sentAt       DateTime  @default(now()) @map("sent_at")
-  sentById     String?   @map("sent_by_id")
-  sentByName   String    @default("") @map("sent_by_name")
-  replied      Boolean   @default(false)
-  repliedAt    DateTime? @map("replied_at")
-  replyReason  String?   @map("reply_reason") // INTERESTED, NOT_INTERESTED, HAS_PROVIDER, TOO_EXPENSIVE, LATER, NO_BUDGET
-  variantLabel String?   @map("variant_label") // A | B | C | D (AI variants)
-  tone         String?   @map("tone")          // tone used at generation (snapshot)
-  objective    String?   @map("objective")     // objective at generation (snapshot)
-  meetingBooked Boolean  @default(false) @map("meeting_booked")
-  createdAt    DateTime  @default(now()) @map("created_at")
+  id            String    @id @default(cuid())
+  prospectId    String    @map("prospect_id")
+  templateId    String?   @map("template_id")
+  templateKey   String?   @map("template_key")
+  channel       String    @default("WHATSAPP")
+  body          String
+  sentAt        DateTime  @default(now()) @map("sent_at")
+  sentById      String?   @map("sent_by_id")
+  sentByName    String    @default("") @map("sent_by_name")
+  replied       Boolean   @default(false)
+  repliedAt     DateTime? @map("replied_at")
+  replyReason   String?   @map("reply_reason") // INTERESTED, NOT_INTERESTED, HAS_PROVIDER, TOO_EXPENSIVE, LATER, NO_BUDGET
+  variantLabel  String?   @map("variant_label") // A | B | C | D (AI variants)
+  tone          String?   @map("tone") // tone used at generation (snapshot)
+  objective     String?   @map("objective") // objective at generation (snapshot)
+  meetingBooked Boolean   @default(false) @map("meeting_booked")
+  createdAt     DateTime  @default(now()) @map("created_at")
 
   prospect Prospect          @relation(fields: [prospectId], references: [id], onDelete: Cascade)
   template OutreachTemplate? @relation(fields: [templateId], references: [id])
@@ -796,4 +809,3 @@ model OutreachMessage {
   @@index([sentAt])
   @@map("outreach_messages")
 }
-
