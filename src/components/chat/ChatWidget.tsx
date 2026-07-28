@@ -24,39 +24,41 @@ export default function ChatWidget({ locale }: Props) {
     : "en";
 
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [conversationId, setConversationId] = useState<string | undefined>(undefined);
+  // Lazy useState initializers restore session on first mount (client only, runs once)
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (Array.isArray(saved.messages)) return saved.messages as Message[];
+      }
+    } catch {}
+    return [];
+  });
+  const [conversationId, setConversationId] = useState<string | undefined>(() => {
+    if (typeof window === "undefined") return undefined;
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (typeof saved.conversationId === "string") return saved.conversationId;
+      }
+    } catch {}
+    return undefined;
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showLead, setShowLead] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const dir = chatLocale === "ar" ? "rtl" : "ltr";
 
-  // restore session
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(SESSION_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw);
-        if (Array.isArray(saved.messages)) setMessages(saved.messages);
-        if (saved.conversationId) setConversationId(saved.conversationId);
-      }
-    } catch {}
-  }, []);
-
-  // persist session
+  // persist session (external system sync — legitimate use of useEffect)
   useEffect(() => {
     try {
       sessionStorage.setItem(SESSION_KEY, JSON.stringify({ messages, conversationId }));
     } catch {}
   }, [messages, conversationId]);
-
-  // greet on first open
-  useEffect(() => {
-    if (open && messages.length === 0) {
-      setMessages([{ role: "assistant", content: t("greeting", chatLocale) }]);
-    }
-  }, [open, messages.length, chatLocale]);
 
   // auto-scroll
   useEffect(() => {
@@ -172,9 +174,17 @@ export default function ChatWidget({ locale }: Props) {
         </div>
       )}
 
-      {/* floating button */}
+      {/* floating button — greet on first open here (avoids setState-in-effect) */}
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          setOpen((v) => {
+            const willOpen = !v;
+            if (willOpen && messages.length === 0) {
+              setMessages([{ role: "assistant", content: t("greeting", chatLocale) }]);
+            }
+            return willOpen;
+          });
+        }}
         aria-label={t("buttonLabel", chatLocale)}
         className="w-14 h-14 rounded-full bg-primary text-white shadow-2xl hover:bg-primary-dark hover:scale-105 transition-all flex items-center justify-center"
       >
