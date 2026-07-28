@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ibda3 Digital — Agency Website
 
-## Getting Started
+The official website of Ibda3 Digital, a web development agency based in Marrakech, Morocco. Cinematic multi-language marketing site with portfolio, blog, contact flow, and an internal admin dashboard for project and lead management.
 
-First, run the development server:
+**Live:** https://ibda3-digital.vercel.app/
+
+## Public site features
+
+- **Cinematic hero** with 3D scenes and scroll-driven storytelling
+- **Portfolio grid** — case studies with translated content per project (data-driven from DB)
+- **Services** — showcase sites, e-commerce, mobile apps, SEO, maintenance
+- **Blog** — MDX-based articles
+- **Contact flow** — form validation, lead saved to DB + delivered via EmailJS
+- **3 languages** — French (default), English, Arabic (with RTL)
+- **Testimonials, FAQs, client logos, WhatsApp floating button**
+- **SEO** — sitemap (dynamic from DB), robots.txt, per-page metadata, Organization + Service JSON-LD, hreflang
+
+## Admin dashboard (auth-gated)
+
+- **Project CRUD** — visibility toggle, drag-drop image upload with auto WebP conversion
+- **Single-locale input** — write in one language, auto-fills the others
+- **Leads inbox** — status filters (NEW/CONTACTED/QUALIFIED/CLOSED), pagination, internal notes
+- **Prospects, clients, campaigns, tasks** — full CRM layer
+- **Team chat** — internal channels + DMs
+
+## Tech stack
+
+- **Framework:** Next.js 16 (App Router) · React 19 · TypeScript
+- **Database:** PostgreSQL (Neon serverless) via Prisma ORM 7
+- **Auth:** JWT (jose + bcryptjs), cookie-based session, 7-day expiry
+- **i18n:** next-intl v4 (FR/EN/AR with RTL)
+- **Styling:** Tailwind CSS v4 with dual light/dark themes
+- **Animation:** Framer Motion + GSAP + Embla Carousel
+- **Content:** MDX (next-mdx-remote + gray-matter) for blog posts
+- **AI:** Anthropic Claude SDK (used in internal admin workflows)
+- **PDFs:** jsPDF
+- **Validation:** Zod on all API routes
+- **Email:** EmailJS (client-side) for contact form
+- **Hosting:** Vercel
+- **Node:** requires Node.js 20+
+
+## Getting started
 
 ```bash
+nvm use 20
+npm install
+npx prisma generate
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copy `.env.example` to `.env` and set:
 
-## Learn More
+- `DATABASE_URL` — PostgreSQL connection string (Neon or self-hosted)
+- `JWT_SECRET` — 32+ char random string
+- `ANTHROPIC_API_KEY` — for AI-powered admin features
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD` — bootstrap admin login
+- `NEXT_PUBLIC_EMAILJS_SERVICE_ID`, `NEXT_PUBLIC_EMAILJS_TEMPLATE_ID`, `NEXT_PUBLIC_EMAILJS_PUBLIC_KEY` — contact form delivery
 
-To learn more about Next.js, take a look at the following resources:
+## Project structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+ibda3-portfolio/
+├── src/app/
+│   ├── [locale]/       # public site (localized)
+│   ├── admin/          # internal admin (JWT-gated)
+│   ├── sign/           # auth pages
+│   └── api/            # REST endpoints (public + admin)
+├── src/components/     # UI + admin components
+├── src/lib/            # prisma client, auth, DAL, fallback data
+├── src/messages/       # fr.json, en.json, ar.json
+├── prisma/             # schema + seed
+├── content/blog/       # MDX blog posts
+├── leads/              # lead intake handlers
+└── public/
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## About
 
-## Deploy on Vercel
+Built and maintained by [Ayoub Khyat](https://github.com/AyoubKhyat) — full-stack developer, Marrakech.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Freelance work available at [Ibda3 Digital](https://ibda3-digital.vercel.app/) and on [Fiverr](https://www.fiverr.com/ayoubkhyat). Languages: English · Français · العربية.
