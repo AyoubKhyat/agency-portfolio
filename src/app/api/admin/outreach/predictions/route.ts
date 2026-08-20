@@ -43,13 +43,18 @@ export async function GET() {
   const hotProspects = await prisma.prospect.findMany({
     where: {
       qualityLabel: "HOT",
-      status: { notIn: ["CONVERTI", "CLIENT", "PERDU", "REFUSE"] },
+      // REPONDU stays in on purpose (it scores +20 as "already warmed up").
+      // LOST / PAS_DE_WHATSAPP are dead ends and must never be predicted.
+      status: { notIn: ["CONVERTI", "CLIENT", "LOST", "PAS_DE_WHATSAPP", "PERDU", "REFUSE"] },
     },
     select: {
       id: true, name: true, sector: true, neighborhood: true,
       phone: true, whatsappLink: true, instagram: true, hasWebsite: true, website: true,
       qualityLabel: true, score: true, status: true,
-      sentAt: true, lastActionAt: true,
+      // Follow-up stamps are required by the client so the "FU" button knows
+      // which sequence step is next. Without them every row looks like followup1.
+      sentAt: true, followup1At: true, followup2At: true, followup3At: true,
+      lastActionAt: true,
       owner: { select: { id: true, fullName: true, avatarInitials: true } },
       _count: {
         select: {
