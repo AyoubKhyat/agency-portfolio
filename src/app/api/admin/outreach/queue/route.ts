@@ -15,7 +15,15 @@ import { prisma, hasPrisma } from "@/lib/prisma";
  */
 
 const DAY = 86_400_000;
-const ACTIVE_STATUSES_EXCLUDED = ["REPONDU", "CONVERTI", "CLIENT", "PERDU", "REFUSE"];
+// Statuses that are NOT actionable cold outreach any more.
+// LOST is the real terminal status in the Zod enum (PERDU/REFUSE are legacy
+// spellings, kept so any historic row still matches). PAS_DE_WHATSAPP means we
+// already established there is no reachable WhatsApp — re-queueing it wastes time.
+const ACTIVE_STATUSES_EXCLUDED = [
+  "REPONDU", "CONVERTI", "CLIENT",
+  "LOST", "PAS_DE_WHATSAPP",
+  "PERDU", "REFUSE",
+];
 
 export async function GET() {
   const session = await getSession();

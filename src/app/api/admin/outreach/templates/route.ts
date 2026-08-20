@@ -13,7 +13,10 @@ export async function GET() {
 
     const templates = await prisma.outreachTemplate.findMany({
       where: { isActive: true },
-      select: { key: true, name: true, channel: true, language: true, body: true, subject: true },
+      // `id` is needed so the caller can attribute a logged OutreachMessage back
+      // to the template it used (POST /api/admin/prospecting/[id]/outreach
+      // resolves templateKey from templateId).
+      select: { id: true, key: true, name: true, channel: true, language: true, body: true, subject: true },
       orderBy: { key: "asc" },
     });
 

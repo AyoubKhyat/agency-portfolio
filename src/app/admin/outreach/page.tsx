@@ -87,7 +87,27 @@ function relativeDate(iso: string | null): string {
 }
 
 /* ---------- WhatsApp pre-fill helpers ---------- */
-type Template = { key: string; name: string; channel: string; language: string; subject: string; body: string };
+type Template = { id: string; key: string; name: string; channel: string; language: string; subject: string; body: string };
+
+type OutreachChannel = "WHATSAPP" | "INSTAGRAM";
+
+/** Sequence step to stamp next, or null when there is nothing left to record.
+ *  `initial` is deliberately never returned — first contact is stamped by the
+ *  WA/IG send path, not by the follow-up button. */
+function nextFollowupStep(p: {
+  sentAt: string | null;
+  followup1At: string | null;
+  followup2At: string | null;
+  followup3At: string | null;
+}): "followup1" | "followup2" | "followup3" | null {
+  if (!p.sentAt) return null;
+  if (!p.followup1At) return "followup1";
+  if (!p.followup2At) return "followup2";
+  if (!p.followup3At) return "followup3";
+  return null; // cycle complete
+}
+
+const FOLLOWUP_STEP_NUMBER: Record<string, string> = { followup1: "1", followup2: "2", followup3: "3" };
 
 function fillTemplate(body: string, p: { name: string; sector: string; neighborhood: string }): string {
   return body
@@ -156,6 +176,73 @@ function buildWaUrl(p: { phone: string | null; whatsappLink: string | null }, bo
   return body ? `${base}?text=${encodeURIComponent(body)}` : base;
 }
 
+/* ---------- Outreach logging ---------- */
+
+/** Recorded verbatim when no template was available (cap reached / no sector match).
+ *  The send is real, the wording just wasn't produced by us — say so rather than
+ *  inventing a body. */
+const UNCAPTURED_BODY: Record<OutreachChannel, string> = {
+  WHATSAPP: "(composed manually in WhatsApp — body not captured)",
+  INSTAGRAM: "(composed manually in Instagram — body not captured)",
+};
+
+/** Everything a send needs: the external URL to open and the exact text +
+ *  template we are about to use, so the log matches what was really sent. */
+type OutreachPayload = { url: string; body: string; templateId: string | null };
+
+function buildOutreach(p: QueueProspect, templates: Template[], channel: OutreachChannel): OutreachPayload {
+  let tpl: Template | null = null;
+  let body = "";
+  try {
+    tpl = pickTemplate(p, templates || []);
+    if (tpl) body = fillTemplate(tpl.body, p);
+  } catch (err) {
+    // Never let a template problem block the click — fall back to an empty composer.
+    console.error("[outreach] template pre-fill failed, opening empty composer:", err);
+    tpl = null;
+    body = "";
+  }
+
+  if (channel === "INSTAGRAM") {
+    const handle = (p.instagram || "").replace(/^@/, "");
+    return { url: handle ? `https://instagram.com/${handle}` : "", body, templateId: tpl?.id ?? null };
+  }
+
+  // WhatsApp: prefer the pre-filled composer, but always keep the bare wa.me
+  // URL as a fallback so the click still works.
+  const bare = buildWaUrl(p, "");
+  const enriched = body ? buildWaUrl(p, body) : "";
+  return { url: enriched || bare, body, templateId: tpl?.id ?? null };
+}
+
+/**
+ * Record the send through the existing outreach logger
+ * (POST /api/admin/prospecting/[id]/outreach → OutreachMessage row).
+ * This is what the Today's-scoreboard counters read. Failures are logged and
+ * swallowed: a logging outage must never break the outreach flow.
+ */
+async function logOutreachMessage(
+  prospectId: string,
+  channel: OutreachChannel,
+  body: string,
+  templateId: string | null,
+): Promise<void> {
+  try {
+    const res = await fetch(`/api/admin/prospecting/${prospectId}/outreach`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        channel,
+        body: body.trim() || UNCAPTURED_BODY[channel],
+        templateId,
+      }),
+    });
+    if (!res.ok) console.error("[outreach] outreach log rejected:", res.status);
+  } catch (err) {
+    console.error("[outreach] failed to log outreach message:", err);
+  }
+}
+
 /* ============================================================ */
 export default function OutreachCommandCenter() {
   const [tab, setTab] = useState<"all" | "queue" | "predict" | "focus">("queue");
@@ -198,6 +285,43 @@ export default function OutreachCommandCenter() {
       body: JSON.stringify(body),
     });
     // Refresh data after action
+    loadAll();
+  }
+
+  /**
+   * A WA/IG send: record the message first (OutreachMessage — what the
+   * scoreboard counts), then apply the status change + activity row. Ordering
+   * keeps the two writes independent; a failed log still marks the prospect
+   * sent, exactly as before this change.
+   */
+  async function handleSend(
+    prospectId: string,
+    channel: OutreachChannel,
+    body: string,
+    templateId: string | null,
+  ) {
+    await logOutreachMessage(prospectId, channel, body, templateId);
+    await markStatus(prospectId, "ENVOYE", channel === "WHATSAPP" ? "SENT_WHATSAPP" : "SENT_INSTAGRAM");
+  }
+
+  /**
+   * Record that the next follow-up in the sequence actually went out.
+   * Uses the existing sequence endpoint, which stamps only followupNAt — it
+   * never touches sentAt, so the original first-send date is preserved.
+   */
+  async function handleFollowUp(p: QueueProspect) {
+    const step = nextFollowupStep(p);
+    if (!step) return;
+    try {
+      const res = await fetch(`/api/admin/prospecting/${p.id}/sequence`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ step, done: true }),
+      });
+      if (!res.ok) console.error("[outreach] follow-up log rejected:", res.status);
+    } catch (err) {
+      console.error("[outreach] failed to log follow-up:", err);
+    }
     loadAll();
   }
 
@@ -254,20 +378,20 @@ export default function OutreachCommandCenter() {
       </div>
 
       {tab === "queue" && (
-        <QueueTab queue={queue} loading={loading && !queue} onAction={markStatus} templates={templates} />
+        <QueueTab queue={queue} loading={loading && !queue} onAction={markStatus} onSend={handleSend} onFollowUp={handleFollowUp} templates={templates} />
       )}
       {tab === "predict" && (
-        <PredictionsTab predictions={predictions} loading={loading && !predictions} onAction={markStatus} templates={templates} />
+        <PredictionsTab predictions={predictions} loading={loading && !predictions} onAction={markStatus} onSend={handleSend} onFollowUp={handleFollowUp} templates={templates} />
       )}
       {tab === "focus" && (
         <FocusTab prospects={
           predictions && predictions.length > 0
             ? predictions
             : allHot.filter((p) => !p.sentAt).slice(0, 50)
-        } onAction={markStatus} templates={templates} />
+        } onAction={markStatus} onSend={handleSend} onFollowUp={handleFollowUp} templates={templates} />
       )}
       {tab === "all" && (
-        <AllHotTab prospects={allHot} loading={loading && allHot.length === 0} onAction={markStatus} templates={templates} />
+        <AllHotTab prospects={allHot} loading={loading && allHot.length === 0} onAction={markStatus} onSend={handleSend} onFollowUp={handleFollowUp} templates={templates} />
       )}
 
       {addOpen && (
@@ -462,35 +586,29 @@ function CoverageStat({ label, value, tone, subtle }: { label: string; value: nu
 /* ============================================================
  * One-click action row (reused everywhere)
  * ============================================================ */
-function ActionRow({ p, onAction, compact, templates }: { p: QueueProspect; onAction: (id: string, status: string | null, actionType: string) => void; compact?: boolean; templates: Template[] }) {
+function ActionRow({ p, onAction, onSend, onFollowUp, compact, templates }: { p: QueueProspect; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void; onFollowUp: (p: QueueProspect) => void; compact?: boolean; templates: Template[] }) {
   const hasPhone = !!(p.phone && p.phone.trim());
   const hasIG = !!(p.instagram && p.instagram.trim());
-  const igUrl = hasIG ? `https://instagram.com/${(p.instagram || "").replace(/^@/, "")}` : "";
+  const nextStep = nextFollowupStep(p);
 
   function handleWhatsApp() {
-    // CRITICAL: open the bare wa.me URL first so a template/render error can never block the click.
-    // Then try to enrich with pre-filled text — any failure falls back silently to the empty composer.
-    let url = buildWaUrl(p, "");
-    try {
-      const tpl = pickTemplate(p, templates || []);
-      if (tpl) {
-        const body = fillTemplate(tpl.body, p);
-        const enriched = buildWaUrl(p, body);
-        if (enriched) url = enriched;
-      }
-    } catch (err) {
-      console.error("[outreach] WhatsApp template pre-fill failed, opening empty composer:", err);
-    }
+    // CRITICAL: buildOutreach always yields a usable URL (bare wa.me) so a
+    // template/render error can never block the click.
+    const { url, body, templateId } = buildOutreach(p, templates, "WHATSAPP");
     if (url) window.open(url, "_blank");
-    onAction(p.id, "ENVOYE", "SENT_WHATSAPP");
+    onSend(p.id, "WHATSAPP", body, templateId);
   }
   function handleInstagram() {
+    const { url, body, templateId } = buildOutreach(p, templates, "INSTAGRAM");
+    // Instagram has no pre-fill parameter — put the same text on the clipboard so
+    // the body we log is genuinely the message being pasted.
+    if (body) navigator.clipboard?.writeText(body).catch(() => {});
     try {
-      if (igUrl) window.open(igUrl, "_blank");
+      if (url) window.open(url, "_blank");
     } catch (err) {
       console.error("[outreach] Instagram open failed:", err);
     }
-    onAction(p.id, "ENVOYE", "SENT_INSTAGRAM");
+    onSend(p.id, "INSTAGRAM", body, templateId);
   }
 
   return (
@@ -511,6 +629,15 @@ function ActionRow({ p, onAction, compact, templates }: { p: QueueProspect; onAc
         </a>
       )}
       <div className="w-px h-4 bg-[var(--os-border)] mx-0.5" />
+      {nextStep && (
+        <button
+          onClick={() => onFollowUp(p)}
+          title={`Record follow-up ${FOLLOWUP_STEP_NUMBER[nextStep]} as sent (does not change the first-send date)`}
+          className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 hover:bg-amber-100"
+        >
+          <CheckIcon className="w-3.5 h-3.5" /> FU {FOLLOWUP_STEP_NUMBER[nextStep]}
+        </button>
+      )}
       <button onClick={() => onAction(p.id, "REPONDU", "MARKED_REPLIED")} title="Mark replied" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 hover:bg-blue-100">
         <MessageCircle className="w-3.5 h-3.5" /> Reply
       </button>
@@ -530,7 +657,7 @@ function ActionRow({ p, onAction, compact, templates }: { p: QueueProspect; onAc
 /* ============================================================
  * Queue tab
  * ============================================================ */
-function QueueTab({ queue, loading, onAction, templates }: { queue: QueueData | null; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; templates: Template[] }) {
+function QueueTab({ queue, loading, onAction, onSend, onFollowUp, templates }: { queue: QueueData | null; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
   if (loading || !queue) return <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="os-skeleton h-32 rounded-2xl" />)}</div>;
 
   const sections: Array<keyof QueueData["buckets"]> = ["never_contacted", "due_day_4", "due_day_10", "due_day_20"];
@@ -557,7 +684,7 @@ function QueueTab({ queue, loading, onAction, templates }: { queue: QueueData | 
             ) : (
               <div className="border-t border-[var(--os-border)] divide-y divide-[var(--os-border)]">
                 {bucket.slice(0, 50).map((p) => (
-                  <ProspectRow key={p.id} p={p} onAction={onAction} templates={templates} />
+                  <ProspectRow key={p.id} p={p} onAction={onAction} onSend={onSend} onFollowUp={onFollowUp} templates={templates} />
                 ))}
                 {bucket.length > 50 && (
                   <div className="px-4 py-2 text-[11px] text-[#64748B] text-center">+ {bucket.length - 50} more</div>
@@ -571,7 +698,7 @@ function QueueTab({ queue, loading, onAction, templates }: { queue: QueueData | 
   );
 }
 
-function ProspectRow({ p, onAction, templates }: { p: QueueProspect; onAction: (id: string, status: string | null, actionType: string) => void; templates: Template[] }) {
+function ProspectRow({ p, onAction, onSend, onFollowUp, templates }: { p: QueueProspect; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
   return (
     <div className="px-4 py-3 hover:bg-gray-50/60">
       <div className="flex items-start gap-3 flex-wrap">
@@ -598,7 +725,7 @@ function ProspectRow({ p, onAction, templates }: { p: QueueProspect; onAction: (
           </div>
         </div>
         <div className="shrink-0">
-          <ActionRow p={p} onAction={onAction} templates={templates} />
+          <ActionRow p={p} onAction={onAction} onSend={onSend} onFollowUp={onFollowUp} templates={templates} />
         </div>
       </div>
     </div>
@@ -608,7 +735,7 @@ function ProspectRow({ p, onAction, templates }: { p: QueueProspect; onAction: (
 /* ============================================================
  * Predictions tab
  * ============================================================ */
-function PredictionsTab({ predictions, loading, onAction, templates }: { predictions: Prediction[] | null; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; templates: Template[] }) {
+function PredictionsTab({ predictions, loading, onAction, onSend, onFollowUp, templates }: { predictions: Prediction[] | null; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
   if (loading || !predictions) return <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="os-skeleton h-24 rounded-2xl" />)}</div>;
   if (predictions.length === 0) {
     return (
@@ -639,7 +766,7 @@ function PredictionsTab({ predictions, loading, onAction, templates }: { predict
                   <span key={r} className="text-[10.5px] px-1.5 py-0.5 rounded bg-purple-50 text-[#7C3AED] border border-purple-100">{r}</span>
                 ))}
               </div>
-              <ActionRow p={p} onAction={onAction} templates={templates} />
+              <ActionRow p={p} onAction={onAction} onSend={onSend} onFollowUp={onFollowUp} templates={templates} />
             </div>
           </div>
         </div>
@@ -651,7 +778,7 @@ function PredictionsTab({ predictions, loading, onAction, templates }: { predict
 /* ============================================================
  * Focus tab
  * ============================================================ */
-function FocusTab({ prospects, onAction, templates }: { prospects: QueueProspect[]; onAction: (id: string, status: string | null, actionType: string) => void; templates: Template[] }) {
+function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { prospects: QueueProspect[]; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
   const [idx, setIdx] = useState(0);
 
   if (prospects.length === 0) {
@@ -703,19 +830,9 @@ function FocusTab({ prospects, onAction, templates }: { prospects: QueueProspect
           {hasPhone && (
             <button
               onClick={() => {
-                let url = buildWaUrl(current, "");
-                try {
-                  const tpl = pickTemplate(current, templates || []);
-                  if (tpl) {
-                    const body = fillTemplate(tpl.body, current);
-                    const enriched = buildWaUrl(current, body);
-                    if (enriched) url = enriched;
-                  }
-                } catch (err) {
-                  console.error("[outreach] WhatsApp template pre-fill failed, opening empty composer:", err);
-                }
+                const { url, body, templateId } = buildOutreach(current, templates, "WHATSAPP");
                 if (url) window.open(url, "_blank");
-                onAction(current.id, "ENVOYE", "SENT_WHATSAPP");
+                onSend(current.id, "WHATSAPP", body, templateId);
               }}
               className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-emerald-500 text-white shadow-md shadow-emerald-500/30 hover:shadow-lg"
             >
@@ -725,12 +842,14 @@ function FocusTab({ prospects, onAction, templates }: { prospects: QueueProspect
           {hasIG && (
             <button
               onClick={() => {
+                const { url, body, templateId } = buildOutreach(current, templates, "INSTAGRAM");
+                if (body) navigator.clipboard?.writeText(body).catch(() => {});
                 try {
-                  window.open(`https://instagram.com/${(current.instagram || "").replace(/^@/, "")}`, "_blank");
+                  if (url) window.open(url, "_blank");
                 } catch (err) {
                   console.error("[outreach] Instagram open failed:", err);
                 }
-                onAction(current.id, "ENVOYE", "SENT_INSTAGRAM");
+                onSend(current.id, "INSTAGRAM", body, templateId);
               }}
               className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md shadow-purple-500/30 hover:shadow-lg"
             >
@@ -746,6 +865,15 @@ function FocusTab({ prospects, onAction, templates }: { prospects: QueueProspect
 
         {/* Secondary actions */}
         <div className="flex flex-wrap gap-1.5">
+          {nextFollowupStep(current) && (
+            <button
+              onClick={() => onFollowUp(current)}
+              title="Record the next follow-up as sent (does not change the first-send date)"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-amber-50 text-amber-700 hover:bg-amber-100"
+            >
+              <CheckIcon className="w-3 h-3" /> FU {FOLLOWUP_STEP_NUMBER[nextFollowupStep(current)!]} sent
+            </button>
+          )}
           <button onClick={() => onAction(current.id, "REPONDU", "MARKED_REPLIED")} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-blue-50 text-blue-700 hover:bg-blue-100">
             <MessageCircle className="w-3 h-3" /> Replied
           </button>
@@ -801,7 +929,7 @@ function FocusTab({ prospects, onAction, templates }: { prospects: QueueProspect
 /* ============================================================
  * All HOT tab
  * ============================================================ */
-function AllHotTab({ prospects, loading, onAction, templates }: { prospects: QueueProspect[]; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; templates: Template[] }) {
+function AllHotTab({ prospects, loading, onAction, onSend, onFollowUp, templates }: { prospects: QueueProspect[]; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
   const [filter, setFilter] = useState("ALL");
   const filtered = useMemo(() => {
     if (filter === "ALL") return prospects;
@@ -875,7 +1003,7 @@ function AllHotTab({ prospects, loading, onAction, templates }: { prospects: Que
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex justify-end">
-                      <ActionRow p={p} onAction={onAction} compact templates={templates} />
+                      <ActionRow p={p} onAction={onAction} onSend={onSend} onFollowUp={onFollowUp} compact templates={templates} />
                     </div>
                   </td>
                 </tr>
