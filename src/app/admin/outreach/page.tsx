@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Send, MessageCircle, CalendarCheck, FileSignature, Trophy, Flame,
@@ -137,9 +137,12 @@ function pickTemplate(p: { sector: string; status: string; sentAt: string | null
   const isSpa = /spa|hammam/.test(s);
 
   if (touches === 1) {
-    // Follow-up slot: prefer sector-specific FU, fall back to generic templates (no generic FU yet)
+    // Follow-up slot. The sector-specific follow-up wins where one exists;
+    // everything else gets the generic follow-up. Deliberately never falls back
+    // to an intro template — re-sending an intro as a follow-up reads as if the
+    // first message never happened.
     if (isSpa) return templates.find((t) => t.key === "WEBSITE_OFFER_SPA_HAMMAM_FOLLOWUP") ?? null;
-    return null;
+    return templates.find((t) => t.key === "WEBSITE_OFFER_FOLLOWUP") ?? null;
   }
 
   // touches === 0 → first-touch / intro
@@ -241,6 +244,113 @@ async function logOutreachMessage(
   } catch (err) {
     console.error("[outreach] failed to log outreach message:", err);
   }
+}
+
+/* ---------- Open → confirm flow ---------- */
+
+type PendingSend = { channel: OutreachChannel; body: string; templateId: string | null };
+
+/**
+ * Opening WhatsApp/Instagram performs ZERO database writes. It only arms a local
+ * confirmation prompt; a send is recorded solely when the user confirms they
+ * actually sent the message.
+ *
+ * Nothing here is persisted — a refresh or navigation discards an unconfirmed
+ * send, which is correct: "I opened WhatsApp" is not evidence that a message
+ * went out. Chrome can silently block a popup, the number can be unreachable,
+ * or the user can simply change their mind.
+ */
+function usePendingSend(
+  prospectId: string,
+  onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void | Promise<void>,
+) {
+  const [pending, setPending] = useState<PendingSend | null>(null);
+  const [busy, setBusy] = useState(false);
+  // Synchronous one-shot latch. `busy` only takes effect after a re-render, so
+  // two clicks landing in the same tick could both pass a state-based guard and
+  // write two rows. A ref flips immediately and closes that window.
+  const consumed = useRef(false);
+
+  const arm = useCallback((payload: PendingSend) => {
+    consumed.current = false;
+    setBusy(false);
+    setPending(payload);
+  }, []);
+
+  const cancel = useCallback(() => {
+    consumed.current = true; // also disarms any in-flight double click
+    setBusy(false);
+    setPending(null);
+  }, []);
+
+  const confirm = useCallback(async () => {
+    if (!pending || consumed.current) return;
+    consumed.current = true;
+    setBusy(true);
+    try {
+      await onSend(prospectId, pending.channel, pending.body, pending.templateId);
+    } finally {
+      setBusy(false);
+      setPending(null);
+    }
+  }, [pending, onSend, prospectId]);
+
+  return { pending, busy, arm, cancel, confirm };
+}
+
+/** The only control that can record a send. Replaces the action buttons while armed. */
+function ConfirmSendBar({
+  pending, busy, onConfirm, onCancel, size = "sm",
+}: {
+  pending: PendingSend;
+  busy: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+  size?: "sm" | "lg";
+}) {
+  const channelLabel = pending.channel === "WHATSAPP" ? "WhatsApp" : "Instagram";
+  const lg = size === "lg";
+  return (
+    <div className={cn(
+      "flex items-center gap-2 flex-wrap rounded-lg border border-amber-200 bg-amber-50/70",
+      lg ? "px-3 py-2.5" : "px-2 py-1.5",
+    )}>
+      <AlertTriangle className={cn("text-amber-600 shrink-0", lg ? "w-4 h-4" : "w-3.5 h-3.5")} />
+      <span className={cn("text-amber-900 font-medium", lg ? "text-[13px]" : "text-[11px]")}>
+        {channelLabel} opened — did you actually send it?
+      </span>
+      <button
+        onClick={onConfirm}
+        disabled={busy}
+        className={cn(
+          "inline-flex items-center gap-1 rounded-md font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed",
+          lg ? "px-3 py-1.5 text-[12px]" : "px-2 py-1 text-[11px]",
+        )}
+      >
+        {busy
+          ? <><Loader2 className={cn("animate-spin", lg ? "w-3.5 h-3.5" : "w-3 h-3")} /> Recording…</>
+          : <><CheckIcon className={cn(lg ? "w-3.5 h-3.5" : "w-3 h-3")} /> Yes, sent</>}
+      </button>
+      <button
+        onClick={onCancel}
+        disabled={busy}
+        className={cn(
+          "inline-flex items-center gap-1 rounded-md font-medium text-[#475569] bg-white border border-[var(--os-border)] hover:bg-gray-50 disabled:opacity-60",
+          lg ? "px-3 py-1.5 text-[12px]" : "px-2 py-1 text-[11px]",
+        )}
+      >
+        <X className={cn(lg ? "w-3.5 h-3.5" : "w-3 h-3")} /> No / cancel
+      </button>
+    </div>
+  );
+}
+
+/** Tooltip that makes the "no prepared message" case obvious before the click. */
+function openTitle(channel: OutreachChannel, body: string): string {
+  const name = channel === "WHATSAPP" ? "WhatsApp" : "Instagram";
+  return body
+    ? `Open ${name} with the prepared message (records nothing until you confirm)`
+    : `Open ${name} — no template available for this stage, compose manually (records nothing until you confirm)`;
 }
 
 /* ============================================================ */
@@ -586,42 +696,65 @@ function CoverageStat({ label, value, tone, subtle }: { label: string; value: nu
 /* ============================================================
  * One-click action row (reused everywhere)
  * ============================================================ */
-function ActionRow({ p, onAction, onSend, onFollowUp, compact, templates }: { p: QueueProspect; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void; onFollowUp: (p: QueueProspect) => void; compact?: boolean; templates: Template[] }) {
+function ActionRow({ p, onAction, onSend, onFollowUp, compact, templates }: { p: QueueProspect; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void | Promise<void>; onFollowUp: (p: QueueProspect) => void; compact?: boolean; templates: Template[] }) {
   const hasPhone = !!(p.phone && p.phone.trim());
   const hasIG = !!(p.instagram && p.instagram.trim());
   const nextStep = nextFollowupStep(p);
+  const { pending, busy, arm, cancel, confirm } = usePendingSend(p.id, onSend);
 
-  function handleWhatsApp() {
-    // CRITICAL: buildOutreach always yields a usable URL (bare wa.me) so a
-    // template/render error can never block the click.
-    const { url, body, templateId } = buildOutreach(p, templates, "WHATSAPP");
-    if (url) window.open(url, "_blank");
-    onSend(p.id, "WHATSAPP", body, templateId);
-  }
-  function handleInstagram() {
-    const { url, body, templateId } = buildOutreach(p, templates, "INSTAGRAM");
-    // Instagram has no pre-fill parameter — put the same text on the clipboard so
-    // the body we log is genuinely the message being pasted.
-    if (body) navigator.clipboard?.writeText(body).catch(() => {});
-    try {
-      if (url) window.open(url, "_blank");
-    } catch (err) {
-      console.error("[outreach] Instagram open failed:", err);
-    }
-    onSend(p.id, "INSTAGRAM", body, templateId);
+  const wa = useMemo(() => buildOutreach(p, templates, "WHATSAPP"), [p, templates]);
+  const ig = useMemo(() => buildOutreach(p, templates, "INSTAGRAM"), [p, templates]);
+
+  // While a send is awaiting confirmation the action buttons are replaced, so the
+  // same prospect can't be re-opened (and re-armed) mid-decision.
+  if (pending) {
+    return <ConfirmSendBar pending={pending} busy={busy} onConfirm={confirm} onCancel={cancel} />;
   }
 
   return (
     <div className={cn("flex items-center gap-1.5 flex-wrap", compact && "gap-1")}>
       {hasPhone && (
-        <button onClick={handleWhatsApp} title="Open WhatsApp + mark sent" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100">
-          <FaWhatsapp className="w-3.5 h-3.5" /> WA
-        </button>
+        wa.url ? (
+          // A real anchor, not window.open(): a user-clicked target="_blank"
+          // navigation is not subject to Chrome's popup blocker.
+          <a
+            href={wa.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => arm({ channel: "WHATSAPP", body: wa.body, templateId: wa.templateId })}
+            title={openTitle("WHATSAPP", wa.body)}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+          >
+            <FaWhatsapp className="w-3.5 h-3.5" /> WA
+          </a>
+        ) : (
+          <button disabled title="No usable WhatsApp number for this prospect" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-gray-100 text-gray-400 cursor-not-allowed">
+            <FaWhatsapp className="w-3.5 h-3.5" /> WA
+          </button>
+        )
       )}
       {hasIG && (
-        <button onClick={handleInstagram} title="Open Instagram + mark sent" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-[#7C3AED] hover:bg-purple-100">
-          <FaInstagram className="w-3.5 h-3.5" /> IG
-        </button>
+        ig.url ? (
+          <a
+            href={ig.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => {
+              // Instagram has no pre-fill parameter — put the same text on the
+              // clipboard so the body we may log is what actually gets pasted.
+              if (ig.body) navigator.clipboard?.writeText(ig.body).catch(() => {});
+              arm({ channel: "INSTAGRAM", body: ig.body, templateId: ig.templateId });
+            }}
+            title={openTitle("INSTAGRAM", ig.body)}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-[#7C3AED] hover:bg-purple-100"
+          >
+            <FaInstagram className="w-3.5 h-3.5" /> IG
+          </a>
+        ) : (
+          <button disabled title="No usable Instagram handle for this prospect" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-gray-100 text-gray-400 cursor-not-allowed">
+            <FaInstagram className="w-3.5 h-3.5" /> IG
+          </button>
+        )
       )}
       {hasPhone && (
         <a href={`tel:${p.phone}`} title={`Call ${p.phone}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 hover:bg-amber-100">
@@ -657,7 +790,7 @@ function ActionRow({ p, onAction, onSend, onFollowUp, compact, templates }: { p:
 /* ============================================================
  * Queue tab
  * ============================================================ */
-function QueueTab({ queue, loading, onAction, onSend, onFollowUp, templates }: { queue: QueueData | null; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
+function QueueTab({ queue, loading, onAction, onSend, onFollowUp, templates }: { queue: QueueData | null; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void | Promise<void>; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
   if (loading || !queue) return <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="os-skeleton h-32 rounded-2xl" />)}</div>;
 
   const sections: Array<keyof QueueData["buckets"]> = ["never_contacted", "due_day_4", "due_day_10", "due_day_20"];
@@ -698,7 +831,7 @@ function QueueTab({ queue, loading, onAction, onSend, onFollowUp, templates }: {
   );
 }
 
-function ProspectRow({ p, onAction, onSend, onFollowUp, templates }: { p: QueueProspect; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
+function ProspectRow({ p, onAction, onSend, onFollowUp, templates }: { p: QueueProspect; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void | Promise<void>; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
   return (
     <div className="px-4 py-3 hover:bg-gray-50/60">
       <div className="flex items-start gap-3 flex-wrap">
@@ -735,7 +868,7 @@ function ProspectRow({ p, onAction, onSend, onFollowUp, templates }: { p: QueueP
 /* ============================================================
  * Predictions tab
  * ============================================================ */
-function PredictionsTab({ predictions, loading, onAction, onSend, onFollowUp, templates }: { predictions: Prediction[] | null; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
+function PredictionsTab({ predictions, loading, onAction, onSend, onFollowUp, templates }: { predictions: Prediction[] | null; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void | Promise<void>; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
   if (loading || !predictions) return <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="os-skeleton h-24 rounded-2xl" />)}</div>;
   if (predictions.length === 0) {
     return (
@@ -778,10 +911,17 @@ function PredictionsTab({ predictions, loading, onAction, onSend, onFollowUp, te
 /* ============================================================
  * Focus tab
  * ============================================================ */
-function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { prospects: QueueProspect[]; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
+function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { prospects: QueueProspect[]; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void | Promise<void>; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
   const [idx, setIdx] = useState(0);
 
-  if (prospects.length === 0) {
+  // Derived before any early return so the hook order below stays stable.
+  const current: QueueProspect | null =
+    prospects.length > 0 ? prospects[Math.min(idx, prospects.length - 1)] : null;
+  const { pending, busy, arm, cancel, confirm } = usePendingSend(current?.id ?? "", onSend);
+  const wa = useMemo(() => (current ? buildOutreach(current, templates, "WHATSAPP") : null), [current, templates]);
+  const ig = useMemo(() => (current ? buildOutreach(current, templates, "INSTAGRAM") : null), [current, templates]);
+
+  if (!current) {
     return (
       <div className="rounded-2xl border border-[var(--os-border)] bg-white p-10 text-center">
         <Trophy className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
@@ -791,7 +931,6 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
     );
   }
 
-  const current = prospects[Math.min(idx, prospects.length - 1)];
   const remaining = prospects.length - idx - 1;
   const hasPhone = !!(current.phone && current.phone.trim());
   const hasIG = !!(current.instagram && current.instagram.trim());
@@ -826,42 +965,58 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
         </div>
 
         {/* Big action buttons */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-          {hasPhone && (
-            <button
-              onClick={() => {
-                const { url, body, templateId } = buildOutreach(current, templates, "WHATSAPP");
-                if (url) window.open(url, "_blank");
-                onSend(current.id, "WHATSAPP", body, templateId);
-              }}
-              className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-emerald-500 text-white shadow-md shadow-emerald-500/30 hover:shadow-lg"
-            >
-              <FaWhatsapp className="w-4 h-4" /> WhatsApp
-            </button>
-          )}
-          {hasIG && (
-            <button
-              onClick={() => {
-                const { url, body, templateId } = buildOutreach(current, templates, "INSTAGRAM");
-                if (body) navigator.clipboard?.writeText(body).catch(() => {});
-                try {
-                  if (url) window.open(url, "_blank");
-                } catch (err) {
-                  console.error("[outreach] Instagram open failed:", err);
-                }
-                onSend(current.id, "INSTAGRAM", body, templateId);
-              }}
-              className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md shadow-purple-500/30 hover:shadow-lg"
-            >
-              <FaInstagram className="w-4 h-4" /> Instagram
-            </button>
-          )}
-          {hasPhone && (
-            <a href={`tel:${current.phone}`} className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-amber-500 text-white shadow-md shadow-amber-500/30 hover:shadow-lg">
-              <PhoneIcon className="w-4 h-4" /> Call
-            </a>
-          )}
-        </div>
+        {pending ? (
+          <div className="mb-4">
+            <ConfirmSendBar pending={pending} busy={busy} onConfirm={confirm} onCancel={cancel} size="lg" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+            {hasPhone && (
+              wa?.url ? (
+                <a
+                  href={wa.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => arm({ channel: "WHATSAPP", body: wa.body, templateId: wa.templateId })}
+                  title={openTitle("WHATSAPP", wa.body)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-emerald-500 text-white shadow-md shadow-emerald-500/30 hover:shadow-lg"
+                >
+                  <FaWhatsapp className="w-4 h-4" /> WhatsApp
+                </a>
+              ) : (
+                <button disabled title="No usable WhatsApp number for this prospect" className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-gray-200 text-gray-400 cursor-not-allowed">
+                  <FaWhatsapp className="w-4 h-4" /> WhatsApp
+                </button>
+              )
+            )}
+            {hasIG && (
+              ig?.url ? (
+                <a
+                  href={ig.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    if (ig.body) navigator.clipboard?.writeText(ig.body).catch(() => {});
+                    arm({ channel: "INSTAGRAM", body: ig.body, templateId: ig.templateId });
+                  }}
+                  title={openTitle("INSTAGRAM", ig.body)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md shadow-purple-500/30 hover:shadow-lg"
+                >
+                  <FaInstagram className="w-4 h-4" /> Instagram
+                </a>
+              ) : (
+                <button disabled title="No usable Instagram handle for this prospect" className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-gray-200 text-gray-400 cursor-not-allowed">
+                  <FaInstagram className="w-4 h-4" /> Instagram
+                </button>
+              )
+            )}
+            {hasPhone && (
+              <a href={`tel:${current.phone}`} className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-amber-500 text-white shadow-md shadow-amber-500/30 hover:shadow-lg">
+                <PhoneIcon className="w-4 h-4" /> Call
+              </a>
+            )}
+          </div>
+        )}
 
         {/* Secondary actions */}
         <div className="flex flex-wrap gap-1.5">
@@ -929,7 +1084,7 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
 /* ============================================================
  * All HOT tab
  * ============================================================ */
-function AllHotTab({ prospects, loading, onAction, onSend, onFollowUp, templates }: { prospects: QueueProspect[]; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
+function AllHotTab({ prospects, loading, onAction, onSend, onFollowUp, templates }: { prospects: QueueProspect[]; loading: boolean; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void | Promise<void>; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
   const [filter, setFilter] = useState("ALL");
   const filtered = useMemo(() => {
     if (filter === "ALL") return prospects;
