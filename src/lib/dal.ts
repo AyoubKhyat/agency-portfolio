@@ -575,9 +575,17 @@ export async function deleteProspect(id: string) {
 }
 
 export async function updateProspectStatus(id: string, status: string) {
-  const data: Record<string, unknown> = { status };
-  if (status === "ENVOYE") data.sentAt = new Date();
-  return db().prospect.update({ where: { id }, data });
+  if (status === "ENVOYE") {
+    // `sentAt` is the FIRST-contact stamp and the anchor for the whole follow-up
+    // cadence (day 4 / 10 / 20). Re-sending or following up must never move it,
+    // otherwise the prospect silently drops out of its overdue bucket.
+    // updateMany + `sentAt: null` makes this a no-op once it has been set.
+    await db().prospect.updateMany({
+      where: { id, sentAt: null },
+      data: { sentAt: new Date() },
+    });
+  }
+  return db().prospect.update({ where: { id }, data: { status } });
 }
 
 export async function assignProspectOwner(id: string, ownerUserId: string | null) {
