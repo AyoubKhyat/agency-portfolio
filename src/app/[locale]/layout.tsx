@@ -5,6 +5,7 @@ import { routing } from "@/i18n/routing";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import ChatWidget from "@/components/chat/ChatWidget";
 import SetLang from "@/components/SetLang";
 import LoadingScreen from "@/components/LoadingScreen";
 import ScrollProgress from "@/components/ScrollProgress";
@@ -210,6 +211,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       <main id="main-content" className="flex-1">{children}</main>
       <Footer />
       <WhatsAppButton />
+      <ChatWidget locale={locale} />
       <BackToTop />
       <CookieConsent />
     </NextIntlClientProvider>
