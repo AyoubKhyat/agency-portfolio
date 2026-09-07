@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
+import AssistantWidget from "@/components/assistant/AssistantWidget";
 import SetLang from "@/components/SetLang";
 import LoadingScreen from "@/components/LoadingScreen";
 import ScrollProgress from "@/components/ScrollProgress";
@@ -209,7 +209,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       <Breadcrumbs />
       <main id="main-content" className="flex-1">{children}</main>
       <Footer />
-      <WhatsAppButton />
+      <AssistantWidget />
       <BackToTop />
       <CookieConsent />
     </NextIntlClientProvider>

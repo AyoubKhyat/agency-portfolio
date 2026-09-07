@@ -564,5 +564,26 @@
     "asrar-lalla_result2_label": "Cash-on-delivery & WhatsApp",
     "asrar-lalla_result3_value": "Responsive",
     "asrar-lalla_result3_label": "Mobile-optimized shopping"
+  },
+  "Assistant": {
+    "greeting": "Hello 👋 How can we help you?",
+    "cta_whatsapp": "Chat with us on WhatsApp",
+    "prefill_intro": "Hello 👋",
+    "aria_open": "Open the Ibda3 assistant",
+    "aria_close": "Close the Ibda3 assistant",
+    "aria_close_panel": "Close the assistant",
+    "website_label": "I need a website",
+    "website_reply": "We build websites designed to turn visitors into customers. A showcase site, an online store or a custom solution, depending on your business.",
+    "bookings_label": "I want more bookings",
+    "bookings_reply": "We can simplify your booking journey so your clients move more easily from Instagram or your website to a direct booking.",
+    "app_label": "I need an app",
+    "app_reply": "We build web and mobile apps suited to your business, from the idea through to launch.",
+    "automation_label": "I want to automate my business",
+    "automation_reply": "We can automate repetitive tasks: client enquiries, follow-ups, notifications, forms, workflows and integrations.",
+    "ai_label": "I have an AI project",
+    "ai_reply": "We also build AI-powered solutions: assistants, data processing, intelligent automation and internal tools.",
+    "pricing_label": "How much does it cost?",
+    "pricing_reply": "It depends on what you need. For some simple booking journeys, our packages can start at around 1 500 MAD. Web, app, AI and automation projects are quoted individually.",
+    "contact_label": "Talk to Ibda3"
   }
 }
