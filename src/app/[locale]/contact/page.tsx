@@ -153,10 +153,11 @@ export default function ContactPage() {
         : "border-line-soft focus:border-primary focus:ring-2 focus:ring-primary/20"
     }`;
 
+  // Tappable on mobile: tel: / mailto: / wa.me all open the device's native app.
   const contactRows = [
-    { label: "Tél", value: t("info_phone") },
-    { label: "WhatsApp", value: "wa.me/212625461645", amber: true },
-    { label: "E-mail", value: t("info_email") },
+    { label: "Tél", value: t("info_phone"), href: `tel:${t("info_phone").replace(/\s+/g, "")}` },
+    { label: "WhatsApp", value: "wa.me/212625461645", href: "https://wa.me/212625461645", external: true, amber: true },
+    { label: "E-mail", value: t("info_email"), href: `mailto:${t("info_email")}` },
     { label: "Adresse", value: t("info_address") },
   ];
 
@@ -184,14 +185,25 @@ export default function ContactPage() {
             {/* Contact Card */}
             <FadeIn direction="right" delay={0.2}>
               <div className="border border-line rounded-3xl p-8 md:p-10 bg-gradient-to-b from-primary/5 to-primary/[0.02]">
-                {contactRows.map((row) => (
-                  <div key={row.label} className="grid grid-cols-[80px_1fr] py-5 border-b border-line-soft items-baseline gap-6 last:border-b-0">
-                    <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-primary">{row.label}</span>
-                    <span className={`font-serif text-xl md:text-2xl ${row.amber ? "text-accent italic" : "text-foreground"}`}>
-                      {row.value}
-                    </span>
-                  </div>
-                ))}
+                {contactRows.map((row) => {
+                  const valueClass = `font-serif text-xl md:text-2xl break-words ${row.amber ? "text-accent italic" : "text-foreground"}`;
+                  return (
+                    <div key={row.label} className="grid grid-cols-[80px_1fr] py-5 border-b border-line-soft items-baseline gap-6 last:border-b-0">
+                      <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-primary">{row.label}</span>
+                      {row.href ? (
+                        <a
+                          href={row.href}
+                          {...(row.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                          className={`${valueClass} hover:text-primary transition-colors`}
+                        >
+                          {row.value}
+                        </a>
+                      ) : (
+                        <span className={valueClass}>{row.value}</span>
+                      )}
+                    </div>
+                  );
+                })}
                 <div className="mt-6 pt-6 border-t border-line-soft flex items-center justify-between">
                   <span className="font-serif italic text-text-muted">{t("availability")}</span>
                   <span className="font-mono text-xs tracking-[0.16em] uppercase text-accent">{t("availability_tag")}</span>

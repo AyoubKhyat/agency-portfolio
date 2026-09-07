@@ -9,7 +9,10 @@ export default function AnimatedCounter({
   value: number;
   suffix?: string;
 }) {
-  const [count, setCount] = useState(0);
+  // null until the count-up actually starts, so the true value is what gets
+  // server-rendered. Seeding at 0 made visitors without JS — or whose
+  // IntersectionObserver never fired — read "0 Projects".
+  const [count, setCount] = useState<number | null>(null);
   const [started, setStarted] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
 
@@ -54,7 +57,7 @@ export default function AnimatedCounter({
 
   return (
     <span ref={ref}>
-      {count}
+      {count ?? value}
       {suffix}
     </span>
   );

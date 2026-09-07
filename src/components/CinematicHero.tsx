@@ -175,6 +175,7 @@ interface CinematicHeroProps {
   badge2Sub?: string;
   phoneDashboard?: string;
   phoneProjects?: string;
+  projectCount?: number;
   rotatingWords?: string[];
 }
 
@@ -192,6 +193,7 @@ export default function CinematicHero({
   badge2Sub = "Backend power",
   phoneDashboard = "Dashboard",
   phoneProjects = "Projects",
+  projectCount = 0,
   rotatingWords,
 }: CinematicHeroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -286,7 +288,6 @@ export default function CinematicHero({
         )
         .fromTo(".phone-widget", { y: 40, autoAlpha: 0, scale: 0.95 }, { y: 0, autoAlpha: 1, scale: 1, stagger: 0.12, ease: "back.out(1.2)", duration: 1.2 }, "-=1.2")
         .to(".progress-ring", { strokeDashoffset: 60, duration: 1.5, ease: "power3.inOut" }, "-=1")
-        .to(".counter-val", { innerHTML: 50, snap: { innerHTML: 1 }, duration: 1.5, ease: "expo.out" }, "-=1.5")
         .fromTo(".floating-badge", { y: 100, autoAlpha: 0, scale: 0.7, rotationZ: -10 }, { y: 0, autoAlpha: 1, scale: 1, rotationZ: 0, ease: "back.out(1.5)", duration: 1.2, stagger: 0.15 }, "-=1.5")
         .fromTo(".card-left-text", { x: -50, autoAlpha: 0 }, { x: 0, autoAlpha: 1, ease: "power4.out", duration: 1.2 }, "-=1.2")
         .fromTo(".card-right-text", { x: 50, autoAlpha: 0, scale: 0.8 }, { x: 0, autoAlpha: 1, scale: 1, ease: "expo.out", duration: 1.2 }, "<")
@@ -429,8 +430,12 @@ export default function CinematicHero({
                           <circle className="progress-ring" cx="88" cy="88" r="64" fill="none" stroke="#A78BFA" strokeWidth="12" />
                         </svg>
                         <div className="text-center z-10 flex flex-col items-center">
-                          <span className="counter-val text-4xl font-extrabold tracking-tighter text-white">0</span>
-                          <span className="text-[8px] text-purple-200/50 uppercase tracking-[0.1em] font-bold mt-0.5">{phoneProjects}</span>
+                          {projectCount > 0 && (
+                            <>
+                              <span className="text-4xl font-extrabold tracking-tighter text-white">{projectCount}</span>
+                              <span className="text-[8px] text-purple-200/50 uppercase tracking-[0.1em] font-bold mt-0.5">{phoneProjects}</span>
+                            </>
+                          )}
                         </div>
                       </div>
 

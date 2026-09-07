@@ -1,38 +1,23 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState } from "react";
 
 export default function LoadingScreen() {
   const [visible, setVisible] = useState(true);
-  const [fading, setFading] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const fadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    timerRef.current = setTimeout(() => {
-      setFading(true);
-      fadeRef.current = setTimeout(() => {
-        setVisible(false);
-      }, 800);
-    }, 2500);
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      if (fadeRef.current) clearTimeout(fadeRef.current);
-    };
-  }, []);
 
   if (!visible) return null;
 
   return (
     <div
+      aria-hidden="true"
+      // The fade is driven entirely by CSS and starts on first paint, so the
+      // overlay is never held open on a timer. It unmounts once the fade ends.
+      className="loading-screen"
+      onAnimationEnd={() => setVisible(false)}
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 9999,
-        transition: "opacity 0.8s ease",
-        opacity: fading ? 0 : 1,
-        pointerEvents: "auto",
         background: "var(--bg)",
       }}
     >
