@@ -564,5 +564,26 @@
     "asrar-lalla_result2_label": "Paiement à la livraison & WhatsApp",
     "asrar-lalla_result3_value": "Responsive",
     "asrar-lalla_result3_label": "Achat optimisé mobile"
+  },
+  "Assistant": {
+    "greeting": "Bonjour 👋 Comment pouvons-nous vous aider ?",
+    "cta_whatsapp": "Parler avec nous sur WhatsApp",
+    "prefill_intro": "Bonjour 👋",
+    "aria_open": "Ouvrir l'assistant Ibda3",
+    "aria_close": "Fermer l'assistant Ibda3",
+    "aria_close_panel": "Fermer l'assistant",
+    "website_label": "J'ai besoin d'un site web",
+    "website_reply": "Nous créons des sites pensés pour convertir les visiteurs en clients. Site vitrine, e-commerce ou solution sur mesure selon votre activité.",
+    "bookings_label": "Je veux plus de réservations",
+    "bookings_reply": "Nous pouvons simplifier votre parcours de réservation pour que vos clients passent plus facilement d'Instagram ou de votre site vers une réservation directe.",
+    "app_label": "J'ai besoin d'une application",
+    "app_reply": "Nous développons des applications web et mobiles adaptées à votre activité, de l'idée jusqu'à la mise en ligne.",
+    "automation_label": "Je veux automatiser mon activité",
+    "automation_reply": "Nous pouvons automatiser certaines tâches répétitives : demandes clients, suivi, notifications, formulaires, workflows et intégrations.",
+    "ai_label": "J'ai un projet IA",
+    "ai_reply": "Nous créons aussi des solutions basées sur l'IA : assistants, traitement de données, automatisation intelligente et outils métier.",
+    "pricing_label": "Combien ça coûte ?",
+    "pricing_reply": "Le tarif dépend du besoin. Pour certains parcours simples de réservation, nos offres peuvent commencer autour de 1 500 MAD. Les projets web, app, IA ou automatisation sont étudiés sur mesure.",
+    "contact_label": "Parler à Ibda3"
   }
 }
