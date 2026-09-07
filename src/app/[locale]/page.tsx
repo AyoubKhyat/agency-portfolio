@@ -6,7 +6,6 @@ import { Link } from "@/i18n/navigation";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import LogoCarousel from "@/components/LogoCarousel";
-import Testimonials from "@/components/Testimonials";
 import ClientLogos from "@/components/ClientLogos";
 import { getVisibleProjects } from "@/lib/dal";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
@@ -48,14 +47,19 @@ export default async function HomePage({
     { key: "maintenance", num: "05", title: sTranslations("maintenance_title"), desc: sTranslations("maintenance_desc") },
   ];
 
+  const dbProjects = await getVisibleProjects(locale);
+  const projectCount = dbProjects.length;
+
+  // Only verifiable figures: the live project count comes from the portfolio itself.
+  // A zero count means the portfolio could not be loaded — drop the tile rather than show "0".
   const stats = [
-    { value: 50, suffix: "+", label: t("stats_projects") },
-    { value: 40, suffix: "+", label: t("stats_clients") },
+    ...(projectCount > 0
+      ? [{ value: projectCount, suffix: "", label: t("stats_projects") }]
+      : []),
     { value: 5, suffix: "+", label: t("stats_years") },
     { value: 24, suffix: "/7", label: t("stats_support") },
   ];
 
-  const dbProjects = await getVisibleProjects(locale);
   const baseProducts = dbProjects
     .filter((p) => p.image && p.image.startsWith("/"))
     .map((p) => ({
@@ -81,6 +85,7 @@ export default async function HomePage({
         badge2Sub={t("hero_badge2_sub")}
         phoneDashboard={t("hero_phone_dashboard")}
         phoneProjects={t("hero_phone_projects")}
+        projectCount={projectCount}
         rotatingWords={[
           t("hero_rotate1"),
           t("hero_rotate2"),
@@ -93,11 +98,11 @@ export default async function HomePage({
       {/* Stats */}
       <section className="bg-background border-t border-line-soft">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <StaggerContainer className="relative grid grid-cols-2 md:grid-cols-4 gap-0 border-t border-line-soft">
+          <StaggerContainer className="relative grid grid-cols-1 sm:grid-cols-3 gap-0 border-t border-line-soft">
             {stats.map((stat, i) => (
               <StaggerItem
                 key={stat.label}
-                className={`py-8 md:py-10 ${i % 2 === 0 ? "border-r border-line-soft" : ""} ${i === 1 ? "md:border-r md:border-line-soft" : ""} text-center`}
+                className={`py-8 md:py-10 ${i < stats.length - 1 ? "sm:border-r sm:border-line-soft" : ""} text-center`}
               >
                 <p className="font-serif text-5xl md:text-6xl text-primary">
                   <AnimatedCounter value={stat.value} suffix={stat.suffix} />
@@ -176,9 +181,6 @@ export default async function HomePage({
           </StaggerContainer>
         </div>
       </section>
-
-      {/* Testimonials */}
-      <Testimonials />
 
       {/* WhatsApp CTA — direct-message shortcut with a pre-filled body */}
       <section className="relative py-20 md:py-24 bg-background border-t border-line-soft overflow-hidden">
