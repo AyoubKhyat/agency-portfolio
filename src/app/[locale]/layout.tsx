@@ -123,7 +123,7 @@ function JsonLd({ locale }: { locale: string }) {
     alternateName: "إبداع ديجيتال",
     description: descs[locale] || descs.fr,
     url: `${BASE_URL}/${locale}`,
-    logo: `${BASE_URL}/icon.png`,
+    logo: `${BASE_URL}/logo_ibda3.png`,
     image: `${BASE_URL}/og-image.png`,
     telephone: "+212625461645",
     email: "ibda3.digital0@gmail.com",
@@ -170,7 +170,7 @@ function JsonLd({ locale }: { locale: string }) {
     publisher: {
       "@type": "Organization",
       name: "Ibda3 Digital",
-      logo: { "@type": "ImageObject", url: `${BASE_URL}/icon.png` },
+      logo: { "@type": "ImageObject", url: `${BASE_URL}/logo_ibda3.png` },
     },
     inLanguage: locale === "ar" ? "ar" : locale === "en" ? "en" : "fr",
   };
