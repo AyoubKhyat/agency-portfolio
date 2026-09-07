@@ -50,14 +50,16 @@ export default async function HomePage({
   const dbProjects = await getVisibleProjects(locale);
   const projectCount = dbProjects.length;
 
-  // Only verifiable figures: the live project count comes from the portfolio itself.
-  // A zero count means the portfolio could not be loaded — drop the tile rather than show "0".
-  const stats = [
+  // Only facts we can point at: the live project count comes from the portfolio
+  // itself, and the other two tiles state where we are and when we answer.
+  // A zero count means the portfolio could not be loaded — drop the tile
+  // rather than show "0".
+  const stats: { value?: number; suffix?: string; text?: string; label: string }[] = [
     ...(projectCount > 0
       ? [{ value: projectCount, suffix: "", label: t("stats_projects") }]
       : []),
-    { value: 5, suffix: "+", label: t("stats_years") },
-    { value: 24, suffix: "/7", label: t("stats_support") },
+    { text: t("stats_based_value"), label: t("stats_based_label") },
+    { text: t("stats_hours_value"), label: t("stats_hours_label") },
   ];
 
   const baseProducts = dbProjects
@@ -104,8 +106,12 @@ export default async function HomePage({
                 key={stat.label}
                 className={`py-8 md:py-10 ${i < stats.length - 1 ? "sm:border-r sm:border-line-soft" : ""} text-center`}
               >
-                <p className="font-serif text-5xl md:text-6xl text-primary">
-                  <AnimatedCounter value={stat.value} suffix={stat.suffix} />
+                <p className="font-serif text-4xl md:text-5xl lg:text-6xl text-primary">
+                  {typeof stat.value === "number" ? (
+                    <AnimatedCounter value={stat.value} suffix={stat.suffix} />
+                  ) : (
+                    stat.text
+                  )}
                 </p>
                 <p className="text-sm text-text-muted mt-2">{stat.label}</p>
               </StaggerItem>
