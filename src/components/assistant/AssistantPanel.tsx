@@ -10,6 +10,13 @@ import { OPTIONS, type AssistantOption } from "./script";
 /** One exchange: the option the visitor tapped, and the scripted reply to it. */
 type Exchange = { option: AssistantOption };
 
+/**
+ * How long the typing indicator shows before the scripted reply appears.
+ * Long enough to read as a person composing an answer, short enough not to
+ * feel broken. The wait is cosmetic only — nothing is being fetched.
+ */
+const TYPING_MS = 3000;
+
 export default function AssistantPanel({
   id,
   onClose,
@@ -21,8 +28,11 @@ export default function AssistantPanel({
 }) {
   const t = useTranslations("Assistant");
   const [exchanges, setExchanges] = useState<Exchange[]>([]);
+  /** The option being "answered" right now, or null when idle. */
+  const [pending, setPending] = useState<AssistantOption | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Move focus into the panel when it opens, so keyboard and screen-reader
   // users land on the dialog rather than staying behind it.
@@ -39,11 +49,30 @@ export default function AssistantPanel({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  // Keep the newest reply in view without yanking the whole page.
+  // The panel unmounts when the visitor closes it, so drop any reply still
+  // waiting to land rather than updating state on an unmounted component.
   useEffect(() => {
-    if (exchanges.length === 0) return;
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  // Keep the newest bubble in view without yanking the whole page.
+  useEffect(() => {
+    if (exchanges.length === 0 && !pending) return;
     endRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [exchanges.length]);
+  }, [exchanges.length, pending]);
+
+  const select = (option: AssistantOption) => {
+    // One reply at a time: ignore clicks while a reply is already on its way.
+    if (pending) return;
+    setPending(option);
+    timerRef.current = setTimeout(() => {
+      timerRef.current = null;
+      setExchanges((prev) => [...prev, { option }]);
+      setPending(null);
+    }, TYPING_MS);
+  };
 
   const label = (o: AssistantOption) => `${o.emoji} ${t(`${o.id}_label`)}`;
   const lastOption = exchanges[exchanges.length - 1]?.option;
@@ -91,7 +120,8 @@ export default function AssistantPanel({
           {t("greeting")}
         </p>
 
-        {/* Replies are announced politely rather than interrupting. */}
+        {/* Selections, typing status and replies are announced politely rather
+            than interrupting whatever the screen reader is already saying. */}
         <div aria-live="polite" className="space-y-3">
           {exchanges.map(({ option }, i) => (
             <div key={`${option.id}-${i}`} className="space-y-3">
@@ -105,13 +135,38 @@ export default function AssistantPanel({
               )}
             </div>
           ))}
+
+          {pending && (
+            <div className="space-y-3">
+              {/* The visitor's choice lands immediately... */}
+              <p className="ms-auto w-fit max-w-[85%] bg-primary text-white rounded-2xl rounded-ee-sm px-4 py-2.5 text-sm">
+                {label(pending)}
+              </p>
+              {/* ...then the reply is composed. The dots are decorative; the
+                  label carries the meaning for assistive tech. */}
+              <div className="w-fit bg-surface-2 rounded-2xl rounded-ss-sm px-4 py-3 flex items-center gap-2.5">
+                <span aria-hidden="true" className="flex items-center gap-1">
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      // The global prefers-reduced-motion rule in globals.css
+                      // collapses this animation, leaving three static dots.
+                      className="w-1.5 h-1.5 rounded-full bg-text-muted animate-bounce"
+                      style={{ animationDelay: `${i * 0.15}s` }}
+                    />
+                  ))}
+                </span>
+                <span className="text-xs text-text-muted">{t("typing")}</span>
+              </div>
+            </div>
+          )}
         </div>
         <div ref={endRef} />
       </div>
 
       {/* Options + hand-off */}
       <div className="shrink-0 border-t border-line-soft p-3 space-y-2 bg-background">
-        {lastOption && (
+        {lastOption && !pending && (
           <a
             href={buildWhatsAppUrl(prefill(lastOption))}
             target="_blank"
@@ -128,8 +183,9 @@ export default function AssistantPanel({
             <button
               key={option.id}
               type="button"
-              onClick={() => setExchanges((prev) => [...prev, { option }])}
-              className="w-full text-start px-4 py-2.5 rounded-xl border border-line text-sm text-foreground hover:border-primary/50 hover:bg-primary/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              onClick={() => select(option)}
+              disabled={pending !== null}
+              className="w-full text-start px-4 py-2.5 rounded-xl border border-line text-sm text-foreground hover:border-primary/50 hover:bg-primary/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-line disabled:hover:bg-transparent"
             >
               {label(option)}
             </button>

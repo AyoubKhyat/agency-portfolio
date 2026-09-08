@@ -567,6 +567,7 @@
   },
   "Assistant": {
     "greeting": "Hello 👋 How can we help you?",
+    "typing": "Ibda3 is typing…",
     "cta_whatsapp": "Chat with us on WhatsApp",
     "prefill_intro": "Hello 👋",
     "aria_open": "Open the Ibda3 assistant",
