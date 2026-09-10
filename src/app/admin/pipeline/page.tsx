@@ -10,6 +10,13 @@ import { GlassCard } from "@/components/admin/glass-card";
 import { Badge } from "@/components/admin/badge";
 import { EmptyState } from "@/components/admin/empty-state";
 import { cn } from "@/lib/utils";
+import {
+  CLIENT_PROJECT_STATUSES,
+  clientProjectStatusColumn,
+  clientProjectStatusLabel,
+  isActiveClientProjectStatus,
+  isClientProjectStatus,
+} from "@/lib/project-status";
 
 type ClientProject = {
   id: string; name: string; clientName: string; description: string;
@@ -20,24 +27,7 @@ type ClientProject = {
   sortOrder: number; createdAt: string;
 };
 
-const STATUSES = ["NEW", "DISCOVERY", "DESIGN", "DEVELOPMENT", "REVIEW", "CLIENT_FEEDBACK", "READY_TO_LAUNCH", "LIVE", "COMPLETED", "ON_HOLD"];
-const STATUS_LABELS: Record<string, string> = {
-  NEW: "New", DISCOVERY: "Discovery", DESIGN: "Design", DEVELOPMENT: "Development",
-  REVIEW: "Review", CLIENT_FEEDBACK: "Feedback", READY_TO_LAUNCH: "Launch Ready",
-  LIVE: "Live", MAINTENANCE: "Maintenance", COMPLETED: "Completed", ON_HOLD: "On Hold",
-};
-const STATUS_COLORS: Record<string, { border: string; bg: string; dot: string }> = {
-  NEW: { border: "border-blue-200", bg: "bg-blue-50/40", dot: "bg-blue-500" },
-  DISCOVERY: { border: "border-violet-200", bg: "bg-violet-50/40", dot: "bg-violet-500" },
-  DESIGN: { border: "border-pink-200", bg: "bg-pink-50/40", dot: "bg-pink-500" },
-  DEVELOPMENT: { border: "border-amber-200", bg: "bg-amber-50/40", dot: "bg-amber-500" },
-  REVIEW: { border: "border-cyan-200", bg: "bg-cyan-50/40", dot: "bg-cyan-500" },
-  CLIENT_FEEDBACK: { border: "border-orange-200", bg: "bg-orange-50/40", dot: "bg-orange-500" },
-  READY_TO_LAUNCH: { border: "border-emerald-200", bg: "bg-emerald-50/40", dot: "bg-emerald-500" },
-  LIVE: { border: "border-green-200", bg: "bg-green-50/40", dot: "bg-green-600" },
-  COMPLETED: { border: "border-emerald-200", bg: "bg-emerald-50/30", dot: "bg-emerald-600" },
-  ON_HOLD: { border: "border-red-200", bg: "bg-red-50/40", dot: "bg-red-400" },
-};
+const STATUSES = CLIENT_PROJECT_STATUSES;
 const PRIORITY_BADGE: Record<string, string> = { LOW: "default", MEDIUM: "blue", HIGH: "amber", URGENT: "red" };
 
 export default function PipelinePage() {
@@ -92,7 +82,7 @@ export default function PipelinePage() {
     return sortDir === "asc" ? cmp : -cmp;
   });
 
-  const activeProjects = projects.filter((p) => !["COMPLETED", "ON_HOLD"].includes(p.status));
+  const activeProjects = projects.filter((p) => isActiveClientProjectStatus(p.status));
   const totalBudget = projects.reduce((s, p) => s + p.budget, 0);
   const avgProgress = projects.length > 0 ? Math.round(projects.reduce((s, p) => s + p.progress, 0) / projects.length) : 0;
 
@@ -150,7 +140,7 @@ export default function PipelinePage() {
         <div className="overflow-x-auto pb-4 -mx-4 px-4">
           <div className="flex gap-3" style={{ minWidth: visibleStatuses.length * 260 }}>
             {visibleStatuses.map((status) => {
-              const cols = STATUS_COLORS[status] || STATUS_COLORS.NEW;
+              const cols = clientProjectStatusColumn(status);
               const items = projects.filter((p) => p.status === status);
               return (
                 <div
@@ -163,7 +153,7 @@ export default function PipelinePage() {
                   <div className="flex items-center justify-between mb-3 px-1">
                     <div className="flex items-center gap-2">
                       <span className={cn("w-2 h-2 rounded-full", cols.dot)} />
-                      <span className="text-[11px] font-semibold text-[#0F172A] uppercase tracking-wide">{STATUS_LABELS[status]}</span>
+                      <span className="text-[11px] font-semibold text-[#0F172A] uppercase tracking-wide">{clientProjectStatusLabel(status)}</span>
                     </div>
                     <span className="text-[10px] font-bold text-[#64748B] bg-white/80 px-1.5 py-0.5 rounded-full">{items.length}</span>
                   </div>
@@ -236,7 +226,7 @@ export default function PipelinePage() {
                       {p.services && <p className="text-[10px] text-[#64748B] truncate max-w-[200px]">{p.services}</p>}
                     </td>
                     <td className="px-4 py-2.5 text-[#475569] text-xs">{p.clientName}</td>
-                    <td className="px-4 py-2.5"><Badge variant={STATUS_COLORS[p.status] ? "purple" : "default"} size="sm">{STATUS_LABELS[p.status] || p.status}</Badge></td>
+                    <td className="px-4 py-2.5"><Badge variant={isClientProjectStatus(p.status) ? "purple" : "default"} size="sm">{clientProjectStatusLabel(p.status)}</Badge></td>
                     <td className="px-4 py-2.5 text-[#0F172A] text-xs font-medium">{p.budget > 0 ? `${p.budget.toLocaleString()} ${p.currency}` : "—"}</td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">

@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
+import { clientProjectStatusSchema } from "@/lib/project-status";
 import { z } from "zod";
 
 const schema = z.object({
   updates: z.array(z.object({
     id: z.string(),
-    status: z.string(),
+    status: clientProjectStatusSchema,
     sortOrder: z.number(),
   })),
 });
