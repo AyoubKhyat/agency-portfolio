@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
+import { clientProjectStatusSchema } from "@/lib/project-status";
 import { z } from "zod";
 
 export async function GET(
@@ -23,7 +24,7 @@ const patchSchema = z.object({
   clientName: z.string().optional(),
   description: z.string().optional(),
   services: z.string().optional(),
-  status: z.string().optional(),
+  status: clientProjectStatusSchema.optional(),
   priority: z.string().optional(),
   budget: z.number().optional(),
   amountPaid: z.number().optional(),
@@ -46,7 +47,14 @@ export async function PATCH(
   const { id } = await params;
   const body = await req.json();
   const parsed = patchSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "Invalid" }, { status: 400 });
+  if (!parsed.success) {
+    // Surface the reason: a rejected status used to come back as a bare
+    // "Invalid", which gave no clue that the value was the problem.
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Invalid", fieldErrors: parsed.error.flatten().fieldErrors },
+      { status: 400 },
+    );
+  }
 
   const data: Record<string, unknown> = { ...parsed.data };
   if (parsed.data.startDate !== undefined) {

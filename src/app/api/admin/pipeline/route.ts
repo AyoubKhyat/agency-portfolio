@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
+import { clientProjectStatusSchema } from "@/lib/project-status";
 import { z } from "zod";
 
 export async function GET() {
@@ -20,7 +21,7 @@ const createSchema = z.object({
   clientName: z.string().min(1),
   description: z.string().optional().default(""),
   services: z.string().optional().default(""),
-  status: z.string().optional().default("NEW"),
+  status: clientProjectStatusSchema.optional().default("NEW"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional().default("MEDIUM"),
   budget: z.number().optional().default(0),
   currency: z.string().optional().default("MAD"),

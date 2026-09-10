@@ -16,6 +16,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { TaskList } from "@/components/admin/task-list";
 import { MentionTextarea, HighlightedMentions } from "@/components/admin/mention-textarea";
+import { clientProjectStatusLabel, clientProjectStatusPill } from "@/lib/project-status";
 
 type Client = {
   id: string;
@@ -76,13 +77,11 @@ const PROPOSAL_STATUS_COLOR: Record<string, string> = {
   REJECTED: "text-red-700 bg-red-50 border-red-100",
 };
 
-const PROJECT_STATUS_COLOR: Record<string, string> = {
-  NEW:         "text-blue-700 bg-blue-50 border-blue-100",
-  IN_PROGRESS: "text-amber-700 bg-amber-50 border-amber-100",
-  REVIEW:      "text-purple-700 bg-purple-50 border-purple-100",
-  DONE:        "text-emerald-700 bg-emerald-50 border-emerald-100",
-  ON_HOLD:     "text-[#6B7280] bg-[#F3F4F6] border-[#E5E7EB]",
-};
+// Project status styling/labels come from the shared ClientProject source of
+// truth. This file used to keep its own map (NEW / IN_PROGRESS / REVIEW / DONE
+// / ON_HOLD) which did not match the pipeline's vocabulary at all, so a project
+// in DESIGN or DEVELOPMENT fell through to the NEW styling and showed its raw
+// status string here.
 
 const ACTIVITY_LABEL: Record<string, string> = {
   CLIENT_CREATED:  "created the client",
@@ -563,8 +562,8 @@ function ProjectsTab({ projects }: { projects: ClientProject[] }) {
               <h3 className="text-[15px] font-semibold text-[#111827]">{p.name}</h3>
               {p.description && <p className="text-[13px] text-[#6B7280] mt-1 line-clamp-2">{p.description}</p>}
               <div className="flex items-center gap-3 mt-2 text-[12px] text-[#6B7280] flex-wrap">
-                <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-semibold", PROJECT_STATUS_COLOR[p.status] ?? PROJECT_STATUS_COLOR.NEW)}>
-                  {p.status}
+                <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-semibold", clientProjectStatusPill(p.status))}>
+                  {clientProjectStatusLabel(p.status)}
                 </span>
                 <span>{formatMAD(p.budget)} {p.currency}</span>
                 {p.dueDate && <span>Due {new Date(p.dueDate).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</span>}
