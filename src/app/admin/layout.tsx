@@ -9,7 +9,7 @@ import {
   BarChart3, Settings, LogOut, PanelLeftClose, PanelLeft, Menu, X,
   Activity, UsersRound, Bell, Search, Layers, Shield, CheckSquare, BellRing,
   Calendar, FileSignature, Crown, MessageSquare, Moon, Sun, Gauge, Receipt, PenLine,
-  Webhook, BookOpen, Compass, Flame, Inbox, Banknote, Sparkles,
+  Webhook, BookOpen, Compass, Flame, Inbox, Banknote, Sparkles, FileText,
 } from "lucide-react";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { cn } from "@/lib/utils";
@@ -52,6 +52,7 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: "/admin/clients", label: "Clients", icon: Building2 },
       { href: "/admin/projects", label: "Projects", icon: FolderKanban },
+      { href: "/admin/documents", label: "Documents", icon: FileText },
     ],
   },
 ];

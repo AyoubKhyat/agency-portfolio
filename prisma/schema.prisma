@@ -299,6 +299,7 @@ model ClientProject {
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
   client       Client?   @relation(fields: [clientId], references: [id])
+  documents    Document[]
 
   @@map("client_projects")
 }
@@ -329,6 +330,7 @@ model Client {
   activities ClientActivity[]
   meetings   Meeting[]
   contracts  Contract[]
+  documents  Document[]
 
   @@map("clients")
 }
@@ -797,3 +799,60 @@ model OutreachMessage {
   @@map("outreach_messages")
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────
+// DOCUMENTS HUB (Phase 1)
+//
+// A private library of uploaded PDFs (contracts, proposals, devis, invoices).
+// Deliberately INDEPENDENT of the Contract / Proposal / Invoice models, which
+// are structured records rendered on the fly by jsPDF. Phase 2 may link them.
+//
+// Storage: bytes live in `document_files` (Postgres bytea), split from the
+// metadata row so list/detail queries never load a blob. Files are served
+// only through an authenticated route — nothing lands in public/.
+// ─────────────────────────────────────────────────────────────────────────
+model Document {
+  id            String    @id @default(cuid())
+  title         String
+  clientName    String    @default("") @map("client_name")
+  clientId      String?   @map("client_id")
+  projectName   String    @default("") @map("project_name")
+  projectId     String?   @map("project_id")
+  type          String    // CONTRACT | PROPOSAL | QUOTE | INVOICE
+  language      String    @default("FR") // FR | EN | AR
+  status        String    @default("DRAFT")
+  documentDate  DateTime? @map("document_date")
+  amount        Float?
+  currency      String    @default("MAD")
+  notes         String    @default("")
+  fileName      String    @map("file_name")
+  fileSize      Int       @map("file_size")
+  archivedAt    DateTime? @map("archived_at") // soft archive — reversible
+  createdById   String?   @map("created_by_id")
+  createdByName String?   @map("created_by_name")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  file    DocumentFile?
+  client  Client?        @relation(fields: [clientId], references: [id])
+  project ClientProject? @relation(fields: [projectId], references: [id])
+
+  @@index([type])
+  @@index([status])
+  @@index([clientId])
+  @@index([projectId])
+  @@index([archivedAt])
+  @@index([createdAt])
+  @@map("documents")
+}
+
+model DocumentFile {
+  documentId String   @id @map("document_id")
+  data       Bytes
+  mimeType   String   @default("application/pdf") @map("mime_type")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("document_files")
+}
