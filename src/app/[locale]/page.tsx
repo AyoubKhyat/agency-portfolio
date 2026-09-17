@@ -7,10 +7,10 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import LogoCarousel from "@/components/LogoCarousel";
 import ClientLogos from "@/components/ClientLogos";
+import HomeHero, { type HeroProject } from "@/components/HomeHero";
 import { getVisibleProjects } from "@/lib/dal";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
-const CinematicHero = dynamic(() => import("@/components/CinematicHero"));
 const ServicesScroll = dynamic(() => import("@/components/ServicesScroll"));
 const HeroParallax = dynamic(() => import("@/components/HeroParallax"));
 
@@ -62,6 +62,18 @@ export default async function HomePage({
     { text: t("stats_hours_value"), label: t("stats_hours_label") },
   ];
 
+  // Only real projects that ship a local screenshot — no invented placeholders.
+  const heroProjects: HeroProject[] = dbProjects
+    .filter((p) => p.image && p.image.startsWith("/"))
+    .slice(0, 6)
+    .map((p) => ({
+      slug: p.slug,
+      title: p.title,
+      image: p.image,
+      url: p.url,
+      tag: p.tag,
+    }));
+
   const baseProducts = dbProjects
     .filter((p) => p.image && p.image.startsWith("/"))
     .map((p) => ({
@@ -73,29 +85,7 @@ export default async function HomePage({
 
   return (
     <>
-      <CinematicHero
-        tagline={t("hero_tagline")}
-        subtitle={t("hero_title")}
-        description={t("hero_subtitle")}
-        ctaLabel={t("hero_cta")}
-        cta2Label={t("hero_cta2")}
-        cardHeadline={t("hero_card_headline")}
-        cardDesc={t("hero_card_desc")}
-        badge1Title={t("hero_badge1_title")}
-        badge1Sub={t("hero_badge1_sub")}
-        badge2Title={t("hero_badge2_title")}
-        badge2Sub={t("hero_badge2_sub")}
-        phoneDashboard={t("hero_phone_dashboard")}
-        phoneProjects={t("hero_phone_projects")}
-        projectCount={projectCount}
-        rotatingWords={[
-          t("hero_rotate1"),
-          t("hero_rotate2"),
-          t("hero_rotate3"),
-          t("hero_rotate4"),
-          t("hero_rotate5"),
-        ]}
-      />
+      <HomeHero projects={heroProjects} />
 
       {/* Stats */}
       <section className="bg-background border-t border-line-soft">

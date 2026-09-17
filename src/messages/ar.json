@@ -14,6 +14,16 @@
     "hero_cta": "اطلب عرض سعر",
     "hero_cta2": "شاهد أعمالنا",
     "hero_tagline": "ويب وأتمتة / مراكش",
+    "hero_eyebrow": "مواقع • تطبيقات • أتمتة",
+    "hero_headline": "حلول رقمية<br></br>مصمّمة <grow>لتنمية</grow><br></br>أعمالك.",
+    "hero_support": "نصمّم ونطوّر تجارب رقمية عالية الأداء للشركات الطموحة في المغرب وخارجه.",
+    "hero_cta_primary": "ابدأ مشروعك",
+    "hero_cta_secondary": "استكشف أعمالنا",
+    "hero_svc1": "مواقع إلكترونية",
+    "hero_svc2": "تطبيقات موبايل",
+    "hero_svc3": "تجارة إلكترونية",
+    "hero_svc4": "أتمتة",
+    "hero_svc5": "حلول الذكاء الاصطناعي",
     "meta_title": "إبداع ديجيتال — مواقع وتطبيقات وأنظمة حجز وأتمتة للعلامات النامية.",
     "services_title": "خدماتنا",
     "services_subtitle": "حلول رقمية متكاملة لتنمية أعمالك",
@@ -388,7 +398,6 @@
     "cta_title": "لديك مشروع مشابه؟",
     "cta_desc": "لنبني شيئاً رائعاً معاً. أخبرنا عن رؤيتك وسنحولها إلى واقع.",
     "cta_button": "ابدأ مشروعك",
-
     "hammam-nour_title": "حمام نور",
     "hammam-nour_tagline": "واحة عافية مغربية عريقة في قلب المدينة القديمة.",
     "hammam-nour_meta_desc": "دراسة حالة: كيف أنشأنا منصة حجز سبا فاخرة لحمام نور في مراكش مع عرض العلاجات والحجوزات الإلكترونية والسرد التراثي. تصميم مواقع في مراكش.",
@@ -410,7 +419,6 @@
     "hammam-nour_result2_label": "واجهة متحركة (Framer Motion)",
     "hammam-nour_result3_value": "حجز",
     "hammam-nour_result3_label": "نظام حجز إلكتروني",
-
     "goudoukh_title": "قدوخ للسيارات الفاخرة",
     "goudoukh_tagline": "تجربة تأجير فاخرة لأرقى سيارات مراكش.",
     "goudoukh_meta_desc": "دراسة حالة: كيف بنينا منصة تأجير سيارات فاخرة لقدوخ في مراكش مع عرض الأسطول ونظام الحجز وخدمات الكونسيرج. تصميم مواقع مراكش.",
@@ -432,7 +440,6 @@
     "goudoukh_result2_label": "واجهة متحركة (Framer Motion)",
     "goudoukh_result3_value": "EN · FR · AR",
     "goudoukh_result3_label": "واجهة بثلاث لغات",
-
     "tannour_title": "تنّور",
     "tannour_tagline": "حرفة الجلد العريقة، بحلة رقمية أنيقة.",
     "tannour_meta_desc": "دراسة حالة: كيف أنشأنا متجر إلكتروني فاخر لتنّور، علامة جلدية حرفية من مراكش مع سرد تراثي وتجربة تسوق عصرية. متجر إلكتروني المغرب.",
@@ -454,7 +461,6 @@
     "tannour_result2_label": "كتالوج كامل وإتمام الشراء",
     "tannour_result3_value": "متجاوب",
     "tannour_result3_label": "متجر محسّن للجوال",
-
     "terrene_title": "ستوديو Terrene",
     "terrene_tagline": "الهندسة المعمارية والتصميم، بأبهى حلة.",
     "terrene_meta_desc": "دراسة حالة: كيف بنينا موقع بورتفوليو فاخر لستوديو Terrene، استوديو هندسة معمارية وتصميم داخلي مع عروض مشاريع أنيقة. تصميم مواقع في المغرب.",
@@ -476,7 +482,6 @@
     "terrene_result2_label": "موقع عرض الاستوديو",
     "terrene_result3_value": "متجاوب",
     "terrene_result3_label": "تصميم يعتمد الجوال أولاً",
-
     "victory-path_title": "سلسلة الانتصار",
     "victory-path_tagline": "تتبع الإنجازات، احتفل بالتقدم.",
     "victory-path_meta_desc": "دراسة حالة: كيف بنينا Victory Path، تطبيق ويب ثنائي اللغة لتتبع الإنجازات مع دعم إنجليزي/عربي وأوضاع فاتح/داكن وقدرات PWA. تطوير تطبيقات في مراكش.",
@@ -498,7 +503,6 @@
     "victory-path_result2_label": "تطبيق ويب قابل للتثبيت",
     "victory-path_result3_value": "EN · AR",
     "victory-path_result3_label": "واجهة بلغتين",
-
     "aylani-parfums_title": "عيلاني بارفان",
     "aylani-parfums_tagline": "عطور استثنائية، مختارة بعناية للسوق المغربي.",
     "aylani-parfums_meta_desc": "دراسة حالة: كيف أنشأنا منصة تجارة إلكترونية للعطور الفاخرة لعيلاني بارفان مع مجموعات مختارة وطلب عبر واتساب وتجربة تسوق أنيقة. متجر إلكتروني المغرب.",
@@ -520,7 +524,6 @@
     "aylani-parfums_result2_label": "الطلب عبر واتساب",
     "aylani-parfums_result3_value": "متجاوب",
     "aylani-parfums_result3_label": "تسوق محسّن للجوال",
-
     "luxury-copro_title": "لوكشري كوبرو",
     "luxury-copro_tagline": "تراثكم، خبرتنا — إدارة الملكية المشتركة في مراكش.",
     "luxury-copro_meta_desc": "دراسة حالة: كيف صممنا الموقع المؤسسي لـ Luxury Copro، شركة إدارة الملكية المشتركة والعقارات في مراكش، بتصميم فاخر وعرض للمساكن المُدارة.",
@@ -542,7 +545,6 @@
     "luxury-copro_result2_label": "واجهة متحركة (Framer Motion)",
     "luxury-copro_result3_value": "FR · EN",
     "luxury-copro_result3_label": "واجهة بلغتين",
-
     "asrar-lalla_title": "أسرار لالة",
     "asrar-lalla_tagline": "جمال مغربي طبيعي، يصل إلى باب منزلك.",
     "asrar-lalla_meta_desc": "دراسة حالة: كيف بنينا متجراً إلكترونياً لـ Asrar Lalla، علامة منتجات تجميل مغربية طبيعية 100% مع الدفع عند التوصيل والطلب عبر واتساب.",
