@@ -23,6 +23,9 @@
   --nav-bg: rgba(250, 250, 250, 0.85);
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --duration: 0.6s;
+  /* Hero brand gradient: Ibda3 purple -> blue */
+  --grad-a: #8B6FE0;
+  --grad-b: #2563EB;
 }
 
 .dark {
@@ -44,6 +47,8 @@
   --card-from: rgba(167, 139, 250, 0.04);
   --card-border: rgba(245, 230, 66, 0.1);
   --nav-bg: rgba(10, 10, 10, 0.85);
+  --grad-a: #A78BFA;
+  --grad-b: #60A5FA;
 }
 
 @theme inline {
@@ -240,6 +245,35 @@ body {
 .card-gradient {
   background: linear-gradient(to bottom, var(--card-from), transparent);
   border-color: var(--card-border);
+}
+
+/* ─── Homepage hero ─── */
+
+/* Purple -> blue brand gradient on text. The inline-block + padding keeps
+   descenders (the "g" in "grow") inside the painted background box. */
+.text-gradient-brand {
+  display: inline-block;
+  padding-block-end: 0.14em;
+  margin-block-end: -0.14em;
+  background-image: linear-gradient(100deg, var(--grad-a) 0%, var(--grad-b) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Very soft brand wash behind the hero — no heavy shadows, no blur on text. */
+.hero-wash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(55% 45% at 82% 12%, color-mix(in srgb, var(--grad-b) 12%, transparent) 0%, transparent 72%),
+    radial-gradient(45% 40% at 6% 4%, color-mix(in srgb, var(--grad-a) 12%, transparent) 0%, transparent 70%);
+}
+
+.hero-rule {
+  background: linear-gradient(90deg, transparent, var(--color-line), transparent);
 }
 
 :focus-visible {

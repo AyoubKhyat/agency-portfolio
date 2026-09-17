@@ -14,6 +14,16 @@
     "hero_cta": "Get a Quote",
     "hero_cta2": "View Our Work",
     "hero_tagline": "Web & Automation / Marrakech",
+    "hero_eyebrow": "WEBSITES • APPS • AUTOMATION",
+    "hero_headline": "Digital solutions<br></br>built to <grow>grow</grow><br></br>your business.",
+    "hero_support": "We design and build high-performance digital experiences for ambitious businesses in Morocco and beyond.",
+    "hero_cta_primary": "Start a Project",
+    "hero_cta_secondary": "Explore Our Work",
+    "hero_svc1": "Websites",
+    "hero_svc2": "Mobile Apps",
+    "hero_svc3": "E-commerce",
+    "hero_svc4": "Automation",
+    "hero_svc5": "AI Solutions",
     "meta_title": "Ibda3 Digital — Websites, apps, bookings and automation for growing brands.",
     "services_title": "Our Services",
     "services_subtitle": "Complete digital solutions to grow your business",
@@ -388,7 +398,6 @@
     "cta_title": "Have a similar project?",
     "cta_desc": "Let's build something great together. Tell us about your vision and we'll bring it to life.",
     "cta_button": "Start Your Project",
-
     "hammam-nour_title": "Hammam Nour",
     "hammam-nour_tagline": "A sanctuary of ancient Moroccan wellness in the heart of the medina.",
     "hammam-nour_meta_desc": "Case study: How we built a luxury spa booking platform for Hammam Nour in Marrakech with treatment showcases, online reservations and heritage storytelling.",
@@ -410,7 +419,6 @@
     "hammam-nour_result2_label": "Motion-driven UI (Framer Motion)",
     "hammam-nour_result3_value": "Booking",
     "hammam-nour_result3_label": "Online reservation system",
-
     "goudoukh_title": "Goudoukh Luxury Cars",
     "goudoukh_tagline": "A premium rental experience for Marrakech's finest vehicles.",
     "goudoukh_meta_desc": "Case study: How we built a premium luxury car rental platform for Goudoukh in Marrakech with fleet showcase, booking system and concierge services.",
@@ -432,7 +440,6 @@
     "goudoukh_result2_label": "Motion-driven UI (Framer Motion)",
     "goudoukh_result3_value": "EN · FR · AR",
     "goudoukh_result3_label": "Trilingual interface",
-
     "tannour_title": "Tannour",
     "tannour_tagline": "Artisan leather craftsmanship, presented digitally.",
     "tannour_meta_desc": "Case study: How we created a luxury e-commerce platform for Tannour, a Marrakech artisan leather brand with heritage storytelling and modern shopping experience.",
@@ -454,7 +461,6 @@
     "tannour_result2_label": "Full product catalog & checkout",
     "tannour_result3_value": "Responsive",
     "tannour_result3_label": "Mobile-optimized storefront",
-
     "terrene_title": "Terrene Studio",
     "terrene_tagline": "Architecture and design, showcased beautifully.",
     "terrene_meta_desc": "Case study: How we built a premium portfolio website for Terrene Studio, an architecture and interior design studio with elegant project showcases.",
@@ -476,7 +482,6 @@
     "terrene_result2_label": "Studio showcase site",
     "terrene_result3_value": "Responsive",
     "terrene_result3_label": "Mobile-first design",
-
     "victory-path_title": "Victory Path",
     "victory-path_tagline": "Track achievements, celebrate progress.",
     "victory-path_meta_desc": "Case study: How we built Victory Path, a bilingual achievement tracking web app with English/Arabic support, dark/light themes and PWA capabilities.",
@@ -498,7 +503,6 @@
     "victory-path_result2_label": "Installable web app",
     "victory-path_result3_value": "EN · AR",
     "victory-path_result3_label": "Bilingual interface",
-
     "aylani-parfums_title": "Aylani Parfums",
     "aylani-parfums_tagline": "Exceptional fragrances, curated for the Moroccan market.",
     "aylani-parfums_meta_desc": "Case study: How we built a luxury perfume e-commerce platform for Aylani Parfums with curated collections, WhatsApp ordering and an elegant shopping experience.",
@@ -520,7 +524,6 @@
     "aylani-parfums_result2_label": "WhatsApp-first ordering",
     "aylani-parfums_result3_value": "Responsive",
     "aylani-parfums_result3_label": "Mobile-optimized shopping",
-
     "luxury-copro_title": "Luxury Copro",
     "luxury-copro_tagline": "Your heritage, our expertise — property management in Marrakech.",
     "luxury-copro_meta_desc": "Case study: How we designed the corporate website for Luxury Copro, a co-ownership management and real estate company in Marrakech, with premium design and managed residences showcase.",
@@ -542,7 +545,6 @@
     "luxury-copro_result2_label": "Motion-driven UI (Framer Motion)",
     "luxury-copro_result3_value": "FR · EN",
     "luxury-copro_result3_label": "Bilingual interface",
-
     "asrar-lalla_title": "Asrar Lalla",
     "asrar-lalla_tagline": "Moroccan natural beauty, delivered to your door.",
     "asrar-lalla_meta_desc": "Case study: How we built an e-commerce boutique for Asrar Lalla, a brand of 100% natural Moroccan beauty products with cash on delivery and WhatsApp ordering.",
