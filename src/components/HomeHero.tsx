@@ -75,20 +75,20 @@ export default function HomeHero({ projects }: { projects: HeroProject[] }) {
     <section className="relative overflow-hidden bg-background">
       <div className="hero-wash" aria-hidden="true" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 lg:py-20">
-        <div className="grid items-center gap-12 lg:gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.02fr)]">
+      <div className="relative max-w-7xl xl:max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 lg:py-20 xl:py-24">
+        <div className="grid items-center gap-12 lg:gap-14 xl:gap-16 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.18fr)]">
           {/* ── Copy ── */}
-          <div className="max-w-xl">
+          <div className="max-w-xl xl:max-w-[38rem]">
             <motion.p
               {...rise(0)}
-              className="font-mono text-[11px] sm:text-xs tracking-[0.22em] uppercase text-text-muted"
+              className="font-mono text-xs sm:text-[13px] font-medium tracking-[0.14em] uppercase text-text-muted"
             >
               {t("hero_eyebrow")}
             </motion.p>
 
             <motion.h1
               {...rise(0.06)}
-              className="mt-6 font-serif text-[2.75rem] leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-[4.25rem]"
+              className="mt-6 font-serif text-[2.75rem] leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-[4.25rem] xl:text-[4.75rem]"
             >
               {t.rich("hero_headline", {
                 br: () => <br />,
@@ -100,7 +100,7 @@ export default function HomeHero({ projects }: { projects: HeroProject[] }) {
 
             <motion.p
               {...rise(0.12)}
-              className="mt-6 text-base sm:text-lg leading-relaxed text-text-muted max-w-lg"
+              className="mt-6 text-base sm:text-lg xl:text-xl leading-relaxed text-text-muted max-w-lg xl:max-w-xl"
             >
               {t("hero_support")}
             </motion.p>
@@ -111,7 +111,7 @@ export default function HomeHero({ projects }: { projects: HeroProject[] }) {
             >
               <Link
                 href="/contact"
-                className="group inline-flex items-center justify-center gap-2.5 rounded-full px-7 py-3.5 text-sm sm:text-base font-semibold text-white transition-transform active:scale-[0.98]"
+                className="group inline-flex items-center justify-center gap-2.5 rounded-full px-7 py-3.5 xl:px-8 xl:py-4 text-sm sm:text-base font-semibold text-white transition-transform active:scale-[0.98]"
                 style={{
                   backgroundImage:
                     "linear-gradient(100deg, var(--grad-a) 0%, var(--grad-b) 100%)",
@@ -134,7 +134,7 @@ export default function HomeHero({ projects }: { projects: HeroProject[] }) {
 
               <Link
                 href="/portfolio"
-                className="inline-flex items-center justify-center rounded-full border border-line px-7 py-3.5 text-sm sm:text-base font-semibold text-foreground hover:border-primary hover:text-primary transition-colors active:scale-[0.98]"
+                className="inline-flex items-center justify-center rounded-full border border-line px-7 py-3.5 xl:px-8 xl:py-4 text-sm sm:text-base font-semibold text-foreground hover:border-primary hover:text-primary transition-colors active:scale-[0.98]"
               >
                 {t("hero_cta_secondary")}
               </Link>
@@ -143,7 +143,7 @@ export default function HomeHero({ projects }: { projects: HeroProject[] }) {
             {/* Compact service row */}
             <motion.div {...rise(0.24)} className="mt-10">
               <div className="h-px w-full hero-rule" aria-hidden="true" />
-              <ul className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] sm:text-xs tracking-[0.12em] uppercase text-text-muted">
+              <ul className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-xs sm:text-[13px] font-medium tracking-[0.06em] uppercase text-text-muted">
                 {services.map((s, i) => (
                   <li key={s} className="flex items-center gap-3">
                     {i > 0 && (
@@ -174,7 +174,7 @@ export default function HomeHero({ projects }: { projects: HeroProject[] }) {
             onBlurCapture={() => setPaused(false)}
           >
             <div className="flex items-center justify-between gap-4 mb-4">
-              <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-text-muted">
+              <span className="font-mono text-xs tracking-[0.12em] uppercase text-text-muted">
                 {t("clients_title")}
               </span>
               {rotating.length > 1 && (
@@ -201,7 +201,7 @@ export default function HomeHero({ projects }: { projects: HeroProject[] }) {
               )}
             </div>
 
-            <div className="relative pb-14 sm:pb-16 ps-0 sm:ps-4">
+            <div className="relative pb-16 sm:pb-20 ps-0 sm:ps-4">
               {/* depth panel */}
               <div
                 aria-hidden="true"
@@ -218,7 +218,18 @@ export default function HomeHero({ projects }: { projects: HeroProject[] }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="mx-auto max-w-[60%] truncate rounded-md bg-background px-3 py-1 text-center font-mono text-[10px] text-text-muted border border-line-soft">
-                      {current ? hostname(current.url) : "ibda3digital"}
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.span
+                          key={current ? current.slug : "idle"}
+                          initial={reduceMotion ? false : { opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={reduceMotion ? undefined : { opacity: 0 }}
+                          transition={{ duration: 0.6, ease }}
+                          className="block truncate"
+                        >
+                          {current ? hostname(current.url) : "ibda3digital"}
+                        </motion.span>
+                      </AnimatePresence>
                     </div>
                   </div>
                 </div>
@@ -239,7 +250,7 @@ export default function HomeHero({ projects }: { projects: HeroProject[] }) {
                           alt={current.title}
                           fill
                           priority={index === 0}
-                          sizes="(max-width: 1024px) 92vw, 600px"
+                          sizes="(max-width: 1024px) 92vw, 740px"
                           className="object-cover object-top"
                         />
                       </motion.div>
@@ -248,23 +259,34 @@ export default function HomeHero({ projects }: { projects: HeroProject[] }) {
                 </div>
 
                 {current && (
-                  <div className="flex items-center justify-end gap-3 ps-[46%] pe-4 py-3 border-t border-line-soft">
-                    <span className="text-sm font-semibold text-foreground truncate">
-                      {current.title}
-                    </span>
-                    {current.tag && (
-                      <span className="shrink-0 font-mono text-[10px] tracking-[0.12em] uppercase text-text-muted">
-                        {current.tag}
-                      </span>
-                    )}
+                  <div className="flex items-center justify-end gap-3 ps-[38%] sm:ps-[34%] pe-4 py-3 border-t border-line-soft">
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.div
+                        key={current.slug}
+                        initial={reduceMotion ? false : { opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={reduceMotion ? undefined : { opacity: 0 }}
+                        transition={{ duration: 0.6, ease }}
+                        className="flex min-w-0 items-center justify-end gap-3"
+                      >
+                        <span className="text-sm font-semibold text-foreground truncate">
+                          {current.title}
+                        </span>
+                        {current.tag && (
+                          <span className="shrink-0 font-mono text-[11px] tracking-[0.08em] uppercase text-text-muted">
+                            {current.tag}
+                          </span>
+                        )}
+                      </motion.div>
+                    </AnimatePresence>
                   </div>
                 )}
               </div>
 
               {/* offset secondary card — a second real project */}
               {pinned && (
-                <div className="absolute bottom-0 start-0 sm:-start-6 w-[42%] max-w-[220px] rounded-xl border border-line bg-surface overflow-hidden shadow-[0_18px_40px_-30px_rgba(15,15,26,0.5)]">
-                  <div className="flex items-center gap-1 px-2.5 h-6 border-b border-line-soft bg-surface-2" aria-hidden="true">
+                <div className="absolute bottom-0 start-0 sm:-start-5 lg:-start-8 w-[34%] max-w-[180px] rounded-xl border border-line bg-surface overflow-hidden shadow-[0_18px_40px_-30px_rgba(15,15,26,0.5)]">
+                  <div className="flex items-center gap-1 px-2.5 h-5 border-b border-line-soft bg-surface-2" aria-hidden="true">
                     <span className="w-1.5 h-1.5 rounded-full bg-line" />
                     <span className="w-1.5 h-1.5 rounded-full bg-line" />
                     <span className="w-1.5 h-1.5 rounded-full bg-line" />
@@ -274,11 +296,11 @@ export default function HomeHero({ projects }: { projects: HeroProject[] }) {
                       src={pinned.image}
                       alt={pinned.title}
                       fill
-                      sizes="220px"
+                      sizes="180px"
                       className="object-cover object-top"
                     />
                   </div>
-                  <div className="px-2.5 py-2">
+                  <div className="px-2.5 py-1.5">
                     <span className="block truncate text-[11px] font-semibold text-foreground">
                       {pinned.title}
                     </span>
