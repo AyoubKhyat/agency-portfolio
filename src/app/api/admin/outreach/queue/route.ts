@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
+import {
+  FOLLOW_UP_EXCLUDED_STATUSES,
+  computeFollowUpBucket,
+  type FollowUpBucket,
+} from "@/lib/follow-up";
 
 /**
  * HOT prospects bucketed by follow-up stage.
@@ -10,20 +15,12 @@ import { prisma, hasPrisma } from "@/lib/prisma";
  *  - due_day_10: followup1At is 6+ days ago, followup2At=null
  *  - due_day_20: followup2At is 10+ days ago, followup3At=null
  *
- * Excludes prospects already replied / converted (REPONDU / CONVERTI / CLIENT)
- * since those have moved past the cold-outreach phase.
+ * Suppression is defined in @/lib/follow-up and applied TWICE on purpose:
+ * once as a Prisma filter (so the `take` budget isn't spent on rows we will
+ * discard) and once via computeFollowUpBucket (the authoritative rule). A
+ * prospect with ANY replied outreach message never appears here, regardless
+ * of whether anyone remembered to move their status to REPONDU.
  */
-
-const DAY = 86_400_000;
-// Statuses that are NOT actionable cold outreach any more.
-// LOST is the real terminal status in the Zod enum (PERDU/REFUSE are legacy
-// spellings, kept so any historic row still matches). PAS_DE_WHATSAPP means we
-// already established there is no reachable WhatsApp — re-queueing it wastes time.
-const ACTIVE_STATUSES_EXCLUDED = [
-  "REPONDU", "CONVERTI", "CLIENT",
-  "LOST", "PAS_DE_WHATSAPP",
-  "PERDU", "REFUSE",
-];
 
 export async function GET() {
   const session = await getSession();
@@ -38,7 +35,9 @@ export async function GET() {
   const all = await prisma.prospect.findMany({
     where: {
       qualityLabel: "HOT",
-      status: { notIn: ACTIVE_STATUSES_EXCLUDED },
+      status: { notIn: [...FOLLOW_UP_EXCLUDED_STATUSES] },
+      // A reply on ANY outreach message takes the prospect out of the queue.
+      outreachMessages: { none: { replied: true } },
     },
     select: {
       id: true, name: true, phone: true, whatsappLink: true, instagram: true,
@@ -64,14 +63,24 @@ export async function GET() {
   const touchCountByProspect = new Map<string, number>(
     touchRows.map((r) => [r.prospectId, r._count._all]),
   );
+
+  // Replies are already excluded by the query above; re-read them so the pure
+  // rule gets a real value instead of a hardcoded `false` that could mask a
+  // future query regression.
+  const repliedRows = all.length === 0 ? [] : await prisma.outreachMessage.findMany({
+    where: { prospectId: { in: all.map((p) => p.id) }, replied: true },
+    select: { prospectId: true },
+    distinct: ["prospectId"],
+  });
+  const repliedProspectIds = new Set(repliedRows.map((r) => r.prospectId));
+
   const allWithTouches = all.map((p) => ({
     ...p,
     whatsappTouchCount: touchCountByProspect.get(p.id) ?? 0,
   }));
 
   const now = Date.now();
-  type Bucket = "never_contacted" | "due_day_4" | "due_day_10" | "due_day_20";
-  const buckets: Record<Bucket, typeof allWithTouches> = {
+  const buckets: Record<FollowUpBucket, typeof allWithTouches> = {
     never_contacted: [],
     due_day_4: [],
     due_day_10: [],
@@ -79,28 +88,15 @@ export async function GET() {
   };
 
   for (const p of allWithTouches) {
-    // Most-advanced bucket the prospect qualifies for
-    if (!p.sentAt) {
-      buckets.never_contacted.push(p);
-      continue;
-    }
-    if (!p.followup1At) {
-      if (now - p.sentAt.getTime() >= 3 * DAY) buckets.due_day_4.push(p);
-      continue;
-    }
-    if (!p.followup2At) {
-      if (now - p.followup1At.getTime() >= 6 * DAY) buckets.due_day_10.push(p);
-      continue;
-    }
-    if (!p.followup3At) {
-      if (now - p.followup2At.getTime() >= 10 * DAY) buckets.due_day_20.push(p);
-      continue;
-    }
-    // followup3At set → cycle complete, skip
+    const bucket = computeFollowUpBucket(
+      { ...p, hasReply: repliedProspectIds.has(p.id) },
+      now,
+    );
+    if (bucket) buckets[bucket].push(p);
   }
 
   // Sort each bucket by score (highest first), then by oldest action (push the staler ones up)
-  for (const k of Object.keys(buckets) as Bucket[]) {
+  for (const k of Object.keys(buckets) as FollowUpBucket[]) {
     buckets[k].sort((a, b) => {
       const scoreDiff = (b.score ?? 0) - (a.score ?? 0);
       if (scoreDiff !== 0) return scoreDiff;
