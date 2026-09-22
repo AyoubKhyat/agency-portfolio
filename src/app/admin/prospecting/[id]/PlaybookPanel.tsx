@@ -55,8 +55,23 @@ type MessageVariants = {
   rationale: string;
 };
 
-type AuditFinding = { observation: string; opportunity: string; recommendation: string };
-type AuditResult = { recommendations: AuditFinding[]; conversation_opener: string };
+type AuditHypothesis = {
+  hypothesis: string;
+  why_it_matters: string;
+  how_to_verify: string;
+  recommendation: string;
+};
+/**
+ * `knownFacts` is built server-side from stored columns and is the only part
+ * of this payload that is factual. `hypotheses` are explicitly unverified —
+ * nothing in the system has inspected the prospect's site or feed.
+ */
+type AuditResult = {
+  knownFacts: string[];
+  hypotheses: AuditHypothesis[];
+  conversation_opener: string;
+  evidence_gap: string;
+};
 
 const REPLY_REASONS = [
   { value: "MEETING_REQUESTED", label: "Wants a meeting" },
@@ -768,9 +783,17 @@ function AuditModal({ audit, onClose, onUseOpener }: { audit: AuditResult; onClo
   const [copied, setCopied] = useState(false);
 
   async function copyAll() {
-    const text = audit.recommendations.map((r, i) =>
-      `${i + 1}. ${r.observation}\n   ${r.opportunity}\n   → ${r.recommendation}`
-    ).join("\n\n") + "\n\n" + audit.conversation_opener;
+    const text = [
+      "KNOWN (from our records):",
+      ...audit.knownFacts.map((f) => `- ${f}`),
+      "",
+      "UNVERIFIED HYPOTHESES — check before mentioning any of these:",
+      ...audit.hypotheses.map((h, i) =>
+        `${i + 1}. ${h.hypothesis}\n   Why it matters: ${h.why_it_matters}\n   Verify: ${h.how_to_verify}\n   → ${h.recommendation}`
+      ),
+      "",
+      audit.conversation_opener,
+    ].join("\n");
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -782,35 +805,71 @@ function AuditModal({ audit, onClose, onUseOpener }: { audit: AuditResult; onClo
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--os-border)]">
           <div className="flex items-center gap-2">
             <ClipboardList className="w-4 h-4 text-[#8B00FF]" />
-            <h2 className="text-lg font-semibold text-[#0F172A]">Quick audit · 3 recommendations</h2>
+            <h2 className="text-lg font-semibold text-[#0F172A]">Pre-call checklist · unverified</h2>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"><X className="w-5 h-5" /></button>
         </div>
 
         <div className="p-6 space-y-4 max-h-[calc(100vh-160px)] overflow-y-auto">
+          <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+            <p className="text-[12px] text-amber-900 leading-relaxed">
+              <strong>Nothing below has been checked.</strong> We have not opened this
+              business&apos;s website or Instagram — only the records we already hold.
+              Treat every item as a question to verify, not a finding to send.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-[var(--os-border)] bg-white p-4">
+            <div className="text-[10px] uppercase tracking-wider text-emerald-700 font-bold mb-2">
+              Known — from our records
+            </div>
+            <ul className="space-y-1">
+              {audit.knownFacts.map((f, i) => (
+                <li key={i} className="text-[13px] text-[#0F172A] flex gap-2">
+                  <Check className="w-3 h-3 text-emerald-600 mt-1 shrink-0" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           <div className="space-y-3">
-            {audit.recommendations.map((rec, i) => (
+            <div className="text-[10px] uppercase tracking-wider text-amber-700 font-bold">
+              Unverified hypotheses — verify before mentioning
+            </div>
+            {audit.hypotheses.map((h, i) => (
               <div key={i} className="rounded-xl border border-[var(--os-border)] bg-white p-4">
                 <div className="flex items-baseline gap-3 mb-2">
                   <span className="text-[20px] font-bold text-[#8B00FF] tabular-nums leading-none">{String(i + 1).padStart(2, "0")}</span>
                   <div className="flex-1 space-y-2">
                     <div>
-                      <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-medium mb-0.5">Observation</div>
-                      <p className="text-[13px] text-[#0F172A]">{rec.observation}</p>
+                      <div className="text-[10px] uppercase tracking-wider text-amber-700 font-medium mb-0.5">Hypothesis (unverified)</div>
+                      <p className="text-[13px] text-[#0F172A]">{h.hypothesis}</p>
                     </div>
                     <div>
-                      <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-medium mb-0.5">Opportunity</div>
-                      <p className="text-[13px] text-[#475569]">{rec.opportunity}</p>
+                      <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-medium mb-0.5">Why it matters</div>
+                      <p className="text-[13px] text-[#475569]">{h.why_it_matters}</p>
                     </div>
                     <div>
-                      <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-medium mb-0.5">Recommendation</div>
-                      <p className="text-[13px] text-[#0F172A] font-medium">{rec.recommendation}</p>
+                      <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-medium mb-0.5">How to verify</div>
+                      <p className="text-[13px] text-[#0F172A]">{h.how_to_verify}</p>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-medium mb-0.5">Recommendation (if it holds)</div>
+                      <p className="text-[13px] text-[#0F172A] font-medium">{h.recommendation}</p>
                     </div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
+
+          {audit.evidence_gap && (
+            <div className="rounded-xl border border-[var(--os-border)] bg-[#F8FAFC] px-4 py-3">
+              <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-medium mb-0.5">Evidence gap</div>
+              <p className="text-[13px] text-[#475569]">{audit.evidence_gap}</p>
+            </div>
+          )}
 
           <div className="rounded-xl border-2 border-purple-200 bg-gradient-to-br from-purple-50/40 to-violet-50/40 p-4">
             <div className="text-[10px] uppercase tracking-wider text-[#8B00FF] font-bold mb-2">Suggested conversation opener</div>
@@ -828,7 +887,7 @@ function AuditModal({ audit, onClose, onUseOpener }: { audit: AuditResult; onClo
                 className="inline-flex items-center gap-1.5 text-[12px] text-[#475569] hover:text-[#0F172A] px-3 py-1.5 rounded-lg hover:bg-white"
               >
                 {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                {copied ? "Copied" : "Copy full audit"}
+                {copied ? "Copied" : "Copy checklist"}
               </button>
             </div>
           </div>

@@ -258,7 +258,9 @@ export default function ProspectDiscoveryPage() {
             website: i.website, instagram: i.instagram, facebook: i.facebook,
             mapsUrl: i.mapsUrl, rating: i.rating, reviewCount: i.reviewCount,
           })),
-          allowPossibleDuplicates: true,
+          // Possible duplicates are skipped and reported back rather than
+          // imported as fresh prospects — they need a human to adjudicate.
+          allowPossibleDuplicates: false,
         }),
       });
       if (res.ok) {

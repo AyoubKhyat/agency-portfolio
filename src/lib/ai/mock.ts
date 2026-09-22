@@ -182,25 +182,45 @@ function outreachWhatsApp(input: OutreachInput): string {
 
 /* ─────────────────────────── Provider ─────────────────────────── */
 
+/**
+ * Every string this provider emits carries this marker.
+ *
+ * Mock output is template-driven prose that reads exactly like a real analyst
+ * wrote it, and it is the SILENT fallback whenever no AI key is configured.
+ * Without a marker, placeholder text about a business's "weak digital
+ * footprint" is indistinguishable from a real audit — and the outreach drafts
+ * are one copy-paste away from being sent to an actual business owner.
+ *
+ * The marker is deliberately inside the text rather than only a metadata flag,
+ * so it survives being copied out of the UI into WhatsApp or an email.
+ */
+export const MOCK_MARKER = "[SAMPLE TEXT - no AI provider configured]";
+
+function mark(text: string): string {
+  if (!text) return text;
+  return text.startsWith(MOCK_MARKER) ? text : `${MOCK_MARKER} ${text}`;
+}
+
 export class MockAiProvider implements AiProvider {
   readonly name = "MOCK" as const;
   readonly isReal = false;
 
   async generateAudit(input: AuditInput): Promise<AuditOutput> {
     return {
-      aiSummary: summaryFor(input),
-      suggestedOffer: offerFor(input.sector),
-      websiteSummary: websiteSummaryFor(input),
-      opportunityExplanation: opportunityFor(input),
+      aiSummary: mark(summaryFor(input)),
+      suggestedOffer: mark(offerFor(input.sector)),
+      websiteSummary: mark(websiteSummaryFor(input)),
+      opportunityExplanation: mark(opportunityFor(input)),
     };
   }
 
   async generateOutreachEmail(input: OutreachInput): Promise<EmailDraft> {
-    return outreachEmail(input);
+    const draft = outreachEmail(input);
+    return { subject: mark(draft.subject), body: mark(draft.body) };
   }
 
   async generateOutreachWhatsApp(input: OutreachInput): Promise<string> {
-    return outreachWhatsApp(input);
+    return mark(outreachWhatsApp(input));
   }
 }
 

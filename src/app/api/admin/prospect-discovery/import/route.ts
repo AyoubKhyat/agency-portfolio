@@ -30,7 +30,9 @@ const bodySchema = z.object({
   candidates: z.array(candidateSchema).min(1).max(500),
   ownerId: z.string().nullable().optional(),
   campaignId: z.string().nullable().optional(),
-  allowPossibleDuplicates: z.boolean().default(true),
+  // Default OFF: a POSSIBLE match is a manual-review outcome, not a fresh
+  // prospect. Callers must opt in explicitly after looking at the match.
+  allowPossibleDuplicates: z.boolean().default(false),
   tier: z.enum(["HOT_ONLY", "HOT_WARM", "ALL"]).default("ALL"),
 });
 

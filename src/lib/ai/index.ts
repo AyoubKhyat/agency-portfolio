@@ -50,6 +50,15 @@ function resolveProvider(): AiProvider {
   if (openaiKey) return new OpenAiProvider(openaiKey);
   if (geminiKey) return new GeminiAiProvider(geminiKey);
   if (anthropicKey) return new AnthropicAiProvider(anthropicKey);
+
+  // Falling back to Mock is legitimate, but it must never be silent: mock
+  // audits and outreach drafts read like real ones. They are marked inline
+  // (see MOCK_MARKER) and the UI badges them, but say it here too so it is
+  // obvious in server logs which mode a deployment is running in.
+  console.warn(
+    "[ai] No AI provider key set (OPENAI_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY). " +
+    "Using MockAiProvider — all generated audits and outreach drafts are SAMPLE TEXT, not analysis."
+  );
   return new MockAiProvider();
 }
 
