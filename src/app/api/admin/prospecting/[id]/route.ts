@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getProspectById, updateProspectStatus, updateProspect, deleteProspect, assignProspectOwner, logProspectActivity, setProspectFirstContact, setProspectSentBy, notifyTeam } from "@/lib/dal";
+import { resolveStatusChange } from "@/lib/prospect-status-guard";
 import { z } from "zod";
 
 export async function GET(
@@ -111,6 +112,23 @@ export async function PATCH(
   if (parsed.data.status) {
     const previousStatus = current.status;
     const actionType = parsed.data.actionType || `STATUS_${parsed.data.status}`;
+
+    // A send on a prospect who already replied (or moved further) records the
+    // send but keeps their status — it must never drop them back to ENVOYE.
+    const change = resolveStatusChange(previousStatus, parsed.data.status);
+    if (change.preserved) {
+      await logProspectActivity({
+        prospectId: id,
+        userId: session.userId,
+        userName: session.fullName,
+        actionType,
+        previousStatus,
+        newStatus: previousStatus,
+        details: parsed.data.details ?? `Status kept at ${previousStatus} (send does not undo a reply)`,
+      });
+      const unchanged = await getProspectById(id);
+      return NextResponse.json({ ...unchanged, statusPreserved: true });
+    }
 
     try {
       await updateProspectStatus(id, parsed.data.status);
