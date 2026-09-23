@@ -2,6 +2,7 @@ import { prisma, hasPrisma } from "./prisma";
 import { FALLBACK_PROJECTS, FALLBACK_SLUGS } from "./fallback-projects";
 import { getTranslations } from "next-intl/server";
 import { hashPassword } from "./auth";
+import { bulkUpdateStatusWith, updateProspectStatusWith } from "./prospect-first-contact";
 
 function db() {
   if (!hasPrisma()) throw new Error("Database not available");
@@ -575,17 +576,10 @@ export async function deleteProspect(id: string) {
 }
 
 export async function updateProspectStatus(id: string, status: string) {
-  if (status === "ENVOYE") {
-    // `sentAt` is the FIRST-contact stamp and the anchor for the whole follow-up
-    // cadence (day 4 / 10 / 20). Re-sending or following up must never move it,
-    // otherwise the prospect silently drops out of its overdue bucket.
-    // updateMany + `sentAt: null` makes this a no-op once it has been set.
-    await db().prospect.updateMany({
-      where: { id, sentAt: null },
-      data: { sentAt: new Date() },
-    });
-  }
-  return db().prospect.update({ where: { id }, data: { status } });
+  // `sentAt` is the FIRST-contact anchor for the whole follow-up cadence
+  // (day 4 / 10 / 20) — see @/lib/prospect-first-contact for why it must
+  // never move once set.
+  return updateProspectStatusWith(db(), id, status);
 }
 
 export async function assignProspectOwner(id: string, ownerUserId: string | null) {
@@ -640,12 +634,11 @@ export async function setProspectSentBy(prospectId: string, userId: string, user
 }
 
 export async function bulkUpdateStatus(prospectIds: string[], status: string) {
-  const data: Record<string, unknown> = { status };
-  if (status === "ENVOYE") data.sentAt = new Date();
-  return db().prospect.updateMany({
-    where: { id: { in: prospectIds } },
-    data,
-  });
+  // Previously this set `sentAt: new Date()` unconditionally, which reset the
+  // first-contact anchor on every already-contacted prospect in the selection
+  // and silently re-queued them for initial outreach. It now only stamps rows
+  // where the anchor is still null.
+  return bulkUpdateStatusWith(db(), prospectIds, status);
 }
 
 export async function setProspectFirstContact(prospectId: string, userId: string, userName: string) {

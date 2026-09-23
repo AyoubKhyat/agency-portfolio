@@ -359,6 +359,7 @@ function ResultCard({
   onPreview: (m: PreviewModal) => void;
 }) {
   const [importing, setImporting] = useState(false);
+  const [needsReview, setNeedsReview] = useState<{ message: string; prospectId: string | null } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState<null | "email" | "whatsapp">(null);
   const dup = result.duplicate;
@@ -375,17 +376,30 @@ function ResultCard({
   const isImported = Boolean(result.importedProspectId);
   const isDuplicate = dup.status === "EXISTS";
 
-  async function handleImport() {
+  /**
+   * Import re-checks duplication server-side against CURRENT data, so the
+   * verdict shown on this card (computed when the sweep ran) can be overruled
+   * here. A POSSIBLE match comes back as 409 + needsManualReview and requires
+   * an explicit second click confirming it is a different business.
+   */
+  async function handleImport(confirmNotDuplicate = false) {
     setImporting(true);
     setError(null);
     try {
       const res = await fetch("/api/admin/discovery/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ discoveryResultId: result.id }),
+        body: JSON.stringify({ discoveryResultId: result.id, confirmNotDuplicate }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Import failed");
+      if (!res.ok) {
+        if (data.needsManualReview) {
+          setNeedsReview({ message: data.error, prospectId: data.prospectId ?? null });
+          return;
+        }
+        throw new Error(data.error || "Import failed");
+      }
+      setNeedsReview(null);
       onImported(result.id, data.prospectId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Import failed");
@@ -452,6 +466,18 @@ function ResultCard({
             <div className="text-[9px] font-bold tracking-wider uppercase mt-1">{oppLabel}</div>
           </div>
         </div>
+
+        {/* Sample-text warning — the mock provider produces analyst-sounding
+            prose that must never be mistaken for a real audit or sent as-is. */}
+        {result.aiProvider === "MOCK" && (
+          <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2">
+            <p className="text-[12px] text-amber-900 leading-relaxed">
+              <span className="font-semibold">Sample text — no AI provider configured.</span>{" "}
+              The summary, offer and message drafts below are placeholders, not analysis
+              of this business. Do not send them.
+            </p>
+          </div>
+        )}
 
         {/* AI Summary */}
         {result.aiSummary && (
@@ -581,7 +607,7 @@ function ResultCard({
             )}
             {!isDuplicate && !isImported && (
               <button
-                onClick={handleImport}
+                onClick={() => handleImport(false)}
                 disabled={importing}
                 className={cn(
                   "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12.5px] font-semibold transition-all",
@@ -605,6 +631,34 @@ function ResultCard({
             )}
           </div>
         </div>
+
+        {needsReview && (
+          <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2">
+            <p className="text-[12px] text-amber-900 leading-relaxed">
+              <span className="font-semibold">Needs manual review — </span>
+              {needsReview.message}. Check the existing record before importing; if this
+              is genuinely a different business, confirm below.
+            </p>
+            <div className="mt-2 flex items-center gap-2">
+              {needsReview.prospectId && (
+                <Link
+                  href={`/admin/prospecting/${needsReview.prospectId}`}
+                  className="inline-flex items-center gap-1 text-[12px] font-semibold text-amber-900 underline underline-offset-2"
+                >
+                  Open the suggested match
+                  <ArrowUpRight className="w-3 h-3" />
+                </Link>
+              )}
+              <button
+                onClick={() => handleImport(true)}
+                disabled={importing}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-amber-900 text-white disabled:opacity-60"
+              >
+                {importing ? "Importing" : "Different business — import anyway"}
+              </button>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="mt-3 text-[12px] text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">

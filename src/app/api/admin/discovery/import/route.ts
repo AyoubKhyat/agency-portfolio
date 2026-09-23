@@ -4,9 +4,16 @@ import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { qualityLabelFromScore } from "@/lib/discovery/score";
 import { isProspectSegment } from "@/lib/prospect-segments";
+import { detectDuplicate } from "@/lib/discovery/duplicates";
 
 const schema = z.object({
   discoveryResultId: z.string().min(1),
+  /**
+   * Explicit operator override for a POSSIBLE match. A possible duplicate is
+   * never imported silently — the caller must come back having looked at the
+   * suggested match and decided it is a different business.
+   */
+  confirmNotDuplicate: z.boolean().optional().default(false),
 });
 
 export async function POST(req: Request) {
@@ -25,16 +32,68 @@ export async function POST(req: Request) {
   });
   if (!result) return NextResponse.json({ error: "Discovery result not found" }, { status: 404 });
 
-  if (result.duplicateStatus === "EXISTS") {
+  if (result.importedProspectId) {
     return NextResponse.json(
-      { error: "Duplicate — already exists in Relationships", prospectId: result.duplicateProspectId },
+      { error: "Already imported", prospectId: result.importedProspectId },
       { status: 409 }
     );
   }
 
-  if (result.importedProspectId) {
+  // The duplicateStatus stored on the row was computed when the sweep ran and
+  // is stale by definition — a prospect may have been created (by another
+  // import, a manual add, or a different sweep) in between. Re-classify
+  // against CURRENT data immediately before writing.
+  const live = await detectDuplicate({
+    name: result.name,
+    website: result.website,
+    phone: result.phone,
+    email: result.email,
+    instagram: result.instagram,
+    city: result.city,
+    country: result.country,
+    sector: result.sector,
+    sourceUrl: result.sourceUrl,
+  });
+
+  // Keep the stored verdict honest so the card stops showing a stale "NEW".
+  if (
+    live.status !== result.duplicateStatus ||
+    live.prospectId !== result.duplicateProspectId
+  ) {
+    await prisma.discoveryResult.update({
+      where: { id: result.id },
+      data: {
+        duplicateStatus: live.status,
+        duplicateReason: live.reason,
+        duplicateProspectId: live.prospectId,
+      },
+    }).catch(() => null);
+  }
+
+  if (live.status === "EXISTS") {
     return NextResponse.json(
-      { error: "Already imported", prospectId: result.importedProspectId },
+      {
+        error: `Duplicate — already in Relationships${live.prospectName ? ` as "${live.prospectName}"` : ""}`,
+        duplicateStatus: "EXISTS",
+        reason: live.reason,
+        prospectId: live.prospectId,
+        prospectName: live.prospectName,
+      },
+      { status: 409 }
+    );
+  }
+
+  // POSSIBLE is a manual-review outcome, never a silent fresh import.
+  if (live.status === "POSSIBLE" && !parsed.data.confirmNotDuplicate) {
+    return NextResponse.json(
+      {
+        error: `Possible duplicate of "${live.prospectName ?? "an existing prospect"}" — needs manual review`,
+        duplicateStatus: "POSSIBLE",
+        needsManualReview: true,
+        reason: live.reason,
+        prospectId: live.prospectId,
+        prospectName: live.prospectName,
+      },
       { status: 409 }
     );
   }
@@ -68,6 +127,9 @@ export async function POST(req: Request) {
     `Discovered by AI Business Development Agent — "${result.name}"`,
     result.city && result.country ? `(${result.city}, ${result.country})` : "",
     `Opportunity ${result.opportunityScore} · Confidence ${result.confidenceScore}`,
+    live.status === "POSSIBLE"
+      ? `Imported after manual review of a possible duplicate (${live.reason ?? "name overlap"})`
+      : "",
   ]
     .filter(Boolean)
     .join(" ");

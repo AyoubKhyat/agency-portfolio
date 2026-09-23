@@ -21,9 +21,9 @@ const OUTPUT_SCHEMA = {
   type: "object" as const,
   properties: {
     whatsapp_short: { type: "string" as const, description: "30-50 words, direct, opens a conversation. Plain text, no markdown." },
-    whatsapp_long: { type: "string" as const, description: "80-120 words, includes one specific observation about the business. Plain text, no markdown." },
+    whatsapp_long: { type: "string" as const, description: "80-120 words, built on the supplied prospect facts only. Plain text, no markdown." },
     instagram_short: { type: "string" as const, description: "30-50 words, casual tone, lower formality than WhatsApp. Plain text." },
-    instagram_long: { type: "string" as const, description: "80-120 words, references their Instagram presence specifically. Plain text." },
+    instagram_long: { type: "string" as const, description: "80-120 words. May note that we found them on Instagram, but must NOT describe their posts, feed, bio or content — we have not seen them. Plain text." },
     rationale: { type: "string" as const, description: "1-2 sentences: what specific signal you used to personalize this." },
   },
   required: ["whatsapp_short", "whatsapp_long", "instagram_short", "instagram_long", "rationale"],
@@ -47,7 +47,7 @@ const OBJECTIVE_GUIDE: Record<string, string> = {
   FOLLOW_UP: "Reference the previous message briefly and add ONE new angle (a question, an insight, an example). Don't repeat the original pitch.",
 };
 
-function buildSystemPrompt(language: string, tone: string, objective: string, isRegeneration: boolean): string {
+export function buildSystemPrompt(language: string, tone: string, objective: string, isRegeneration: boolean): string {
   const langName = language === "fr" ? "French" : language === "ar" ? "Arabic" : "English";
   return `You write outbound sales messages for Ibda3 Digital, a web development agency in Marrakech, Morocco.
 You are messaging local business owners to start a conversation — NOT to immediately pitch a website.
@@ -55,7 +55,8 @@ You are messaging local business owners to start a conversation — NOT to immed
 Strict rules:
 1. NEVER sound generic. If your message would work for any business in any sector, rewrite it.
 2. NEVER pitch a website, automation, CRM, or any service in the first message. The goal is to start dialogue.
-3. ALWAYS reference one specific, observable thing about THIS business (sector, neighborhood, Instagram, missing website).
+3. Personalize ONLY from the prospect facts supplied below (name, sector, neighborhood, whether an Instagram handle or website URL is on file, and our previous messages). These are the only things we know.
+3b. EVIDENCE DISCIPLINE — we have NOT visited their website, viewed their Instagram, called them, or seen their booking flow. Never write anything that implies we did: no claims about their design, photos, posts, reviews, menu, prices, loading speed, booking process or how their site "looks". Referring to the existence of a channel is fine ("I came across your Instagram"); describing its content is not.
 4. Maximum 120 words per long variant. Short variants 30-50 words.
 5. Write in ${langName}.
 6. No emoji spam — max 1 emoji if natural.
@@ -81,7 +82,19 @@ const FEEDBACK_INSTRUCTIONS: Record<string, string> = {
   MAKE_SHORTER: "Previous attempt was VERBOSE. Cut 40% of the word count across all variants. Tighten every sentence.",
 };
 
-function buildUserPrompt(args: {
+/**
+ * Describe the website field honestly. `hasWebsite` is a legacy boolean that
+ * predates the `website` column, so the two can disagree: trust a stored URL
+ * even when the boolean is false, and never claim a URL we do not have.
+ */
+export function describeWebsite(hasWebsite: boolean, website: string | null): string {
+  const url = (website || "").trim();
+  if (url) return `yes (${url})`;
+  if (hasWebsite) return "yes (URL not stored — do not describe the site itself)";
+  return "no";
+}
+
+export function buildUserPrompt(args: {
   name: string;
   sector: string;
   city: string;
@@ -97,7 +110,7 @@ function buildUserPrompt(args: {
     `Business: ${args.name}`,
     `Sector: ${args.sector}`,
     `City / neighborhood: ${args.city}`,
-    `Has a website: ${args.hasWebsite ? `yes (${args.website || "URL unknown"})` : "no"}`,
+    `Has a website: ${describeWebsite(args.hasWebsite, args.website)}`,
     `Instagram: ${args.instagram || "none / unknown"}`,
     `Stage in sequence: ${args.followUpStage}`,
   ];
@@ -141,6 +154,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     where: { id },
     select: {
       name: true, sector: true, neighborhood: true, instagram: true, hasWebsite: true,
+      website: true,
       sentAt: true, followup1At: true, followup2At: true, followup3At: true,
     },
   });
@@ -194,7 +208,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             sector: prospect.sector,
             city: prospect.neighborhood || "Marrakech",
             hasWebsite: prospect.hasWebsite,
-            website: null,
+            website: prospect.website,
             instagram: prospect.instagram || null,
             followUpStage: stage,
             previousMessages: recentMessages.map((m) => m.body).reverse(),
