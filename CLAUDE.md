@@ -111,11 +111,15 @@ src/
 ```bash
 nvm use 20                    # Switch to Node 20 (required)
 npm run dev                   # Dev server (port 3000 or next available)
-npm run build                 # Production build
+npm run build                 # Production build (prisma generate + next build; never touches the DB schema)
 npm run lint                  # ESLint
-npx prisma db push            # Create/update DB tables from schema
+npm run db:diff               # Read-only: SQL needed to bring the DB in line with schema.prisma
 npx tsx prisma/seed.ts         # Seed DB with existing projects + admin user
 ```
+
+**Schema changes are manual and deliberate.** Builds (local and Vercel) no longer run `prisma db push`.
+`.env` `DATABASE_URL` is the **production** Neon database: review `npm run db:diff` first, then apply
+the change explicitly (`npx prisma db push`, without `--accept-data-loss`) only after approval.
 
 ## Admin Dashboard
 - **URL**: `/admin` (login at `/admin/login`)
