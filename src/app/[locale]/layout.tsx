@@ -11,8 +11,9 @@ import ScrollProgress from "@/components/ScrollProgress";
 import BackToTop from "@/components/BackToTop";
 import CookieConsent from "@/components/CookieConsent";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { SITE_URL, localeAlternates } from "@/lib/site";
 
-const BASE_URL = "https://ibda3-digital.vercel.app";
+const BASE_URL = SITE_URL;
 
 export async function generateMetadata({
   params,
@@ -54,15 +55,8 @@ export async function generateMetadata({
     authors: [{ name: "Ibda3 Digital" }],
     creator: "Ibda3 Digital",
     publisher: "Ibda3 Digital",
-    alternates: {
-      canonical: url,
-      languages: {
-        "x-default": `${BASE_URL}/fr`,
-        fr: `${BASE_URL}/fr`,
-        en: `${BASE_URL}/en`,
-        ar: `${BASE_URL}/ar`,
-      },
-    },
+    // The locale home; every other page sets its own self-referencing alternates.
+    alternates: localeAlternates(locale),
     openGraph: {
       type: "website",
       locale: locale === "ar" ? "ar_MA" : locale === "en" ? "en_US" : "fr_FR",

@@ -4,11 +4,12 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { HiOutlineCheck } from "react-icons/hi2";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
+import { SITE_URL, localeAlternates } from "@/lib/site";
 
 const SLUGS = ["web", "ecommerce", "mobile", "seo", "maintenance"] as const;
 type Slug = (typeof SLUGS)[number];
 
-const BASE_URL = "https://ibda3-digital.vercel.app";
+const BASE_URL = SITE_URL;
 
 function ServiceJsonLd({ locale, slug, name, description }: { locale: string; slug: string; name: string; description: string }) {
   const schema = {
@@ -53,6 +54,7 @@ export async function generateMetadata({
   return {
     title: `${t(`${slug}_title`)} — Ibda3 Digital`,
     description: t(`${slug}_intro`),
+    alternates: localeAlternates(locale, `/services/${slug}`),
   };
 }
 

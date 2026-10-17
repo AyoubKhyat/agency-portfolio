@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { HiOutlineCheck, HiOutlineChatBubbleLeft } from "react-icons/hi2";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
+import { SITE_URL } from "@/lib/site";
 
 type SectorData = {
   slug: string;
@@ -181,7 +182,7 @@ const SECTORS: Record<string, SectorData> = {
 };
 
 const SLUGS = Object.keys(SECTORS);
-const BASE_URL = "https://ibda3-digital.vercel.app";
+const BASE_URL = SITE_URL;
 
 function SectorJsonLd({ slug, sector }: { slug: string; sector: SectorData }) {
   const schema = {
@@ -215,13 +216,21 @@ function FaqJsonLd({ faq }: { faq: { q: string; a: string }[] }) {
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />;
 }
 
+// Sector landing pages are offline until their content and translations are reviewed: every slug
+// returns 404. The pages and copy below are kept as-is; set to true to bring them back.
+const SECTOR_PAGES_ENABLED = false;
+
+// Render on request like the rest of the localized site. Statically rendered, the shared [locale]
+// layout's request-locale lookup throws DYNAMIC_SERVER_USAGE (500) instead of rendering the 404.
+export const dynamic = "force-dynamic";
+
 export async function generateStaticParams() {
   return SLUGS.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const sector = SECTORS[slug];
+  const sector = SECTOR_PAGES_ENABLED ? SECTORS[slug] : undefined;
   if (!sector) return {};
   return {
     title: `${sector.title} — Ibda3 Digital`,
@@ -231,7 +240,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function SectorPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const sector = SECTORS[slug];
+  const sector = SECTOR_PAGES_ENABLED ? SECTORS[slug] : undefined;
   if (!sector) notFound();
 
   return (

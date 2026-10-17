@@ -3,8 +3,9 @@
 import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { HiChevronRight } from "react-icons/hi2";
+import { SITE_URL } from "@/lib/site";
 
-const BASE_URL = "https://ibda3-digital.vercel.app";
+const BASE_URL = SITE_URL;
 
 const PAGE_KEYS: Record<string, string> = {
   services: "services",
@@ -14,13 +15,12 @@ const PAGE_KEYS: Record<string, string> = {
   contact: "contact",
 };
 
-const CASE_STUDY_SLUGS = ["hammam-nour", "goudoukh", "tannour", "terrene", "victory-path"];
-
-export default function Breadcrumbs() {
+// Case-study pages render their own instance with the project title from the database
+// (projectTitle); the layout instance stays out of the way on those routes.
+export default function Breadcrumbs({ projectTitle }: { projectTitle?: string } = {}) {
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations("Nav");
-  const cs = useTranslations("CaseStudy");
 
   const segments = pathname.replace(/^\//, "").split("/");
   const slug = segments[0];
@@ -29,7 +29,9 @@ export default function Breadcrumbs() {
 
   if (!pageKey || pathname === "/") return null;
 
-  const isCaseStudy = slug === "portfolio" && subSlug && CASE_STUDY_SLUGS.includes(subSlug);
+  const onCaseStudyRoute = slug === "portfolio" && Boolean(subSlug);
+  if (onCaseStudyRoute && !projectTitle) return null;
+  const isCaseStudy = onCaseStudyRoute && Boolean(projectTitle);
 
   const items = [
     {
@@ -46,11 +48,11 @@ export default function Breadcrumbs() {
     },
   ];
 
-  if (isCaseStudy) {
+  if (isCaseStudy && projectTitle) {
     items.push({
       "@type": "ListItem" as const,
       position: 3,
-      name: cs(`${subSlug}_title`),
+      name: projectTitle,
       item: `${BASE_URL}/${locale}/${slug}/${subSlug}`,
     });
   }
@@ -91,7 +93,7 @@ export default function Breadcrumbs() {
                 <HiChevronRight className="w-3 h-3" />
               </li>
               <li>
-                <span className="text-foreground">{cs(`${subSlug}_title`)}</span>
+                <span className="text-foreground">{projectTitle}</span>
               </li>
             </>
           ) : (

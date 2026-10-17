@@ -74,6 +74,95 @@ export async function getVisibleProjects(locale: string) {
   }));
 }
 
+// Hidden in the database; the static fallback list predates the visibility flag.
+const FALLBACK_HIDDEN = new Set(["luxury-copro"]);
+
+export type HomepageProject = {
+  slug: string;
+  url: string;
+  image: string;
+  title: string;
+  sector: string;
+};
+
+/** Visible projects for the homepage, in admin sort order, with the localized sector. */
+export async function getHomepageProjects(locale: string): Promise<HomepageProject[]> {
+  const fallback = async () =>
+    (await getFallbackProjects(locale))
+      .filter((p) => !FALLBACK_HIDDEN.has(p.slug))
+      .map((p) => ({
+        slug: p.slug, url: p.url, image: p.image, title: p.title, sector: p.tag,
+      }));
+  if (!hasPrisma()) return fallback();
+  try {
+    const projects = await prisma.project.findMany({
+      where: { visible: true },
+      orderBy: { sortOrder: "asc" },
+      select: {
+        slug: true, url: true, image: true, tag: true,
+        translations: { where: { locale }, select: { title: true, industry: true } },
+      },
+    });
+    if (projects.length === 0) return fallback();
+    return projects.map((p) => ({
+      slug: p.slug,
+      url: p.url,
+      image: p.image,
+      title: p.translations[0]?.title ?? p.slug,
+      sector: p.translations[0]?.industry || p.tag,
+    }));
+  } catch (e) {
+    console.error("[dal] getHomepageProjects failed, using fallback:", e);
+    return fallback();
+  }
+}
+
+export type PortfolioCardProject = {
+  slug: string;
+  url: string;
+  image: string;
+  title: string;
+  desc: string;
+  tags: string[];
+  sector: string;
+};
+
+/** Visible projects for the Portfolio page, in admin sort order (read-only). */
+export async function getPortfolioProjects(locale: string): Promise<PortfolioCardProject[]> {
+  const split = (tags: string) => tags.split(",").map((s) => s.trim()).filter(Boolean);
+  const fallback = async () =>
+    (await getFallbackProjects(locale))
+      .filter((p) => !FALLBACK_HIDDEN.has(p.slug))
+      .map((p) => ({ slug: p.slug, url: p.url, image: p.image, title: p.title, desc: p.desc, tags: split(p.tags), sector: p.tag }));
+  if (!hasPrisma()) return fallback();
+  try {
+    const projects = await prisma.project.findMany({
+      where: { visible: true },
+      orderBy: { sortOrder: "asc" },
+      select: {
+        slug: true, url: true, image: true, tag: true,
+        translations: { where: { locale }, select: { title: true, desc: true, tags: true, industry: true } },
+      },
+    });
+    if (projects.length === 0) return fallback();
+    return projects.map((p) => {
+      const t = p.translations[0];
+      return {
+        slug: p.slug,
+        url: p.url,
+        image: p.image,
+        title: t?.title ?? p.slug,
+        desc: t?.desc ?? "",
+        tags: split(t?.tags ?? ""),
+        sector: t?.industry || p.tag,
+      };
+    });
+  } catch (e) {
+    console.error("[dal] getPortfolioProjects failed, using fallback:", e);
+    return fallback();
+  }
+}
+
 export async function getProjectBySlug(slug: string, locale: string) {
   if (!hasPrisma()) return getFallbackSlug(slug, locale);
   const project = await prisma.project.findUnique({
@@ -83,13 +172,16 @@ export async function getProjectBySlug(slug: string, locale: string) {
     },
   });
 
-  if (!project || !project.visible) return getFallbackSlug(slug, locale);
+  // Explicitly hidden in the database: not found (never served from the static fallback).
+  if (project && !project.visible) return null;
+  if (!project) return getFallbackSlug(slug, locale);
 
   const t = project.translations[0];
   return { ...project, translation: t ?? null };
 }
 
 async function getFallbackSlug(slug: string, locale: string) {
+  if (FALLBACK_HIDDEN.has(slug)) return null;
   const fp = FALLBACK_PROJECTS.find((p) => p.slug === slug);
   if (!fp) return null;
 

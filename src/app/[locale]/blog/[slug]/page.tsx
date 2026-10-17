@@ -6,8 +6,9 @@ import { HiArrowLeft, HiOutlineClock, HiOutlineUser } from "react-icons/hi2";
 import { FadeIn } from "@/components/motion";
 import { getPostBySlug, getAllPostSlugs } from "@/lib/blog";
 import { MDXRemote } from "next-mdx-remote/rsc";
+import { SITE_URL } from "@/lib/site";
 
-const BASE_URL = "https://ibda3-digital.vercel.app";
+const BASE_URL = SITE_URL;
 
 function BlogPostJsonLd({
   locale,

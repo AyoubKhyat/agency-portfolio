@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Inter, Instrument_Serif, JetBrains_Mono, Plus_Jakarta_Sans, Noto_Kufi_Arabic } from "next/font/google";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -39,7 +40,7 @@ const notoKufiArabic = Noto_Kufi_Arabic({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ibda3-digital.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   title: "Ibda3 Digital — Agence Web Marrakech",
   description:
     "Ibda3 Digital — Agence web à Marrakech. Création de sites web, applications mobiles et solutions e-commerce sur mesure.",

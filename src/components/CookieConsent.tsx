@@ -28,14 +28,16 @@ export default function CookieConsent() {
   if (!visible) return null;
 
   return (
+    // Phones get a tighter card (same message, same two 40px buttons) so it covers less of the
+    // first screen; from md up the layout is unchanged.
     <div
-      className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:max-w-md z-[60] border border-line rounded-2xl bg-background/95 backdrop-blur-md p-5 shadow-2xl"
+      className="fixed bottom-3 left-3 right-3 md:bottom-4 md:left-auto md:right-6 md:max-w-md z-[60] border border-line rounded-2xl bg-background/95 backdrop-blur-md px-4 py-3.5 md:p-5 shadow-2xl"
       style={{
         animation: "cookie-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both",
       }}
     >
-      <p className="text-sm text-text-muted leading-relaxed">{t("message")}</p>
-      <div className="flex items-center gap-3 mt-4">
+      <p className="text-[13px] leading-[1.45] md:text-sm md:leading-relaxed text-text-muted">{t("message")}</p>
+      <div className="flex items-center gap-2 mt-2.5 md:gap-3 md:mt-4">
         <button
           onClick={accept}
           className="flex-1 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors"

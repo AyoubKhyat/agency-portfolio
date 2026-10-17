@@ -1,0 +1,179 @@
+/* Portfolio v2 — port of design-exploration/portfolio-v2 (approved, refined prototype).
+   The hero keeps the site's Tailwind styles; everything else is scoped under .root, with the
+   same tokens as the homepage (home-v2) and Services v2. */
+
+.root {
+  --bg: #f6f5f1;
+  --ink: #0b0b0f;
+  --muted: #5d5d66;
+  --line: rgba(11, 11, 15, 0.12);
+  --line-2: rgba(11, 11, 15, 0.22);
+  --plate: #ecebe5;
+  --card: #fbfaf7;
+  --grad: linear-gradient(100deg, #8b6fe0 0%, #2563eb 100%);
+  --cta-grad: linear-gradient(100deg, #6a4ee0 0%, #2563eb 100%);
+  --display: "Cabinet Grotesk", var(--font-alexandria), system-ui, sans-serif;
+  /* next/font family names directly: var(--font-inter) also carries "Inter Fallback" (local
+     Arial), which has Arabic glyphs and would win over Tajawal. */
+  --body: "Inter", "Tajawal", system-ui, sans-serif;
+  --gut: clamp(16px, 3.6vw, 56px);
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 16px/1.6 var(--body);
+  transition: background 0.4s, color 0.4s;
+}
+.root[dir="rtl"] { font-size: 17px; }
+:global(.dark) .root {
+  --bg: #09090b;
+  --ink: #f2f1ee;
+  --muted: #9d9da8;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-2: rgba(255, 255, 255, 0.2);
+  --plate: #121216;
+  --card: #0e0e11;
+  --grad: linear-gradient(100deg, #a78bfa 0%, #60a5fa 100%);
+  --cta-grad: linear-gradient(100deg, #5b3fd6 0%, #1d4ed8 100%);
+}
+
+.root *, .root *::before, .root *::after { box-sizing: border-box; }
+.root :where(a) { color: inherit; text-decoration: none; }
+.root :where(button) { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.root :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+
+/* ── Hero subtitle (refined): Instrument Serif italic, editorial size, under the headline ── */
+.heroSub { margin: 0; max-width: 30ch; font-style: italic; font-weight: 400; font-size: clamp(26px, 2.5vw, 36px); line-height: 1.25; letter-spacing: -0.005em; color: var(--color-text-muted); }
+/* Arabic has no true italic: upright, a touch smaller, roomier line height. */
+.heroSubAr { font-style: normal; font-size: clamp(20px, 1.9vw, 28px); line-height: 1.7; letter-spacing: 0; }
+.nw { white-space: nowrap; }
+
+.wrap { max-width: 1520px; margin: 0 auto; padding-inline: var(--gut); }
+.grid12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(16px, 2vw, 32px); }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.label { font: 600 13px/1.45 var(--body); letter-spacing: 0.01em; color: var(--muted); }
+.root[dir="rtl"] .label { font-size: 13.5px; letter-spacing: 0; }
+.secNum { color: var(--ink); font-variant-numeric: tabular-nums; margin-inline-end: 0.3em; }
+/* The number is an LTR island: in RTL the label text follows on its left. */
+.root[dir="rtl"] .secNum { margin-inline-end: 0; margin-left: 0.3em; }
+.disp { font-family: var(--display); font-weight: 800; letter-spacing: -0.035em; line-height: 0.92; }
+.root[dir="rtl"] .disp { letter-spacing: 0; line-height: 1.35; font-weight: 700; }
+.flip { display: inline-block; }
+.root[dir="rtl"] .flip { transform: scaleX(-1); }
+
+/* Section scaffolding (same as homepage / Services v2) */
+.sec { padding-block: clamp(84px, 9vw, 144px); }
+.secHead { align-items: start; margin-bottom: clamp(36px, 4.4vw, 64px); }
+.secHead .label { grid-column: 1 / span 3; padding-top: 0.9em; }
+.secHead .hd { grid-column: 4 / -1; }
+.secHead h2 { margin: 0; font-size: clamp(2.5rem, 5.4vw, 5.6rem); max-width: 15ch; }
+.secIntro { margin: clamp(16px, 1.8vw, 24px) 0 0; max-width: 52ch; color: var(--muted); font-size: 1.05rem; }
+
+/* ── Filter ── */
+.filterBar { padding-top: clamp(24px, 2.6vw, 36px); }
+.filterRow { display: flex; align-items: center; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.seg { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--card); }
+.seg button { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; font-weight: 600; font-size: 14.5px; color: var(--muted); transition: background 0.3s, color 0.3s; }
+.seg button .n { font: 600 12px/1 var(--body); font-variant-numeric: tabular-nums; padding: 3px 7px; border-radius: 999px; background: var(--plate); color: var(--muted); transition: background 0.3s, color 0.3s; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg button[aria-pressed="true"] .n { background: color-mix(in srgb, var(--bg) 18%, transparent); color: var(--bg); }
+.seg button:not([aria-pressed="true"]):hover { color: var(--ink); }
+.legend { display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; margin: 0; padding: 0; list-style: none; }
+.legend li { display: inline-flex; align-items: center; gap: 8px; }
+
+/* Badges: client = filled brand gradient, concept = dashed outline */
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font: 600 12px/1 var(--body); letter-spacing: 0.01em; white-space: nowrap; }
+.root[dir="rtl"] .badge { font-size: 12.5px; letter-spacing: 0; }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badgeClient { background: var(--grad); color: #fff; }
+.badgeConcept { border: 1px dashed var(--line-2); color: var(--muted); }
+
+/* ── Work sections ── */
+.clients { background: var(--plate); padding-top: clamp(56px, 6vw, 96px); }
+.concepts { background: var(--bg); }
+.note { display: flex; gap: 14px; align-items: flex-start; margin: 0 0 clamp(28px, 3vw, 44px); padding: 16px 20px; border: 1px dashed var(--line-2); border-radius: 14px; color: var(--muted); max-width: 760px; }
+.note .badge { margin-top: 2px; }
+.note p { margin: 0; }
+.work { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 2vw, 32px); }
+.work > li { display: flex; }
+.pcard { position: relative; flex: 1; display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; transition: border-color 0.4s, transform 0.5s var(--ease), box-shadow 0.5s var(--ease); }
+.shot { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; background: var(--plate); border-bottom: 1px solid var(--line); }
+.shot img { object-fit: cover; object-position: center; transition: transform 0.9s var(--ease); }
+.pbody { display: flex; flex-direction: column; gap: 14px; padding: clamp(22px, 2.4vw, 36px); flex: 1; }
+.pmeta { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; }
+.sector { font: 500 13.5px/1.4 var(--body); color: var(--muted); }
+.pcard h3 { margin: 4px 0 0; font-size: clamp(2rem, 3vw, 3.1rem); }
+.pcard h3 a::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.pdesc { margin: 0; color: var(--muted); font-size: 15.5px; max-width: 54ch; }
+.ptags { margin: 0; font: 500 13px/1.5 var(--body); color: var(--muted); }
+.ptags span + span::before { content: "·"; margin-inline: 0.5em; opacity: 0.6; }
+.pact { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; margin-top: auto; padding-top: 18px; border-top: 1px solid var(--line); }
+.more { display: inline-flex; gap: 8px; font-weight: 600; font-size: 14.5px; border-bottom: 2px solid var(--line-2); padding-bottom: 2px; transition: border-color 0.3s; }
+.ext { position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 7px; font-weight: 500; font-size: 14px; color: var(--muted); padding: 6px 0; transition: color 0.3s; }
+.ext svg { width: 14px; height: 14px; }
+.root[dir="rtl"] .ext svg { transform: scaleX(-1); }
+.ext:hover { color: var(--ink); }
+.extLbl { display: inline-flex; align-items: center; gap: 7px; }
+.host { white-space: nowrap; }
+/* Odd card out: full width, image beside the text */
+.work > li:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.work > li:last-child:nth-child(odd) .pcard { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+/* next/image fill is out of flow, so the frame sets its own height: 16:10, as the prototype's in-flow screenshot. */
+.work > li:last-child:nth-child(odd) .shot { aspect-ratio: 16 / 10; min-height: 100%; border-bottom: 0; border-inline-end: 1px solid var(--line); }
+@media (hover: hover) {
+  .pcard:hover { border-color: var(--line-2); transform: translateY(-3px); box-shadow: 0 28px 60px -36px rgba(40, 30, 120, 0.4); }
+  .pcard:hover .shot img { transform: scale(1.035); }
+  .pcard:hover .more { border-color: currentColor; }
+}
+.pcard:has(h3 a:focus-visible) { outline: 2px solid var(--ink); outline-offset: 3px; }
+.root .pcard h3 a:focus-visible { outline: none; }
+
+/* ── CTA (homepage gradient; deeper stops keep white text ≥ 4.5:1) ── */
+.cta { background: var(--cta-grad); color: #fff; padding-block: clamp(72px, 8vw, 128px); }
+.cta .label { color: rgba(255, 255, 255, 0.88); }
+.cta .secNum { color: #fff; }
+.ctaTitle { margin: 18px 0 0; font-size: clamp(2.9rem, 7.4vw, 7.6rem); max-width: 16ch; }
+.ctaRow { margin-top: clamp(28px, 4vw, 48px); align-items: end; row-gap: 28px; }
+.ctaRow p { grid-column: 1 / span 6; margin: 0; font-size: 1.15rem; color: rgba(255, 255, 255, 0.92); max-width: 44ch; }
+.ctaRow .act { grid-column: 7 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 14px 28px; flex-wrap: wrap; }
+.pillWhite { display: inline-flex; align-items: center; gap: 10px; padding: 20px 30px; border-radius: 999px; background: #fff; color: #0b0b0f !important; font-weight: 600; font-size: 17px; transition: transform 0.3s var(--ease); }
+.pillWhite:hover { transform: translateY(-2px); }
+.linkW { display: inline-flex; align-items: center; gap: 9px; font-weight: 600; font-size: 16px; color: #fff; border-bottom: 2px solid rgba(255, 255, 255, 0.45); padding-bottom: 3px; transition: border-color 0.3s; }
+.linkW:hover { border-color: #fff; }
+.linkW svg { width: 18px; height: 18px; }
+.root .cta :focus-visible { outline-color: #fff; outline-offset: 4px; }
+
+/* Scroll reveals: content is visible unless JS runs and motion is allowed */
+.jsReveal [data-reveal] { opacity: 0; transform: translateY(26px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); }
+.jsReveal [data-reveal][data-in] { opacity: 1; transform: none; }
+.fade { animation: secIn 0.5s var(--ease) both; }
+.fade [data-reveal] { opacity: 1 !important; transform: none !important; }
+@keyframes secIn { from { opacity: 0; transform: translateY(12px); } }
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .secHead .label { grid-column: 1 / -1; padding-top: 0; margin-bottom: 14px; }
+  .secHead .hd { grid-column: 1 / -1; }
+  .ctaRow p, .ctaRow .act { grid-column: 1 / -1; }
+  .ctaRow .act { justify-content: flex-start; }
+  .work > li:last-child:nth-child(odd) .pcard { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .work { grid-template-columns: minmax(0, 1fr); }
+  .work > li:last-child:nth-child(odd) { grid-column: auto; }
+  .work > li:last-child:nth-child(odd) .pcard { display: flex; }
+  .work > li:last-child:nth-child(odd) .shot { aspect-ratio: 16 / 9; min-height: 0; border-inline-end: 0; border-bottom: 1px solid var(--line); }
+  .seg { width: 100%; }
+  .seg button { flex: 1; justify-content: center; padding: 10px 8px; }
+  .legend { display: none; }
+  .pact { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .ext { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .pillWhite { width: 100%; justify-content: center; }
+}
+@media (max-width: 360px) {
+  .seg button { font-size: 13.5px; gap: 6px; }
+  .seg button .n { padding: 3px 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .root *, .root *::before, .root *::after { animation: none !important; transition: none !important; }
+}

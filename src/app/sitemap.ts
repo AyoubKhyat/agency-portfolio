@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { getAllProjectSlugs } from "@/lib/dal";
 import { getAllPostSlugs } from "@/lib/blog";
+import { SITE_URL } from "@/lib/site";
 
-const BASE_URL = "https://ibda3-digital.vercel.app";
+const BASE_URL = SITE_URL;
 const locales = ["fr", "en", "ar"];
 const pages = ["", "/services", "/portfolio", "/blog", "/about", "/contact"];
 const serviceSlugs = ["web", "ecommerce", "mobile", "seo", "maintenance"];

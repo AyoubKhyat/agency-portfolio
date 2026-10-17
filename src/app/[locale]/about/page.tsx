@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
+import { localeAlternates } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -10,7 +11,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "About" });
-  return { title: `${t("title")} — Ibda3 Digital`, description: t("subtitle") };
+  return {
+    title: `${t("title")} — Ibda3 Digital`,
+    description: t("subtitle"),
+    alternates: localeAlternates(locale, "/about"),
+  };
 }
 
 export default function AboutPage() {
