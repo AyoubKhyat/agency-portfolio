@@ -21,14 +21,21 @@ export type CardLabels = { client: string; concept: string; caseStudy: string; l
 
 // Image-led project card. The title link covers the whole card (case study); the live-site
 // link sits above it. The screenshot link is a duplicate target, so it is hidden from AT and Tab.
-export default function ProjectCard({ project: p, isClient, labels }: { project: PortfolioCardProject; isClient: boolean; labels: CardLabels }) {
+export default function ProjectCard({ project: p, isClient, labels, priority = false }: { project: PortfolioCardProject; isClient: boolean; labels: CardLabels; priority?: boolean }) {
   const caseHref = `/portfolio/${p.slug}`;
   const host = hostname(p.url);
   return (
     <article className={s.pcard}>
       <Link href={caseHref} className={s.shot} tabIndex={-1} aria-hidden="true">
         {p.image.startsWith("/") && (
-          <Image src={p.image} alt="" fill sizes="(max-width: 760px) 100vw, (max-width: 1520px) 50vw, 760px" />
+          <Image
+            src={p.image}
+            alt=""
+            fill
+            sizes="(max-width: 760px) 100vw, (max-width: 1520px) 50vw, 760px"
+            // The first card is the page's largest above-the-fold element: load it eagerly, first.
+            {...(priority ? { loading: "eager" as const, fetchPriority: "high" as const } : {})}
+          />
         )}
       </Link>
       <div className={s.pbody}>

@@ -6,7 +6,10 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/_next/"],
+      // /_next/ must stay crawlable (CSS/JS/images needed to render pages). Admin and contract-signing
+      // pages are not disallowed here: they send X-Robots-Tag: noindex (next.config.ts), which crawlers
+      // can only see if they are allowed to fetch the page.
+      disallow: ["/api/"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

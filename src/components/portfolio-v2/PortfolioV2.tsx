@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { preconnect } from "react-dom";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { FadeIn } from "@/components/motion";
 import RevealController from "@/components/home-v2/RevealController";
 import { alexandria, tajawal } from "@/components/home-v2/fonts";
 import { getPortfolioProjects, type PortfolioCardProject } from "@/lib/dal";
@@ -12,9 +11,6 @@ import ProjectCard, { type CardLabels } from "./ProjectCard";
 import WorkFilter from "./WorkFilter";
 import s from "./portfolio.module.css";
 
-// Cabinet Grotesk is served by Fontshare's CSS API (ITF Free Font License): the repo is
-// public, so the font files must not be committed.
-const CABINET_CSS = "https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800&display=swap";
 const ROOT_ID = "portfolio-v2";
 
 const WA_ICON = (
@@ -29,7 +25,6 @@ function noBreakHyphens(text: string): ReactNode[] {
 }
 
 export default async function PortfolioV2({ locale }: { locale: string }) {
-  preconnect("https://api.fontshare.com");
   preconnect("https://cdn.fontshare.com", { crossOrigin: "anonymous" });
   const t = await getTranslations({ locale, namespace: "Portfolio" });
   const h = await getTranslations({ locale, namespace: "HomeV2" });
@@ -59,9 +54,9 @@ export default async function PortfolioV2({ locale }: { locale: string }) {
   );
   const list = (items: PortfolioCardProject[], isClient: boolean) => (
     <ul className={s.work}>
-      {items.map((p) => (
+      {items.map((p, i) => (
         <li key={p.slug} data-reveal="">
-          <ProjectCard project={p} isClient={isClient} labels={cardLabels} />
+          <ProjectCard project={p} isClient={isClient} labels={cardLabels} priority={isClient && i === 0} />
         </li>
       ))}
     </ul>
@@ -106,19 +101,18 @@ export default async function PortfolioV2({ locale }: { locale: string }) {
         <div className="grid-bg" />
         <div className="glow w-[600px] h-[600px] bg-primary -bottom-32 left-20 opacity-20" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeIn>
+          <div className="hero-enter">
             <div className="flex flex-col gap-[22px] md:gap-7">
               <h1 className="font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.95] tracking-tight text-foreground">
                 <span className="text-primary italic">{words[0]}</span><br />{words.slice(1).join(" ")}.
               </h1>
               <p className={`font-serif ${s.heroSub} ${rtl ? s.heroSubAr : ""}`}>{noBreakHyphens(t("subtitle"))}</p>
             </div>
-          </FadeIn>
+          </div>
         </div>
       </section>
 
       <div id={ROOT_ID} dir={rtl ? "rtl" : "ltr"} className={`${s.root} ${alexandria.variable} ${tajawal.variable}`}>
-        <link rel="stylesheet" href={CABINET_CSS} precedence="default" />
         <RevealController rootId={ROOT_ID} hiddenClass={s.jsReveal} />
 
         <WorkFilter

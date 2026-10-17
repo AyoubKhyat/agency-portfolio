@@ -5,7 +5,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import ProjectDetailV2 from "@/components/project-detail-v2/ProjectDetailV2";
 import { getProjectBySlug } from "@/lib/dal";
 import { CLIENT_SLUGS } from "@/lib/homepage-clients";
-import { SITE_URL, localeAlternates, localeUrl } from "@/lib/site";
+import { SITE_URL, pageMetadata } from "@/lib/site";
 
 const BASE_URL = SITE_URL;
 
@@ -65,18 +65,14 @@ export async function generateMetadata({
 
   const seo = await seoText(project, locale);
 
-  return {
+  return pageMetadata({
+    locale,
+    path: `/portfolio/${slug}`,
     title: seo.title,
     description: seo.description,
-    alternates: localeAlternates(locale, `/portfolio/${slug}`),
-    openGraph: {
-      title: seo.title,
-      description: seo.description,
-      url: localeUrl(locale, `/portfolio/${slug}`),
-      images: [{ url: `${BASE_URL}${project.image}` }],
-      type: "article",
-    },
-  };
+    type: "article",
+    image: project.image || undefined,
+  });
 }
 
 export default async function CaseStudyPage({

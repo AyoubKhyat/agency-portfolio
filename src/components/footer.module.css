@@ -1,0 +1,107 @@
+/* Footer v2 (compact) — port of design-exploration/footer-v2 (approved prototype). Always charcoal:
+   it closes light pages as a dark block and sits a step darker than dark pages. Scoped under .f. */
+
+.f {
+  --f-bg: #0e0e13;
+  --f-ink: #f2f1ee;
+  --f-muted: #9d9da8;
+  --f-soft: #6f6f7a;
+  --f-line: rgba(255, 255, 255, 0.1);
+  --f-line-2: rgba(255, 255, 255, 0.2);
+  --f-grad: linear-gradient(100deg, #a78bfa 0%, #60a5fa 100%);
+  --f-glow: 0.16;
+  /* next/font family names directly: var(--font-inter) also carries "Inter Fallback" (local
+     Arial), which has Arabic glyphs and would win over Tajawal. */
+  --body: "Inter", "Tajawal", system-ui, sans-serif;
+  --mono: var(--font-jetbrains), ui-monospace, monospace;
+  --ez: cubic-bezier(0.2, 0.7, 0.1, 1);
+
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  container-type: inline-size; /* 100cqw = footer width, for the legal row clearance below */
+  background: var(--f-bg);
+  color: var(--f-ink);
+  font: 400 16px/1.6 var(--body);
+}
+:global(.dark) .f { --f-bg: #050507; --f-glow: 0.12; border-top: 1px solid rgba(255, 255, 255, 0.11); }
+.f::before { content: ""; position: absolute; z-index: -1; width: 900px; height: 900px; border-radius: 50%; top: -520px; inset-inline-end: -260px; background: radial-gradient(circle, #8b6fe0 0%, transparent 62%); opacity: var(--f-glow); pointer-events: none; }
+.f::after { content: ""; position: absolute; z-index: -1; width: 700px; height: 700px; border-radius: 50%; bottom: -420px; inset-inline-start: -200px; background: radial-gradient(circle, #2563eb 0%, transparent 62%); opacity: calc(var(--f-glow) * 0.8); pointer-events: none; }
+.f *, .f *::before, .f *::after { box-sizing: border-box; }
+.f :where(a) { color: inherit; text-decoration: none; }
+.f :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 4px; }
+
+.wrap { max-width: 1280px; margin-inline: auto; padding-inline: 16px; }
+@media (min-width: 640px) { .wrap { padding-inline: 24px; } }
+@media (min-width: 1024px) { .wrap { padding-inline: 32px; } }
+
+/* 1. Columns */
+.cols { display: grid; gap: 32px 32px; padding-block: clamp(40px, 4.2vw, 60px) clamp(32px, 3.4vw, 48px); grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(0, 1fr)); }
+.brand img { display: block; width: 44px; height: 44px; border-radius: 10px; }
+.brand p { margin: 14px 0 0; max-width: 34ch; font: 400 15px/1.7 var(--body); color: var(--f-muted); }
+.city { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; font: 500 13.5px/1.4 var(--body); color: var(--f-ink); }
+.city::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--f-grad); box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.15); }
+.colH { margin: 0 0 14px; font: 400 11.5px/1.6 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--f-soft); }
+.f[dir="rtl"] .colH { font-family: var(--font-arabic), system-ui, sans-serif; letter-spacing: 0; font-size: 13px; }
+.links { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+.links a { position: relative; font: 500 15.5px/1.4 var(--body); color: var(--f-ink); opacity: 0.86; transition: opacity 0.25s; }
+.links a::after { content: ""; position: absolute; inset-inline: 0; bottom: -3px; height: 1px; background: var(--f-grad); transform: scaleX(0); transform-origin: left; transition: transform 0.35s var(--ez); }
+.f[dir="rtl"] .links a::after { transform-origin: right; }
+.links a:hover { opacity: 1; }
+.links a:hover::after { transform: scaleX(1); }
+.social { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.social a { display: flex; align-items: center; gap: 12px; padding: 7px 12px; margin-inline: -12px; border-radius: 14px; transition: background 0.25s; }
+.social a:hover { background: rgba(255, 255, 255, 0.05); }
+.ico { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--f-line-2); display: grid; place-items: center; flex: none; color: var(--f-ink); transition: border-color 0.25s, background 0.25s; }
+.social a:hover .ico { border-color: transparent; background: var(--f-grad); color: #0b0b0f; }
+.ico svg { width: 17px; height: 17px; }
+.social b { display: block; font: 600 14.5px/1.3 var(--body); }
+.social small { display: block; font: 400 13px/1.4 var(--body); color: var(--f-muted); unicode-bidi: isolate; direction: ltr; }
+.f[dir="rtl"] .social small { text-align: right; }
+
+/* 2. Oversized wordmark */
+.mark { container-type: inline-size; border-top: 1px solid var(--f-line); padding-top: clamp(16px, 2.2vw, 28px); }
+.mark p { margin: 0; direction: ltr; text-align: center; white-space: nowrap; font: 800 15.2cqw/0.78 "Cabinet Grotesk", system-ui, sans-serif; letter-spacing: -0.045em;
+          background: linear-gradient(180deg, rgba(242, 241, 238, 0.95) 0%, rgba(242, 241, 238, 0.55) 55%, rgba(167, 139, 250, 0.18) 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+          padding-bottom: 0.04em; user-select: none; }
+.mark p span { padding-inline-end: 0.06em; margin-inline-end: -0.06em; background: var(--f-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* 3. Legal row */
+.legal { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-block: 18px 22px; border-top: 1px solid var(--f-line); font: 400 12px/1.6 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--f-soft); }
+.f[dir="rtl"] .legal { font-family: var(--font-arabic), system-ui, sans-serif; letter-spacing: 0; font-size: 12.5px; }
+.legal p { margin: 0; }
+.legal nav { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+.legal a { color: var(--f-muted); border-bottom: 1px solid transparent; transition: color 0.25s, border-color 0.25s; }
+.legal a:hover { color: var(--f-ink); border-color: currentColor; }
+
+@media (max-width: 1023px) {
+  .cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .brand { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; }
+  .follow { grid-column: 1 / -1; }
+  .legal { flex-direction: column; align-items: flex-start; }
+}
+/* The floating back-to-top (44px, left) and chat (56px, right) buttons sit 24px from the bottom and
+   would cover the copyright / privacy link at the end of the page.
+   Phones: keep the last 80px clear. */
+@media (max-width: 639px) {
+  .legal { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+}
+/* Tablets / laptops: the row sits beside the buttons, so pad it sideways only where the content edge
+   (gutter + centring space) is closer than the buttons + 12px: 80px on the left, 92px on the right.
+   Physical sides: the buttons do not mirror in RTL. Reaches 0 from ~1376px. */
+@media (min-width: 640px) {
+  .legal {
+    --edge: max(24px, (100cqw - 1280px) / 2 + 24px);
+    padding-left: max(0px, 80px - var(--edge));
+    padding-right: max(0px, 92px - var(--edge));
+  }
+}
+@media (min-width: 1024px) {
+  .legal { --edge: max(32px, (100cqw - 1280px) / 2 + 32px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .f *, .f *::before, .f *::after { transition: none !important; }
+}

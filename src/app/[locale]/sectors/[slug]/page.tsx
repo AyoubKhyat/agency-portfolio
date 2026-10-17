@@ -44,7 +44,7 @@ const SECTORS: Record<string, SectorData> = {
       { title: "Mise en ligne & SEO", desc: "Votre site est live, optimisé pour Google, et vous commencez à recevoir des patients." },
     ],
     faq: [
-      { q: "Combien coûte un site web pour un cabinet dentaire ?", a: "Nos sites commencent à partir de 5 000 MAD. Le prix dépend des fonctionnalités (réservation en ligne, multilingue, etc.). Contactez-nous pour un devis gratuit." },
+      { q: "Combien coûte un site web pour un cabinet dentaire ?", a: "Chaque site est sur devis : le prix dépend des fonctionnalités (réservation en ligne, multilingue, etc.). Contactez-nous pour un devis gratuit et sans engagement." },
       { q: "Combien de temps pour créer mon site ?", a: "Votre site est prêt en 7 à 10 jours ouvrables après validation de la maquette." },
       { q: "Mon site sera-t-il visible sur Google ?", a: "Oui. On optimise chaque site pour le référencement local — votre cabinet apparaîtra quand quelqu'un cherche \"dentiste Marrakech\" ou \"dentiste [votre quartier]\"." },
       { q: "Puis-je modifier le contenu moi-même ?", a: "Oui, on vous donne accès à un panneau d'administration simple pour modifier textes, photos et horaires." },
@@ -79,7 +79,7 @@ const SECTORS: Record<string, SectorData> = {
     faq: [
       { q: "Est-ce que mes clientes pourront réserver en ligne ?", a: "Oui ! Elles choisissent la prestation, la date et l'heure. Vous recevez une notification WhatsApp." },
       { q: "J'ai déjà Instagram, pourquoi un site web ?", a: "Instagram est limité : pas de réservation, pas de tarifs clairs, pas de référencement Google. Un site web complète votre Instagram et attire les clientes qui cherchent sur Google." },
-      { q: "Combien ça coûte ?", a: "À partir de 4 000 MAD. Contactez-nous pour un devis adapté à vos besoins." },
+      { q: "Combien ça coûte ?", a: "Sur devis, selon vos besoins. Contactez-nous pour un devis gratuit et sans engagement." },
     ],
     cta: "Remplissez votre agenda en ligne",
   },
@@ -111,7 +111,7 @@ const SECTORS: Record<string, SectorData> = {
     faq: [
       { q: "Puis-je ajouter des biens moi-même ?", a: "Oui, vous aurez un panneau d'administration simple pour ajouter, modifier et supprimer vos annonces avec photos." },
       { q: "Mon site sera-t-il mieux référencé qu'Avito ?", a: "Pour les recherches locales comme \"appartement Gueliz Marrakech\", oui. Un site dédié à votre agence sera mieux positionné qu'une annonce perdue sur un portail." },
-      { q: "Quel est le prix ?", a: "À partir de 7 000 MAD selon les fonctionnalités. Devis gratuit sur demande." },
+      { q: "Quel est le prix ?", a: "Sur devis, selon les fonctionnalités. Contactez-nous pour un devis gratuit et sans engagement." },
     ],
     cta: "Vendez plus de biens grâce à votre site",
   },
@@ -143,7 +143,7 @@ const SECTORS: Record<string, SectorData> = {
     faq: [
       { q: "Comment fonctionne la réservation directe ?", a: "Les voyageurs choisissent leur chambre et leurs dates, puis vous recevez la demande par email et WhatsApp. Vous confirmez manuellement — pas de paiement en ligne obligatoire." },
       { q: "Est-ce que ça remplace Booking ?", a: "Non, ça le complète. Vous gardez Booking pour la visibilité mais vous redirigez les voyageurs vers votre site pour les réservations directes (0% commission)." },
-      { q: "Combien ça coûte ?", a: "À partir de 6 000 MAD. Le site se rembourse en quelques réservations directes." },
+      { q: "Combien ça coûte ?", a: "Sur devis, selon vos besoins. Contactez-nous pour un devis gratuit et sans engagement." },
     ],
     cta: "Arrêtez de payer des commissions",
   },
@@ -175,7 +175,7 @@ const SECTORS: Record<string, SectorData> = {
     faq: [
       { q: "Est-ce que les clients pourront commander en ligne ?", a: "Oui, on peut intégrer un bouton WhatsApp pour les commandes ou un formulaire de réservation." },
       { q: "J'ai déjà une page Instagram, c'est suffisant ?", a: "Instagram ne remplace pas un site web. Un site vous donne un menu permanent, une localisation claire et un meilleur référencement Google." },
-      { q: "Combien ça coûte ?", a: "À partir de 4 000 MAD pour un site vitrine avec menu et réservation." },
+      { q: "Combien ça coûte ?", a: "Sur devis, selon vos besoins (site vitrine avec menu et réservation). Contactez-nous pour un devis gratuit et sans engagement." },
     ],
     cta: "Remplissez vos tables ce soir",
   },

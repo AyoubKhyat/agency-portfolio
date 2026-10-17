@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { FadeIn } from "@/components/motion";
 import ServicesV2 from "@/components/services-v2/ServicesV2";
-import { localeAlternates } from "@/lib/site";
+import { pageMetadata } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -12,11 +11,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Services" });
-  return {
-    title: `${t("title")} — Ibda3 Digital`,
-    description: t("subtitle"),
-    alternates: localeAlternates(locale, "/services"),
-  };
+  return pageMetadata({ locale, path: "/services", title: `${t("title")} — Ibda3 Digital`, description: t("subtitle") });
 }
 
 function FaqJsonLd({ items }: { items: { question: string; answer: string }[] }) {
@@ -52,14 +47,14 @@ export default function ServicesPage() {
         <div className="grid-bg" />
         <div className="glow w-[800px] h-[800px] bg-primary -top-48 -left-48 opacity-20" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeIn>
+          <div className="hero-enter">
             <span className="pill">◆ {t("title")}</span>
-          </FadeIn>
-          <FadeIn delay={0.15}>
+          </div>
+          <div className="hero-enter" style={{ "--enter-delay": "0.15s" } as React.CSSProperties}>
             <h1 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[132px] leading-[0.95] tracking-tight text-foreground max-w-[1200px]">
               {t("hero_headline")}
             </h1>
-          </FadeIn>
+          </div>
         </div>
       </section>
 

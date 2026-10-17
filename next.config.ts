@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
   },
   poweredByHeader: false,
+  // Private areas: never indexed, even if a URL leaks.
+  async headers() {
+    const noindex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
+    return [
+      { source: "/admin/:path*", headers: noindex },
+      { source: "/sign/:path*", headers: noindex },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);

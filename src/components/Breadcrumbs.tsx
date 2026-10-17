@@ -13,6 +13,7 @@ const PAGE_KEYS: Record<string, string> = {
   blog: "blog",
   about: "about",
   contact: "contact",
+  privacy: "privacy", // label from Footer.privacy (not a Nav item)
 };
 
 // Case-study pages render their own instance with the project title from the database
@@ -21,6 +22,7 @@ export default function Breadcrumbs({ projectTitle }: { projectTitle?: string } 
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations("Nav");
+  const footer = useTranslations("Footer");
 
   const segments = pathname.replace(/^\//, "").split("/");
   const slug = segments[0];
@@ -32,6 +34,7 @@ export default function Breadcrumbs({ projectTitle }: { projectTitle?: string } 
   const onCaseStudyRoute = slug === "portfolio" && Boolean(subSlug);
   if (onCaseStudyRoute && !projectTitle) return null;
   const isCaseStudy = onCaseStudyRoute && Boolean(projectTitle);
+  const pageName = slug === "privacy" ? footer("privacy") : t(pageKey);
 
   const items = [
     {
@@ -43,7 +46,7 @@ export default function Breadcrumbs({ projectTitle }: { projectTitle?: string } 
     {
       "@type": "ListItem" as const,
       position: 2,
-      name: t(pageKey),
+      name: pageName,
       item: `${BASE_URL}/${locale}/${slug}`,
     },
   ];
@@ -86,7 +89,7 @@ export default function Breadcrumbs({ projectTitle }: { projectTitle?: string } 
             <>
               <li>
                 <Link href="/portfolio" className="hover:text-primary transition-colors">
-                  {t(pageKey)}
+                  {pageName}
                 </Link>
               </li>
               <li aria-hidden="true">
@@ -98,7 +101,7 @@ export default function Breadcrumbs({ projectTitle }: { projectTitle?: string } 
             </>
           ) : (
             <li>
-              <span className="text-foreground">{t(pageKey)}</span>
+              <span className="text-foreground">{pageName}</span>
             </li>
           )}
         </ol>

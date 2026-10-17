@@ -6,7 +6,7 @@ import { HiArrowLeft, HiOutlineClock, HiOutlineUser } from "react-icons/hi2";
 import { FadeIn } from "@/components/motion";
 import { getPostBySlug, getAllPostSlugs } from "@/lib/blog";
 import { MDXRemote } from "next-mdx-remote/rsc";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, pageMetadata } from "@/lib/site";
 
 const BASE_URL = SITE_URL;
 
@@ -64,26 +64,15 @@ export async function generateMetadata({
   const post = await getPostBySlug(slug, locale);
   if (!post) return {};
 
-  return {
+  return pageMetadata({
+    locale,
+    path: `/blog/${slug}`,
     title: `${post.title} — Ibda3 Digital`,
     description: post.excerpt,
-    alternates: {
-      canonical: `${BASE_URL}/${locale}/blog/${slug}`,
-      languages: {
-        fr: `${BASE_URL}/fr/blog/${slug}`,
-        en: `${BASE_URL}/en/blog/${slug}`,
-        ar: `${BASE_URL}/ar/blog/${slug}`,
-        "x-default": `${BASE_URL}/fr/blog/${slug}`,
-      },
-    },
-    openGraph: {
-      title: post.title,
-      description: post.excerpt,
-      type: "article",
-      publishedTime: post.date,
-      authors: [post.author],
-    },
-  };
+    type: "article",
+    image: post.image,
+    article: { publishedTime: post.date || undefined, authors: [post.author] },
+  });
 }
 
 export default async function BlogPostPage({

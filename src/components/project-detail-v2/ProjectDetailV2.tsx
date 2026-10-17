@@ -11,9 +11,6 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { VERIFIED_RESULTS, isWithheld, type CaseField } from "./content-policy";
 import s from "./detail.module.css";
 
-// Cabinet Grotesk is served by Fontshare's CSS API (ITF Free Font License): the repo is
-// public, so the font files must not be committed.
-const CABINET_CSS = "https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800&display=swap";
 const ROOT_ID = "project-detail-v2";
 
 type Project = NonNullable<Awaited<ReturnType<typeof getProjectBySlug>>>;
@@ -45,7 +42,6 @@ function hostname(url: string) {
 }
 
 export default async function ProjectDetailV2({ project, locale }: { project: Project; locale: string }) {
-  preconnect("https://api.fontshare.com");
   preconnect("https://cdn.fontshare.com", { crossOrigin: "anonymous" });
   const t = await getTranslations({ locale, namespace: "CaseStudy" });
   const h = await getTranslations({ locale, namespace: "HomeV2" });
@@ -130,7 +126,6 @@ export default async function ProjectDetailV2({ project, locale }: { project: Pr
 
   return (
     <div id={ROOT_ID} dir={rtl ? "rtl" : "ltr"} className={`${s.root} ${alexandria.variable} ${tajawal.variable}`}>
-      <link rel="stylesheet" href={CABINET_CSS} precedence="default" />
       <RevealController rootId={ROOT_ID} hiddenClass={s.jsReveal} />
 
       {/* Hero: site surface, grid, glow and Instrument Serif title; refined hierarchy */}
@@ -168,7 +163,7 @@ export default async function ProjectDetailV2({ project, locale }: { project: Pr
           </div>
           {project.image?.startsWith("/") && (
             <div className={`${s.shot} ${s.heroIn} ${s.d1}`}>
-              <Image src={project.image} alt={tr.title} fill priority sizes="(max-width: 1280px) 100vw, 1216px" />
+              <Image src={project.image} alt={tr.title} fill preload fetchPriority="high" sizes="(max-width: 1280px) 100vw, 1216px" />
             </div>
           )}
         </div>

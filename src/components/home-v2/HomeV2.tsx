@@ -11,9 +11,6 @@ import RevealController from "./RevealController";
 import { alexandria, tajawal } from "./fonts";
 import s from "./home.module.css";
 
-// Cabinet Grotesk is served by Fontshare's CSS API (ITF Free Font License): the repo is
-// public, so the font files must not be committed.
-const CABINET_CSS = "https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800&display=swap";
 const ROOT_ID = "home-v2";
 const PHONE = "+212 625 461 645";
 const EMAIL = "ibda3.digital0@gmail.com";
@@ -43,7 +40,6 @@ function isLocalImage(src: string) {
 }
 
 export default async function HomeV2({ locale }: { locale: string }) {
-  preconnect("https://api.fontshare.com");
   preconnect("https://cdn.fontshare.com", { crossOrigin: "anonymous" });
   const t = await getTranslations({ locale, namespace: "HomeV2" });
   const wa = await getTranslations({ locale, namespace: "WhatsApp" });
@@ -64,7 +60,6 @@ export default async function HomeV2({ locale }: { locale: string }) {
 
   return (
     <div id={ROOT_ID} dir={rtl ? "rtl" : "ltr"} lang={locale} className={`${s.root} ${alexandria.variable} ${tajawal.variable}`}>
-      <link rel="stylesheet" href={CABINET_CSS} precedence="default" />
       <RevealController rootId={ROOT_ID} hiddenClass={s.jsReveal} />
 
       {/* 1. Who IBDA3 is: slogan + plain value proposition */}

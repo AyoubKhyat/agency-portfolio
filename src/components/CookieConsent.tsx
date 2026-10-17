@@ -2,27 +2,42 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
+
+// Set by the ga-consent-gate script in the root layout.
+type AnalyticsGate = { load: () => void; clear: () => void };
+const analytics = () => (window as unknown as { __ibda3Analytics?: AnalyticsGate }).__ibda3Analytics;
 
 export default function CookieConsent() {
   const t = useTranslations("Cookies");
+  const f = useTranslations("Footer");
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    // The privacy page can record a choice while the banner is open; hide it then.
+    const hide = () => setVisible(false);
+    window.addEventListener("cookie-consent-change", hide);
     if (!localStorage.getItem("cookie-consent")) {
       const timer = setTimeout(() => setVisible(true), 1500);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener("cookie-consent-change", hide);
+      };
     }
+    return () => window.removeEventListener("cookie-consent-change", hide);
   }, []);
 
+  // Analytics is opt-in: Accept starts it now; Decline keeps it off and removes any GA cookies.
   function accept() {
     localStorage.setItem("cookie-consent", "accepted");
+    analytics()?.load();
     setVisible(false);
   }
 
   function decline() {
     localStorage.setItem("cookie-consent", "declined");
+    analytics()?.clear();
     setVisible(false);
-    window.location.reload();
   }
 
   if (!visible) return null;
@@ -36,7 +51,11 @@ export default function CookieConsent() {
         animation: "cookie-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both",
       }}
     >
-      <p className="text-[13px] leading-[1.45] md:text-sm md:leading-relaxed text-text-muted">{t("message")}</p>
+      <p className="text-[13px] leading-[1.45] md:text-sm md:leading-relaxed text-text-muted">{t("message")}{" "}
+        <Link href="/privacy" className="underline underline-offset-2 text-foreground hover:text-primary">
+          {f("privacy")}
+        </Link>
+      </p>
       <div className="flex items-center gap-2 mt-2.5 md:gap-3 md:mt-4">
         <button
           onClick={accept}

@@ -382,6 +382,42 @@ body {
   to { opacity: 0; }
 }
 
+/* Cabinet Grotesk 700/800 (ITF Free Font License), the rules Fontshare's CSS API returns for
+   cabinet-grotesk@700,800&display=swap. Declared here instead of linking
+   api.fontshare.com/v2/css, which was a render-blocking third-party stylesheet on every page.
+   The files stay on Fontshare's CDN (the repo is public, so they must not be committed).
+   If Fontshare ever changes these URLs, headings fall back to Alexandria / system-ui: re-copy
+   the rules from https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800&display=swap */
+@font-face {
+  font-family: "Cabinet Grotesk";
+  src: url("https://cdn.fontshare.com/wf/XMXWOHABYLQDJ42L65EFRYNVRY37HQCB/B2O4O6V3JMFM2WDCYQI3A47L5U4THDUL/WN5274VQ3AUBDFP74GB4EC4XYJ3EKVNE.woff2") format("woff2"),
+       url("https://cdn.fontshare.com/wf/XMXWOHABYLQDJ42L65EFRYNVRY37HQCB/B2O4O6V3JMFM2WDCYQI3A47L5U4THDUL/WN5274VQ3AUBDFP74GB4EC4XYJ3EKVNE.woff") format("woff"),
+       url("https://cdn.fontshare.com/wf/XMXWOHABYLQDJ42L65EFRYNVRY37HQCB/B2O4O6V3JMFM2WDCYQI3A47L5U4THDUL/WN5274VQ3AUBDFP74GB4EC4XYJ3EKVNE.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Cabinet Grotesk";
+  src: url("https://cdn.fontshare.com/wf/ZX6AQLSFYVDPN2URWO2MQFGTYYOHIS64/TPYPKOYWFQVNJHLLRXD4KFYX4LUOUW4Z/6QH2ALVTTK7IRVO5MYOQQ3OZNXW5SSS3.woff2") format("woff2"),
+       url("https://cdn.fontshare.com/wf/ZX6AQLSFYVDPN2URWO2MQFGTYYOHIS64/TPYPKOYWFQVNJHLLRXD4KFYX4LUOUW4Z/6QH2ALVTTK7IRVO5MYOQQ3OZNXW5SSS3.woff") format("woff"),
+       url("https://cdn.fontshare.com/wf/ZX6AQLSFYVDPN2URWO2MQFGTYYOHIS64/TPYPKOYWFQVNJHLLRXD4KFYX4LUOUW4Z/6QH2ALVTTK7IRVO5MYOQQ3OZNXW5SSS3.ttf") format("truetype");
+  font-weight: 800;
+  font-display: swap;
+  font-style: normal;
+}
+
+/* Entrance animations that need no JavaScript: content is painted from the server HTML and the
+   animation starts on first paint (reduced motion: the global rule below shortens them to ~0).
+   Fill mode "backwards": the start state covers any delay, and nothing (no transform) is left
+   on the element afterwards, so fixed-position descendants behave normally. */
+@keyframes enter-up {
+  from { opacity: 0; transform: translateY(var(--enter-y, 12px)); }
+}
+.page-enter { animation: enter-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+/* Same motion as the FadeIn hero blocks it replaces: 40px rise, 0.6s, optional delay. */
+.hero-enter { --enter-y: 40px; animation: enter-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) var(--enter-delay, 0s) backwards; }
+
 .loading-screen {
   animation: loading-fade-out 0.4s var(--ease) forwards;
   pointer-events: none;

@@ -27,9 +27,9 @@ export async function generateMetadata({
     ar: "إبداع ديجيتال — وكالة ويب مراكش | مواقع، تطبيقات وتجارة إلكترونية",
   };
   const descriptions: Record<string, string> = {
-    en: "Professional web agency in Marrakech, Morocco. We build custom websites, mobile apps, e-commerce stores and SEO solutions. 5+ years of experience. Free quote.",
-    fr: "Agence web professionnelle à Marrakech, Maroc. Création de sites web, applications mobiles, boutiques e-commerce et solutions SEO. +5 ans d'expérience. Devis gratuit.",
-    ar: "وكالة ويب احترافية في مراكش، المغرب. نبني مواقع إلكترونية، تطبيقات موبايل، متاجر إلكترونية وحلول SEO. +5 سنوات خبرة. عرض سعر مجاني.",
+    en: "Professional web agency in Marrakech, Morocco. We build custom websites, mobile apps, e-commerce stores and SEO solutions. Free quote.",
+    fr: "Agence web professionnelle à Marrakech, Maroc. Création de sites web, applications mobiles, boutiques e-commerce et solutions SEO. Devis gratuit.",
+    ar: "وكالة ويب احترافية في مراكش، المغرب. نبني مواقع إلكترونية، تطبيقات موبايل، متاجر إلكترونية وحلول SEO. عرض سعر مجاني.",
   };
   const title = titles[locale] || titles.fr;
   const description = descriptions[locale] || descriptions.fr;

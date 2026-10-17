@@ -10,15 +10,11 @@ import { CheckIcon, Mark } from "./Marks";
 import { FEATURES, SERVICE_KEYS, num } from "./data";
 import s from "./services.module.css";
 
-// Cabinet Grotesk is served by Fontshare's CSS API (ITF Free Font License): the repo is
-// public, so the font files must not be committed.
-const CABINET_CSS = "https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800&display=swap";
 const ROOT_ID = "services-v2";
 
 // Everything below the Services hero: cards, comparison, FAQ and CTA
 // (design-exploration/services-v2). Content comes from the Services and Comparison messages.
 export default function ServicesV2({ faqItems }: { faqItems: { question: string; answer: string }[] }) {
-  preconnect("https://api.fontshare.com");
   preconnect("https://cdn.fontshare.com", { crossOrigin: "anonymous" });
   const t = useTranslations("Services");
   const c = useTranslations("Comparison");
@@ -39,7 +35,6 @@ export default function ServicesV2({ faqItems }: { faqItems: { question: string;
 
   return (
     <div id={ROOT_ID} dir={rtl ? "rtl" : "ltr"} className={`${s.root} ${alexandria.variable} ${tajawal.variable}`}>
-      <link rel="stylesheet" href={CABINET_CSS} precedence="default" />
       <RevealController rootId={ROOT_ID} hiddenClass={s.jsReveal} />
 
       {/* Service cards */}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { localeAlternates } from "@/lib/site";
+import { pageMetadata } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -9,11 +9,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Contact" });
-  return {
-    title: `${t("title")} — Ibda3 Digital`,
-    description: t("subtitle"),
-    alternates: localeAlternates(locale, "/contact"),
-  };
+  return pageMetadata({ locale, path: "/contact", title: `${t("title")} — Ibda3 Digital`, description: t("subtitle") });
 }
 
 export default function ContactLayout({

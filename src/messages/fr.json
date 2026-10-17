@@ -75,7 +75,7 @@
     "seo_desc": "Boostez votre visibilité sur Google grâce au SEO technique, la stratégie de mots-clés et l'optimisation des performances.",
     "seo_features": "Audit technique, Recherche de mots-clés, Optimisation on-page, Analytics & reporting",
     "maintenance_title": "Maintenance & Support",
-    "maintenance_desc": "Forfaits mensuels pour garder votre site à jour, sécurisé et performant.",
+    "maintenance_desc": "Forfaits mensuels sur devis pour garder votre site à jour, sécurisé et performant.",
     "maintenance_features": "Mises à jour, Sécurité, Sauvegardes, Support réactif",
     "cta_title": "Un projet en tête ?",
     "cta_desc": "Discutons de vos besoins et trouvons la solution idéale ensemble.",
@@ -88,26 +88,15 @@
     "seo_subtitle": "Montez en classement. Croissez plus vite.",
     "maintenance_subtitle": "Toujours à jour.",
     "cta_button": "Demander un devis gratuit",
-    "pricing_title": "Nos Forfaits",
-    "pricing_starter": "Starter",
-    "pricing_starter_price": "À partir de 3 000 MAD",
-    "pricing_starter_desc": "Site vitrine simple et efficace",
-    "pricing_pro": "Pro",
-    "pricing_pro_price": "À partir de 8 000 MAD",
-    "pricing_pro_desc": "Site avancé avec CMS",
-    "pricing_business": "Business",
-    "pricing_business_price": "À partir de 15 000 MAD",
-    "pricing_popular": "Populaire",
-    "pricing_business_desc": "E-commerce ou application sur mesure",
     "faq_title": "Questions fréquentes",
     "faq1_q": "Combien coûte un site web ?",
-    "faq1_a": "Nos tarifs commencent à 3 000 MAD pour un site vitrine simple. Le prix varie selon la complexité, les fonctionnalités et le design. Contactez-nous pour un devis gratuit et personnalisé.",
+    "faq1_a": "Chaque projet est sur devis : le prix dépend de la complexité, des fonctionnalités et du design. Contactez-nous pour un devis gratuit et sans engagement.",
     "faq2_q": "Combien de temps prend la création d'un site ?",
     "faq2_a": "Un site vitrine prend généralement 2 à 3 semaines. Un e-commerce ou une application plus complexe peut nécessiter 4 à 8 semaines. Nous définissons le planning ensemble dès le départ.",
     "faq3_q": "Est-ce que le site sera responsive et optimisé mobile ?",
     "faq3_a": "Absolument. Tous nos sites sont conçus mobile-first et testés sur tous les appareils. L'optimisation mobile est incluse dans chaque projet.",
     "faq4_q": "Proposez-vous la maintenance après la livraison ?",
-    "faq4_a": "Oui, nous proposons des forfaits de maintenance mensuels incluant les mises à jour, la sécurité, les sauvegardes et le support technique réactif.",
+    "faq4_a": "Oui, nous proposons des forfaits de maintenance mensuels sur devis, incluant les mises à jour, la sécurité, les sauvegardes et le support technique réactif.",
     "faq5_q": "Quelles technologies utilisez-vous ?",
     "faq5_a": "Nous utilisons les technologies les plus modernes : Next.js, React, Laravel, PHP, Tailwind CSS. Le choix dépend des besoins spécifiques de votre projet.",
     "learn_more": "En savoir plus"
@@ -158,7 +147,7 @@
     "mobile_tools": "React Native, Expo, TypeScript, Firebase, Figma",
     "seo_title": "SEO & Visibilité",
     "seo_tagline": "Montez en classement. Soyez trouvé. Croissez.",
-    "seo_intro": "Nous boostons votre visibilité sur Google grâce au SEO technique, la stratégie de contenu et l'optimisation des performances. Notre approche data-driven assure une croissance durable du trafic organique. Pas de raccourcis — nous construisons des fondations solides.",
+    "seo_intro": "Nous boostons votre visibilité sur Google grâce au SEO technique, la stratégie de contenu et l'optimisation des performances. Notre approche data-driven assure une croissance durable du trafic organique. Pas de raccourcis — nous construisons des fondations solides. Accompagnement sur devis, selon vos objectifs.",
     "seo_features_title": "Une stratégie SEO complète, pas juste des mots-clés.",
     "seo_features": "Audit SEO technique complet, Recherche et cartographie des mots-clés, Optimisation on-page (balises méta et contenu), Optimisation vitesse et Core Web Vitals, Configuration Google Search Console et Analytics, Rapports mensuels avec recommandations",
     "seo_step1_title": "Audit & Recherche",
@@ -170,7 +159,7 @@
     "seo_tools": "Google Search Console, Google Analytics, Ahrefs, Lighthouse, Schema.org",
     "maintenance_title": "Maintenance & Support",
     "maintenance_tagline": "Dormez tranquille. Votre site est entre bonnes mains.",
-    "maintenance_intro": "Nous proposons des forfaits de maintenance mensuels pour garder votre site à jour, sécurisé et performant. Des mises à jour aux correctifs de sécurité, sauvegardes et support technique — nous gérons tout pour que vous vous concentriez sur votre activité.",
+    "maintenance_intro": "Nous proposons des forfaits de maintenance mensuels, sur devis, pour garder votre site à jour, sécurisé et performant. Des mises à jour aux correctifs de sécurité, sauvegardes et support technique — nous gérons tout pour que vous vous concentriez sur votre activité.",
     "maintenance_features_title": "La tranquillité d'esprit, chaque mois.",
     "maintenance_features": "Mises à jour régulières CMS et plugins, Surveillance et correctifs de sécurité, Sauvegardes automatiques quotidiennes, Surveillance et optimisation des performances, Support technique prioritaire, Monitoring uptime avec alertes instantanées",
     "maintenance_step1_title": "Évaluation",
@@ -398,7 +387,7 @@
     "service_mobile": "Applications Mobiles",
     "service_seo": "SEO",
     "service_maintenance": "Maintenance",
-    "company": "Entreprise",
+    "company": "Agence",
     "follow": "Suivez-nous",
     "rights": "Tous droits réservés.",
     "privacy": "Politique de confidentialité",
@@ -612,7 +601,7 @@
     "ai_label": "J'ai un projet IA",
     "ai_reply": "Nous créons aussi des solutions basées sur l'IA : assistants, traitement de données, automatisation intelligente et outils métier.",
     "pricing_label": "Combien ça coûte ?",
-    "pricing_reply": "Le tarif dépend du besoin. Pour certains parcours simples de réservation, nos offres peuvent commencer autour de 1 500 MAD. Les projets web, app, IA ou automatisation sont étudiés sur mesure.",
+    "pricing_reply": "Chaque projet est sur devis : le tarif dépend de vos besoins (pages, fonctionnalités, délais). Décrivez-nous votre projet et nous vous enverrons un devis gratuit et sans engagement.",
     "contact_label": "Parler à Ibda3"
   },
   "HomeV2": {
@@ -679,5 +668,63 @@
     "place": "Marrakech, Maroc",
     "h1_sr": "Ibda3 Digital — agence web à Marrakech.",
     "work_intro": "{count, plural, =1 {Un projet client. Il est en ligne aujourd'hui.} =2 {Deux projets clients, présentés à égalité. Chacun est en ligne aujourd'hui.} =3 {Trois projets clients, présentés à égalité. Chacun est en ligne aujourd'hui.} =4 {Quatre projets clients, présentés à égalité. Chacun est en ligne aujourd'hui.} other {# projets clients, présentés à égalité. Chacun est en ligne aujourd'hui.}}"
+  },
+  "Privacy": {
+    "meta_title": "Politique de confidentialité — Ibda3 Digital",
+    "meta_desc": "Comment Ibda3 Digital utilise les informations collectées sur ce site.",
+    "kicker": "Confidentialité",
+    "title": "Politique de confidentialité",
+    "updated": "Dernière mise à jour : 17 octobre 2026",
+    "draft": "Projet en attente de validation par le propriétaire et un conseil juridique. Cette page n'est pas encore définitive.",
+    "draft_badge": "Projet",
+    "intro": "Nous respectons votre vie privée. Voici, simplement, ce que nous collectons et pourquoi.",
+    "contents": "Sommaire",
+    "sections": [
+      {
+        "h": "Qui sommes-nous",
+        "p": [
+          "Ibda3 Digital est une activité indépendante de services numériques basée à Marrakech, au Maroc.",
+          "Pour toute question sur vos données : ibda3.digital0@gmail.com."
+        ]
+      },
+      {
+        "h": "Informations collectées",
+        "items": [
+          "Ce que vous nous envoyez via le formulaire de contact : nom, e-mail, téléphone (facultatif), service souhaité et message. Ces informations nous parviennent par e-mail et sont conservées dans notre outil interne de suivi des demandes.",
+          "Des informations techniques de base (adresse IP, type de navigateur, pages consultées), nécessaires pour faire fonctionner et protéger le site."
+        ]
+      },
+      {
+        "h": "Utilisation",
+        "items": [
+          "Répondre à vos demandes et échanger sur votre projet.",
+          "Faire fonctionner le site et le protéger contre les abus.",
+          "Mesurer la fréquentation, uniquement si vous l'avez accepté."
+        ]
+      },
+      {
+        "h": "Cookies et services externes",
+        "consent": true,
+        "p": [
+          "Le site enregistre dans votre navigateur votre langue, votre thème (clair ou sombre) et votre choix concernant les cookies. Ces éléments sont nécessaires à son fonctionnement.",
+          "La mesure d'audience (Google Analytics) est facultative : elle ne démarre qu'après un clic sur « Accepter ». Vous pouvez changer d'avis à tout moment ci-dessous.",
+          "Des prestataires techniques nous aident à héberger le site, à acheminer les messages, à conserver les demandes de façon sécurisée et à afficher les polices de caractères. Certains peuvent traiter des informations en dehors du Maroc.",
+          "Les liens WhatsApp ouvrent un service externe, soumis à ses propres règles."
+        ]
+      },
+      {
+        "h": "Vos droits",
+        "p": [
+          "Vous pouvez demander à accéder à vos informations, à les corriger ou à les supprimer en écrivant à ibda3.digital0@gmail.com.",
+          "Vous pouvez aussi vous adresser à la CNDP, l'autorité marocaine de protection des données personnelles.",
+          "Cette page peut évoluer ; la date de mise à jour figure en haut."
+        ]
+      }
+    ],
+    "consent_title": "Vos préférences de cookies",
+    "consent_status": "Choix actuel :",
+    "consent_accepted": "mesure d'audience acceptée",
+    "consent_declined": "mesure d'audience refusée",
+    "consent_unset": "aucun choix enregistré"
   }
 }

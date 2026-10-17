@@ -75,7 +75,7 @@
     "seo_desc": "Boost your visibility on Google with technical SEO, keyword strategy and performance optimization.",
     "seo_features": "Technical audit, Keyword research, On-page optimization, Analytics & reporting",
     "maintenance_title": "Maintenance & Support",
-    "maintenance_desc": "Monthly packages to keep your site updated, secure and performing well.",
+    "maintenance_desc": "Monthly packages, on request, to keep your site updated, secure and performing well.",
     "maintenance_features": "Updates, Security, Backups, Responsive support",
     "cta_title": "Have a project in mind?",
     "cta_desc": "Let's discuss your needs and find the perfect solution together.",
@@ -88,26 +88,15 @@
     "seo_subtitle": "Rank higher. Grow faster.",
     "maintenance_subtitle": "Always up to date.",
     "cta_button": "Request a Free Quote",
-    "pricing_title": "Our Plans",
-    "pricing_starter": "Starter",
-    "pricing_starter_price": "From 3,000 MAD",
-    "pricing_starter_desc": "Simple and effective showcase site",
-    "pricing_pro": "Pro",
-    "pricing_pro_price": "From 8,000 MAD",
-    "pricing_pro_desc": "Advanced site with CMS",
-    "pricing_business": "Business",
-    "pricing_business_price": "From 15,000 MAD",
-    "pricing_popular": "Popular",
-    "pricing_business_desc": "E-commerce or custom application",
     "faq_title": "Frequently Asked Questions",
     "faq1_q": "How much does a website cost?",
-    "faq1_a": "Our prices start at 3,000 MAD for a simple showcase site. The cost varies based on complexity, features and design. Contact us for a free, personalized quote.",
+    "faq1_a": "Every project is priced on request: the cost depends on complexity, features and design. Contact us for a free, no-obligation quote.",
     "faq2_q": "How long does it take to build a website?",
     "faq2_a": "A showcase website typically takes 2 to 3 weeks. An e-commerce store or complex application may require 4 to 8 weeks. We define the timeline together from the start.",
     "faq3_q": "Will the site be responsive and mobile-optimized?",
     "faq3_a": "Absolutely. All our sites are designed mobile-first and tested across all devices. Mobile optimization is included in every project.",
     "faq4_q": "Do you offer maintenance after delivery?",
-    "faq4_a": "Yes, we offer monthly maintenance packages including updates, security, backups and responsive technical support.",
+    "faq4_a": "Yes, we offer monthly maintenance packages on request, including updates, security, backups and responsive technical support.",
     "faq5_q": "What technologies do you use?",
     "faq5_a": "We use the most modern technologies: Next.js, React, Laravel, PHP, Tailwind CSS. The choice depends on the specific needs of your project.",
     "learn_more": "Learn more"
@@ -158,7 +147,7 @@
     "mobile_tools": "React Native, Expo, TypeScript, Firebase, Figma",
     "seo_title": "SEO & Visibility",
     "seo_tagline": "Rank higher. Get found. Grow faster.",
-    "seo_intro": "We boost your visibility on Google through technical SEO, content strategy, and performance optimization. Our data-driven approach ensures sustainable growth in organic traffic. We don't do shortcuts — we build a solid foundation that compounds over time.",
+    "seo_intro": "We boost your visibility on Google through technical SEO, content strategy, and performance optimization. Our data-driven approach ensures sustainable growth in organic traffic. We don't do shortcuts — we build a solid foundation that compounds over time. Engagements are quoted on request, based on your goals.",
     "seo_features_title": "A complete SEO strategy, not just keywords.",
     "seo_features": "Full technical SEO audit, Keyword research and mapping, On-page optimization (meta tags and content), Site speed and Core Web Vitals optimization, Google Search Console and Analytics setup, Monthly reporting with actionable insights",
     "seo_step1_title": "Audit & Research",
@@ -170,7 +159,7 @@
     "seo_tools": "Google Search Console, Google Analytics, Ahrefs, Lighthouse, Schema.org",
     "maintenance_title": "Maintenance & Support",
     "maintenance_tagline": "Sleep well. Your site is in good hands.",
-    "maintenance_intro": "We offer monthly maintenance packages to keep your website updated, secure, and performing at its best. From software updates to security patches, backups, and technical support — we handle everything so you can focus on your business.",
+    "maintenance_intro": "We offer monthly maintenance packages, on request, to keep your website updated, secure, and performing at its best. From software updates to security patches, backups, and technical support — we handle everything so you can focus on your business.",
     "maintenance_features_title": "Peace of mind, every month.",
     "maintenance_features": "Regular CMS and plugin updates, Security monitoring and patches, Automated daily backups, Performance monitoring and optimization, Priority technical support, Uptime monitoring with instant alerts",
     "maintenance_step1_title": "Assessment",
@@ -398,7 +387,7 @@
     "service_mobile": "Mobile Apps",
     "service_seo": "SEO",
     "service_maintenance": "Maintenance",
-    "company": "Company",
+    "company": "Agency",
     "follow": "Follow Us",
     "rights": "All rights reserved.",
     "privacy": "Privacy Policy",
@@ -612,7 +601,7 @@
     "ai_label": "I have an AI project",
     "ai_reply": "We also build AI-powered solutions: assistants, data processing, intelligent automation and internal tools.",
     "pricing_label": "How much does it cost?",
-    "pricing_reply": "It depends on what you need. For some simple booking journeys, our packages can start at around 1 500 MAD. Web, app, AI and automation projects are quoted individually.",
+    "pricing_reply": "Every project is priced on request: the cost depends on your needs (pages, features, timeline). Tell us about your project and we'll send you a free, no-obligation quote.",
     "contact_label": "Talk to Ibda3"
   },
   "HomeV2": {
@@ -679,5 +668,63 @@
     "place": "Marrakech, Morocco",
     "h1_sr": "Ibda3 Digital — web agency in Marrakech.",
     "work_intro": "{count, plural, =1 {One client project. It is live today.} =2 {Two client projects, shown on equal footing. Both are live today.} =3 {Three client projects, shown on equal footing. Every one of them is live today.} =4 {Four client projects, shown on equal footing. Every one of them is live today.} other {# client projects, shown on equal footing. Every one of them is live today.}}"
+  },
+  "Privacy": {
+    "meta_title": "Privacy Policy — Ibda3 Digital",
+    "meta_desc": "How Ibda3 Digital uses the information collected on this website.",
+    "kicker": "Privacy",
+    "title": "Privacy Policy",
+    "updated": "Last updated: 17 October 2026",
+    "draft": "Draft awaiting approval by the owner and a legal adviser. This page is not final yet.",
+    "draft_badge": "Draft",
+    "intro": "We respect your privacy. Here is, in plain words, what we collect and why.",
+    "contents": "Contents",
+    "sections": [
+      {
+        "h": "Who we are",
+        "p": [
+          "Ibda3 Digital is a freelance digital-services activity based in Marrakech, Morocco.",
+          "For any question about your data: ibda3.digital0@gmail.com."
+        ]
+      },
+      {
+        "h": "Information we collect",
+        "items": [
+          "What you send us through the contact form: name, email, phone (optional), service needed and message. It reaches us by email and is kept in our internal enquiry-tracking tool.",
+          "Basic technical information (IP address, browser type, pages visited) needed to run and protect the website."
+        ]
+      },
+      {
+        "h": "How we use it",
+        "items": [
+          "To reply to your enquiries and discuss your project.",
+          "To run the website and protect it against abuse.",
+          "To measure traffic, only if you have agreed to it."
+        ]
+      },
+      {
+        "h": "Cookies and external services",
+        "consent": true,
+        "p": [
+          "The website stores your language, your theme (light or dark) and your cookie choice in your browser. These are needed for it to work.",
+          "Audience measurement (Google Analytics) is optional: it only starts after you click “Accept”. You can change your mind at any time below.",
+          "Technical service providers help us host the website, deliver messages, keep enquiries securely and display fonts. Some of them may process information outside Morocco.",
+          "WhatsApp links open an external service with its own rules."
+        ]
+      },
+      {
+        "h": "Your rights and contact",
+        "p": [
+          "You can ask to access, correct or delete your information by writing to ibda3.digital0@gmail.com.",
+          "You can also contact the CNDP, Morocco's personal data protection authority.",
+          "This page may change; the date of the latest update is shown at the top."
+        ]
+      }
+    ],
+    "consent_title": "Your cookie preferences",
+    "consent_status": "Current choice:",
+    "consent_accepted": "audience measurement accepted",
+    "consent_declined": "audience measurement declined",
+    "consent_unset": "no choice recorded"
   }
 }
