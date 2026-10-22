@@ -9,6 +9,7 @@ import {
 } from "@/lib/dal";
 import { logAudit, getClientIp } from "@/lib/audit";
 import { findSlugConflict, isUniqueSlugViolation, slugConflict } from "@/lib/project-slug";
+import { PROJECT_KINDS, isProjectKind } from "@/lib/project-kind";
 
 const TRANSLATION_FIELDS = [
   "locale", "title", "desc", "tags", "tagline", "metaDesc", "client",
@@ -48,6 +49,11 @@ export async function PUT(
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
+  // Omitted (e.g. an admin tab opened before this field existed): keep the saved classification.
+  if (body.kind !== undefined && !isProjectKind(body.kind)) {
+    return NextResponse.json({ error: `kind must be one of: ${PROJECT_KINDS.join(", ")}` }, { status: 400 });
+  }
+
   try {
     if (typeof body.slug === "string" && body.slug) {
       const conflict = await findSlugConflict(body.slug, id, getProjectIdBySlug);
@@ -74,6 +80,7 @@ export async function PUT(
       tag: body.tag || "",
       visible: body.visible ?? true,
       status,
+      kind: body.kind,
       translations: cleanTranslations,
     });
 
@@ -84,7 +91,7 @@ export async function PUT(
       action: "UPDATE_PROJECT",
       entity: "project",
       entityId: id,
-      details: { slug: body.slug, category: body.category, status },
+      details: { slug: body.slug, category: body.category, status, kind: body.kind },
       ipAddress: getClientIp(req),
     });
 

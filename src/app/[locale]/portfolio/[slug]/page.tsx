@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProjectDetailV2 from "@/components/project-detail-v2/ProjectDetailV2";
 import { getProjectBySlug } from "@/lib/dal";
-import { CLIENT_SLUGS } from "@/lib/homepage-clients";
+import { isClientProject } from "@/lib/project-kind";
 import { SITE_URL, pageMetadata } from "@/lib/site";
 
 const BASE_URL = SITE_URL;
@@ -43,7 +43,7 @@ type Project = NonNullable<Awaited<ReturnType<typeof getProjectBySlug>>>;
 // description (metaDesc reads like a client commission: "Comment nous avons créé … pour …").
 async function seoText(project: Project, locale: string) {
   const tr = project.translation!;
-  if (CLIENT_SLUGS.has(project.slug)) {
+  if (isClientProject(project)) {
     return { title: `${tr.title} — Ibda3 Digital`, description: tr.metaDesc || tr.desc };
   }
   const cs = await getTranslations({ locale, namespace: "CaseStudy" });

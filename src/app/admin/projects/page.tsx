@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/admin/empty-state";
 import { ProjectStatusBadge } from "@/components/admin/project-status-badge";
 import { cn } from "@/lib/utils";
 import { isRenderableProjectImage } from "@/lib/project-image";
+import { PROJECT_KIND_LABELS, isClientProject } from "@/lib/project-kind";
 
 type Project = {
   id: string;
@@ -23,6 +24,7 @@ type Project = {
   tag: string;
   visible: boolean;
   status?: string;
+  kind?: string;
   sortOrder: number;
   translations: { locale: string; title: string; desc: string }[];
 };
@@ -146,6 +148,9 @@ export default function ProjectsPage() {
                 {/* Top-left status + visibility */}
                 <div className="absolute top-3 left-3 flex items-center gap-1.5">
                   <ProjectStatusBadge status={project.status} size="sm" />
+                  <Badge variant={isClientProject(project) ? "success" : "default"} size="sm">
+                    {PROJECT_KIND_LABELS[isClientProject(project) ? "CLIENT" : "CONCEPT"]}
+                  </Badge>
                   {!project.visible && <Badge variant="default" size="sm">Hidden</Badge>}
                 </div>
               </div>
@@ -180,6 +185,7 @@ export default function ProjectsPage() {
                 <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Image</th>
                 <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Title</th>
                 <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Status</th>
+                <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Type</th>
                 <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Category</th>
                 <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Visible</th>
                 <th className="text-right px-4 py-3 text-[#475569] font-medium text-xs">Actions</th>
@@ -197,6 +203,11 @@ export default function ProjectsPage() {
                   </td>
                   <td className="px-4 py-3 text-[#0F172A] font-medium">{project.translations[0]?.title ?? project.slug}</td>
                   <td className="px-4 py-3"><ProjectStatusBadge status={project.status} size="sm" /></td>
+                  <td className="px-4 py-3">
+                    <Badge variant={isClientProject(project) ? "success" : "default"} size="sm">
+                      {PROJECT_KIND_LABELS[isClientProject(project) ? "CLIENT" : "CONCEPT"]}
+                    </Badge>
+                  </td>
                   <td className="px-4 py-3"><Badge variant="purple" size="sm">{project.category}</Badge></td>
                   <td className="px-4 py-3">
                     <button onClick={() => handleToggle(project.id)} className="transition-colors">

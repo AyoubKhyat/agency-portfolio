@@ -54,6 +54,7 @@ model Project {
   tag       String
   visible   Boolean @default(true)
   status    String  @default("DRAFT") // DRAFT | IN_PROGRESS | REVIEW | COMPLETED | PUBLISHED
+  kind      String  @default("CONCEPT") // CLIENT | CONCEPT — public Client / Concept classification
   sortOrder Int     @default(0) @map("sort_order")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

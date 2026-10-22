@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { FaWhatsapp } from "react-icons/fa";
 import { Link } from "@/i18n/navigation";
 import { getHomepageProjects, type HomepageProject } from "@/lib/dal";
-import { CLIENT_SLUGS } from "@/lib/homepage-clients";
+import { isClientProject } from "@/lib/project-kind";
 import { isRenderableProjectImage } from "@/lib/project-image";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import RevealController from "./RevealController";
@@ -45,8 +45,8 @@ export default async function HomeV2({ locale }: { locale: string }) {
 
   const projects = await getHomepageProjects(locale);
   // Clients: alphabetical by slug, so the order is stable across locales. Concepts: admin order.
-  const clients = projects.filter((p) => CLIENT_SLUGS.has(p.slug)).sort((a, b) => a.slug.localeCompare(b.slug));
-  const concepts = projects.filter((p) => !CLIENT_SLUGS.has(p.slug));
+  const clients = projects.filter(isClientProject).sort((a, b) => a.slug.localeCompare(b.slug));
+  const concepts = projects.filter((p) => !isClientProject(p));
 
   const secLabel = (n: string, text: string, className = s.label) => (
     <span className={className}>

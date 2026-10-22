@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import RevealController from "@/components/home-v2/RevealController";
 import { alexandria, tajawal } from "@/components/home-v2/fonts";
 import { getPortfolioProjects, type getProjectBySlug } from "@/lib/dal";
-import { CLIENT_SLUGS } from "@/lib/homepage-clients";
+import { isClientProject } from "@/lib/project-kind";
 import { isRenderableProjectImage } from "@/lib/project-image";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { VERIFIED_RESULTS, isWithheld, type CaseField } from "./content-policy";
@@ -52,7 +52,7 @@ export default async function ProjectDetailV2({ project, locale }: { project: Pr
   const rtl = locale === "ar";
   const tr = project.translation!;
   const slug = project.slug;
-  const isClient = CLIENT_SLUGS.has(slug);
+  const isClient = isClientProject(project);
   const show = (field: CaseField, value: string | null | undefined) => (value && !isWithheld(slug, field) ? value : "");
 
   const challenge = show("challenge", tr.challenge);
@@ -77,7 +77,7 @@ export default async function ProjectDetailV2({ project, locale }: { project: Pr
   // More work: two other visible projects, same type first, in admin order.
   const all = await getPortfolioProjects(locale);
   const others = all.filter((x) => x.slug !== slug);
-  const related = [...others.filter((x) => CLIENT_SLUGS.has(x.slug) === isClient), ...others.filter((x) => CLIENT_SLUGS.has(x.slug) !== isClient)].slice(0, 2);
+  const related = [...others.filter((x) => isClientProject(x) === isClient), ...others.filter((x) => isClientProject(x) !== isClient)].slice(0, 2);
 
   // Section labels carry only the number (the heading names the section); the CTA keeps its word.
   const order = [
@@ -293,7 +293,7 @@ export default async function ProjectDetailV2({ project, locale }: { project: Pr
             </div>
             <ul className={s.rel}>
               {related.map((r) => {
-                const rClient = CLIENT_SLUGS.has(r.slug);
+                const rClient = isClientProject(r);
                 return (
                   <li key={r.slug} data-reveal="">
                     <article className={s.rcard}>

@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getProjectsForAdmin, createProject, getProjectIdBySlug } from "@/lib/dal";
 import { logAudit, getClientIp } from "@/lib/audit";
 import { findSlugConflict, isUniqueSlugViolation, slugConflict } from "@/lib/project-slug";
+import { DEFAULT_PROJECT_KIND, PROJECT_KINDS } from "@/lib/project-kind";
 import { z } from "zod";
 
 const translationSchema = z.object({
@@ -56,6 +57,7 @@ const createSchema = z.object({
   tag: z.string().optional().default(""),
   visible: z.boolean().optional().default(true),
   status: z.enum(PROJECT_STATUSES).optional().default("DRAFT"),
+  kind: z.enum(PROJECT_KINDS).optional().default(DEFAULT_PROJECT_KIND),
   translations: z.array(translationSchema).min(1),
 });
 
@@ -132,7 +134,7 @@ export async function POST(req: Request) {
     action: "CREATE_PROJECT",
     entity: "project",
     entityId: project.id,
-    details: { slug: data.slug, category: data.category },
+    details: { slug: data.slug, category: data.category, kind: data.kind },
     ipAddress: getClientIp(req),
   });
 

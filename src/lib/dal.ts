@@ -3,6 +3,7 @@ import { FALLBACK_PROJECTS, FALLBACK_SLUGS } from "./fallback-projects";
 import { getTranslations } from "next-intl/server";
 import { hashPassword } from "./auth";
 import { bulkUpdateStatusWith, updateProspectStatusWith } from "./prospect-first-contact";
+import { DEFAULT_PROJECT_KIND } from "./project-kind";
 
 function db() {
   if (!hasPrisma()) throw new Error("Database not available");
@@ -83,6 +84,7 @@ export type HomepageProject = {
   image: string;
   title: string;
   sector: string;
+  kind: string;
 };
 
 /** Visible projects for the homepage, in admin sort order, with the localized sector. */
@@ -91,7 +93,7 @@ export async function getHomepageProjects(locale: string): Promise<HomepageProje
     (await getFallbackProjects(locale))
       .filter((p) => !FALLBACK_HIDDEN.has(p.slug))
       .map((p) => ({
-        slug: p.slug, url: p.url, image: p.image, title: p.title, sector: p.tag,
+        slug: p.slug, url: p.url, image: p.image, title: p.title, sector: p.tag, kind: p.kind,
       }));
   if (!hasPrisma()) return fallback();
   try {
@@ -99,7 +101,7 @@ export async function getHomepageProjects(locale: string): Promise<HomepageProje
       where: { visible: true },
       orderBy: { sortOrder: "asc" },
       select: {
-        slug: true, url: true, image: true, tag: true,
+        slug: true, url: true, image: true, tag: true, kind: true,
         translations: { where: { locale }, select: { title: true, industry: true } },
       },
     });
@@ -110,6 +112,7 @@ export async function getHomepageProjects(locale: string): Promise<HomepageProje
       image: p.image,
       title: p.translations[0]?.title ?? p.slug,
       sector: p.translations[0]?.industry || p.tag,
+      kind: p.kind,
     }));
   } catch (e) {
     console.error("[dal] getHomepageProjects failed, using fallback:", e);
@@ -125,6 +128,7 @@ export type PortfolioCardProject = {
   desc: string;
   tags: string[];
   sector: string;
+  kind: string;
 };
 
 /** Visible projects for the Portfolio page, in admin sort order (read-only). */
@@ -133,14 +137,14 @@ export async function getPortfolioProjects(locale: string): Promise<PortfolioCar
   const fallback = async () =>
     (await getFallbackProjects(locale))
       .filter((p) => !FALLBACK_HIDDEN.has(p.slug))
-      .map((p) => ({ slug: p.slug, url: p.url, image: p.image, title: p.title, desc: p.desc, tags: split(p.tags), sector: p.tag }));
+      .map((p) => ({ slug: p.slug, url: p.url, image: p.image, title: p.title, desc: p.desc, tags: split(p.tags), sector: p.tag, kind: p.kind }));
   if (!hasPrisma()) return fallback();
   try {
     const projects = await prisma.project.findMany({
       where: { visible: true },
       orderBy: { sortOrder: "asc" },
       select: {
-        slug: true, url: true, image: true, tag: true,
+        slug: true, url: true, image: true, tag: true, kind: true,
         translations: { where: { locale }, select: { title: true, desc: true, tags: true, industry: true } },
       },
     });
@@ -155,6 +159,7 @@ export async function getPortfolioProjects(locale: string): Promise<PortfolioCar
         desc: t?.desc ?? "",
         tags: split(t?.tags ?? ""),
         sector: t?.industry || p.tag,
+        kind: p.kind,
       };
     });
   } catch (e) {
@@ -272,6 +277,8 @@ export type ProjectInput = {
   tag: string;
   visible?: boolean;
   status?: string;
+  /** CLIENT | CONCEPT. On update, undefined keeps the saved value. */
+  kind?: string;
   translations: {
     locale: string;
     title: string;
@@ -313,6 +320,7 @@ export async function createProject(data: ProjectInput) {
       tag: data.tag,
       visible: data.visible ?? true,
       status: data.status ?? "DRAFT",
+      kind: data.kind ?? DEFAULT_PROJECT_KIND,
       sortOrder: (maxOrder._max.sortOrder ?? 0) + 1,
       translations: {
         create: data.translations,
@@ -335,6 +343,7 @@ export async function updateProject(id: string, data: ProjectInput) {
         tag: data.tag,
         visible: data.visible,
         ...(data.status ? { status: data.status } : {}),
+        ...(data.kind ? { kind: data.kind } : {}),
         translations: {
           create: data.translations,
         },

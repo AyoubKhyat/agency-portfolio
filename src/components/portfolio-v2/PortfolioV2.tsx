@@ -5,7 +5,7 @@ import { Link } from "@/i18n/navigation";
 import RevealController from "@/components/home-v2/RevealController";
 import { alexandria, tajawal } from "@/components/home-v2/fonts";
 import { getPortfolioProjects, type PortfolioCardProject } from "@/lib/dal";
-import { CLIENT_SLUGS } from "@/lib/homepage-clients";
+import { isClientProject } from "@/lib/project-kind";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import ProjectCard, { type CardLabels } from "./ProjectCard";
 import WorkFilter from "./WorkFilter";
@@ -33,9 +33,9 @@ export default async function PortfolioV2({ locale }: { locale: string }) {
   const rtl = locale === "ar";
 
   const projects = await getPortfolioProjects(locale);
-  // Verified client work (same allowlist as the homepage); every other visible project is a concept.
-  const clients = projects.filter((p) => CLIENT_SLUGS.has(p.slug));
-  const concepts = projects.filter((p) => !CLIENT_SLUGS.has(p.slug));
+  // Client work as classified in the admin (Project.kind); every other visible project is a concept.
+  const clients = projects.filter(isClientProject);
+  const concepts = projects.filter((p) => !isClientProject(p));
 
   const cardLabels: CardLabels = {
     client: h("tag_client"),

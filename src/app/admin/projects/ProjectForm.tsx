@@ -15,6 +15,14 @@ import {
   ACCEPTED_COVER_LABEL, ACCEPTED_COVER_TYPES, MAX_COVER_BYTES, MAX_COVER_LABEL,
   isRenderableProjectImage,
 } from "@/lib/project-image";
+import {
+  DEFAULT_PROJECT_KIND, PROJECT_KINDS, PROJECT_KIND_LABELS, isProjectKind, type ProjectKind,
+} from "@/lib/project-kind";
+
+const KIND_HELP: Record<ProjectKind, string> = {
+  CLIENT: "Real client work. Shown under Clients on the site.",
+  CONCEPT: "Experimental or demo work. Labelled as a concept on the site.",
+};
 
 const CATEGORIES = ["web", "app", "plugin", "ecommerce"];
 const LANGUAGES = [
@@ -77,6 +85,7 @@ type InitialData = {
   tag: string;
   visible: boolean;
   status?: string;
+  kind?: string;
   updatedAt?: string;
   translations: (Fields & { locale: string })[];
 };
@@ -117,6 +126,7 @@ export default function ProjectForm({
   const [tag, setTag] = useState(initial?.tag ?? "");
   const [visible, setVisible] = useState(initial?.visible ?? true);
   const [status, setStatus] = useState<string>(initial?.status ?? "DRAFT");
+  const [kind, setKind] = useState<ProjectKind>(initial && isProjectKind(initial.kind) ? initial.kind : DEFAULT_PROJECT_KIND);
   const [lastUpdated, setLastUpdated] = useState(initial?.updatedAt);
 
   const initialFields =
@@ -199,7 +209,7 @@ export default function ProjectForm({
 
     const body = {
       slug: slug || slugify(fields.title),
-      category, url, image, tag, visible, status, translations,
+      category, url, image, tag, visible, status, kind, translations,
     };
 
     const endpoint = mode === "create" ? "/api/admin/projects" : `/api/admin/projects/${initial?.id}`;
@@ -530,6 +540,39 @@ export default function ProjectForm({
               </p>
             </section>
 
+            {/* Classification */}
+            <section className="bg-white border border-[#E5E7EB] rounded-xl p-5">
+              <fieldset>
+                <legend className="text-[14px] font-semibold text-[#111827] mb-3">
+                  Classification <span className="text-red-500">*</span>
+                </legend>
+                <div className="grid grid-cols-2 gap-2">
+                  {PROJECT_KINDS.map((k) => (
+                    <label
+                      key={k}
+                      className={`flex items-center justify-center gap-2 h-10 rounded-lg border text-[13px] font-medium cursor-pointer transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#8B00FF]/30 ${
+                        kind === k
+                          ? "border-[#8B00FF] bg-[#8B00FF]/10 text-[#8B00FF]"
+                          : "border-[#D1D5DB] bg-white text-[#374151] hover:bg-[#F9FAFB]"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="kind"
+                        value={k}
+                        checked={kind === k}
+                        onChange={() => { setKind(k); markDirty(); }}
+                        required
+                        className="sr-only"
+                      />
+                      {PROJECT_KIND_LABELS[k]}
+                    </label>
+                  ))}
+                </div>
+                <p className="text-[11px] text-[#9CA3AF] mt-2">{KIND_HELP[kind]}</p>
+              </fieldset>
+            </section>
+
             {/* Live preview */}
             <section className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-[#E5E7EB] flex items-center justify-between gap-2">
@@ -558,6 +601,13 @@ export default function ProjectForm({
               <div className="p-4 space-y-2">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <ProjectStatusBadge status={status} size="sm" />
+                  <span
+                    className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${
+                      kind === "CLIENT" ? "text-emerald-700 bg-emerald-50" : "text-[#6B7280] bg-[#F3F4F6]"
+                    }`}
+                  >
+                    {PROJECT_KIND_LABELS[kind]}
+                  </span>
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8B00FF] bg-[#8B00FF]/10 px-2 py-0.5 rounded">
                     {category}
                   </span>

@@ -1,6 +1,6 @@
 /**
- * Route-level checks for duplicate slugs on POST /api/admin/projects and
- * PUT /api/admin/projects/[id]. Auth, data access and audit are mocked, so
+ * Route-level checks for POST /api/admin/projects and PUT /api/admin/projects/[id]:
+ * duplicate slugs and the Client / Concept classification (kind). Auth, data access and audit are mocked, so
  * no database is touched. Needs --experimental-test-module-mocks (see the
  * "test" script).
  */
@@ -8,13 +8,14 @@ import { test, mock } from "node:test";
 import assert from "node:assert/strict";
 
 type Row = { id: string; slug: string };
-const db = { rows: [] as Row[], createError: null as unknown, updateError: null as unknown, writes: 0 };
+const db = { rows: [] as Row[], createError: null as unknown, updateError: null as unknown, writes: 0, lastWrite: null as Record<string, unknown> | null };
 
 function reset(rows: Row[]) {
   db.rows = rows;
   db.createError = null;
   db.updateError = null;
   db.writes = 0;
+  db.lastWrite = null;
 }
 
 mock.module("@/lib/auth", {
@@ -33,6 +34,7 @@ mock.module("@/lib/dal", {
     createProject: async (data: { slug: string }) => {
       if (db.createError) throw db.createError;
       db.writes++;
+      db.lastWrite = data;
       const row = { id: `new-${db.writes}`, slug: data.slug };
       db.rows.push(row);
       return row;
@@ -40,6 +42,7 @@ mock.module("@/lib/dal", {
     updateProject: async (id: string, data: { slug: string }) => {
       if (db.updateError) throw db.updateError;
       db.writes++;
+      db.lastWrite = data;
       return { id, slug: data.slug };
     },
     deleteProject: async () => {},
@@ -131,4 +134,53 @@ test("PUT unexpected error no longer leaks the Prisma message", async () => {
   const { error } = await res.json();
   assert.equal(error, "Could not save the project. Please try again.");
   assert.doesNotMatch(error, /secret|prisma|postgres/i);
+});
+
+// ─── Client / Concept classification ──────────────────────────────
+
+test("POST without kind creates a CONCEPT", async () => {
+  reset([]);
+  const res = await post(createBody("new-concept"));
+  assert.equal(res.status, 201);
+  assert.equal(db.lastWrite?.kind, "CONCEPT");
+});
+
+test("POST with kind CLIENT saves CLIENT", async () => {
+  reset([]);
+  const res = await post({ ...createBody("new-client"), kind: "CLIENT" });
+  assert.equal(res.status, 201);
+  assert.equal(db.lastWrite?.kind, "CLIENT");
+});
+
+test("POST with an invalid kind is 400 and writes nothing", async () => {
+  reset([]);
+  for (const kind of ["client", "PARTNER", "", 1, null]) {
+    const res = await post({ ...createBody("bad-kind"), kind });
+    assert.equal(res.status, 400, `kind=${JSON.stringify(kind)}`);
+    assert.match((await res.json()).error, /kind/);
+  }
+  assert.equal(db.writes, 0);
+});
+
+test("PUT can reclassify a project", async () => {
+  reset([{ id: "p1", slug: "tannour" }]);
+  const res = await put("p1", { slug: "tannour", category: "web", kind: "CLIENT", translations: [translation] });
+  assert.equal(res.status, 200);
+  assert.equal(db.lastWrite?.kind, "CLIENT");
+});
+
+test("PUT without kind passes undefined (the DAL then keeps the saved value)", async () => {
+  reset([{ id: "p1", slug: "dandana-cabaret" }]);
+  const res = await put("p1", { slug: "dandana-cabaret", category: "web", translations: [translation] });
+  assert.equal(res.status, 200);
+  assert.equal(db.lastWrite?.kind, undefined);
+});
+
+test("PUT with an invalid kind is 400 and writes nothing", async () => {
+  reset([{ id: "p1", slug: "dandana-cabaret" }]);
+  for (const kind of ["client", "PARTNER", "", 1, null]) {
+    const res = await put("p1", { slug: "dandana-cabaret", category: "web", kind, translations: [translation] });
+    assert.equal(res.status, 400, `kind=${JSON.stringify(kind)}`);
+  }
+  assert.equal(db.writes, 0);
 });

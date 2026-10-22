@@ -10,7 +10,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { findSlugConflict, isUniqueSlugViolation, slugConflict } from "../src/lib/project-slug";
-import { CLIENT_SLUGS } from "../src/lib/homepage-clients";
 
 /** Shape of the error Prisma 7 + the Neon adapter actually threw in production. */
 function neonP2002(fields: string[] | undefined, modelName = "Project") {
@@ -77,14 +76,4 @@ test("slugConflict message names the slug", () => {
     status: 409,
     error: 'A project with the slug "x" already exists. Edit that project or choose a different slug.',
   });
-});
-
-test("Dandana Cabaret is classified as client work, by its real slug", () => {
-  for (const slug of ["dandana-cabaret", "terrene", "aylani-parfums", "luxury-copro"]) {
-    assert.equal(CLIENT_SLUGS.has(slug), true, slug);
-  }
-  assert.equal(CLIENT_SLUGS.has("dandana"), false, "stale slug that matched no project");
-  for (const concept of ["goudoukh", "hammam-nour", "tannour", "victory-path", "asrar-lalla"]) {
-    assert.equal(CLIENT_SLUGS.has(concept), false, concept);
-  }
 });
