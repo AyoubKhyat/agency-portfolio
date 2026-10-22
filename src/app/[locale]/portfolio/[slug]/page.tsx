@@ -16,7 +16,7 @@ function CaseStudyJsonLd({ locale, slug, name, description, image }: { locale: s
     name,
     description,
     url: `${BASE_URL}/${locale}/portfolio/${slug}`,
-    image: `${BASE_URL}${image}`,
+    image: image.startsWith("http") ? image : `${BASE_URL}${image}`,
     creator: {
       "@type": "ProfessionalService",
       name: "Ibda3 Digital",

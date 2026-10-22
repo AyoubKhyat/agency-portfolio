@@ -11,6 +11,10 @@ import {
 import {
   PROJECT_STATUSES, ProjectStatusBadge,
 } from "@/components/admin/project-status-badge";
+import {
+  ACCEPTED_COVER_LABEL, ACCEPTED_COVER_TYPES, MAX_COVER_BYTES, MAX_COVER_LABEL,
+  isRenderableProjectImage,
+} from "@/lib/project-image";
 
 const CATEGORIES = ["web", "app", "plugin", "ecommerce"];
 const LANGUAGES = [
@@ -97,6 +101,7 @@ export default function ProjectForm({
   const [error, setError] = useState("");
   const [dirty, setDirty] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const [showCaseStudy, setShowCaseStudy] = useState(false);
 
   // Always start editing in French when available
@@ -131,23 +136,36 @@ export default function ProjectForm({
   }
 
   const uploadFile = useCallback(async (file: File) => {
-    if (!file.type.startsWith("image/")) return;
+    setUploadError("");
+    if (!ACCEPTED_COVER_TYPES.includes(file.type)) {
+      setUploadError(`Only ${ACCEPTED_COVER_LABEL} images are allowed.`);
+      return;
+    }
+    if (file.size > MAX_COVER_BYTES) {
+      const mb = (file.size / (1024 * 1024)).toFixed(1);
+      setUploadError(`That image is ${mb} MB. The maximum is ${MAX_COVER_LABEL}.`);
+      return;
+    }
     setUploading(true);
-    setError("");
     const fd = new FormData();
     fd.append("file", file);
     fd.append("slug", slug || slugify(fields.title) || file.name.replace(/\.[^.]+$/, ""));
     try {
       const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      if (res.ok) {
-        const data = await res.json();
+      // A platform-level rejection (e.g. Vercel's 413) is not JSON.
+      const data = await res.json().catch(() => null);
+      if (res.ok && typeof data?.path === "string") {
         setImage(data.path);
         markDirty();
+      } else if (typeof data?.error === "string") {
+        setUploadError(data.error);
+      } else if (res.status === 413) {
+        setUploadError(`That image is too large. The maximum is ${MAX_COVER_LABEL}.`);
       } else {
-        setError("Image upload failed.");
+        setUploadError(`Image upload failed (error ${res.status}). Please try again.`);
       }
     } catch {
-      setError("Image upload failed.");
+      setUploadError("Image upload failed. Check your connection and try again.");
     } finally {
       setUploading(false);
     }
@@ -156,6 +174,8 @@ export default function ProjectForm({
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    // Reset so choosing the same file again (e.g. after an error) still fires onChange.
+    e.target.value = "";
     if (file) uploadFile(file);
   }
 
@@ -527,7 +547,7 @@ export default function ProjectForm({
                 </div>
               </div>
               <div className="relative aspect-[16/10] bg-[#F3F4F6]">
-                {image && image.startsWith("/") ? (
+                {isRenderableProjectImage(image) ? (
                   <Image src={image} alt="" fill sizes="340px" className="object-cover" />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-[#9CA3AF]">
@@ -580,7 +600,7 @@ export default function ProjectForm({
             <section className="bg-white border border-[#E5E7EB] rounded-xl p-5">
               <h2 className="text-[14px] font-semibold text-[#111827] mb-1">Cover image</h2>
               <p className="text-[12px] text-[#6B7280] mb-3">1280×800 recommended, auto-converted to WebP.</p>
-              {image && image.startsWith("/") ? (
+              {isRenderableProjectImage(image) ? (
                 <div className="space-y-2">
                   <div className="relative aspect-[16/10] rounded-lg overflow-hidden border border-[#E5E7EB] bg-[#F9FAFB]">
                     <Image src={image} alt="Project cover" fill sizes="280px" className="object-cover" />
@@ -627,10 +647,15 @@ export default function ProjectForm({
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/*"
+                accept={ACCEPTED_COVER_TYPES.join(",")}
                 onChange={handleFileChange}
                 className="hidden"
               />
+              {uploadError ? (
+                <p role="alert" className="mt-2 text-[12px] text-red-700">{uploadError}</p>
+              ) : (
+                <p className="mt-2 text-[11px] text-[#9CA3AF]">{ACCEPTED_COVER_LABEL}, up to {MAX_COVER_LABEL}.</p>
+              )}
             </section>
 
             {/* Visibility */}

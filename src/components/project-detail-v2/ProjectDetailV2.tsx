@@ -7,6 +7,7 @@ import RevealController from "@/components/home-v2/RevealController";
 import { alexandria, tajawal } from "@/components/home-v2/fonts";
 import { getPortfolioProjects, type getProjectBySlug } from "@/lib/dal";
 import { CLIENT_SLUGS } from "@/lib/homepage-clients";
+import { isRenderableProjectImage } from "@/lib/project-image";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { VERIFIED_RESULTS, isWithheld, type CaseField } from "./content-policy";
 import s from "./detail.module.css";
@@ -161,7 +162,7 @@ export default async function ProjectDetailV2({ project, locale }: { project: Pr
               </div>
             )}
           </div>
-          {project.image?.startsWith("/") && (
+          {isRenderableProjectImage(project.image) && (
             <div className={`${s.shot} ${s.heroIn} ${s.d1}`}>
               <Image src={project.image} alt={tr.title} fill preload fetchPriority="high" sizes="(max-width: 1280px) 100vw, 1216px" />
             </div>
@@ -297,7 +298,7 @@ export default async function ProjectDetailV2({ project, locale }: { project: Pr
                   <li key={r.slug} data-reveal="">
                     <article className={s.rcard}>
                       <Link href={`/portfolio/${r.slug}`} className={s.rshot} tabIndex={-1} aria-hidden="true">
-                        {r.image.startsWith("/") && <Image src={r.image} alt="" fill sizes="(max-width: 760px) 100vw, 760px" />}
+                        {isRenderableProjectImage(r.image) && <Image src={r.image} alt="" fill sizes="(max-width: 760px) 100vw, 760px" />}
                       </Link>
                       <div className={s.rbody}>
                         <div className={s.rmeta}>

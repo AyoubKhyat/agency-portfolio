@@ -6,6 +6,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import { Link } from "@/i18n/navigation";
 import { getHomepageProjects, type HomepageProject } from "@/lib/dal";
 import { CLIENT_SLUGS } from "@/lib/homepage-clients";
+import { isRenderableProjectImage } from "@/lib/project-image";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import RevealController from "./RevealController";
 import { alexandria, tajawal } from "./fonts";
@@ -33,10 +34,6 @@ function hostname(url: string) {
   } catch {
     return "";
   }
-}
-
-function isLocalImage(src: string) {
-  return src.startsWith("/");
 }
 
 export default async function HomeV2({ locale }: { locale: string }) {
@@ -202,7 +199,7 @@ export default async function HomeV2({ locale }: { locale: string }) {
                   <li key={p.slug}>
                     <a href={p.url} target="_blank" rel="noopener noreferrer">
                       <span className={s.thumb}>
-                        {isLocalImage(p.image) && (
+                        {isRenderableProjectImage(p.image) && (
                           <Image src={p.image} alt="" fill sizes="(max-width: 760px) 46vw, 16vw" />
                         )}
                       </span>
@@ -282,7 +279,7 @@ function ClientFigure({ p, visit, tag, count }: { p: HomepageProject; visit: str
   return (
     <figure className={s.fig} data-reveal>
       <a className={s.shot} href={p.url} target="_blank" rel="noopener noreferrer" data-cta={visit} aria-label={`${p.title} — ${visit}`}>
-        {isLocalImage(p.image) && <Image src={p.image} alt={p.title} fill sizes={sizes} />}
+        {isRenderableProjectImage(p.image) && <Image src={p.image} alt={p.title} fill sizes={sizes} />}
       </a>
       <figcaption className={s.figcap}>
         <div>

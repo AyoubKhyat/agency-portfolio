@@ -12,6 +12,7 @@ import { Badge } from "@/components/admin/badge";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ProjectStatusBadge } from "@/components/admin/project-status-badge";
 import { cn } from "@/lib/utils";
+import { isRenderableProjectImage } from "@/lib/project-image";
 
 type Project = {
   id: string;
@@ -117,7 +118,7 @@ export default function ProjectsPage() {
             >
               {/* Image */}
               <div className="relative aspect-[16/10] bg-[var(--os-surface-2)] overflow-hidden">
-                {project.image && project.image.startsWith("/") ? (
+                {isRenderableProjectImage(project.image) ? (
                   <Image src={project.image} alt="" fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="400px" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-300">
@@ -189,7 +190,7 @@ export default function ProjectsPage() {
                 <tr key={project.id} className="border-b border-[var(--os-border)] hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
                     <div className="w-12 h-8 relative rounded overflow-hidden bg-[var(--os-surface-2)]">
-                      {project.image && project.image.startsWith("/") && (
+                      {isRenderableProjectImage(project.image) && (
                         <Image src={project.image} alt="" fill className="object-cover" sizes="48px" />
                       )}
                     </div>

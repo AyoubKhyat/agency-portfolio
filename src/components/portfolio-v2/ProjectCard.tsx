@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import type { PortfolioCardProject } from "@/lib/dal";
+import { isRenderableProjectImage } from "@/lib/project-image";
 import s from "./portfolio.module.css";
 
 function hostname(url: string) {
@@ -27,7 +28,7 @@ export default function ProjectCard({ project: p, isClient, labels, priority = f
   return (
     <article className={s.pcard}>
       <Link href={caseHref} className={s.shot} tabIndex={-1} aria-hidden="true">
-        {p.image.startsWith("/") && (
+        {isRenderableProjectImage(p.image) && (
           <Image
             src={p.image}
             alt=""

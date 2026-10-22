@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { hostname: "opengraph.githubassets.com" },
+      // Admin-uploaded project covers (Vercel Blob, public store).
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com", pathname: "/projects/**" },
     ],
     formats: ["image/avif", "image/webp"],
   },
