@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import {
   getProjectByIdForAdmin,
+  getProjectIdBySlug,
   updateProject,
   deleteProject,
   toggleProjectVisibility,
 } from "@/lib/dal";
 import { logAudit, getClientIp } from "@/lib/audit";
+import { findSlugConflict, isUniqueSlugViolation, slugConflict } from "@/lib/project-slug";
 
 const TRANSLATION_FIELDS = [
   "locale", "title", "desc", "tags", "tagline", "metaDesc", "client",
@@ -39,9 +41,19 @@ export async function PUT(
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const body = await req.json();
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
 
   try {
+    if (typeof body.slug === "string" && body.slug) {
+      const conflict = await findSlugConflict(body.slug, id, getProjectIdBySlug);
+      if (conflict) return NextResponse.json({ error: conflict.error }, { status: conflict.status });
+    }
+
     const cleanTranslations = (body.translations || []).map((t: Record<string, unknown>) => {
       const clean: Record<string, string> = {};
       for (const field of TRANSLATION_FIELDS) {
@@ -78,8 +90,13 @@ export async function PUT(
 
     return NextResponse.json(project);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Update failed";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    if (isUniqueSlugViolation(e)) {
+      const conflict = slugConflict(String(body.slug));
+      return NextResponse.json({ error: conflict.error }, { status: conflict.status });
+    }
+    // Prisma messages include query details; log them, never return them.
+    console.error("[projects] update failed:", e);
+    return NextResponse.json({ error: "Could not save the project. Please try again." }, { status: 500 });
   }
 }
 

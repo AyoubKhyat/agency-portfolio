@@ -3,7 +3,7 @@
 // as a client. Replace with a database field once the admin has a client/concept selector.
 export const CLIENT_SLUGS: ReadonlySet<string> = new Set([
   "aylani-parfums",
-  "dandana",
+  "dandana-cabaret",
   "luxury-copro",
   "terrene",
 ]);

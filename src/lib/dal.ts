@@ -163,6 +163,12 @@ export async function getPortfolioProjects(locale: string): Promise<PortfolioCar
   }
 }
 
+/** Id of the project that owns `slug`, or null. Used to reject duplicate slugs before writing. */
+export async function getProjectIdBySlug(slug: string): Promise<string | null> {
+  const project = await db().project.findUnique({ where: { slug }, select: { id: true } });
+  return project?.id ?? null;
+}
+
 export async function getProjectBySlug(slug: string, locale: string) {
   if (!hasPrisma()) return getFallbackSlug(slug, locale);
   const project = await prisma.project.findUnique({

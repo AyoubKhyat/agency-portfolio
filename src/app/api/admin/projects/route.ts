@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getProjectsForAdmin, createProject } from "@/lib/dal";
+import { getProjectsForAdmin, createProject, getProjectIdBySlug } from "@/lib/dal";
 import { logAudit, getClientIp } from "@/lib/audit";
+import { findSlugConflict, isUniqueSlugViolation, slugConflict } from "@/lib/project-slug";
 import { z } from "zod";
 
 const translationSchema = z.object({
@@ -70,7 +71,12 @@ export async function POST(req: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json();
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     const flat = parsed.error.flatten();
@@ -100,10 +106,24 @@ export async function POST(req: Request) {
     return { ...firstWithTitle, locale };
   });
 
-  const project = await createProject({
-    ...data,
-    translations: filledTranslations,
-  });
+  let project: Awaited<ReturnType<typeof createProject>>;
+  try {
+    const conflict = await findSlugConflict(data.slug, null, getProjectIdBySlug);
+    if (conflict) return NextResponse.json({ error: conflict.error }, { status: conflict.status });
+
+    project = await createProject({
+      ...data,
+      translations: filledTranslations,
+    });
+  } catch (e) {
+    // Two creates with the same slug at once: the unique index catches what the pre-check could not.
+    if (isUniqueSlugViolation(e)) {
+      const conflict = slugConflict(data.slug);
+      return NextResponse.json({ error: conflict.error }, { status: conflict.status });
+    }
+    console.error("[projects] create failed:", e);
+    return NextResponse.json({ error: "Could not create the project. Please try again." }, { status: 500 });
+  }
 
   // Audit: project created
   await logAudit({
