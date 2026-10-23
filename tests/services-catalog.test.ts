@@ -130,11 +130,26 @@ test("structured data lists every catalog service", () => {
   assert.equal(new Set(SERVICES.map((s) => s.schemaName)).size, SERVICES.length);
 });
 
-test("Arabic SEO copy: no guarantee of results, and the tagline is not repeated in the description", () => {
-  const ar = msgs.ar;
-  for (const v of [ar.Services.seo_desc, ar.Services.seo_subtitle, ar.ServiceDetail.seo_tagline, ar.ServiceDetail.seo_intro]) {
-    assert.doesNotMatch(v, /يضمن|نضمن|تضمن|ضمان|مضمون/, v);
+test("SEO copy makes no guaranteed-results claim in FR, EN or AR", () => {
+  const guarantee = {
+    fr: /garanti|assure|certitude|résultats assurés/i,
+    en: /guarantee|ensures?\b|assured|promise/i,
+    ar: /يضمن|نضمن|تضمن|ضمان|مضمون|مؤكد/,
+  } as const;
+  for (const l of LOCALES) {
+    const sv = msgs[l].Services;
+    const sd = msgs[l].ServiceDetail;
+    const seoCopy = [sv.seo_subtitle, sv.seo_desc, sv.seo_features, ...Object.entries(sd).filter(([k]) => k.startsWith("seo_")).map(([, v]) => v as string)];
+    for (const v of seoCopy) assert.doesNotMatch(v, guarantee[l], `${l}: ${v}`);
   }
+  // The outcome is framed as an aim in every locale.
+  assert.match(msgs.fr.ServiceDetail.seo_intro, /vise à améliorer/);
+  assert.match(msgs.en.ServiceDetail.seo_intro, /aims to improve/);
+  assert.match(msgs.ar.ServiceDetail.seo_intro, /يهدف إلى/);
+});
+
+test("Arabic SEO copy: the tagline is not repeated in the description", () => {
+  const ar = msgs.ar;
   const opening = (s: string) => s.split(/\s+/).slice(0, 2).join(" ");
   assert.notEqual(opening(ar.Services.seo_desc), opening(ar.Services.seo_subtitle));
   assert.notEqual(opening(ar.ServiceDetail.seo_intro.split("—")[1].trim()), opening(ar.ServiceDetail.seo_tagline));
