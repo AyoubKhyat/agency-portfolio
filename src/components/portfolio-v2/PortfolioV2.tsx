@@ -139,7 +139,7 @@ export default async function PortfolioV2({ locale }: { locale: string }) {
             <div className={`${s.grid12} ${s.ctaRow}`}>
               <p>{h("cta_sub")}</p>
               <div className={s.act}>
-                <a className={s.linkW} href={buildWhatsAppUrl(wa("prefill_message"))} target="_blank" rel="noopener noreferrer">
+                <a className={s.linkW} href={buildWhatsAppUrl(wa("prefill_message"))} target="_blank" data-wa-placement="portfolio_cta" rel="noopener noreferrer">
                   {WA_ICON}
                   <span>{h("cta_wa")}</span>
                   <span className={s.srOnly}>{t("new_tab")}</span>

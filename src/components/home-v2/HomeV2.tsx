@@ -8,6 +8,7 @@ import { getHomepageProjects, type HomepageProject } from "@/lib/dal";
 import { isClientProject } from "@/lib/project-kind";
 import { isRenderableProjectImage } from "@/lib/project-image";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { SERVICE_GROUPS, groupHref } from "@/lib/services-catalog";
 import RevealController from "./RevealController";
 import { alexandria, tajawal } from "./fonts";
 import s from "./home.module.css";
@@ -16,7 +17,6 @@ const ROOT_ID = "home-v2";
 const PHONE = "+212 625 461 645";
 const EMAIL = "ibda3.digital0@gmail.com";
 
-const SERVICES = ["s1", "s2", "s3", "s4", "s5", "s6"] as const;
 const REASONS = ["w1", "w2", "w3", "w4"] as const;
 // Ascending bars: height (px) and added opacity per step.
 const STEPS = [
@@ -40,7 +40,17 @@ export default async function HomeV2({ locale }: { locale: string }) {
   preconnect("https://cdn.fontshare.com", { crossOrigin: "anonymous" });
   const t = await getTranslations({ locale, namespace: "HomeV2" });
   const wa = await getTranslations({ locale, namespace: "WhatsApp" });
-  const waUrl = buildWhatsAppUrl(wa("prefill_message"));
+  const sv = await getTranslations({ locale, namespace: "Services" });
+  const pf = await getTranslations({ locale, namespace: "Portfolio" });
+  const waUrl = buildWhatsAppUrl(wa("prefill_general"));
+  // The three service groups from the shared catalog; the Services page lists every service.
+  const groups = SERVICE_GROUPS.map((g) => ({
+    id: g.id,
+    href: groupHref(g.id),
+    title: sv(`group_${g.msg}_title`),
+    desc: sv(`group_${g.msg}_desc`),
+  }));
+  const viewCase = pf("view_case_study");
   const rtl = locale === "ar";
 
   const projects = await getHomepageProjects(locale);
@@ -82,12 +92,12 @@ export default async function HomeV2({ locale }: { locale: string }) {
             </span>
           </h1>
           <div className={`${s.grid12} ${s.value}`}>
-            <div className={s.valueText}>
+            <div className={s.valueText} data-assistant-avoid>
               <p className={s.valueMain} id="home-v2-value">{t("value")}</p>
               <p className={s.valueSub}>{t("value_sub")}</p>
             </div>
-            <div className={s.valueCta}>
-              <a className={`${s.pill} ${s.pillGrad}`} href={waUrl} target="_blank" rel="noopener noreferrer">
+            <div className={s.valueCta} data-assistant-avoid>
+              <a className={`${s.pill} ${s.pillGrad}`} href={waUrl} target="_blank" rel="noopener noreferrer" data-wa-placement="home_hero">
                 <FaWhatsapp aria-hidden="true" />
                 <span>{t("cta_wa")}</span>
               </a>
@@ -98,12 +108,12 @@ export default async function HomeV2({ locale }: { locale: string }) {
             </div>
           </div>
           <ul className={s.svcIndex}>
-            {SERVICES.map((k, i) => (
-              <li key={k}>
-                <a href="#offer">
+            {groups.map((g, i) => (
+              <li key={g.id}>
+                <Link href={g.href}>
                   <span className={s.idxNum} dir="ltr">{num(i)}</span>
-                  <span>{t(k)}</span>
-                </a>
+                  <span>{g.title}</span>
+                </Link>
               </li>
             ))}
           </ul>
@@ -119,18 +129,22 @@ export default async function HomeV2({ locale }: { locale: string }) {
             <p>{t("offer_intro")}</p>
           </div>
           <ol className={s.offer}>
-            {SERVICES.map((k, i) => (
-              <li key={k}>
-                <div className={s.row}>
+            {groups.map((g, i) => (
+              <li key={g.id}>
+                <Link className={s.row} href={g.href}>
                   <span className={`${s.rowNum} ${s.idxNum}`} dir="ltr">{num(i)}</span>
-                  <h3 className={`${s.rowName} ${s.disp}`}>{t(k)}</h3>
-                  <p className={s.rowDesc}>{t(`${k}_d`)}</p>
+                  <h3 className={`${s.rowName} ${s.disp}`}>{g.title}</h3>
+                  <p className={s.rowDesc}>{g.desc}</p>
                   <span className={s.go} aria-hidden="true"><span className={s.flip}>→</span></span>
-                </div>
+                </Link>
               </li>
             ))}
           </ol>
-          <p className={`${s.label} ${s.offerAlso}`}>{t("offer_also")}</p>
+          <p className={`${s.label} ${s.offerAlso}`}>
+            <Link href="/services" className={s.offerLink}>
+              {t("offer_link")} <span className={s.flip} aria-hidden="true">→</span>
+            </Link>
+          </p>
         </div>
       </section>
 
@@ -181,7 +195,7 @@ export default async function HomeV2({ locale }: { locale: string }) {
               </div>
               <div className={s.work} data-count={clients.length}>
                 {clients.map((p) => (
-                  <ClientFigure key={p.slug} p={p} visit={t("visit")} tag={t("tag_client")} count={clients.length} />
+                  <ClientFigure key={p.slug} p={p} cta={viewCase} tag={t("tag_client")} count={clients.length} />
                 ))}
               </div>
             </>
@@ -197,7 +211,7 @@ export default async function HomeV2({ locale }: { locale: string }) {
               <ul className={s.labList}>
                 {concepts.map((p) => (
                   <li key={p.slug}>
-                    <a href={p.url} target="_blank" rel="noopener noreferrer">
+                    <Link href={`/portfolio/${p.slug}`} aria-label={`${p.title} — ${viewCase}`}>
                       <span className={s.thumb}>
                         {isRenderableProjectImage(p.image) && (
                           <Image src={p.image} alt="" fill sizes="(max-width: 760px) 46vw, 16vw" />
@@ -206,7 +220,7 @@ export default async function HomeV2({ locale }: { locale: string }) {
                       <span className={`${s.tag} ${s.labTag}`}>{t("tag_concept")}</span>
                       <span className={s.nm}>{p.title}</span>
                       <span className={s.sc}>{p.sector}</span>
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -251,7 +265,7 @@ export default async function HomeV2({ locale }: { locale: string }) {
           <div className={`${s.grid12} ${s.ctaRow}`}>
             <p>{t("cta_sub")}</p>
             <div className={s.ctaActions}>
-              <a className={`${s.pill} ${s.pillWhite}`} href={waUrl} target="_blank" rel="noopener noreferrer">
+              <a className={`${s.pill} ${s.pillWhite}`} href={waUrl} target="_blank" rel="noopener noreferrer" data-wa-placement="home_cta">
                 <FaWhatsapp aria-hidden="true" />
                 <span>{t("cta_wa")}</span>
               </a>
@@ -262,7 +276,7 @@ export default async function HomeV2({ locale }: { locale: string }) {
             </div>
           </div>
           <div className={s.ctaInfo}>
-            <a href={waUrl} target="_blank" rel="noopener noreferrer" dir="ltr">{PHONE}</a>
+            <a href={waUrl} target="_blank" rel="noopener noreferrer" dir="ltr" data-wa-placement="home_contact_info">{PHONE}</a>
             <a href={`mailto:${EMAIL}`} dir="ltr">{EMAIL}</a>
             <span>{t("hours")}</span>
             <span>{t("place")}</span>
@@ -273,14 +287,15 @@ export default async function HomeV2({ locale }: { locale: string }) {
   );
 }
 
-function ClientFigure({ p, visit, tag, count }: { p: HomepageProject; visit: string; tag: string; count: number }) {
+// The screenshot opens the internal case study (which keeps the external "visit site" link).
+function ClientFigure({ p, cta, tag, count }: { p: HomepageProject; cta: string; tag: string; count: number }) {
   const host = hostname(p.url);
   const sizes = count >= 3 ? "(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 33vw" : "(max-width: 760px) 100vw, 50vw";
   return (
     <figure className={s.fig} data-reveal>
-      <a className={s.shot} href={p.url} target="_blank" rel="noopener noreferrer" data-cta={visit} aria-label={`${p.title} — ${visit}`}>
+      <Link className={s.shot} href={`/portfolio/${p.slug}`} data-cta={cta} aria-label={`${p.title} — ${cta}`}>
         {isRenderableProjectImage(p.image) && <Image src={p.image} alt={p.title} fill sizes={sizes} />}
-      </a>
+      </Link>
       <figcaption className={s.figcap}>
         <div>
           <h3>{p.title}</h3>

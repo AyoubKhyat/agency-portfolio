@@ -4,14 +4,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { tajawal } from "@/components/home-v2/fonts";
+import { SERVICE_GROUPS, groupHref } from "@/lib/services-catalog";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import s from "./footer.module.css";
 
 // Compact Footer V2 (design-exploration/footer-v2). The previous footer is kept in
 // src/components/footer-legacy/LegacyFooter.tsx for rollback.
 const INSTAGRAM = "https://www.instagram.com/ibda3.digital0/";
-const WHATSAPP = "https://wa.me/212625461645";
-
-const SERVICES = ["service_web", "service_ecommerce", "service_mobile", "service_seo", "service_maintenance"] as const;
 const COMPANY = [
   ["/about", "about"],
   ["/portfolio", "portfolio"],
@@ -44,13 +43,15 @@ export default function Footer() {
   const t = useTranslations("Footer");
   const nav = useTranslations("Nav");
   const contact = useTranslations("Contact");
+  const sv = useTranslations("Services");
+  const wa = useTranslations("WhatsApp");
   const rtl = useLocale() === "ar";
   const email = contact("info_email");
 
   const social = [
     // "Instagram" is a brand name: the same label in every language.
     { href: INSTAGRAM, icon: ICONS.instagram, label: "Instagram", value: "@ibda3.digital0", external: true },
-    { href: WHATSAPP, icon: ICONS.whatsapp, label: contact("label_whatsapp"), value: contact("info_phone"), external: true },
+    { href: buildWhatsAppUrl(wa("prefill_general")), icon: ICONS.whatsapp, label: contact("label_whatsapp"), value: contact("info_phone"), external: true },
     { href: `mailto:${email}`, icon: ICONS.email, label: contact("label_email"), value: email, external: false },
   ];
 
@@ -67,10 +68,10 @@ export default function Footer() {
           <nav aria-labelledby="footer-services">
             <h2 className={s.colH} id="footer-services">{t("services")}</h2>
             <ul className={s.links}>
-              {/* Same destination as before: every service links to the services page. */}
-              {SERVICES.map((k) => (
-                <li key={k}>
-                  <Link href="/services">{t(k)}</Link>
+              {/* The three service groups (shared catalog), each to its section of the Services page. */}
+              {SERVICE_GROUPS.map((g) => (
+                <li key={g.id}>
+                  <Link href={groupHref(g.id)}>{sv(`group_${g.msg}_title`)}</Link>
                 </li>
               ))}
             </ul>
@@ -87,7 +88,7 @@ export default function Footer() {
             </ul>
           </nav>
 
-          <div className={s.follow}>
+          <div className={s.follow} data-wa-placement="footer">
             <h2 className={s.colH}>{t("follow")}</h2>
             <ul className={s.social}>
               {social.map((item) => (

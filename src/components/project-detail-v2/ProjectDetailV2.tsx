@@ -84,7 +84,7 @@ export default async function ProjectDetailV2({ project, locale }: { project: Pr
     challenge && "challenge",
     solution && "solution",
     showApproach && "approach",
-    (features.length > 0 || tech.length > 0) && "features",
+    features.length > 0 && "features",
     results.length > 0 && "results",
     related.length > 0 && "more",
     "cta",
@@ -94,7 +94,7 @@ export default async function ProjectDetailV2({ project, locale }: { project: Pr
   const surfaces = [
     (challenge || solution) && "story",
     showApproach && "approach",
-    (features.length > 0 || tech.length > 0) && "features",
+    features.length > 0 && "features",
     results.length > 0 && "results",
     related.length > 0 && "more",
   ].filter(Boolean) as string[];
@@ -228,8 +228,8 @@ export default async function ProjectDetailV2({ project, locale }: { project: Pr
         </section>
       )}
 
-      {/* Features + stack */}
-      {(features.length > 0 || tech.length > 0) && (
+      {/* Features + stack. Only with real features: the stack alone is already in the facts row. */}
+      {features.length > 0 && (
         <section className={secClass("features")}>
           <div className={s.wrap}>
             <div className={`${s.grid12} ${s.secHead}`} data-reveal="">
@@ -329,7 +329,7 @@ export default async function ProjectDetailV2({ project, locale }: { project: Pr
           <div className={`${s.grid12} ${s.ctaRow}`}>
             <p>{t("cta_desc")}</p>
             <div className={s.act}>
-              <a className={s.linkW} href={buildWhatsAppUrl(wa("prefill_message"))} target="_blank" rel="noopener noreferrer">
+              <a className={s.linkW} href={buildWhatsAppUrl(wa("prefill_case_study", { project: tr.title }))} target="_blank" rel="noopener noreferrer" data-wa-placement="case_study_cta">
                 {ICON_WA}
                 <span>{h("cta_wa")}</span>
                 <span className={s.srOnly}>{t("new_tab")}</span>

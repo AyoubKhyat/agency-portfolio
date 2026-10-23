@@ -1,4 +1,5 @@
-// Same services and comparison matrix as src/components/ServiceComparison.tsx.
+// Comparison matrix for the services that have a detail page, in catalog order
+// (DETAIL_PAGE_IDS in src/lib/services-catalog.ts; tests keep the two in sync).
 export const SERVICE_KEYS = ["web", "ecommerce", "mobile", "seo", "maintenance"] as const;
 
 export const FEATURES = [

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { HiOutlineChatBubbleLeftRight, HiXMark } from "react-icons/hi2";
@@ -16,6 +16,40 @@ export default function AssistantWidget() {
   const t = useTranslations("Assistant");
   const [open, setOpen] = useState(false);
   const launcherRef = useRef<HTMLButtonElement>(null);
+  const [yielding, setYielding] = useState(false);
+
+  // Content marked data-assistant-avoid (the homepage hero's value text and CTAs)
+  // must never sit under the launcher. While they overlap it, the closed launcher
+  // fades out and is inert; it comes back as soon as they scroll away.
+  useEffect(() => {
+    let frame = 0;
+    const check = () => {
+      frame = 0;
+      const btn = launcherRef.current?.getBoundingClientRect();
+      if (!btn) return;
+      const hit = [...document.querySelectorAll("[data-assistant-avoid]")].some((el) => {
+        const r = el.getBoundingClientRect();
+        return r.left < btn.right && r.right > btn.left && r.top < btn.bottom && r.bottom > btn.top;
+      });
+      setYielding(hit);
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(check);
+    };
+    schedule();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    // Client-side navigation swaps the page content under the widget.
+    const observer = new MutationObserver(schedule);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      observer.disconnect();
+    };
+  }, []);
+  const hidden = yielding && !open;
 
   // Closing always returns focus to the launcher so keyboard users are not
   // dropped at the top of the document.
@@ -27,7 +61,13 @@ export default function AssistantWidget() {
   return (
     // The only floating control on the page. Kept physically bottom-right in
     // every locale, and below the navbar (z-50) so it never covers navigation.
-    <div className="fixed bottom-6 right-4 sm:right-6 z-[46] flex flex-col items-end gap-3">
+    <div
+      className={`fixed bottom-6 right-4 sm:right-6 z-[46] flex flex-col items-end gap-3 motion-safe:transition-[opacity,transform] motion-safe:duration-300 ${
+        hidden ? "opacity-0 translate-y-2 pointer-events-none" : ""
+      }`}
+      inert={hidden}
+      data-assistant-launcher={hidden ? "hidden" : "visible"}
+    >
       {open && <AssistantPanel id={PANEL_ID} onClose={close} labelledBy={TITLE_ID} />}
 
       <button

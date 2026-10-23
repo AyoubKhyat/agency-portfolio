@@ -5,6 +5,8 @@ import { routing } from "@/i18n/routing";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AssistantWidget from "@/components/assistant/AssistantWidget";
+import WhatsAppClickTracker from "@/components/WhatsAppClickTracker";
+import { SERVICES } from "@/lib/services-catalog";
 import SetLang from "@/components/SetLang";
 import LoadingScreen from "@/components/LoadingScreen";
 import ScrollProgress from "@/components/ScrollProgress";
@@ -135,13 +137,7 @@ function JsonLd({ locale }: { locale: string }) {
       { "@type": "Country", name: "Morocco" },
       { "@type": "City", name: "Marrakech" },
     ],
-    serviceType: [
-      "Web Development",
-      "Mobile App Development",
-      "E-Commerce Solutions",
-      "SEO",
-      "Website Maintenance",
-    ],
+    serviceType: SERVICES.map((svc) => svc.schemaName),
     priceRange: "$$",
     openingHoursSpecification: {
       "@type": "OpeningHoursSpecification",
@@ -206,6 +202,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       <AssistantWidget />
       <BackToTop />
       <CookieConsent />
+      <WhatsAppClickTracker />
     </NextIntlClientProvider>
   );
 }

@@ -2,11 +2,12 @@ import type { MetadataRoute } from "next";
 import { getAllProjectSlugs } from "@/lib/dal";
 import { getAllPostSlugs } from "@/lib/blog";
 import { SITE_URL } from "@/lib/site";
+import { DETAIL_PAGE_IDS } from "@/lib/services-catalog";
 
 const BASE_URL = SITE_URL;
 const locales = ["fr", "en", "ar"];
 const pages = ["", "/services", "/portfolio", "/blog", "/about", "/contact"];
-const serviceSlugs = ["web", "ecommerce", "mobile", "seo", "maintenance"];
+const serviceSlugs = DETAIL_PAGE_IDS; // service detail pages, from the shared catalog
 
 function entry(
   path: string,

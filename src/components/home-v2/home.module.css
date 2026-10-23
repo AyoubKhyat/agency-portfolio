@@ -115,7 +115,7 @@
 .valueCta { grid-column: 9 / -1; display: flex; flex-direction: column; align-items: flex-end; gap: 16px; animation: fade 0.9s var(--ease) both; animation-delay: calc(var(--intro) + 0.5s); }
 @keyframes fade { from { opacity: 0; transform: translateY(14px); } }
 
-.svcIndex { list-style: none; margin: clamp(48px, 6vw, 88px) 0 0; padding: 0; display: grid; grid-template-columns: repeat(6, 1fr); border-top: 1px solid var(--line-2); border-bottom: 1px solid var(--line); }
+.svcIndex { list-style: none; margin: clamp(48px, 6vw, 88px) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line-2); border-bottom: 1px solid var(--line); }
 .svcIndex a { display: flex; gap: 12px; align-items: baseline; padding: 18px 16px 20px 0; height: 100%; font-weight: 600; font-size: 15px; transition: color 0.25s; }
 .root[dir="rtl"] .svcIndex a { padding: 18px 0 20px 16px; }
 .svcIndex li + li a { padding-inline-start: 16px; border-inline-start: 1px solid var(--line); }
@@ -139,6 +139,7 @@
 .rowNum { grid-column: 1 / span 3; padding-inline-start: 4px; transition: color 0.4s; }
 .rowName { grid-column: 4 / span 5; margin: 0; font-size: clamp(2rem, 4.2vw, 4.3rem); transition: transform 0.6s var(--ease); }
 .rowDesc { grid-column: 9 / span 3; margin: 0; color: var(--muted); font-size: 15px; transition: color 0.4s; }
+.row:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
 .go { grid-column: 12; justify-self: end; width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line-2); display: grid; place-items: center; margin-inline-end: 4px; transition: background 0.4s, border-color 0.4s, transform 0.5s var(--ease); }
 @media (hover: hover) {
   .offer li:hover::before { transform: scaleX(1); }
@@ -149,6 +150,8 @@
   .root[dir="rtl"] .offer li:hover .go { transform: rotate(45deg); }
 }
 .offerAlso { margin: 22px 0 0; font-size: 14.5px; font-weight: 500; letter-spacing: 0; }
+.offerLink { display: inline-flex; gap: 8px; align-items: baseline; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.offerLink:hover { color: var(--muted); }
 
 /* ── 3. Why ── */
 .whyStatement { grid-column: 1 / span 6; position: sticky; top: 110px; align-self: start; margin: 0; font: 700 clamp(2rem, 3.6vw, 3.7rem)/1.08 var(--display); letter-spacing: -0.025em; }
@@ -246,9 +249,6 @@
 @media (max-width: 1100px) {
   .valueText { grid-column: 1 / span 8; }
   .valueCta { grid-column: 9 / -1; }
-  .svcIndex { grid-template-columns: repeat(3, 1fr); }
-  .svcIndex li:nth-child(4) a { padding-inline-start: 0; border-inline-start: 0; }
-  .svcIndex li:nth-child(-n + 3) a { border-bottom: 1px solid var(--line); }
   .secHead .label { grid-column: 1 / -1; padding-top: 0; margin-bottom: 14px; }
   .secHead h2, .secHead p { grid-column: 1 / -1; }
   .rowNum { grid-column: 1 / span 1; }
@@ -273,10 +273,9 @@
   .valueCta { align-items: stretch; }
   .pillGrad, .pillWhite { justify-content: center; }
   .valueCta .linkU { align-self: flex-start; }
-  .svcIndex { grid-template-columns: repeat(2, 1fr); }
-  .svcIndex li a { border-inline-start: 0 !important; padding-inline: 0 !important; border-bottom: 1px solid var(--line); }
-  .svcIndex li:nth-child(even) a { padding-inline-start: 14px !important; border-inline-start: 1px solid var(--line) !important; }
-  .svcIndex li:nth-last-child(-n + 2) a { border-bottom: 0; }
+  .svcIndex { grid-template-columns: 1fr; }
+  .svcIndex li a { border-inline-start: 0 !important; padding: 14px 0 !important; border-bottom: 1px solid var(--line); }
+  .svcIndex li:last-child a { border-bottom: 0; }
   .row { grid-template-columns: 34px 1fr; }
   .rowNum { grid-column: 1; }
   .rowName, .rowDesc { grid-column: 2; }

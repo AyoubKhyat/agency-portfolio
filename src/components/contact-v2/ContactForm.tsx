@@ -1,8 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import emailjs from "@emailjs/browser";
+import { SERVICE_GROUPS, servicesInGroup, type ServiceId } from "@/lib/services-catalog";
+import {
+  parseApiResponse,
+  resolveOutcome,
+  shouldReportEmailFailure,
+  shouldSendEmail,
+  shouldTrackLead,
+  type EmailResult,
+  type Outcome,
+} from "@/lib/contact-outcome";
+import { trackEvent } from "@/lib/analytics";
 import s from "./contact.module.css";
 
 type FieldName = "fullName" | "email" | "phone" | "subject" | "message";
@@ -12,6 +23,7 @@ type FieldErrors = Partial<Record<FieldName, string>>;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^[+\d][\d\s\-().]{7,}$/;
 const FIELDS: FieldName[] = ["fullName", "email", "phone", "subject", "message"];
+const OTHER = "other";
 
 const ERR_ICON = (
   <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -19,23 +31,28 @@ const ERR_ICON = (
   </svg>
 );
 
-export default function ContactForm({ waUrl }: { waUrl: string }) {
+export default function ContactForm({ waUrl, initialService = null }: { waUrl: string; initialService?: ServiceId | null }) {
   const t = useTranslations("Contact");
   const sv = useTranslations("Services");
   const v = useTranslations("Validation");
   const h = useTranslations("HomeV2");
+  const locale = useLocale();
   const formRef = useRef<HTMLFormElement>(null);
   const doneRef = useRef<HTMLHeadingElement>(null);
   const alertRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>({});
 
-  // Same subject values as the previous select: service titles, then "Other".
-  const subjects = [
-    ...(["web", "ecommerce", "mobile", "seo", "maintenance"] as const).map((k) => sv(`${k}_title`)),
-    t("form_subject_other"),
-  ];
+  // Every service from the shared catalog, grouped, then "Other". The submitted
+  // value stays the translated title (what the CRM and the email show).
+  const groups = SERVICE_GROUPS.map((g) => ({
+    id: g.id,
+    title: sv(`group_${g.msg}_title`),
+    options: servicesInGroup(g.id).map((svc) => ({ id: svc.id as string, label: sv(`${svc.msg}_title`) })),
+  }));
+  const other = { id: OTHER, label: t("form_subject_other") };
 
   useEffect(() => {
     // Move focus to the outcome (the submit button was disabled while sending).
@@ -101,57 +118,85 @@ export default function ContactForm({ waUrl }: { waUrl: string }) {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!formRef.current) return;
+    const form = formRef.current;
+    if (!form || status === "sending") return;
 
-    const honeypot = new FormData(formRef.current).get("website") as string;
+    const honeypot = new FormData(form).get("website") as string;
     if (honeypot) {
+      setOutcome("success");
       setStatus("success");
       return;
     }
 
     const firstInvalid = validateAll();
     if (firstInvalid) {
-      const el = formRef.current.querySelector<HTMLElement>(`[name="${firstInvalid}"]`);
+      const el = form.querySelector<HTMLElement>(`[name="${firstInvalid}"]`);
       el?.focus();
       return;
     }
 
     setStatus("sending");
+    const formData = new FormData(form);
+    const serviceKey = form.querySelector<HTMLInputElement>('input[name="subject"]:checked')?.dataset.serviceId ?? OTHER;
 
-    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-    const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
-    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+    // 1. Save the inquiry (source of truth). It also tells us about duplicates.
+    let res: Response | null = null;
+    try {
+      res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: formData.get("fullName"),
+          email: formData.get("email"),
+          phone: formData.get("phone") || undefined,
+          subject: formData.get("subject"),
+          message: formData.get("message"),
+        }),
+      });
+    } catch {
+      res = null;
+    }
+    const api = await parseApiResponse(res);
 
-    if (!serviceId || !templateId || !publicKey) {
-      setStatus("error");
-      return;
+    // 2. Email notification, unless the server already has this exact inquiry.
+    let email: EmailResult = "skipped";
+    if (shouldSendEmail(api)) {
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+      if (!serviceId || !templateId || !publicKey) {
+        email = "not_configured";
+      } else {
+        try {
+          await emailjs.sendForm(serviceId, templateId, form, { publicKey });
+          email = "sent";
+        } catch {
+          email = "failed";
+        }
+      }
     }
 
-    try {
-      const formData = new FormData(formRef.current);
-      const [emailResult] = await Promise.allSettled([
-        emailjs.sendForm(serviceId, templateId, formRef.current, { publicKey }),
-        fetch("/api/contact", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fullName: formData.get("fullName"),
-            email: formData.get("email"),
-            phone: formData.get("phone") || undefined,
-            subject: formData.get("subject"),
-            message: formData.get("message"),
-          }),
-        }),
-      ]);
-      if (emailResult.status === "fulfilled") {
-        setStatus("success");
-        formRef.current?.reset();
-        setErrors({});
-        setTouched({});
-      } else {
-        setStatus("error");
-      }
-    } catch {
+    if (shouldReportEmailFailure(api, email) && api.kind === "stored" && api.leadId) {
+      fetch("/api/contact/notification-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadId: api.leadId, status: email === "not_configured" ? "not_configured" : "failed" }),
+        keepalive: true,
+      }).catch(() => {});
+    }
+
+    const result = resolveOutcome(api, email);
+    if (shouldTrackLead(api, result)) {
+      trackEvent("generate_lead", { method: "contact_form", service: serviceKey, locale, page_type: "contact" });
+    }
+    setOutcome(result);
+    if (result === "success" || result === "email_only") {
+      setStatus("success");
+      formRef.current?.reset();
+      setErrors({});
+      setTouched({});
+    } else {
+      // Keep everything the visitor typed so they can retry or switch to WhatsApp.
       setStatus("error");
     }
   }
@@ -177,6 +222,20 @@ export default function ContactForm({ waUrl }: { waUrl: string }) {
     "aria-describedby": `${name}-err`,
   });
   const required = <span className={s.req} aria-hidden="true">*</span>;
+  const chip = (o: { id: string; label: string }, first: boolean) => (
+    <label key={o.id} className={s.chip}>
+      <input
+        type="radio"
+        name="subject"
+        value={o.label}
+        data-service-id={o.id}
+        defaultChecked={o.id === initialService}
+        onChange={handleChange}
+        required={first}
+      />
+      <span>{o.label}</span>
+    </label>
+  );
 
   if (status === "success") {
     return (
@@ -187,7 +246,13 @@ export default function ContactForm({ waUrl }: { waUrl: string }) {
           </svg>
         </span>
         <h2 className={s.disp} tabIndex={-1} ref={doneRef}>{t("form_success")}</h2>
-        <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => setStatus("idle")}>
+        {outcome === "email_only" && (
+          <p className={s.doneNote}>
+            {t("form_success_email_only")}{" "}
+            <a href={waUrl} target="_blank" rel="noopener noreferrer" data-wa-placement="contact_form_notice">{h("cta_wa")}</a>
+          </p>
+        )}
+        <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => { setOutcome(null); setStatus("idle"); }}>
           {t("form_send_another")}
         </button>
       </div>
@@ -209,8 +274,8 @@ export default function ContactForm({ waUrl }: { waUrl: string }) {
         <div className={s.alert} role="alert" tabIndex={-1} ref={alertRef}>
           {ERR_ICON}
           <span>
-            {t("form_error")}{" "}
-            <a href={waUrl} target="_blank" rel="noopener noreferrer">WhatsApp</a>
+            {outcome === "rate_limited" ? t("form_error_rate_limited") : t("form_error")}{" "}
+            <a href={waUrl} target="_blank" rel="noopener noreferrer" data-wa-placement="contact_form_error">WhatsApp</a>
           </span>
         </div>
       )}
@@ -237,13 +302,14 @@ export default function ContactForm({ waUrl }: { waUrl: string }) {
         </div>
         <fieldset className={s.fieldset} aria-invalid={invalid("subject") || undefined} aria-describedby="subject-err">
           <legend className={s.label}>{t("form_subject")}{required}</legend>
-          <div className={s.chips}>
-            {subjects.map((label, i) => (
-              <label key={label} className={s.chip}>
-                <input type="radio" name="subject" value={label} onChange={handleChange} required={i === 0} aria-required={i === 0 || undefined} />
-                <span>{label}</span>
-              </label>
-            ))}
+          {groups.map((g, gi) => (
+            <div key={g.id} className={s.chipGroup}>
+              <span className={s.chipGroupLabel}>{g.title}</span>
+              <div className={s.chips}>{g.options.map((o, i) => chip(o, gi === 0 && i === 0))}</div>
+            </div>
+          ))}
+          <div className={s.chipGroup}>
+            <div className={s.chips}>{chip(other, false)}</div>
           </div>
           {errorText("subject")}
         </fieldset>
@@ -267,7 +333,7 @@ export default function ContactForm({ waUrl }: { waUrl: string }) {
             )}
           </button>
           <p className={s.alt}>
-            {h("cta_kicker")} · <a href={waUrl} target="_blank" rel="noopener noreferrer">{h("cta_wa")}</a>
+            {h("cta_kicker")} · <a href={waUrl} target="_blank" rel="noopener noreferrer" data-wa-placement="contact_form">{h("cta_wa")}</a>
           </p>
         </div>
       </div>

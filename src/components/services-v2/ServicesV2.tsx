@@ -8,6 +8,7 @@ import ComparePicker from "./ComparePicker";
 import FaqList from "./FaqList";
 import { CheckIcon, Mark } from "./Marks";
 import { FEATURES, SERVICE_KEYS, num } from "./data";
+import { SERVICE_GROUPS, contactHref, servicesInGroup } from "@/lib/services-catalog";
 import s from "./services.module.css";
 
 const ROOT_ID = "services-v2";
@@ -37,50 +38,63 @@ export default function ServicesV2({ faqItems }: { faqItems: { question: string;
     <div id={ROOT_ID} dir={rtl ? "rtl" : "ltr"} className={`${s.root} ${alexandria.variable} ${tajawal.variable}`}>
       <RevealController rootId={ROOT_ID} hiddenClass={s.jsReveal} />
 
-      {/* Service cards */}
-      <section className={`${s.sec} ${s.svc}`} id="services">
-        <div className={s.wrap}>
-          <ul className={s.cards}>
-            {SERVICE_KEYS.map((k, i) => {
-              const feats = t(`${k}_features`).split(",").map((f) => f.trim()).filter(Boolean);
-              return (
-                <li key={k} id={`svc-${k}`} data-reveal="">
-                  <Link href={`/services/${k}`} className={s.card}>
-                    <div className={s.cardTop}>
-                      <span className={s.label}>
-                        <span className={s.secNum} dir="ltr">{num(i)}</span>
-                      </span>
-                      <span className={s.go} aria-hidden="true">
-                        <span className={s.flip}>→</span>
-                      </span>
-                    </div>
-                    <h2 className={s.disp}>{titles[i]}</h2>
-                    <p className={s.cardSub}>{t(`${k}_subtitle`)}</p>
-                    <p className={s.cardDesc}>{t(`${k}_desc`)}</p>
-                    <ul className={s.feats}>
-                      {feats.map((f) => (
-                        <li key={f}>
-                          <span className={s.tick}><CheckIcon /></span>
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                    <span className={s.more}>
-                      {t("learn_more")} <span className={s.flip} aria-hidden="true">→</span>
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </section>
+      {/* Service cards, by group (shared catalog). Services with a detail page link to it;
+          the others link to the contact form with the service preselected. */}
+      <div id="services">
+        {SERVICE_GROUPS.map((g, gi) => {
+          const items = servicesInGroup(g.id);
+          return (
+            <section key={g.id} className={`${s.sec} ${s.svc} ${s.svcGroup}`} id={`group-${g.id}`} aria-labelledby={`group-${g.id}-title`}>
+              <div className={s.wrap}>
+                <div className={`${s.grid12} ${s.secHead} ${s.groupHead}`} data-reveal="">
+                  {secLabel(num(gi), <span>{t(`group_${g.msg}_title`)}</span>)}
+                  <h2 className={s.disp} id={`group-${g.id}-title`}>{t(`group_${g.msg}_title`)}</h2>
+                  <p>{t(`group_${g.msg}_desc`)}</p>
+                </div>
+                <ul className={s.cards} data-count={items.length}>
+                  {items.map((svc, i) => {
+                    const feats = t(`${svc.msg}_features`).split(",").map((f) => f.trim()).filter(Boolean);
+                    return (
+                      <li key={svc.id} id={`svc-${svc.id}`} data-reveal="">
+                        <Link href={svc.detailPage ? `/services/${svc.id}` : contactHref(svc.id)} className={s.card}>
+                          <div className={s.cardTop}>
+                            <span className={s.label}>
+                              <span className={s.secNum} dir="ltr">{num(i)}</span>
+                            </span>
+                            <span className={s.go} aria-hidden="true">
+                              <span className={s.flip}>→</span>
+                            </span>
+                          </div>
+                          <h3 className={s.disp}>{t(`${svc.msg}_title`)}</h3>
+                          <p className={s.cardSub}>{t(`${svc.msg}_subtitle`)}</p>
+                          <p className={s.cardDesc}>{t(`${svc.msg}_desc`)}</p>
+                          <ul className={s.feats}>
+                            {feats.map((f) => (
+                              <li key={f}>
+                                <span className={s.tick}><CheckIcon /></span>
+                                {f}
+                              </li>
+                            ))}
+                          </ul>
+                          <span className={s.more}>
+                            {svc.detailPage ? t("learn_more") : t("request_quote")} <span className={s.flip} aria-hidden="true">→</span>
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </section>
+          );
+        })}
+      </div>
 
       {/* Comparison: table on desktop, service picker on phones */}
       <section className={s.sec} id="compare">
         <div className={s.wrap}>
           <div className={`${s.grid12} ${s.secHead}`} data-reveal="">
-            {secLabel("01", <span>{c("pill")}</span>)}
+            {secLabel(num(SERVICE_GROUPS.length), <span>{c("pill")}</span>)}
             <h2 className={s.disp}>
               <span>{c("heading")}</span> <span className={s.gradText}>{c("heading_accent")}</span>
             </h2>
@@ -125,7 +139,7 @@ export default function ServicesV2({ faqItems }: { faqItems: { question: string;
       <section className={`${s.sec} ${s.faq}`} id="faq">
         <div className={`${s.wrap} ${s.grid12}`}>
           <div className={s.faqHead} data-reveal="">
-            {secLabel("02", "FAQ")}
+            {secLabel(num(SERVICE_GROUPS.length + 1), "FAQ")}
             <h2 className={s.disp}>{t("faq_title")}</h2>
           </div>
           <FaqList items={faqItems} />
@@ -135,7 +149,7 @@ export default function ServicesV2({ faqItems }: { faqItems: { question: string;
       {/* CTA */}
       <section className={s.cta} id="contact">
         <div className={s.wrap}>
-          {secLabel("03", <span>{nav("contact")}</span>)}
+          {secLabel(num(SERVICE_GROUPS.length + 2), <span>{nav("contact")}</span>)}
           <h2 className={`${s.ctaTitle} ${s.disp}`}>{t("cta_title")}</h2>
           <div className={`${s.grid12} ${s.ctaRow}`}>
             <p>{t("cta_desc")}</p>

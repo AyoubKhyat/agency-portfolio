@@ -28,8 +28,8 @@ export default function LanguageSwitcher() {
           aria-current={locale === l.code ? "true" : undefined}
           className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
             locale === l.code
-              ? "bg-primary text-white"
-              : "text-text-muted hover:text-foreground"
+              ? "bg-[#7455d1] text-white"
+              : "text-[#555555] dark:text-text-muted hover:text-foreground"
           }`}
         >
           {l.label}

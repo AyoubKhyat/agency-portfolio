@@ -376,6 +376,20 @@ export async function reorderProjects(orderedIds: string[]) {
 
 // ─── Leads ───────────────────────────────────────────────────────
 
+/**
+ * Id of a lead with the same email (case-insensitive), the same message and the
+ * same selected service (subject), created since `since`, or null. Used to
+ * ignore resubmissions of one inquiry.
+ */
+export async function findRecentDuplicateLead(email: string, message: string, subject: string, since: Date): Promise<string | null> {
+  const lead = await db().lead.findFirst({
+    where: { email: { equals: email, mode: "insensitive" }, message, subject, createdAt: { gte: since } },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+  });
+  return lead?.id ?? null;
+}
+
 export async function createLead(data: {
   fullName: string;
   email: string;

@@ -5,8 +5,12 @@ import { Link } from "@/i18n/navigation";
 import { HiOutlineCheck } from "react-icons/hi2";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 import { SITE_URL, pageMetadata } from "@/lib/site";
+import { DETAIL_PAGE_IDS, contactHref, getService } from "@/lib/services-catalog";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { FaWhatsapp } from "react-icons/fa";
 
-const SLUGS = ["web", "ecommerce", "mobile", "seo", "maintenance"] as const;
+// Services with their own page come from the shared catalog.
+const SLUGS = DETAIL_PAGE_IDS;
 type Slug = (typeof SLUGS)[number];
 
 const BASE_URL = SITE_URL;
@@ -70,6 +74,11 @@ export default async function ServiceDetailPage({
 
   const t = await getTranslations({ locale, namespace: "ServiceDetail" });
   const nav = await getTranslations({ locale, namespace: "Nav" });
+  const sv = await getTranslations({ locale, namespace: "Services" });
+  const wa = await getTranslations({ locale, namespace: "WhatsApp" });
+  const home = await getTranslations({ locale, namespace: "HomeV2" });
+  const service = getService(slug as Slug);
+  const waUrl = buildWhatsAppUrl(wa("prefill_service", { service: sv(`${service.msg}_title`) }));
 
   const features = t(`${slug}_features`).split(",").map((f) => f.trim());
   const steps = [1, 2, 3].map((n) => ({
@@ -194,12 +203,23 @@ export default async function ServiceDetailPage({
             {t("cta_title")}
           </h2>
           <p className="mt-4 text-lg text-background/70">{t("cta_desc")}</p>
-          <Link
-            href="/contact"
-            className="inline-block mt-8 px-10 py-4 bg-background text-foreground rounded-xl font-semibold hover:bg-background/90 transition-colors active:scale-95"
-          >
-            {t("cta_button")}
-          </Link>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3" data-wa-placement="service_cta" data-wa-service={slug}>
+            <Link
+              href={contactHref(slug as Slug)}
+              className="inline-block px-10 py-4 bg-background text-foreground rounded-xl font-semibold hover:bg-background/90 transition-colors active:scale-95"
+            >
+              {t("cta_button")}
+            </Link>
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/85 transition-colors active:scale-95"
+            >
+              <FaWhatsapp aria-hidden="true" />
+              {home("cta_wa")}
+            </a>
+          </div>
         </FadeIn>
       </section>
     </>

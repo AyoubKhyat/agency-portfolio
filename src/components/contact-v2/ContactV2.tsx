@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import RevealController from "@/components/home-v2/RevealController";
 import { alexandria, tajawal } from "@/components/home-v2/fonts";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { getService, type ServiceId } from "@/lib/services-catalog";
 import ContactForm from "./ContactForm";
 import s from "./contact.module.css";
 
@@ -15,13 +16,19 @@ const WA_ICON = (
   </svg>
 );
 
-export default async function ContactV2({ locale }: { locale: string }) {
+export default async function ContactV2({ locale, initialService = null }: { locale: string; initialService?: ServiceId | null }) {
   preconnect("https://cdn.fontshare.com", { crossOrigin: "anonymous" });
   const t = await getTranslations({ locale, namespace: "Contact" });
   const h = await getTranslations({ locale, namespace: "HomeV2" });
   const wa = await getTranslations({ locale, namespace: "WhatsApp" });
+  const sv = await getTranslations({ locale, namespace: "Services" });
   const rtl = locale === "ar";
-  const waUrl = buildWhatsAppUrl(wa("prefill_message"));
+  // A visitor who arrived from a service keeps that context in WhatsApp too.
+  const waUrl = buildWhatsAppUrl(
+    initialService
+      ? wa("prefill_service", { service: sv(`${getService(initialService).msg}_title`) })
+      : wa("prefill_contact"),
+  );
   const phone = t("info_phone");
   const email = t("info_email");
 
@@ -31,7 +38,7 @@ export default async function ContactV2({ locale }: { locale: string }) {
       label: t("label_whatsapp"),
       value: (
         <>
-          <a href={waUrl} target="_blank" rel="noopener noreferrer" dir="ltr">wa.me/212625461645</a>
+          <a href={waUrl} target="_blank" rel="noopener noreferrer" dir="ltr" data-wa-placement="contact_details">wa.me/212625461645</a>
           <span className={s.ext} aria-hidden="true">↗</span>
         </>
       ),
@@ -43,7 +50,7 @@ export default async function ContactV2({ locale }: { locale: string }) {
   ];
 
   return (
-    <div id={ROOT_ID} dir={rtl ? "rtl" : "ltr"} className={`${s.root} ${alexandria.variable} ${tajawal.variable}`}>
+    <div id={ROOT_ID} dir={rtl ? "rtl" : "ltr"} className={`${s.root} ${alexandria.variable} ${tajawal.variable}`} data-wa-service={initialService ?? undefined}>
       <RevealController rootId={ROOT_ID} hiddenClass={s.jsReveal} />
 
       {/* Hero: site surface, grid, glows, pill and Instrument Serif heading */}
@@ -63,7 +70,7 @@ export default async function ContactV2({ locale }: { locale: string }) {
                 <span>{h("cta_form")}</span>
                 <span aria-hidden="true">↓</span>
               </a>
-              <a href={waUrl} target="_blank" rel="noopener noreferrer" className={`${s.btn} ${s.btnLine}`}>
+              <a href={waUrl} target="_blank" rel="noopener noreferrer" className={`${s.btn} ${s.btnLine}`} data-wa-placement="contact_hero">
                 <span className={s.waIcon}>{WA_ICON}</span>
                 <span>{h("cta_wa")}</span>
               </a>
@@ -87,7 +94,7 @@ export default async function ContactV2({ locale }: { locale: string }) {
       <section className={s.main} aria-label={t("title")}>
         <div className={s.mwrap}>
           <div className={`${s.card} ${s.formCard}`} id="contact-form" data-reveal="">
-            <ContactForm waUrl={waUrl} />
+            <ContactForm waUrl={waUrl} initialService={initialService} />
           </div>
           <aside className={s.aside}>
             <div className={`${s.card} ${s.waCard}`} data-reveal="">
@@ -97,7 +104,7 @@ export default async function ContactV2({ locale }: { locale: string }) {
               </div>
               <h2 className={s.disp}>{t("whatsapp_cta")}</h2>
               <p className={s.waNum} dir="ltr">{phone}</p>
-              <a href={waUrl} target="_blank" rel="noopener noreferrer" className={`${s.btn} ${s.waBtn}`}>
+              <a href={waUrl} target="_blank" rel="noopener noreferrer" className={`${s.btn} ${s.waBtn}`} data-wa-placement="contact_card">
                 <span>{h("cta_wa")}</span>
                 <span className={s.flip} aria-hidden="true">→</span>
               </a>

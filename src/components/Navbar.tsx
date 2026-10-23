@@ -64,8 +64,8 @@ export default function Navbar() {
                 href={link.href}
                 className={`px-3 py-2 rounded-lg text-sm transition-colors ${
                   pathname === link.href
-                    ? "text-primary font-medium"
-                    : "text-text-muted hover:text-primary"
+                    ? "text-[#7455d1] dark:text-primary font-medium"
+                    : "text-text-muted hover:text-[#7455d1] dark:hover:text-primary"
                 }`}
               >
                 {link.label}
@@ -75,7 +75,7 @@ export default function Navbar() {
             <ThemeToggle />
             <Link
               href="/contact"
-              className="ml-3 px-5 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors active:scale-95"
+              className="ml-3 px-5 py-2 bg-[#7455d1] text-white rounded-lg text-sm font-semibold hover:bg-[#6a4bc4] transition-colors active:scale-95"
             >
               {t("cta")}
             </Link>
@@ -114,8 +114,8 @@ export default function Navbar() {
                     onClick={() => setOpen(false)}
                     className={`block px-3 py-2 rounded-lg text-sm ${
                       pathname === link.href
-                        ? "text-primary font-medium"
-                        : "text-text-muted hover:text-primary"
+                        ? "text-[#7455d1] dark:text-primary font-medium"
+                        : "text-text-muted hover:text-[#7455d1] dark:hover:text-primary"
                     }`}
                   >
                     {link.label}
@@ -129,7 +129,7 @@ export default function Navbar() {
               <Link
                 href="/contact"
                 onClick={() => setOpen(false)}
-                className="block mt-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold text-center hover:bg-primary-dark transition-colors"
+                className="block mt-2 px-4 py-2 bg-[#7455d1] text-white rounded-lg text-sm font-semibold text-center hover:bg-[#6a4bc4] transition-colors"
               >
                 {t("cta")}
               </Link>

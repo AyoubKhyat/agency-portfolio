@@ -171,6 +171,8 @@ export default function AssistantPanel({
             href={buildWhatsAppUrl(prefill(lastOption))}
             target="_blank"
             rel="noopener noreferrer"
+            data-wa-placement="assistant"
+            data-wa-service={lastOption.catalog && "service" in lastOption.catalog ? lastOption.catalog.service : undefined}
             className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-green-500 text-white rounded-xl font-semibold text-sm hover:bg-green-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <FaWhatsapp size={18} aria-hidden="true" />

@@ -40,6 +40,48 @@ export async function notifyUsers(userIds: string[], data: NotifyPayload) {
 }
 
 /**
+ * In-app alert for a new website inquiry: to the team member it was assigned
+ * to, or to every active admin when nobody was assigned. Idempotent per lead
+ * (keyed on the lead's admin link), so a retried request never alerts twice.
+ * Returns how many users were notified.
+ */
+export async function notifyNewLead(lead: {
+  id: string;
+  fullName: string;
+  subject: string;
+  assignedToId?: string | null;
+}): Promise<number> {
+  if (!hasPrisma()) return 0;
+  const link = `/admin/leads/${lead.id}`;
+  try {
+    const already = await prisma.notification.count({ where: { type: "NEW_LEAD", link } });
+    if (already > 0) return 0;
+    const recipients = lead.assignedToId
+      ? [lead.assignedToId]
+      : (
+          await prisma.user.findMany({
+            where: { isActive: true, role: { in: ["admin", "Admin"] } },
+            select: { id: true },
+          })
+        ).map((u) => u.id);
+    const ids = Array.from(new Set(recipients.filter(Boolean)));
+    if (ids.length === 0) return 0;
+    await prisma.notification.createMany({
+      data: ids.map((userId) => ({
+        userId,
+        type: "NEW_LEAD",
+        title: `Nouvelle demande : ${lead.subject}`,
+        body: `${lead.fullName} — formulaire de contact du site`,
+        link,
+      })),
+    });
+    return ids.length;
+  } catch {
+    return 0;
+  }
+}
+
+/**
  * Parse @mentions out of `content`, resolve to user IDs and fire a notification
  * for each. Excludes the author so writers don't ping themselves.
  */
