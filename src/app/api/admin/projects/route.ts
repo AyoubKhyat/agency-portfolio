@@ -32,7 +32,7 @@ const translationSchema = z.object({
   result3Value: z.string().optional().default(""),
   result3Label: z.string().optional().default(""),
   results: z.string().optional().default(""),
-  testimonial: z.string().optional().default(""),
+  // No testimonial here: it is added after creation, per locale, through the testimonial endpoint.
 });
 
 const PROJECT_STATUSES = ["DRAFT", "IN_PROGRESS", "REVIEW", "COMPLETED", "PUBLISHED"] as const;

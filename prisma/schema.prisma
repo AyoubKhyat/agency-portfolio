@@ -56,6 +56,10 @@ model Project {
   status    String  @default("DRAFT") // DRAFT | IN_PROGRESS | REVIEW | COMPLETED | PUBLISHED
   kind      String  @default("CONCEPT") // CLIENT | CONCEPT — public Client / Concept classification
   sortOrder Int     @default(0) @map("sort_order")
+  // Client testimonial (one per project; see src/lib/testimonial-approval.ts). The quote and role are
+  // per locale on ProjectTranslation. The consent note is private: never selected for public pages.
+  testimonialAuthor  String? @map("testimonial_author")
+  testimonialConsent String? @map("testimonial_consent")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -95,6 +99,11 @@ model ProjectTranslation {
   result3Label String? @map("result3_label")
   results      String?
   testimonial  String?
+  // Publication of this locale's testimonial: set only by an admin's explicit approval of the exact
+  // quote, role and author; cleared whenever any of them changes.
+  testimonialRole       String?   @map("testimonial_role")
+  testimonialApprovedAt DateTime? @map("testimonial_approved_at")
+  testimonialApprovedBy String?   @map("testimonial_approved_by")
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 

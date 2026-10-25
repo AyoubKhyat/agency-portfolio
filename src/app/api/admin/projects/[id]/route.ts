@@ -16,8 +16,8 @@ const TRANSLATION_FIELDS = [
   "industry", "challenge", "solution", "step1Title", "step1Desc",
   "step2Title", "step2Desc", "step3Title", "step3Desc", "features",
   "tech", "result1Value", "result1Label", "result2Value", "result2Label",
-  "result3Value", "result3Label", "results", "testimonial",
-] as const;
+  "result3Value", "result3Label", "results",
+] as const; // The testimonial has its own endpoint (./testimonial): a project save never writes it.
 
 const VALID_STATUSES = new Set(["DRAFT", "IN_PROGRESS", "REVIEW", "COMPLETED", "PUBLISHED"]);
 

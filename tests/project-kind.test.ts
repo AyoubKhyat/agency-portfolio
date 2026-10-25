@@ -23,8 +23,12 @@ mock.module("../src/lib/prisma", {
         create: async (args: Record<string, unknown>) => { fake.calls.push({ op: "create", args }); return { id: "new" }; },
         update: async (args: Record<string, unknown>) => { fake.calls.push({ op: "update", args }); return { id: "p1" }; },
         findMany: async (args: Record<string, unknown>) => { fake.calls.push({ op: "findMany", args }); return fake.rows; },
+        findUnique: async (args: Record<string, unknown>) => { fake.calls.push({ op: "findUnique", args }); return { id: "p1" }; },
       },
-      projectTranslation: { deleteMany: async () => ({ count: 3 }) },
+      projectTranslation: {
+        deleteMany: async () => ({ count: 3 }),
+        upsert: async (args: Record<string, unknown>) => { fake.calls.push({ op: "upsertTranslation", args }); return {}; },
+      },
       $transaction: (ops: Promise<unknown>[]) => Promise.all(ops),
     },
   },

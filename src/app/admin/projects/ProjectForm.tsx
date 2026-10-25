@@ -18,6 +18,7 @@ import {
 import {
   DEFAULT_PROJECT_KIND, PROJECT_KINDS, PROJECT_KIND_LABELS, isProjectKind, type ProjectKind,
 } from "@/lib/project-kind";
+import TestimonialPanel from "./TestimonialPanel";
 
 const KIND_HELP: Record<ProjectKind, string> = {
   CLIENT: "Real client work. Shown under Clients on the site.",
@@ -65,7 +66,7 @@ type Fields = {
   step3Title: string; step3Desc: string; features: string; tech: string;
   result1Value: string; result1Label: string; result2Value: string; result2Label: string;
   result3Value: string; result3Label: string;
-  results: string; testimonial: string;
+  results: string;
 };
 
 const emptyFields: Fields = {
@@ -73,8 +74,12 @@ const emptyFields: Fields = {
   industry: "", challenge: "", solution: "", step1Title: "", step1Desc: "",
   step2Title: "", step2Desc: "", step3Title: "", step3Desc: "", features: "",
   tech: "", result1Value: "", result1Label: "", result2Value: "", result2Label: "",
-  result3Value: "", result3Label: "", results: "", testimonial: "",
+  result3Value: "", result3Label: "", results: "",
 };
+
+/** Only the form's own fields (a loaded translation also carries the testimonial columns, saved separately). */
+const pickFields = (t: Partial<Fields>): Fields =>
+  Object.fromEntries((Object.keys(emptyFields) as (keyof Fields)[]).map((k) => [k, t[k] ?? ""])) as Fields;
 
 type InitialData = {
   id?: string;
@@ -133,7 +138,7 @@ export default function ProjectForm({
     initial?.translations.find((t) => t.locale === initialLang) ??
     initial?.translations[0] ??
     { ...emptyFields };
-  const [fields, setFields] = useState<Fields>({ ...emptyFields, ...initialFields });
+  const [fields, setFields] = useState<Fields>(pickFields(initialFields));
 
   const slug = initial?.slug ?? slugify(fields.title);
   const isRtl = lang === "ar";
@@ -203,7 +208,7 @@ export default function ProjectForm({
     const translations = allLocales.map((locale) => {
       if (locale === lang) return { locale, ...fields };
       const existing = initial?.translations.find((t) => t.locale === locale);
-      if (existing && existing.title) return { ...emptyFields, ...existing };
+      if (existing && existing.title) return { locale, ...pickFields(existing) };
       return { locale, ...fields };
     });
 
@@ -320,7 +325,7 @@ export default function ProjectForm({
                       onClick={() => {
                         const next = initial?.translations.find((t) => t.locale === l.value);
                         setLang(l.value);
-                        if (next) setFields({ ...emptyFields, ...next });
+                        if (next) setFields(pickFields(next));
                       }}
                       className={`h-8 px-3 rounded-md text-[12px] font-medium transition-colors ${
                         lang === l.value
@@ -502,20 +507,12 @@ export default function ProjectForm({
                       className={textarea}
                     />
                   </div>
-
-                  <div>
-                    <label className={lbl}>Client testimonial</label>
-                    <textarea
-                      value={fields.testimonial}
-                      onChange={(e) => set("testimonial", e.target.value)}
-                      rows={3}
-                      placeholder="Verbatim quote from the client, plus their name and role."
-                      className={textarea}
-                    />
-                  </div>
                 </div>
               )}
             </section>
+
+            {/* Client testimonial: saved and published on its own (TestimonialPanel) */}
+            <TestimonialPanel projectId={mode === "edit" ? initial?.id : undefined} />
           </div>
 
           {/* RIGHT — sticky */}

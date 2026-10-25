@@ -13,7 +13,7 @@ import fs from "node:fs";
 import { createElement, type ReactElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { IntlProvider, createTranslator } from "use-intl";
-import { approvedTestimonials as realApprovedTestimonials, type TestimonialApproval } from "../src/lib/testimonials";
+import type { PublishedTestimonialRow } from "../src/lib/dal";
 
 const msgs: Record<string, Record<string, unknown>> = Object.fromEntries(
   ["fr", "en", "ar"].map((l) => [l, JSON.parse(fs.readFileSync(`src/messages/${l}.json`, "utf8"))]),
@@ -42,17 +42,19 @@ mock.module("next-intl/server", {
   },
 });
 
-// Dandana has a quote stored in the admin; it must stay hidden until it is approved.
 const projects = [
-  { slug: "dandana-cabaret", url: "https://dandanacabaret.com/", image: "/projects/d.webp", title: "Dandana Cabaret", sector: "Restaurant", kind: "CLIENT", desc: "", tags: [], testimonial: "Fixture stored quote." },
+  { slug: "dandana-cabaret", url: "https://dandanacabaret.com/", image: "/projects/d.webp", title: "Dandana Cabaret", sector: "Restaurant", kind: "CLIENT", desc: "", tags: [] },
   { slug: "terrene", url: "https://terrene.webyms.com/", image: "/projects/terrene.webp", title: "Terrene Studio", sector: "Architecture", kind: "CLIENT", desc: "", tags: [] },
   { slug: "tannour", url: "https://tannour.vercel.app/", image: "/projects/tannour.webp", title: "Tannour", sector: "E-commerce", kind: "CONCEPT", desc: "", tags: [] },
 ];
-mock.module("@/lib/dal", { namedExports: { getHomepageProjects: async () => projects, getPortfolioProjects: async () => projects } });
-// The real approval logic with a test-controlled registry (empty unless a test sets it).
-let approvals: TestimonialApproval[] = [];
-mock.module("@/lib/testimonials", {
-  namedExports: { approvedTestimonials: (p: never, locale: string) => realApprovedTestimonials(p, locale, approvals) },
+// What the database query returns per locale (empty unless a test sets it); lib/testimonials is real.
+let published: Partial<Record<string, PublishedTestimonialRow[]>> = {};
+mock.module("@/lib/dal", {
+  namedExports: {
+    getHomepageProjects: async () => projects,
+    getPortfolioProjects: async () => projects,
+    getPublishedTestimonials: async (locale: string) => published[locale] ?? [],
+  },
 });
 
 // IntlProvider typed loosely so components can be passed as regular children.
@@ -156,14 +158,22 @@ test("homepage: the process section is gone and sections are numbered in order",
   }
 });
 
-test("homepage testimonials: hidden without approval (a stored quote is not enough), shown once approved", async () => {
-  approvals = [];
+test("homepage testimonials: hidden without an approved row, shown once approved for that locale", async () => {
+  const row = (over: Partial<PublishedTestimonialRow> = {}): PublishedTestimonialRow => ({
+    slug: "dandana-cabaret", kind: "CLIENT", visible: true, project: "Dandana Cabaret",
+    author: "Fixture Author", role: "Fixture role", quote: "Fixture stored quote.", approvedAt: new Date("2026-10-01"), ...over,
+  });
+  published = {};
   let markup = await renderHome("fr");
   assert.ok(!markup.includes('id="testimonials"'), "no empty section");
-  assert.ok(!markup.includes("Fixture stored quote."));
   assert.ok(!markup.includes("Témoignages"));
 
-  approvals = [{ slug: "dandana-cabaret", author: "Fixture Author", roles: { fr: "Fixture role" }, approvedOn: "2026-10-01" }];
+  // Rows that slip through must still be dropped: unapproved, concept, hidden project.
+  published = { fr: [row({ approvedAt: null }), row({ slug: "c", kind: "CONCEPT" }), row({ slug: "h", visible: false })] };
+  markup = await renderHome("fr");
+  assert.ok(!markup.includes('id="testimonials"') && !markup.includes("Fixture stored quote."), "re-checked before rendering");
+
+  published = { fr: [row()] };
   try {
     markup = await renderHome("fr");
     assert.ok(markup.includes('id="testimonials"'));
@@ -178,7 +188,7 @@ test("homepage testimonials: hidden without approval (a stored quote is not enou
     // Not approved for English: hidden there.
     assert.ok(!(await renderHome("en")).includes('id="testimonials"'));
   } finally {
-    approvals = [];
+    published = {};
   }
 });
 
@@ -198,7 +208,7 @@ function project(features: string) {
     metaDesc: "", client: "Dandana", industry: "Restaurant", challenge: "Le défi.", solution: "La solution.",
     step1Title: "", step1Desc: "", step2Title: "", step2Desc: "", step3Title: "", step3Desc: "",
     features, tech: "Next.js, React", result1Value: "", result1Label: "", result2Value: "", result2Label: "",
-    result3Value: "", result3Label: "", results: "", testimonial: "",
+    result3Value: "", result3Label: "", results: "",
   };
   return {
     id: "p1", slug: "dandana-cabaret", category: "web", url: "https://dandanacabaret.com/", image: "/projects/d.webp", tag: "Restaurant",

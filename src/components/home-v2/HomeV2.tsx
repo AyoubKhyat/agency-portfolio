@@ -4,12 +4,12 @@ import { preconnect } from "react-dom";
 import { getTranslations } from "next-intl/server";
 import { FaWhatsapp } from "react-icons/fa";
 import { Link } from "@/i18n/navigation";
-import { getHomepageProjects, type HomepageProject } from "@/lib/dal";
+import { getHomepageProjects, getPublishedTestimonials, type HomepageProject } from "@/lib/dal";
 import { isClientProject } from "@/lib/project-kind";
 import { isRenderableProjectImage } from "@/lib/project-image";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { SERVICE_GROUPS, groupHref } from "@/lib/services-catalog";
-import { approvedTestimonials } from "@/lib/testimonials";
+import { publicTestimonials } from "@/lib/testimonials";
 import { TestimonialsColumns } from "@/components/ui/testimonials-columns-1";
 import DiagnosisForm from "./DiagnosisForm";
 import RevealController from "./RevealController";
@@ -54,8 +54,8 @@ export default async function HomeV2({ locale }: { locale: string }) {
   // Clients: alphabetical by slug, so the order is stable across locales. Concepts: admin order.
   const clients = projects.filter(isClientProject).sort((a, b) => a.slug.localeCompare(b.slug));
   const concepts = projects.filter((p) => !isClientProject(p));
-  // Only explicitly approved quotes (lib/testimonials); none means no section at all.
-  const testimonials = approvedTestimonials(projects, locale);
+  // Only quotes an admin approved for this locale (lib/testimonials); none means no section at all.
+  const testimonials = publicTestimonials(await getPublishedTestimonials(locale));
   const cards = testimonials.map((q) => ({ text: q.quote, name: q.author, role: `${q.role} · ${q.project}` }));
 
   // Numbered sections in page order; optional ones count only when they render.

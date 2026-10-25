@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { hashPassword } from "./auth";
 import { bulkUpdateStatusWith, updateProspectStatusWith } from "./prospect-first-contact";
 import { DEFAULT_PROJECT_KIND } from "./project-kind";
+import { isTestimonialLocale, type SavePlan, type TestimonialLocale, type TestimonialState } from "./testimonial-approval";
 
 function db() {
   if (!hasPrisma()) throw new Error("Database not available");
@@ -11,6 +12,28 @@ function db() {
 }
 
 // ─── Projects ────────────────────────────────────────────────────
+
+/** Testimonial columns of a translation: written only through the testimonial functions below. */
+const TESTIMONIAL_TRANSLATION_OMIT = {
+  testimonial: true, testimonialRole: true, testimonialApprovedAt: true, testimonialApprovedBy: true,
+} as const;
+
+/** The project-form content of a translation: everything except the testimonial columns. */
+const TRANSLATION_CONTENT_FIELDS = [
+  "title", "desc", "tags", "tagline", "metaDesc", "client", "industry", "challenge", "solution",
+  "step1Title", "step1Desc", "step2Title", "step2Desc", "step3Title", "step3Desc", "features",
+  "tech", "result1Value", "result1Label", "result2Value", "result2Label", "result3Value",
+  "result3Label", "results",
+] as const;
+
+function translationContent(t: ProjectInput["translations"][number]) {
+  const out: Record<string, string> = {};
+  for (const f of TRANSLATION_CONTENT_FIELDS) {
+    const v = (t as Record<string, unknown>)[f];
+    if (typeof v === "string") out[f] = v;
+  }
+  return out as { title: string; desc: string; tags: string } & Partial<Record<(typeof TRANSLATION_CONTENT_FIELDS)[number], string>>;
+}
 
 async function getFallbackProjects(locale: string) {
   let t: Awaited<ReturnType<typeof getTranslations>>;
@@ -85,8 +108,6 @@ export type HomepageProject = {
   title: string;
   sector: string;
   kind: string;
-  /** The stored client quote for this locale (shown only if approved: see lib/testimonials). */
-  testimonial?: string | null;
 };
 
 /** Visible projects for the homepage, in admin sort order, with the localized sector. */
@@ -104,7 +125,7 @@ export async function getHomepageProjects(locale: string): Promise<HomepageProje
       orderBy: { sortOrder: "asc" },
       select: {
         slug: true, url: true, image: true, tag: true, kind: true,
-        translations: { where: { locale }, select: { title: true, industry: true, testimonial: true } },
+        translations: { where: { locale }, select: { title: true, industry: true } },
       },
     });
     if (projects.length === 0) return fallback();
@@ -115,11 +136,53 @@ export async function getHomepageProjects(locale: string): Promise<HomepageProje
       title: p.translations[0]?.title ?? p.slug,
       sector: p.translations[0]?.industry || p.tag,
       kind: p.kind,
-      testimonial: p.translations[0]?.testimonial ?? null,
     }));
   } catch (e) {
     console.error("[dal] getHomepageProjects failed, using fallback:", e);
     return fallback();
+  }
+}
+
+export type PublishedTestimonialRow = {
+  slug: string;
+  kind: string;
+  visible: boolean;
+  project: string;
+  author: string | null;
+  role: string | null;
+  quote: string | null;
+  approvedAt: Date | null;
+};
+
+/**
+ * Testimonials approved for `locale` on visible Client projects, in admin order. The filter runs
+ * in the database, so unapproved quotes and the private consent note never leave it for a public
+ * page. No database (previews, fallback): none. lib/testimonials re-checks every row.
+ */
+export async function getPublishedTestimonials(locale: string): Promise<PublishedTestimonialRow[]> {
+  if (!hasPrisma()) return [];
+  try {
+    const rows = await prisma.projectTranslation.findMany({
+      where: { locale, testimonialApprovedAt: { not: null }, project: { is: { visible: true, kind: "CLIENT" } } },
+      orderBy: { project: { sortOrder: "asc" } },
+      select: {
+        title: true, testimonial: true, testimonialRole: true, testimonialApprovedAt: true,
+        project: { select: { slug: true, kind: true, visible: true, testimonialAuthor: true } },
+      },
+    });
+    return rows.map((r) => ({
+      slug: r.project.slug,
+      kind: r.project.kind,
+      visible: r.project.visible,
+      project: r.title,
+      author: r.project.testimonialAuthor,
+      role: r.testimonialRole,
+      quote: r.testimonial,
+      approvedAt: r.testimonialApprovedAt,
+    }));
+  } catch (e) {
+    console.error("[dal] getPublishedTestimonials failed, showing none:", e);
+    return [];
   }
 }
 
@@ -181,8 +244,10 @@ export async function getProjectBySlug(slug: string, locale: string) {
   if (!hasPrisma()) return getFallbackSlug(slug, locale);
   const project = await prisma.project.findUnique({
     where: { slug },
+    // Public page: never load the testimonial (approved or not) or the private consent note.
+    omit: { testimonialAuthor: true, testimonialConsent: true },
     include: {
-      translations: { where: { locale } },
+      translations: { where: { locale }, omit: TESTIMONIAL_TRANSLATION_OMIT },
     },
   });
 
@@ -308,7 +373,6 @@ export type ProjectInput = {
     result3Value?: string;
     result3Label?: string;
     results?: string;
-    testimonial?: string;
   }[];
 };
 
@@ -325,17 +389,24 @@ export async function createProject(data: ProjectInput) {
       status: data.status ?? "DRAFT",
       kind: data.kind ?? DEFAULT_PROJECT_KIND,
       sortOrder: (maxOrder._max.sortOrder ?? 0) + 1,
+      // Content only: a testimonial is never created here, so it is never copied between locales.
       translations: {
-        create: data.translations,
+        create: data.translations.map((t) => ({ locale: t.locale, ...translationContent(t) })),
       },
     },
     include: { translations: true },
   });
 }
 
+/**
+ * Saves the project form. Translations are updated in place (content columns only) rather than
+ * deleted and recreated, so the testimonial, its role and its approval survive every project save
+ * untouched. Locales absent from a non-empty payload are removed, as before.
+ */
 export async function updateProject(id: string, data: ProjectInput) {
-  const [, updated] = await db().$transaction([
-    db().projectTranslation.deleteMany({ where: { projectId: id } }),
+  const translations = data.translations.map((t) => ({ locale: t.locale, ...translationContent(t) }));
+  const locales = translations.map((t) => t.locale);
+  await db().$transaction([
     db().project.update({
       where: { id },
       data: {
@@ -347,14 +418,160 @@ export async function updateProject(id: string, data: ProjectInput) {
         visible: data.visible,
         ...(data.status ? { status: data.status } : {}),
         ...(data.kind ? { kind: data.kind } : {}),
-        translations: {
-          create: data.translations,
+      },
+    }),
+    ...(locales.length > 0
+      ? [db().projectTranslation.deleteMany({ where: { projectId: id, locale: { notIn: locales } } })]
+      : []),
+    ...translations.map((t) =>
+      db().projectTranslation.upsert({
+        where: { projectId_locale: { projectId: id, locale: t.locale } },
+        update: t,
+        create: { ...t, projectId: id },
+      }),
+    ),
+  ]);
+  return getProjectByIdForAdmin(id);
+}
+
+// ─── Project testimonial (admin) ─────────────────────────────────
+
+/** The testimonial of a project as the admin API sees it, or null if the project does not exist. */
+export async function getTestimonialState(projectId: string): Promise<TestimonialState | null> {
+  const p = await db().project.findUnique({
+    where: { id: projectId },
+    select: {
+      id: true, kind: true, testimonialAuthor: true, testimonialConsent: true,
+      translations: { select: { locale: true, testimonial: true, testimonialRole: true, testimonialApprovedAt: true, testimonialApprovedBy: true } },
+    },
+  });
+  if (!p) return null;
+  const locales: TestimonialState["locales"] = {};
+  for (const t of p.translations) {
+    if (!isTestimonialLocale(t.locale)) continue;
+    // Stored values as they are (not trimmed): approval compares them exactly.
+    locales[t.locale] = {
+      quote: t.testimonial ?? "",
+      role: t.testimonialRole ?? "",
+      approvedAt: t.testimonialApprovedAt,
+      approvedBy: t.testimonialApprovedBy,
+    };
+  }
+  return { projectId: p.id, kind: p.kind, author: p.testimonialAuthor ?? "", consent: p.testimonialConsent ?? "", locales };
+}
+
+/** Who made a testimonial change: recorded in the audit log written in the same transaction. */
+export type TestimonialActor = { userId: string; userName: string; ipAddress?: string };
+
+const auditRow = (actor: TestimonialActor, action: string, projectId: string, details: Record<string, unknown>) => ({
+  data: {
+    userId: actor.userId,
+    userName: actor.userName,
+    action,
+    entity: "project",
+    entityId: projectId,
+    details: JSON.stringify(details),
+    ipAddress: actor.ipAddress ?? null,
+  },
+});
+
+/**
+ * Writes a save plan (lib/testimonial-approval): only the changed values, with the affected
+ * approvals cleared. The update and every revocation it causes are audited in the same
+ * transaction, so a revocation can never happen unrecorded. Returns the revoked locales.
+ */
+export async function saveTestimonialDraft(projectId: string, plan: SavePlan, actor: TestimonialActor) {
+  const orNull = (s: string) => (s === "" ? null : s);
+  const cleared = { testimonialApprovedAt: null, testimonialApprovedBy: null };
+  const affected = [...plan.locales.map((l) => l.locale), ...plan.clearOnly];
+  return db().$transaction(async (tx) => {
+    // Approvals as they are now (not as read before the request), so the audit is exact.
+    const wasApproved = affected.length
+      ? (await tx.projectTranslation.findMany({
+          where: { projectId, locale: { in: affected }, testimonialApprovedAt: { not: null } },
+          select: { locale: true },
+        })).map((r) => r.locale)
+      : [];
+    if (Object.keys(plan.project).length > 0) {
+      await tx.project.update({
+        where: { id: projectId },
+        data: {
+          ...(plan.project.author !== undefined ? { testimonialAuthor: orNull(plan.project.author) } : {}),
+          ...(plan.project.consent !== undefined ? { testimonialConsent: orNull(plan.project.consent) } : {}),
+        },
+      });
+    }
+    for (const l of plan.locales) {
+      await tx.projectTranslation.update({
+        where: { projectId_locale: { projectId, locale: l.locale } },
+        data: { testimonial: orNull(l.quote), testimonialRole: orNull(l.role), ...cleared },
+      });
+    }
+    if (plan.clearOnly.length > 0) {
+      await tx.projectTranslation.updateMany({ where: { projectId, locale: { in: plan.clearOnly } }, data: cleared });
+    }
+    // The audit records what changed, never the text or the consent note.
+    await tx.auditLog.create(auditRow(actor, "TESTIMONIAL_UPDATED", projectId, {
+      locales: plan.locales.map((l) => l.locale),
+      authorChanged: plan.project.author !== undefined,
+      consentChanged: plan.project.consent !== undefined,
+    }));
+    const edited = new Set(plan.locales.map((l) => l.locale));
+    const reasonFor = (locale: string) =>
+      edited.has(locale as TestimonialLocale) ? "quote_or_role_edited" : plan.project.author !== undefined ? "author_edited" : "consent_removed";
+    for (const locale of wasApproved) {
+      await tx.auditLog.create(auditRow(actor, "TESTIMONIAL_REVOKED", projectId, { locale, reason: reasonFor(locale) }));
+    }
+    return wasApproved as TestimonialLocale[];
+  });
+}
+
+/**
+ * Publishes one locale, atomically and only if the saved values are still exactly the ones the
+ * admin approved (and the project is still a Client project with a consent reference), together
+ * with its audit entry. Returns false when anything changed in between: nothing is written then.
+ */
+export async function approveTestimonial(
+  projectId: string,
+  locale: TestimonialLocale,
+  expected: { author: string; role: string; quote: string },
+  actor: TestimonialActor,
+  fingerprint: string,
+): Promise<boolean> {
+  return db().$transaction(async (tx) => {
+    const { count } = await tx.projectTranslation.updateMany({
+      where: {
+        projectId,
+        locale,
+        testimonial: expected.quote,
+        testimonialRole: expected.role,
+        project: {
+          is: {
+            kind: "CLIENT",
+            testimonialAuthor: expected.author,
+            AND: [{ testimonialConsent: { not: null } }, { NOT: { testimonialConsent: "" } }],
+          },
         },
       },
-      include: { translations: true },
-    }),
-  ]);
-  return updated;
+      data: { testimonialApprovedAt: new Date(), testimonialApprovedBy: actor.userName },
+    });
+    if (count !== 1) return false;
+    await tx.auditLog.create(auditRow(actor, "TESTIMONIAL_APPROVED", projectId, { locale, fingerprint }));
+    return true;
+  });
+}
+
+/** Hides one locale's testimonial (the text is kept), audited. Returns false if it was not published. */
+export async function revokeTestimonial(projectId: string, locale: TestimonialLocale, actor: TestimonialActor): Promise<boolean> {
+  return db().$transaction(async (tx) => {
+    const { count } = await tx.projectTranslation.updateMany({
+      where: { projectId, locale, testimonialApprovedAt: { not: null } },
+      data: { testimonialApprovedAt: null, testimonialApprovedBy: null },
+    });
+    if (count !== 1) return false;
+    await tx.auditLog.create(auditRow(actor, "TESTIMONIAL_REVOKED", projectId, { locale, reason: "manual" }));
+    return true;
+  });
 }
 
 export async function deleteProject(id: string) {
