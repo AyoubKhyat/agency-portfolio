@@ -95,10 +95,19 @@ export default async function HomeV2({ locale }: { locale: string }) {
               </span>
             </span>
           </h1>
-          <div className={`${s.grid12} ${s.heroBody}`}>
+          {/* Free website diagnosis: a dark card in both themes (its own colour tokens, see .dgCard). */}
+          <div className={`${s.grid12} ${s.heroBody} ${s.dgCard}`}>
             <div className={s.heroCopy}>
               <h2 className={s.heroTitle}>{t("hero_title")}</h2>
               <p className={s.heroSub} id="home-v2-value">{t("hero_sub")}</p>
+              <ul className={s.dgTrust}>
+                {(["trust_free", "trust_no_commitment", "trust_no_access"] as const).map((k) => (
+                  <li key={k}>
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    <span>{d(k)}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
             <div className={s.heroForm} data-assistant-avoid>
               <DiagnosisForm waUrl={waUrl} />

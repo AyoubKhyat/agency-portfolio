@@ -777,7 +777,7 @@
     "url_label": "Your website address",
     "url_placeholder": "yourwebsite.com",
     "start": "Free diagnosis",
-    "note": "Free, no commitment. Our team reviews your site, with help from analysis tools — nothing on it is changed.",
+    "note": "Our team reviews your site, with help from analysis tools\u00a0— nothing on it is changed.",
     "step": "Step {n} of 2",
     "details_title": "How can we reach you?",
     "site_label": "Site to review",
@@ -792,6 +792,9 @@
     "success_title": "Request received.",
     "success_body": "Our team will review your site and get back to you by email or WhatsApp with its first observations.",
     "again": "New request",
-    "or_wa": "Or message us on WhatsApp"
+    "or_wa": "Or message us on WhatsApp",
+    "trust_free": "Free",
+    "trust_no_commitment": "No commitment",
+    "trust_no_access": "No access to your site needed"
   }
 }

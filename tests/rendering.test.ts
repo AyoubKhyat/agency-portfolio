@@ -135,6 +135,32 @@ test("homepage hero: slogan lockup kept, new headline, and step 1 of the diagnos
   }
 });
 
+test("homepage hero: the diagnosis card holds the headline, three trust indicators and the unchanged form (FR/EN/AR)", async () => {
+  const trust = {
+    fr: ["Gratuit", "Sans engagement", "Aucun accès à votre site requis"],
+    en: ["Free", "No commitment", "No access to your site needed"],
+    ar: ["مجاني", "دون أي التزام", "لا نحتاج إلى أي صلاحية دخول إلى موقعك"],
+  } as const;
+  for (const locale of ["fr", "en", "ar"] as const) {
+    const markup = await renderHome(locale);
+    const card = markup.slice(markup.indexOf('class="grid12 heroBody dgCard"'), markup.indexOf('id="offer"'));
+    assert.ok(card.length > 0, `${locale}: the card wraps the hero body`);
+    const items = [...card.matchAll(/<li><svg[^>]*aria-hidden="true"[\s\S]*?<\/svg><span>([^<]+)<\/span><\/li>/g)].map((m) => m[1].replace(/&#x27;/g, "'"));
+    assert.deepEqual(items, [...trust[locale]], `${locale}: trust indicators`);
+    for (const needle of ['name="siteUrl"', 'data-wa-placement="home_hero"', 'id="home-v2-value"']) assert.ok(card.includes(needle), `${locale}: ${needle} inside the card`);
+  }
+  // The note under the field no longer repeats the trust indicators; it keeps what only it says.
+  const note = { fr: [/Gratuit|engagement/i, /notre équipe.*rien n'y est modifié/], en: [/free|commitment/i, /Our team reviews.*nothing on it is changed/], ar: [/مجاني|التزام/, /يفحص فريقنا.*دون أي تعديل/] } as const;
+  for (const l of ["fr", "en", "ar"] as const) {
+    const text = (msgs[l].Diagnosis as Record<string, string>).note;
+    assert.doesNotMatch(text, note[l][0], `${l}: no repeat of the trust indicators`);
+    assert.match(text, note[l][1], `${l}: keeps the review and no-change information`);
+    if (l !== "ar") assert.ok(text.includes("\u00a0\u2014") && !text.includes(" \u2014"), `${l}: the dash never starts a line (no-break space before it)`);
+  }
+  // Top-aligned columns: the headline does not move when step 2 makes the form taller.
+  assert.match(fs.readFileSync("src/components/home-v2/home.module.css", "utf8"), /\.heroBody\.dgCard \{[^}]*align-items: start;[^}]*\}/);
+});
+
 test("homepage hero: the honeypot is separate from the address field, hidden and out of the tab order", async () => {
   const markup = await renderHome("fr");
   const fields = inputs(markup);

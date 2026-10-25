@@ -777,7 +777,7 @@
     "url_label": "Adresse de votre site",
     "url_placeholder": "votresite.ma",
     "start": "Diagnostic gratuit",
-    "note": "Gratuit et sans engagement. Votre site est examiné par notre équipe, avec l'aide d'outils d'analyse — rien n'y est modifié.",
+    "note": "Votre site est examiné par notre équipe, avec l'aide d'outils d'analyse\u00a0— rien n'y est modifié.",
     "step": "Étape {n} sur 2",
     "details_title": "Comment vous recontacter ?",
     "site_label": "Site à examiner",
@@ -792,6 +792,9 @@
     "success_title": "Demande reçue.",
     "success_body": "Notre équipe va examiner votre site et vous recontactera par email ou WhatsApp avec ses premières observations.",
     "again": "Nouvelle demande",
-    "or_wa": "Ou écrivez-nous sur WhatsApp"
+    "or_wa": "Ou écrivez-nous sur WhatsApp",
+    "trust_free": "Gratuit",
+    "trust_no_commitment": "Sans engagement",
+    "trust_no_access": "Aucun accès à votre site requis"
   }
 }
