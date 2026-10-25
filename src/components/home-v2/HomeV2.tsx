@@ -9,6 +9,9 @@ import { isClientProject } from "@/lib/project-kind";
 import { isRenderableProjectImage } from "@/lib/project-image";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { SERVICE_GROUPS, groupHref } from "@/lib/services-catalog";
+import { approvedTestimonials } from "@/lib/testimonials";
+import { TestimonialsColumns } from "@/components/ui/testimonials-columns-1";
+import DiagnosisForm from "./DiagnosisForm";
 import RevealController from "./RevealController";
 import { alexandria, tajawal } from "./fonts";
 import s from "./home.module.css";
@@ -18,13 +21,6 @@ const PHONE = "+212 625 461 645";
 const EMAIL = "ibda3.digital0@gmail.com";
 
 const REASONS = ["w1", "w2", "w3", "w4"] as const;
-// Ascending bars: height (px) and added opacity per step.
-const STEPS = [
-  { key: "st1", h: 36, o: 0 },
-  { key: "st2", h: 72, o: 0.25 },
-  { key: "st3", h: 112, o: 0.45 },
-  { key: "st4", h: 160, o: 0.7 },
-] as const;
 
 const num = (i: number) => String(i + 1).padStart(2, "0");
 
@@ -39,11 +35,12 @@ function hostname(url: string) {
 export default async function HomeV2({ locale }: { locale: string }) {
   preconnect("https://cdn.fontshare.com", { crossOrigin: "anonymous" });
   const t = await getTranslations({ locale, namespace: "HomeV2" });
+  const d = await getTranslations({ locale, namespace: "Diagnosis" });
   const wa = await getTranslations({ locale, namespace: "WhatsApp" });
   const sv = await getTranslations({ locale, namespace: "Services" });
   const pf = await getTranslations({ locale, namespace: "Portfolio" });
   const waUrl = buildWhatsAppUrl(wa("prefill_general"));
-  // The three service groups from the shared catalog; the Services page lists every service.
+  // The four service groups from the shared catalog; the Services page lists every service.
   const groups = SERVICE_GROUPS.map((g) => ({
     id: g.id,
     href: groupHref(g.id),
@@ -57,6 +54,13 @@ export default async function HomeV2({ locale }: { locale: string }) {
   // Clients: alphabetical by slug, so the order is stable across locales. Concepts: admin order.
   const clients = projects.filter(isClientProject).sort((a, b) => a.slug.localeCompare(b.slug));
   const concepts = projects.filter((p) => !isClientProject(p));
+  // Only explicitly approved quotes (lib/testimonials); none means no section at all.
+  const testimonials = approvedTestimonials(projects, locale);
+  const cards = testimonials.map((q) => ({ text: q.quote, name: q.author, role: `${q.role} · ${q.project}` }));
+
+  // Numbered sections in page order; optional ones count only when they render.
+  const numbered = ["offer", clients.length > 0 && "work", "why", cards.length > 0 && "testimonials", "contact"].filter(Boolean);
+  const n = (sec: string) => num(numbered.indexOf(sec));
 
   const secLabel = (n: string, text: string, className = s.label) => (
     <span className={className}>
@@ -69,7 +73,7 @@ export default async function HomeV2({ locale }: { locale: string }) {
     <div id={ROOT_ID} dir={rtl ? "rtl" : "ltr"} lang={locale} className={`${s.root} ${alexandria.variable} ${tajawal.variable}`}>
       <RevealController rootId={ROOT_ID} hiddenClass={s.jsReveal} />
 
-      {/* 1. Who IBDA3 is: slogan + plain value proposition */}
+      {/* 1. Who IBDA3 is, and the free website diagnosis */}
       <section className={s.hero}>
         <div className={s.wrap}>
           <div className={`${s.heroTop} ${s.label}`}>
@@ -91,40 +95,29 @@ export default async function HomeV2({ locale }: { locale: string }) {
               </span>
             </span>
           </h1>
-          <div className={`${s.grid12} ${s.value}`}>
-            <div className={s.valueText} data-assistant-avoid>
-              <p className={s.valueMain} id="home-v2-value">{t("value")}</p>
-              <p className={s.valueSub}>{t("value_sub")}</p>
+          <div className={`${s.grid12} ${s.heroBody}`}>
+            <div className={s.heroCopy}>
+              <h2 className={s.heroTitle}>{t("hero_title")}</h2>
+              <p className={s.heroSub} id="home-v2-value">{t("hero_sub")}</p>
             </div>
-            <div className={s.valueCta} data-assistant-avoid>
-              <a className={`${s.pill} ${s.pillGrad}`} href={waUrl} target="_blank" rel="noopener noreferrer" data-wa-placement="home_hero">
-                <FaWhatsapp aria-hidden="true" />
-                <span>{t("cta_wa")}</span>
-              </a>
-              <Link className={s.linkU} href="/contact">
-                <span>{t("cta_quote")}</span>
-                <span className={s.flip} aria-hidden="true">→</span>
-              </Link>
+            <div className={s.heroForm} data-assistant-avoid>
+              <DiagnosisForm waUrl={waUrl} />
+              <p className={s.heroAlt}>
+                <a className={s.linkU} href={waUrl} target="_blank" rel="noopener noreferrer" data-wa-placement="home_hero">
+                  <FaWhatsapp aria-hidden="true" />
+                  <span>{d("or_wa")}</span>
+                </a>
+              </p>
             </div>
           </div>
-          <ul className={s.svcIndex}>
-            {groups.map((g, i) => (
-              <li key={g.id}>
-                <Link href={g.href}>
-                  <span className={s.idxNum} dir="ltr">{num(i)}</span>
-                  <span>{g.title}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 
-      {/* 2. What we build */}
+      {/* 2. What we do: the four service groups */}
       <section className={s.sec} id="offer">
         <div className={s.wrap}>
           <div className={`${s.grid12} ${s.secHead}`} data-reveal>
-            {secLabel("01", t("offer_kicker"))}
+            {secLabel(n("offer"), t("offer_kicker"))}
             <h2 className={s.disp}>{t("offer_title")}</h2>
             <p>{t("offer_intro")}</p>
           </div>
@@ -148,11 +141,59 @@ export default async function HomeV2({ locale }: { locale: string }) {
         </div>
       </section>
 
-      {/* 3. Why IBDA3 */}
-      <section className={`${s.sec} ${s.secTight}`} id="why">
+      {/* 3. Selected work: real clients, then the concept lab */}
+      {(clients.length > 0 || concepts.length > 0) && (
+        <section className={`${s.sec} ${s.secTight}`} id="work">
+          <div className={s.wrap}>
+            {clients.length > 0 && (
+              <>
+                <div className={`${s.grid12} ${s.secHead}`} data-reveal>
+                  {secLabel(n("work"), t("work_kicker"))}
+                  <h2 className={s.disp}>{t("work_title")}</h2>
+                  <p>{t("work_intro", { count: clients.length })}</p>
+                </div>
+                <div className={s.work} data-count={clients.length}>
+                  {clients.map((p) => (
+                    <ClientFigure key={p.slug} p={p} cta={viewCase} tag={t("tag_client")} count={clients.length} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {concepts.length > 0 && (
+              <div className={`${s.lab} ${s.grid12}`} data-reveal>
+                <div className={s.labHead}>
+                  <span className={s.tag}>{t("tag_concept")}</span>
+                  <h3>{t("lab_title")}</h3>
+                  <p>{t("lab_note")}</p>
+                </div>
+                <ul className={s.labList}>
+                  {concepts.map((p) => (
+                    <li key={p.slug}>
+                      <Link href={`/portfolio/${p.slug}`} aria-label={`${p.title} — ${viewCase}`}>
+                        <span className={s.thumb}>
+                          {isRenderableProjectImage(p.image) && (
+                            <Image src={p.image} alt="" fill sizes="(max-width: 760px) 46vw, 16vw" />
+                          )}
+                        </span>
+                        <span className={`${s.tag} ${s.labTag}`}>{t("tag_concept")}</span>
+                        <span className={s.nm}>{p.title}</span>
+                        <span className={s.sc}>{p.sector}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* 4. Why IBDA3 */}
+      <section className={s.sec} id="why">
         <div className={s.wrap}>
           <div className={`${s.grid12} ${s.secHead}`} style={{ marginBottom: 28 }}>
-            {secLabel("02", t("why_kicker"))}
+            {secLabel(n("why"), t("why_kicker"))}
           </div>
           <div className={s.grid12}>
             <p className={s.whyStatement} data-reveal>{t("why_statement")}</p>
@@ -171,7 +212,7 @@ export default async function HomeV2({ locale }: { locale: string }) {
         </div>
       </section>
 
-      {/* Brand story: إبداع */}
+      {/* 5. Brand story: إبداع */}
       <section className={`${s.sec} ${s.name}`}>
         <div className={`${s.wrap} ${s.grid12} ${s.nameGrid}`} data-reveal>
           <p className={s.nameWord} lang="ar" dir="rtl"><span className={s.gradText}>إبداع</span></p>
@@ -183,82 +224,27 @@ export default async function HomeV2({ locale }: { locale: string }) {
         </div>
       </section>
 
-      {/* 4. Selected work: real clients, then the concept lab */}
-      <section className={s.sec} id="work">
-        <div className={s.wrap}>
-          {clients.length > 0 && (
-            <>
-              <div className={`${s.grid12} ${s.secHead}`} data-reveal>
-                {secLabel("03", t("work_kicker"))}
-                <h2 className={s.disp}>{t("work_title")}</h2>
-                <p>{t("work_intro", { count: clients.length })}</p>
-              </div>
-              <div className={s.work} data-count={clients.length}>
-                {clients.map((p) => (
-                  <ClientFigure key={p.slug} p={p} cta={viewCase} tag={t("tag_client")} count={clients.length} />
-                ))}
-              </div>
-            </>
-          )}
-
-          {concepts.length > 0 && (
-            <div className={`${s.lab} ${s.grid12}`} data-reveal>
-              <div className={s.labHead}>
-                <span className={s.tag}>{t("tag_concept")}</span>
-                <h3>{t("lab_title")}</h3>
-                <p>{t("lab_note")}</p>
-              </div>
-              <ul className={s.labList}>
-                {concepts.map((p) => (
-                  <li key={p.slug}>
-                    <Link href={`/portfolio/${p.slug}`} aria-label={`${p.title} — ${viewCase}`}>
-                      <span className={s.thumb}>
-                        {isRenderableProjectImage(p.image) && (
-                          <Image src={p.image} alt="" fill sizes="(max-width: 760px) 46vw, 16vw" />
-                        )}
-                      </span>
-                      <span className={`${s.tag} ${s.labTag}`}>{t("tag_concept")}</span>
-                      <span className={s.nm}>{p.title}</span>
-                      <span className={s.sc}>{p.sector}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+      {/* 6. Testimonials: only approved quotes (lib/testimonials), in scrolling columns; otherwise not rendered at all */}
+      {cards.length > 0 && (
+        <section className={s.sec} id="testimonials">
+          <div className={s.wrap}>
+            <div className={`${s.grid12} ${s.secHead} ${s.tstHead}`} data-reveal>
+              {secLabel(n("testimonials"), t("tst_kicker"))}
+              <h2 className={s.disp}>{t("tst_title")}</h2>
+              <p>{t("tst_intro")}</p>
             </div>
-          )}
-        </div>
-      </section>
-
-      {/* 5. Process */}
-      <section className={`${s.sec} ${s.secTight}`} id="process">
-        <div className={s.wrap}>
-          <div className={`${s.grid12} ${s.secHead}`} data-reveal>
-            {secLabel(clients.length > 0 ? "04" : "03", t("proc_kicker"))}
-            <h2 className={s.disp}>{t("proc_title")}</h2>
+            <div className={s.quotes}>
+              <TestimonialsColumns cardClassName={s.tCard} testimonials={cards} />
+            </div>
           </div>
-          <ol className={s.steps} data-reveal>
-            {STEPS.map((st, i) => (
-              <li key={st.key} style={{ "--i": i, "--h": st.h, "--o": st.o } as CSSProperties}>
-                <div className={s.bar} aria-hidden="true" />
-                <div className={s.stepBody}>
-                  <div className={s.stepTop}>
-                    <span className={s.stepNum} dir="ltr">{num(i)}</span>
-                    <span className={s.label}>{t(`${st.key}_t`)}</span>
-                  </div>
-                  <h3>{t(st.key)}</h3>
-                  <p>{t(`${st.key}_d`)}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* 6. Contact */}
+      {/* 7. Contact */}
       <section className={s.cta} id="contact">
         <div className={s.wrap}>
           <p className={`${s.label} ${s.ctaLabel}`}>
-            <span dir="ltr" className={s.secNum}>({clients.length > 0 ? "05" : "04"})</span>
+            <span dir="ltr" className={s.secNum}>({n("contact")})</span>
             {t("cta_kicker")}
           </p>
           <h2 className={`${s.ctaBig} ${s.disp}`}>{t("cta_big")}</h2>

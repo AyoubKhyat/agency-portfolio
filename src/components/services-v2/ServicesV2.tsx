@@ -8,7 +8,7 @@ import ComparePicker from "./ComparePicker";
 import FaqList from "./FaqList";
 import { CheckIcon, Mark } from "./Marks";
 import { FEATURES, SERVICE_KEYS, num } from "./data";
-import { SERVICE_GROUPS, contactHref, servicesInGroup } from "@/lib/services-catalog";
+import { SERVICE_GROUPS, contactHref, getService, servicesInGroup } from "@/lib/services-catalog";
 import s from "./services.module.css";
 
 const ROOT_ID = "services-v2";
@@ -22,7 +22,7 @@ export default function ServicesV2({ faqItems }: { faqItems: { question: string;
   const nav = useTranslations("Nav");
   const rtl = useLocale() === "ar";
 
-  const titles = SERVICE_KEYS.map((k) => t(`${k}_title`));
+  const titles = SERVICE_KEYS.map((k) => t(`${getService(k).msg}_title`));
   const features = FEATURES.map((f) => ({ label: c(f.key), included: f.included }));
   const yes = c("included");
   const no = c("not_included");

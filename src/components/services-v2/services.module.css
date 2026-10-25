@@ -199,3 +199,9 @@
 @media (max-width: 760px) {
   .cards[data-count] > li:last-child:nth-child(odd) { grid-column: auto; }
 }
+
+/* A group with a single service (Growth & SEO): one wider card instead of a lone third. */
+.cards[data-count="1"] > li { grid-column: span 4; }
+@media (max-width: 1100px) {
+  .cards[data-count="1"] > li { grid-column: 1 / -1; }
+}

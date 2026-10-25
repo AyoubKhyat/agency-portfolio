@@ -8,6 +8,7 @@ import { SITE_URL, pageMetadata } from "@/lib/site";
 import { DETAIL_PAGE_IDS, contactHref, getService } from "@/lib/services-catalog";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { FaWhatsapp } from "react-icons/fa";
+import ProcessBars from "@/components/services-v2/ProcessBars";
 
 // Services with their own page come from the shared catalog.
 const SLUGS = DETAIL_PAGE_IDS;
@@ -55,11 +56,12 @@ export async function generateMetadata({
   const { locale, slug } = await params;
   if (!SLUGS.includes(slug as Slug)) return {};
   const t = await getTranslations({ locale, namespace: "ServiceDetail" });
+  const key = getService(slug as Slug).msg;
   return pageMetadata({
     locale,
     path: `/services/${slug}`,
-    title: `${t(`${slug}_title`)} — Ibda3 Digital`,
-    description: t(`${slug}_intro`),
+    title: `${t(`${key}_title`)} — Ibda3 Digital`,
+    description: t(`${key}_intro`),
   });
 }
 
@@ -78,22 +80,24 @@ export default async function ServiceDetailPage({
   const wa = await getTranslations({ locale, namespace: "WhatsApp" });
   const home = await getTranslations({ locale, namespace: "HomeV2" });
   const service = getService(slug as Slug);
-  const waUrl = buildWhatsAppUrl(wa("prefill_service", { service: sv(`${service.msg}_title`) }));
+  // ServiceDetail copy is keyed by the catalog message key (website-repair → repair_*).
+  const key = service.msg;
+  const waUrl = buildWhatsAppUrl(wa("prefill_service", { service: sv(`${key}_title`) }));
 
-  const features = t(`${slug}_features`).split(",").map((f) => f.trim());
+  const features = t(`${key}_features`).split(",").map((f) => f.trim());
   const steps = [1, 2, 3].map((n) => ({
-    title: t(`${slug}_step${n}_title`),
-    desc: t(`${slug}_step${n}_desc`),
+    title: t(`${key}_step${n}_title`),
+    desc: t(`${key}_step${n}_desc`),
   }));
-  const tools = t(`${slug}_tools`).split(",").map((tool) => tool.trim());
+  const tools = t(`${key}_tools`).split(",").map((tool) => tool.trim());
 
   return (
     <>
       <ServiceJsonLd
         locale={locale}
         slug={slug}
-        name={t(`${slug}_title`)}
-        description={t(`${slug}_intro`)}
+        name={t(`${key}_title`)}
+        description={t(`${key}_intro`)}
       />
 
       {/* Hero */}
@@ -109,15 +113,15 @@ export default async function ServiceDetailPage({
               ← {nav("services")}
             </Link>
             <h1 className="font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.95] tracking-tight text-foreground">
-              {t(`${slug}_title`)}
+              {t(`${key}_title`)}
             </h1>
             <p className="mt-6 font-serif italic text-xl md:text-2xl text-primary max-w-xl">
-              {t(`${slug}_tagline`)}
+              {t(`${key}_tagline`)}
             </p>
           </FadeIn>
           <FadeIn delay={0.15}>
             <p className="mt-8 text-lg text-text-muted leading-relaxed max-w-3xl">
-              {t(`${slug}_intro`)}
+              {t(`${key}_intro`)}
             </p>
           </FadeIn>
         </div>
@@ -131,7 +135,7 @@ export default async function ServiceDetailPage({
             <FadeIn>
               <span className="pill">◆ {t("features_label")}</span>
               <h2 className="mt-8 font-serif text-4xl md:text-6xl text-foreground leading-tight">
-                {t(`${slug}_features_title`)}
+                {t(`${key}_features_title`)}
               </h2>
             </FadeIn>
             <StaggerContainer className="space-y-4">
@@ -148,7 +152,10 @@ export default async function ServiceDetailPage({
         </div>
       </section>
 
-      {/* Process */}
+      {/* Process: Web shows the full "idea to launch" process; the others their three steps */}
+      {key === "web" ? (
+        <ProcessBars locale={locale} />
+      ) : (
       <section className="relative py-24 bg-background overflow-hidden">
         <div className="grid-bg" />
         <div className="glow w-[600px] h-[600px] bg-accent top-[30%] right-[-100px] opacity-10" />
@@ -174,6 +181,7 @@ export default async function ServiceDetailPage({
           </StaggerContainer>
         </div>
       </section>
+      )}
 
       {/* Tools */}
       <section className="py-16 bg-surface-2">

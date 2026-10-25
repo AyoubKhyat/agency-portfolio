@@ -1,0 +1,74 @@
+/* "De l'idée au lancement": the original homepage process (four ascending gradient bars),
+   restored from the homepage v2 styles and now shown on the Web service page only.
+   Scoped under .root; the page background shows through. */
+.root {
+  --ink: #0b0b0f;
+  --muted: #5d5d66;
+  --line: rgba(11, 11, 15, 0.12);
+  --grad: linear-gradient(100deg, #8b6fe0 0%, #2563eb 100%);
+  --display: "Cabinet Grotesk", var(--font-alexandria), system-ui, sans-serif;
+  --body: var(--font-inter), var(--font-tajawal), system-ui, sans-serif;
+  --gut: clamp(16px, 3.6vw, 56px);
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+  color: var(--ink);
+  font: 400 16px/1.6 var(--body);
+  padding-block: clamp(84px, 9vw, 144px);
+}
+.root[dir="rtl"] {
+  font-size: 17px;
+  --body: "Inter", "Tajawal", system-ui, sans-serif;
+}
+:global(.dark) .root {
+  --ink: #f2f1ee;
+  --muted: #9d9da8;
+  --line: rgba(255, 255, 255, 0.11);
+  --grad: linear-gradient(100deg, #a78bfa 0%, #60a5fa 100%);
+}
+.root *, .root *::before, .root *::after { box-sizing: border-box; }
+
+.wrap { max-width: 1520px; margin: 0 auto; padding-inline: var(--gut); }
+.grid12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(16px, 2vw, 32px); }
+.disp { font-family: var(--display); font-weight: 800; letter-spacing: -0.035em; line-height: 0.88; }
+.root[dir="rtl"] .disp { letter-spacing: 0; line-height: 1.35; font-weight: 700; }
+.label { font: 600 13px/1.45 var(--body); letter-spacing: 0.01em; color: var(--muted); }
+.root[dir="rtl"] .label { font-size: 13.5px; letter-spacing: 0; }
+
+.secHead { align-items: start; margin-bottom: clamp(40px, 5vw, 72px); }
+.secHead .label { grid-column: 1 / span 3; padding-top: 0.9em; }
+.secHead h2 { grid-column: 4 / -1; margin: 0; font-size: clamp(2.5rem, 5.4vw, 5.6rem); max-width: 15ch; }
+
+/* Four ascending gradient bars */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(14px, 1.8vw, 28px); align-items: start; }
+/* Every bar sits on the same baseline, however long the text under it (the tallest bar is 160px). */
+.steps li { display: grid; grid-template-rows: 160px auto; }
+.steps li .bar { align-self: end; }
+.bar { height: calc(var(--h) * 1px); background: var(--grad); border-radius: 10px 10px 0 0; opacity: calc(0.3 + var(--o)); transform-origin: bottom; }
+.stepBody { padding-top: 22px; border-top: 2px solid var(--ink); margin-top: -2px; }
+.stepNum { display: block; font: 800 3rem/1 var(--display); letter-spacing: -0.035em; }
+.stepBody h3 { margin: 14px 0 8px; font: 700 1.4rem/1.15 var(--display); letter-spacing: -0.01em; }
+.root[dir="rtl"] .stepBody h3 { letter-spacing: 0; line-height: 1.5; }
+.stepBody p { margin: 0; color: var(--muted); font-size: 15px; }
+
+/* The bars rise once the section scrolls in (RevealController adds data-in). */
+.jsReveal [data-reveal] { opacity: 0; transform: translateY(28px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); }
+.jsReveal [data-reveal][data-in] { opacity: 1; transform: none; }
+.jsReveal .steps[data-reveal] .bar { transform: scaleY(0); transition: transform 1s var(--ease); transition-delay: calc(var(--i) * 120ms); }
+.jsReveal .steps[data-in] .bar { transform: none; }
+
+@media (max-width: 1100px) {
+  .secHead .label { grid-column: 1 / -1; padding-top: 0; margin-bottom: 14px; }
+  .secHead h2 { grid-column: 1 / -1; }
+  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 40px; }
+}
+@media (max-width: 760px) {
+  /* Stacked steps: the bars turn sideways and still ascend, by width. */
+  .steps { grid-template-columns: 1fr; row-gap: 36px; }
+  .steps li { grid-template-rows: auto auto; }
+  .bar { height: 10px; width: calc(var(--h) / 160 * 100%); border-radius: 0 6px 0 0; transform-origin: left; }
+  .root[dir="rtl"] .bar { border-radius: 6px 0 0 0; transform-origin: right; }
+  .jsReveal .steps[data-reveal] .bar { transform: scaleX(0); }
+  .jsReveal .steps[data-in] .bar { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .root *, .root *::before, .root *::after { animation: none !important; transition: none !important; }
+}

@@ -11,6 +11,7 @@
 export const SERVICE_GROUPS = [
   { id: "web-digital", msg: "web_digital" },
   { id: "growth", msg: "growth" },
+  { id: "support", msg: "support" },
   { id: "creative", msg: "creative" },
 ] as const;
 
@@ -24,7 +25,8 @@ export const SERVICES = [
   { id: "automation", group: "web-digital", msg: "automation", detailPage: false, schemaName: "Business Process Automation" },
   { id: "ai", group: "web-digital", msg: "ai", detailPage: false, schemaName: "AI Solutions" },
   { id: "seo", group: "growth", msg: "seo", detailPage: true, schemaName: "SEO" },
-  { id: "maintenance", group: "growth", msg: "maintenance", detailPage: true, schemaName: "Website Maintenance & Technical Support" },
+  { id: "maintenance", group: "support", msg: "maintenance", detailPage: true, schemaName: "Website Maintenance & Technical Support" },
+  { id: "website-repair", group: "support", msg: "repair", detailPage: true, schemaName: "Website Repair & Improvement" },
   { id: "video-editing", group: "creative", msg: "video", detailPage: false, schemaName: "Video Editing" },
   { id: "reels-editing", group: "creative", msg: "reels", detailPage: false, schemaName: "Reels Editing" },
   { id: "graphic-design", group: "creative", msg: "graphic", detailPage: false, schemaName: "Graphic Design" },

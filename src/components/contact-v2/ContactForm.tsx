@@ -4,24 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import emailjs from "@emailjs/browser";
 import { SERVICE_GROUPS, servicesInGroup, type ServiceId } from "@/lib/services-catalog";
-import {
-  parseApiResponse,
-  resolveOutcome,
-  shouldReportEmailFailure,
-  shouldSendEmail,
-  shouldTrackLead,
-  type EmailResult,
-  type Outcome,
-} from "@/lib/contact-outcome";
+import type { Outcome } from "@/lib/contact-outcome";
+import { EMAIL_RE, PHONE_RE, submitInquiry } from "@/lib/contact-submit";
 import { trackEvent } from "@/lib/analytics";
 import s from "./contact.module.css";
 
 type FieldName = "fullName" | "email" | "phone" | "subject" | "message";
 type FieldErrors = Partial<Record<FieldName, string>>;
 
-// Same rules as the previous contact page.
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_RE = /^[+\d][\d\s\-().]{7,}$/;
 const FIELDS: FieldName[] = ["fullName", "email", "phone", "subject", "message"];
 const OTHER = "other";
 
@@ -139,54 +129,18 @@ export default function ContactForm({ waUrl, initialService = null }: { waUrl: s
     const formData = new FormData(form);
     const serviceKey = form.querySelector<HTMLInputElement>('input[name="subject"]:checked')?.dataset.serviceId ?? OTHER;
 
-    // 1. Save the inquiry (source of truth). It also tells us about duplicates.
-    let res: Response | null = null;
-    try {
-      res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: formData.get("fullName"),
-          email: formData.get("email"),
-          phone: formData.get("phone") || undefined,
-          subject: formData.get("subject"),
-          message: formData.get("message"),
-        }),
-      });
-    } catch {
-      res = null;
-    }
-    const api = await parseApiResponse(res);
-
-    // 2. Email notification, unless the server already has this exact inquiry.
-    let email: EmailResult = "skipped";
-    if (shouldSendEmail(api)) {
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-      if (!serviceId || !templateId || !publicKey) {
-        email = "not_configured";
-      } else {
-        try {
-          await emailjs.sendForm(serviceId, templateId, form, { publicKey });
-          email = "sent";
-        } catch {
-          email = "failed";
-        }
-      }
-    }
-
-    if (shouldReportEmailFailure(api, email) && api.kind === "stored" && api.leadId) {
-      fetch("/api/contact/notification-status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leadId: api.leadId, status: email === "not_configured" ? "not_configured" : "failed" }),
-        keepalive: true,
-      }).catch(() => {});
-    }
-
-    const result = resolveOutcome(api, email);
-    if (shouldTrackLead(api, result)) {
+    // Save (source of truth), then the EmailJS notification of the form itself (lib/contact-submit).
+    const { outcome: result, track } = await submitInquiry(
+      {
+        fullName: String(formData.get("fullName") ?? ""),
+        email: String(formData.get("email") ?? ""),
+        phone: String(formData.get("phone") ?? "") || undefined,
+        subject: String(formData.get("subject") ?? ""),
+        message: String(formData.get("message") ?? ""),
+      },
+      (cfg) => emailjs.sendForm(cfg.serviceId, cfg.templateId, form, { publicKey: cfg.publicKey }),
+    );
+    if (track) {
       trackEvent("generate_lead", { method: "contact_form", service: serviceKey, locale, page_type: "contact" });
     }
     setOutcome(result);

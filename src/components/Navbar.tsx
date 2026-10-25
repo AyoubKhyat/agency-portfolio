@@ -44,7 +44,7 @@ export default function Navbar() {
               width={160}
               height={40}
               priority
-              className="hidden md:block"
+              className="hidden xl:block"
               style={{ width: "auto", height: "auto" }}
             />
             <Image
@@ -53,16 +53,16 @@ export default function Navbar() {
               width={48}
               height={48}
               priority
-              className="md:hidden rounded-lg"
+              className="xl:hidden rounded-lg"
             />
           </Link>
 
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden xl:flex items-center gap-1">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
                   pathname === link.href
                     ? "text-[#7455d1] dark:text-primary font-medium"
                     : "text-text-muted hover:text-[#7455d1] dark:hover:text-primary"
@@ -75,7 +75,7 @@ export default function Navbar() {
             <ThemeToggle />
             <Link
               href="/contact"
-              className="ml-3 px-5 py-2 bg-[#7455d1] text-white rounded-lg text-sm font-semibold hover:bg-[#6a4bc4] transition-colors active:scale-95"
+              className="ml-3 px-5 py-2 whitespace-nowrap bg-[#7455d1] text-white rounded-lg text-sm font-semibold hover:bg-[#6a4bc4] transition-colors active:scale-95"
             >
               {t("cta")}
             </Link>
@@ -85,7 +85,7 @@ export default function Navbar() {
             onClick={() => setOpen(!open)}
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
-            className="md:hidden p-2 rounded-lg text-text-muted hover:bg-foreground/5"
+            className="xl:hidden p-2 rounded-lg text-text-muted hover:bg-foreground/5"
           >
             {open ? <HiX size={24} /> : <HiMenu size={24} />}
           </button>
@@ -99,7 +99,7 @@ export default function Navbar() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.25, 0.4, 0.25, 1] }}
-            className="md:hidden border-t border-line-soft bg-background overflow-hidden"
+            className="xl:hidden border-t border-line-soft bg-background overflow-hidden"
           >
             <div className="px-4 py-3 space-y-1">
               {links.map((link, i) => (

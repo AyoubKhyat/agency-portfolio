@@ -18,24 +18,27 @@ import {
   serviceHref,
   servicesInGroup,
 } from "../src/lib/services-catalog";
-import { SERVICE_KEYS as COMPARISON_KEYS } from "../src/components/services-v2/data";
+import { FEATURES, SERVICE_KEYS as COMPARISON_KEYS } from "../src/components/services-v2/data";
 import { OPTIONS } from "../src/components/assistant/script";
 
 const LOCALES = ["fr", "en", "ar"] as const;
 const msgs = Object.fromEntries(LOCALES.map((l) => [l, JSON.parse(fs.readFileSync(`src/messages/${l}.json`, "utf8"))]));
 
-test("the approved architecture: 3 groups, 11 services, nothing removed", () => {
-  assert.deepEqual(SERVICE_GROUPS.map((g) => g.id), ["web-digital", "growth", "creative"]);
+test("the approved architecture: 4 groups, 12 services, nothing removed", () => {
+  assert.deepEqual(SERVICE_GROUPS.map((g) => g.id), ["web-digital", "growth", "support", "creative"]);
   assert.deepEqual(servicesInGroup("web-digital").map((s) => s.id), ["web", "ecommerce", "mobile", "booking", "automation", "ai"]);
-  assert.deepEqual(servicesInGroup("growth").map((s) => s.id), ["seo", "maintenance"]);
+  assert.deepEqual(servicesInGroup("growth").map((s) => s.id), ["seo"]);
+  assert.deepEqual(servicesInGroup("support").map((s) => s.id), ["maintenance", "website-repair"]);
   assert.deepEqual(servicesInGroup("creative").map((s) => s.id), ["video-editing", "reels-editing", "graphic-design"]);
+  assert.equal(SERVICES.length, 12);
   assert.equal(new Set(SERVICES.map((s) => s.id)).size, SERVICES.length, "ids are unique");
   assert.equal(new Set(SERVICES.map((s) => s.msg)).size, SERVICES.length, "message keys are unique");
 });
 
-test("only the five existing detail pages; comparison table and sitemap follow them", () => {
-  assert.deepEqual([...DETAIL_PAGE_IDS], ["web", "ecommerce", "mobile", "seo", "maintenance"]);
+test("six detail pages (the five existing + website repair); comparison table and sitemap follow them", () => {
+  assert.deepEqual([...DETAIL_PAGE_IDS], ["web", "ecommerce", "mobile", "seo", "maintenance", "website-repair"]);
   assert.deepEqual([...COMPARISON_KEYS], [...DETAIL_PAGE_IDS]);
+  for (const f of FEATURES) assert.equal(f.included.length, COMPARISON_KEYS.length, `comparison row ${f.key}`);
   const sitemap = fs.readFileSync("src/app/sitemap.ts", "utf8");
   assert.match(sitemap, /serviceSlugs = DETAIL_PAGE_IDS/);
   const detail = fs.readFileSync("src/app/[locale]/services/[slug]/page.tsx", "utf8");
@@ -45,6 +48,10 @@ test("only the five existing detail pages; comparison table and sitemap follow t
 test("links: detail page, Services-page anchor, group anchor, contact preselection", () => {
   assert.equal(serviceHref("web"), "/services/web");
   assert.equal(serviceHref("seo"), "/services/seo");
+  assert.equal(serviceHref("maintenance"), "/services/maintenance", "existing URL kept");
+  assert.equal(serviceHref("website-repair"), "/services/website-repair");
+  assert.equal(groupHref("growth"), "/services#group-growth", "existing anchor kept");
+  assert.equal(groupHref("support"), "/services#group-support");
   assert.equal(serviceHref("booking"), "/services#svc-booking");
   assert.equal(serviceHref("video-editing"), "/services#svc-video-editing");
   assert.equal(groupHref("creative"), "/services#group-creative");
@@ -102,12 +109,63 @@ test("creative services make no unsupported claims (no clients, results, figures
   }
 });
 
-test("homepage keeps the three groups; the old six-row keys are gone", () => {
+test("homepage copy: four groups, new hero, no process or old hero keys left", () => {
   for (const l of LOCALES) {
     const h = msgs[l].HomeV2;
-    for (const k of ["s1", "s4", "s6_d", "offer_also"]) assert.equal(h[k], undefined, `${l}: HomeV2.${k} removed`);
-    assert.ok(h.offer_title && h.offer_intro && h.offer_link);
+    const gone = ["s1", "s4", "s6_d", "offer_also", "value", "value_sub", "proc_kicker", "proc_title", "st1", "st1_t", "st4_d"];
+    for (const k of gone) assert.equal(h[k], undefined, `${l}: HomeV2.${k} removed`);
+    assert.ok(h.offer_title && h.offer_intro && h.offer_link && h.hero_title && h.hero_sub && h.tst_kicker && h.tst_title);
+    assert.doesNotMatch(h.offer_title, /trois|three|ثلاثة/i, `${l}: offer title counts four groups`);
   }
+  assert.equal(msgs.fr.HomeV2.hero_title, "Votre site web mérite mieux.");
+  // The hero says both: we build, and we repair / improve.
+  assert.match(msgs.fr.HomeV2.hero_sub, /Création, réparation et amélioration/);
+  assert.match(msgs.en.HomeV2.hero_sub, /build, repair and improve/);
+  assert.match(msgs.ar.HomeV2.hero_sub, /إنشاء.*وإصلاحها.*وتحسينها/);
+});
+
+test("the four-step process lives on the Web service page only, without promises it cannot keep", () => {
+  const banned = {
+    fr: /semaine|jour|sur place|hebdomadaire|garanti/i,
+    en: /week|days?\b|on-site|weekly|guarantee/i,
+    ar: /أسبوع|أيام|ميداني|أسبوعي|ضمان|نضمن/,
+  } as const;
+  for (const l of LOCALES) {
+    const sd = msgs[l].ServiceDetail;
+    for (const k of ["web_process_kicker", "web_process_title", ...[1, 2, 3, 4].flatMap((n) => [`web_process_s${n}`, `web_process_s${n}_d`])]) {
+      assert.ok(sd[k]?.trim(), `${l}: ServiceDetail.${k}`);
+      assert.doesNotMatch(sd[k], banned[l], `${l}: ServiceDetail.${k}`);
+    }
+    for (const k of Object.keys(msgs[l].Services)) assert.doesNotMatch(k, /^process_/, `${l}: Services.${k} moved to the Web page`);
+  }
+  assert.equal(msgs.fr.ServiceDetail.web_process_title, "De l'idée au lancement.");
+  const detail = fs.readFileSync("src/app/[locale]/services/[slug]/page.tsx", "utf8");
+  assert.match(detail, /key === "web" \? \(\s*<ProcessBars locale=\{locale\} \/>/, "on the Web detail page, in place of its 3-step block");
+  for (const f of ["src/components/services-v2/ServicesV2.tsx", "src/components/home-v2/HomeV2.tsx"]) {
+    assert.doesNotMatch(fs.readFileSync(f, "utf8"), /ProcessBars|<Process\b|proc_|process_s|STEPS/, `${f}: no process section`);
+  }
+});
+
+test("website repair: complete detail copy, one-time (not maintenance), no prices or guarantees", () => {
+  const oneTime = { fr: /ponctuel/, en: /one-time/, ar: /لمرة واحدة/ } as const;
+  const noPrice = /\d+\s*(dh|mad|dirham|درهم|€|eur|\$|usd)|à partir de|starting at|from \d|ابتداء/i;
+  const noGuarantee = /garanti|guarantee|ضمان|نضمن|مضمون|instantan|instant|48\s*h|24\s*h/i;
+  for (const l of LOCALES) {
+    const sd = msgs[l].ServiceDetail;
+    const keys = ["title", "tagline", "intro", "features_title", "features", "tools", ...[1, 2, 3].flatMap((n) => [`step${n}_title`, `step${n}_desc`])];
+    for (const k of keys) assert.ok(sd[`repair_${k}`]?.trim(), `${l}: ServiceDetail.repair_${k}`);
+    const all = [...keys.map((k) => sd[`repair_${k}`]), msgs[l].Services.repair_desc, msgs[l].Services.repair_features, msgs[l].Assistant.repair_reply];
+    for (const v of all) {
+      assert.doesNotMatch(v, noPrice, `${l}: ${v}`);
+      assert.doesNotMatch(v, noGuarantee, `${l}: ${v}`);
+    }
+    assert.match(sd.repair_intro, oneTime[l], `${l}: repair is a one-time project`);
+    assert.match(msgs[l].Services.repair_desc, oneTime[l]);
+    assert.match(msgs[l].Services.group_support_desc, oneTime[l], `${l}: the group explains repair vs maintenance`);
+    assert.ok(sd.repair_features.split(",").length >= 7, `${l}: the full repair scope is listed`);
+  }
+  const detail = fs.readFileSync("src/app/[locale]/services/[slug]/page.tsx", "utf8");
+  assert.match(detail, /const key = service\.msg;/, "detail copy is keyed by the catalog message key");
 });
 
 test("assistant options point at the catalog and have copy in every locale", () => {
@@ -121,7 +179,7 @@ test("assistant options point at the catalog and have copy in every locale", () 
   }
   assert.ok(OPTIONS.some((o) => o.catalog && "group" in o.catalog && o.catalog.group === "creative"), "creative studio is reachable from the assistant");
   const covered = new Set(OPTIONS.flatMap((o) => (o.catalog && "service" in o.catalog ? [o.catalog.service] : [])));
-  for (const id of ["booking", "automation", "ai"] as const) assert.ok(covered.has(id), `assistant keeps ${id}`);
+  for (const id of ["booking", "automation", "ai", "website-repair"] as const) assert.ok(covered.has(id), `assistant covers ${id}`);
 });
 
 test("structured data lists every catalog service", () => {

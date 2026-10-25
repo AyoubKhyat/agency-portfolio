@@ -85,6 +85,8 @@ export type HomepageProject = {
   title: string;
   sector: string;
   kind: string;
+  /** The stored client quote for this locale (shown only if approved: see lib/testimonials). */
+  testimonial?: string | null;
 };
 
 /** Visible projects for the homepage, in admin sort order, with the localized sector. */
@@ -102,7 +104,7 @@ export async function getHomepageProjects(locale: string): Promise<HomepageProje
       orderBy: { sortOrder: "asc" },
       select: {
         slug: true, url: true, image: true, tag: true, kind: true,
-        translations: { where: { locale }, select: { title: true, industry: true } },
+        translations: { where: { locale }, select: { title: true, industry: true, testimonial: true } },
       },
     });
     if (projects.length === 0) return fallback();
@@ -113,6 +115,7 @@ export async function getHomepageProjects(locale: string): Promise<HomepageProje
       title: p.translations[0]?.title ?? p.slug,
       sector: p.translations[0]?.industry || p.tag,
       kind: p.kind,
+      testimonial: p.translations[0]?.testimonial ?? null,
     }));
   } catch (e) {
     console.error("[dal] getHomepageProjects failed, using fallback:", e);

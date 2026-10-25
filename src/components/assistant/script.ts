@@ -30,6 +30,7 @@ export const OPTIONS: AssistantOption[] = [
   { id: "app", emoji: "📱", hasReply: true, catalog: { service: "mobile" } },
   { id: "automation", emoji: "⚡", hasReply: true, catalog: { service: "automation" } },
   { id: "ai", emoji: "🤖", hasReply: true, catalog: { service: "ai" } },
+  { id: "repair", emoji: "🛠️", hasReply: true, catalog: { service: "website-repair" } },
   { id: "creative", emoji: "🎬", hasReply: true, catalog: { group: "creative" } },
   { id: "pricing", emoji: "💰", hasReply: true },
   { id: "contact", emoji: "💬", hasReply: false },

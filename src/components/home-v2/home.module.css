@@ -8,6 +8,7 @@
   --line: rgba(11, 11, 15, 0.12);
   --line-2: rgba(11, 11, 15, 0.22);
   --plate: #ecebe5;
+  --err: #b42318;
   --grad: linear-gradient(100deg, #8b6fe0 0%, #2563eb 100%);
   --cta-grad: linear-gradient(100deg, #6a4ee0 0%, #2563eb 100%);
   --display: "Cabinet Grotesk", var(--font-alexandria), system-ui, sans-serif;
@@ -37,6 +38,7 @@
   --line: rgba(255, 255, 255, 0.11);
   --line-2: rgba(255, 255, 255, 0.2);
   --plate: #121216;
+  --err: #fda29b;
   --grad: linear-gradient(100deg, #a78bfa 0%, #60a5fa 100%);
   --cta-grad: linear-gradient(100deg, #5b3fd6 0%, #1d4ed8 100%);
 }
@@ -60,6 +62,7 @@
 .root *, .root *::before, .root *::after { box-sizing: border-box; }
 .root a { color: inherit; text-decoration: none; }
 .root img { display: block; max-width: 100%; }
+.root :where(button) { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 
 .wrap { max-width: 1520px; margin: 0 auto; padding-inline: var(--gut); }
 .grid12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(16px, 2vw, 32px); }
@@ -93,9 +96,9 @@
 .heroTop { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 /* Hero slogan: Instrument Serif roman 400, styled like the /services hero headline
    (line-height .95, tracking -.025em). Its capitals are taller and ~25% narrower than
-   Cabinet Grotesk 800: desktop is sized to keep the approved hero height (value + CTAs above
-   the fold), mobile is sized to keep the approved line width (see the ≤760px rule). */
-.slogan { margin: clamp(26px, 4vw, 56px) 0 0; font-family: var(--serif); font-weight: 400; font-size: clamp(4.4rem, 14vw, 14rem); letter-spacing: -0.025em; line-height: 0.95; }
+   Cabinet Grotesk 800: desktop is sized so the diagnosis form starts near the fold,
+   mobile keeps the approved line width (see the ≤760px rule). */
+.slogan { margin: clamp(22px, 3vw, 44px) 0 0; font-family: var(--serif); font-weight: 400; font-size: clamp(4rem, 11vw, 11.5rem); letter-spacing: -0.025em; line-height: 0.95; }
 .root[dir="rtl"] .slogan { line-height: 0.95; letter-spacing: -0.025em; }
 /* Each line masks its own rise. The mask extends 0.24em below the line box so descenders
    (the "g" of "grow") are never cut, and 0.06em to each side for serif overhangs (the "W");
@@ -107,20 +110,57 @@
 /* Starts below the extended mask, so nothing peeks out before the line rises. */
 @keyframes rise { from { transform: translateY(calc(100% + 0.3em)); } }
 
-.value { margin-top: clamp(32px, 4.4vw, 64px); align-items: end; row-gap: 28px; }
-.valueText { grid-column: 1 / span 7; animation: fade 0.9s var(--ease) both; animation-delay: calc(var(--intro) + 0.35s); }
-.valueMain { margin: 0; font: 700 clamp(1.3rem, 2.05vw, 2rem)/1.28 var(--display); letter-spacing: -0.012em; max-width: 34ch; }
-.root[dir="rtl"] .valueMain { letter-spacing: 0; line-height: 1.7; }
-.valueSub { margin: 14px 0 0; color: var(--muted); font-size: 1.02rem; }
-.valueCta { grid-column: 9 / -1; display: flex; flex-direction: column; align-items: flex-end; gap: 16px; animation: fade 0.9s var(--ease) both; animation-delay: calc(var(--intro) + 0.5s); }
+/* Hero body: headline + copy, and the two-step diagnosis form */
+.heroBody { margin-top: clamp(28px, 3.6vw, 52px); padding-top: clamp(22px, 2.4vw, 32px); border-top: 1px solid var(--line-2); align-items: start; row-gap: 28px; }
+.heroCopy { grid-column: 1 / span 5; animation: fade 0.9s var(--ease) both; animation-delay: calc(var(--intro) + 0.35s); }
+.heroTitle { margin: 0; font: 800 clamp(2rem, 3.3vw, 3.3rem)/1.02 var(--display); letter-spacing: -0.03em; max-width: 14ch; }
+.root[dir="rtl"] .heroTitle { font-weight: 700; letter-spacing: 0; line-height: 1.45; }
+.heroSub { margin: 16px 0 0; color: var(--muted); font-size: 1.06rem; max-width: 42ch; }
+.heroForm { grid-column: 7 / -1; animation: fade 0.9s var(--ease) both; animation-delay: calc(var(--intro) + 0.5s); }
+.heroAlt { margin: 22px 0 0; font-size: 14.5px; }
+.heroAlt .linkU { align-items: center; }
+.heroAlt svg { width: 16px; height: 16px; flex: none; }
 @keyframes fade { from { opacity: 0; transform: translateY(14px); } }
-
-.svcIndex { list-style: none; margin: clamp(48px, 6vw, 88px) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line-2); border-bottom: 1px solid var(--line); }
-.svcIndex a { display: flex; gap: 12px; align-items: baseline; padding: 18px 16px 20px 0; height: 100%; font-weight: 600; font-size: 15px; transition: color 0.25s; }
-.root[dir="rtl"] .svcIndex a { padding: 18px 0 20px 16px; }
-.svcIndex li + li a { padding-inline-start: 16px; border-inline-start: 1px solid var(--line); }
-.svcIndex a:hover { color: var(--muted); }
 .idxNum { font: 600 12.5px/1 var(--body); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; color: var(--muted); }
+
+/* Diagnosis form: an editorial underline field, not a boxed widget */
+.dg { position: relative; scroll-margin-block: 96px 40px; } /* clears the sticky nav / leaves air under the submit button */
+.dgLabel { display: block; margin-bottom: 6px; }
+.dgRow { display: flex; align-items: center; gap: 16px; border-bottom: 2px solid var(--ink); padding-bottom: 12px; transition: border-color 0.25s, box-shadow 0.25s; }
+.dgRow:focus-within { box-shadow: 0 2px 0 0 var(--ink); }
+.dgRow[data-invalid] { border-color: var(--err); }
+.dgRow[data-invalid]:focus-within { box-shadow: 0 2px 0 0 var(--err); }
+.dgUrl { flex: 1; min-width: 0; padding: 10px 0; border: 0; border-radius: 0; background: transparent; color: var(--ink); font: 700 clamp(1.3rem, 2vw, 1.9rem)/1.2 var(--display); letter-spacing: -0.015em; outline: none; }
+.dgUrl::placeholder, .dgCtl::placeholder { color: var(--muted); opacity: 0.7; }
+.dgGo { flex: none; border: 0; cursor: pointer; }
+.dgGo:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.dgGo:disabled { opacity: 0.75; cursor: progress; transform: none; }
+.dgErr { margin: 8px 0 0; min-height: 1px; color: var(--err); font-size: 13.5px; font-weight: 500; }
+.dgErr:empty { margin: 0; }
+.dgNote { margin: 12px 0 0; color: var(--muted); font-size: 14px; max-width: 52ch; }
+.dgTitle { margin: 6px 0 0; font: 800 clamp(1.5rem, 2.1vw, 2rem)/1.1 var(--display); letter-spacing: -0.02em; outline: none; }
+.root[dir="rtl"] .dgTitle { font-weight: 700; letter-spacing: 0; line-height: 1.5; }
+.dgSite { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 12px 0 0; font-weight: 600; font-size: 15px; }
+.dgSite bdi { overflow-wrap: anywhere; }
+.dgFields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin-top: 22px; }
+.dgFull { grid-column: 1 / -1; }
+.dgFields .label { display: block; }
+.dgReq { color: var(--err); margin-inline-start: 3px; }
+.dgOpt { font-weight: 500; }
+.dgCtl { display: block; width: 100%; margin-top: 4px; padding: 10px 0; border: 0; border-bottom: 1px solid var(--line-2); border-radius: 0; background: transparent; color: var(--ink); font: 500 16px/1.45 var(--body); outline: none; transition: border-color 0.25s, box-shadow 0.25s; }
+.dgCtl:focus { border-bottom-color: var(--ink); box-shadow: 0 1px 0 0 var(--ink); }
+.dgCtl[aria-invalid="true"] { border-bottom-color: var(--err); box-shadow: 0 1px 0 0 var(--err); }
+textarea.dgCtl { resize: vertical; min-height: 76px; }
+.dgActions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; margin-top: 22px; }
+.dgText { font-weight: 600; font-size: 15px; border-bottom: 2px solid var(--line-2); padding-bottom: 2px; transition: border-color 0.2s; }
+.dgText:hover { border-color: currentColor; }
+.dgText:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+.dgText:disabled { opacity: 0.5; cursor: default; }
+.dgAlert { margin: 16px 0 0; padding: 12px 14px; border-inline-start: 3px solid var(--err); background: color-mix(in srgb, var(--err) 9%, transparent); font-size: 14.5px; outline: none; }
+.dgAlert a { font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.dgSpin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.45); border-top-color: #fff; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.dgReveal { animation: fade 0.5s var(--ease) both; }
 
 /* ── Section scaffolding ── */
 .sec { padding-block: clamp(84px, 9vw, 144px); }
@@ -213,16 +253,33 @@
 .nm { display: block; margin-top: 8px; font: 700 14px/1.25 var(--display); letter-spacing: -0.01em; }
 .sc { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
 
-/* ── 5. Process: four ascending gradient bars ── */
-.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(14px, 1.8vw, 28px); align-items: end; }
-.bar { height: calc(var(--h) * 1px); background: var(--grad); border-radius: 10px 10px 0 0; opacity: calc(0.3 + var(--o)); transform-origin: bottom; }
-.stepBody { padding-top: 22px; border-top: 2px solid var(--ink); margin-top: -2px; }
-.stepTop { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.stepTop .label { font-size: 13px; font-weight: 500; }
-.stepNum { font: 800 3rem/1 var(--display); letter-spacing: -0.035em; }
-.stepBody h3 { margin: 14px 0 8px; font: 700 1.4rem/1.15 var(--display); letter-spacing: -0.01em; }
-.root[dir="rtl"] .stepBody h3 { letter-spacing: 0; line-height: 1.5; }
-.stepBody p { margin: 0; color: var(--muted); font-size: 15px; }
+/* Testimonials (rendered only for approved quotes): scrolling columns from
+   components/ui/testimonials-columns-1, with cards in the homepage's own type and colours. */
+.quotes { margin-top: 0; }
+/* Heading sits close to the columns (the mask's short fade does the rest). */
+.secHead.tstHead { margin-bottom: clamp(20px, 2.4vw, 36px); }
+/* Cards: a lighter/raised surface than the page, a defined hairline and a soft shadow;
+   quote in ink, name/role in the page's muted ink (no opacity fading). */
+.tCard {
+  --t-card: #fdfcfa;
+  --t-edge: rgba(11, 11, 15, 0.2);
+  background: var(--t-card);
+  border-color: var(--t-edge);
+  color: var(--ink);
+  padding: 28px 28px 24px;
+  box-shadow: 0 1px 0 rgba(11, 11, 15, 0.03), 0 20px 40px -28px rgba(40, 30, 120, 0.3);
+  font-size: 15.5px;
+  line-height: 1.6;
+}
+:global(.dark) .tCard {
+  --t-card: #141418;
+  --t-edge: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 40px -28px rgba(0, 0, 0, 0.8);
+}
+.tCard blockquote p { font: italic 400 1.3rem/1.4 var(--serif); letter-spacing: -0.005em; color: var(--ink); }
+.root[dir="rtl"] .tCard blockquote p { font: 500 1.08rem/1.85 var(--ar-display); letter-spacing: 0; }
+.tCard figcaption { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 14px; }
+.tCard figcaption span span:last-child { opacity: 1; color: var(--muted); font-size: 13.5px; }
 
 /* ── 6. Contact: full-width gradient (deeper stops keep white text ≥ 4.5:1) ── */
 .cta { position: relative; overflow: hidden; background: var(--cta-grad); color: #fff; padding-block: clamp(64px, 8vw, 130px) clamp(48px, 5vw, 80px); }
@@ -242,13 +299,11 @@
 /* Scroll reveals: only once RevealController confirms JS + motion are available. */
 .jsReveal [data-reveal] { opacity: 0; transform: translateY(28px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); }
 .jsReveal [data-reveal][data-in] { opacity: 1; transform: none; }
-.jsReveal .steps[data-reveal] .bar { transform: scaleY(0); transition: transform 1s var(--ease); transition-delay: calc(var(--i) * 120ms); }
-.jsReveal .steps[data-in] .bar { transform: none; }
 
 /* ── Responsive ── */
 @media (max-width: 1100px) {
-  .valueText { grid-column: 1 / span 8; }
-  .valueCta { grid-column: 9 / -1; }
+  .heroCopy, .heroForm { grid-column: 1 / -1; }
+  .heroTitle { max-width: 20ch; }
   .secHead .label { grid-column: 1 / -1; padding-top: 0; margin-bottom: 14px; }
   .secHead h2, .secHead p { grid-column: 1 / -1; }
   .rowNum { grid-column: 1 / span 1; }
@@ -259,23 +314,24 @@
   .reasons { grid-column: 1 / -1; margin-top: 40px; }
   .work[data-count="3"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .labHead, .labList { grid-column: 1 / -1; }
-  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 40px; }
   .ctaRow p, .ctaActions { grid-column: 1 / -1; }
   .ctaActions { justify-content: flex-start; }
 }
 @media (max-width: 760px) {
   .heroHours { display: none; }
-  .slogan { font-size: 20vw; }
-  /* Tighter hero rhythm on phones so both CTAs sit above the first-visit cookie banner at 390×844. */
-  .value { margin-top: 24px; row-gap: 20px; }
-  .valueCta { gap: 10px; }
-  .valueText, .valueCta { grid-column: 1 / -1; }
-  .valueCta { align-items: stretch; }
+  .slogan { font-size: 19vw; }
+  /* Tighter hero rhythm on phones so the address field sits high on a 390×844 screen. */
+  .heroBody { margin-top: 20px; padding-top: 20px; row-gap: 22px; }
+  .heroSub { margin-top: 10px; font-size: 1rem; }
   .pillGrad, .pillWhite { justify-content: center; }
-  .valueCta .linkU { align-self: flex-start; }
-  .svcIndex { grid-template-columns: 1fr; }
-  .svcIndex li a { border-inline-start: 0 !important; padding: 14px 0 !important; border-bottom: 1px solid var(--line); }
-  .svcIndex li:last-child a { border-bottom: 0; }
+  /* The field and its button stack; the button spans the width for an easy tap. */
+  .dgRow { flex-wrap: wrap; gap: 12px; border-bottom: 0; padding-bottom: 0; box-shadow: none !important; }
+  .dgUrl { flex-basis: 100%; border-bottom: 2px solid var(--ink); font-size: 1.3rem; }
+  .dgRow[data-invalid] .dgUrl { border-color: var(--err); }
+  .dgUrl:focus { box-shadow: 0 2px 0 0 var(--ink); }
+  .dgRow .dgGo { width: 100%; }
+  .dgFields { grid-template-columns: minmax(0, 1fr); }
+  .dgActions .dgGo { width: 100%; }
   .row { grid-template-columns: 34px 1fr; }
   .rowNum { grid-column: 1; }
   .rowName, .rowDesc { grid-column: 2; }
@@ -288,12 +344,6 @@
   .labList { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: calc(var(--gut) * -1); padding-inline: var(--gut); scroll-padding-inline: var(--gut); scrollbar-width: none; }
   .labList::-webkit-scrollbar { display: none; }
   .labList li { flex: none; width: 46%; scroll-snap-align: start; }
-  /* Stacked steps: the bars turn sideways and still ascend, by width. */
-  .steps { grid-template-columns: 1fr; row-gap: 36px; }
-  .bar { height: 10px; width: calc(var(--h) / 160 * 100%); border-radius: 0 6px 0 0; transform-origin: left; }
-  .root[dir="rtl"] .bar { border-radius: 6px 0 0 0; transform-origin: right; }
-  .jsReveal .steps[data-reveal] .bar { transform: scaleX(0); }
-  .jsReveal .steps[data-in] .bar { transform: none; }
   .pillWhite { width: 100%; justify-content: center; }
 }
 /* Phones: the site's fixed cookie banner covers up to ~215px of the viewport on a first visit.
