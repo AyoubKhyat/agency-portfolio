@@ -6,6 +6,7 @@ import {
   TESTIMONIAL_LIMITS,
   TESTIMONIAL_LOCALES,
   approvalProblem,
+  duplicateQuoteLocales,
   type TestimonialLocale,
   type TestimonialState,
 } from "@/lib/testimonial-approval";
@@ -97,6 +98,8 @@ export default function TestimonialPanel({ projectId, initial }: { projectId?: s
   const consentDirty = draft.consent.trim() !== saved.consent;
   const dirty = authorDirty || consentDirty || TESTIMONIAL_LOCALES.some(localeDirty);
   const consentRemoved = saved.consent.trim() !== "" && draft.consent.trim() === "";
+  // Same quote in several languages (e.g. the French text pasted into EN/AR): warn, never block or change.
+  const duplicates = duplicateQuoteLocales(Object.fromEntries(TESTIMONIAL_LOCALES.map((l) => [l, draft.locales[l]?.quote ?? ""])));
   const willUnpublish = (l: TestimonialLocale) => !!saved.locales[l]?.approvedAt && (localeDirty(l) || authorDirty || consentRemoved);
 
   function setLocale(l: TestimonialLocale, field: "quote" | "role", value: string) {
@@ -222,6 +225,13 @@ export default function TestimonialPanel({ projectId, initial }: { projectId?: s
                   />
                 </div>
               </div>
+
+              {duplicates[l] && (
+                <p className="mt-3 text-[12px] text-amber-800 bg-amber-50 border border-amber-100 rounded-md px-3 py-2" data-duplicate-warning={l}>
+                  Same text as {duplicates[l]!.map((o) => o.toUpperCase()).join(" and ")}. Check this is the version the client approved
+                  in {LOCALE_LABELS[l]}: nothing is translated automatically.
+                </p>
+              )}
 
               {willUnpublish(l) && (
                 <p className="mt-3 text-[12px] text-amber-800 bg-amber-50 border border-amber-100 rounded-md px-3 py-2">

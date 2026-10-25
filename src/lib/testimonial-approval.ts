@@ -136,6 +136,24 @@ export function approvalProblem(
   return null;
 }
 
+/**
+ * For each locale, the other locales whose quote is the same text (ignoring case, surrounding and
+ * repeated whitespace). Advisory only: the panel warns, nothing is blocked, translated or changed.
+ */
+export function duplicateQuoteLocales(
+  quotes: Partial<Record<TestimonialLocale, string>>,
+): Partial<Record<TestimonialLocale, TestimonialLocale[]>> {
+  const norm = (s: string | undefined) => (s ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+  const out: Partial<Record<TestimonialLocale, TestimonialLocale[]>> = {};
+  for (const l of TESTIMONIAL_LOCALES) {
+    const q = norm(quotes[l]);
+    if (!q) continue;
+    const same = TESTIMONIAL_LOCALES.filter((o) => o !== l && norm(quotes[o]) === q);
+    if (same.length) out[l] = same;
+  }
+  return out;
+}
+
 export type TestimonialStatus = "empty" | "draft" | "published";
 export function localeStatus(cur: TestimonialLocaleState | undefined): TestimonialStatus {
   if (!cur || (!cur.quote.trim() && !cur.role.trim())) return "empty";

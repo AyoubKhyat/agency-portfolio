@@ -150,11 +150,12 @@ test("homepage: the process section is gone and sections are numbered in order",
     assert.ok(!markup.includes('id="process"'), `${locale}: no process section`);
     assert.ok(!markup.includes("De l&#x27;idée au lancement") && !markup.includes("From idea to launch"));
     const nums = [...markup.matchAll(/class="secNum">\((\d{2})\)</g)].map((m) => m[1]);
-    assert.deepEqual(nums, ["01", "02", "03", "04"], `${locale}: offer, work, why, contact`);
-    // Order: hero form, services, work, why, brand story, contact.
+    assert.deepEqual(nums, ["01", "02", "03", "04"], `${locale}: offer, why, work, contact`);
+    // Order: hero form, services, why, brand story, work, (testimonials), contact.
     const at = (needle: string) => markup.indexOf(needle);
-    assert.ok(at("dg-siteUrl") < at('id="offer"') && at('id="offer"') < at('id="work"') && at('id="work"') < at('id="why"'));
-    assert.ok(at('id="why"') < at("إبداع</span></p>") && at("إبداع</span></p>") < at('id="contact"'));
+    assert.ok(at("dg-siteUrl") < at('id="offer"') && at('id="offer"') < at('id="why"'), `${locale}: offer before why`);
+    assert.ok(at('id="why"') < at("إبداع</span></p>") && at("إبداع</span></p>") < at('id="work"'), `${locale}: brand story between why and work`);
+    assert.ok(at('id="work"') < at('id="contact"'), `${locale}: work before contact`);
   }
 });
 
@@ -184,6 +185,7 @@ test("homepage testimonials: hidden without an approved row, shown once approved
     assert.ok(markup.includes("Fixture Author") && markup.includes("Fixture role · Dandana Cabaret"));
     const nums = [...markup.matchAll(/class="secNum">\((\d{2})\)</g)].map((m) => m[1]);
     assert.deepEqual(nums, ["01", "02", "03", "04", "05"], "testimonials take their number before contact");
+    assert.ok(markup.indexOf('id="work"') < markup.indexOf('id="testimonials"'), "testimonials come after the work");
     assert.ok(markup.indexOf('id="testimonials"') < markup.indexOf('id="contact"'));
     // Not approved for English: hidden there.
     assert.ok(!(await renderHome("en")).includes('id="testimonials"'));
@@ -198,6 +200,17 @@ test("no fictional sample testimonials remain in the source or the shipped trans
   for (const f of files("src").filter((f) => /\.(tsx?|json|css)$/.test(f))) {
     assert.doesNotMatch(fs.readFileSync(f, "utf8"), /NOT A REAL CLIENT REVIEW|IBDA3_TESTIMONIALS_DEMO|testimonials-demo|Exemple fictif|Fictional example|مثال وهمي/, f);
   }
+});
+
+test("brand story: the Arabic word's gradient covers the marks below the baseline (no clipping)", () => {
+  const css = fs.readFileSync("src/components/home-v2/home.module.css", "utf8");
+  assert.match(css, /\.nameWord \.gradText \{ display: inline-block; padding-bottom: 0\.3em; margin-bottom: -0\.3em; \}/);
+});
+
+test("admin editor: the testimonial panel comes before the case study section", () => {
+  const form = fs.readFileSync("src/app/admin/projects/ProjectForm.tsx", "utf8");
+  assert.ok(form.indexOf("<TestimonialPanel") > 0 && form.indexOf("<TestimonialPanel") < form.indexOf("{/* Case study */}"));
+  assert.equal(form.split("<TestimonialPanel").length - 1, 1, "rendered once");
 });
 
 // ─── Case study ──────────────────────────────────────────────────

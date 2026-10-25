@@ -59,7 +59,7 @@ export default async function HomeV2({ locale }: { locale: string }) {
   const cards = testimonials.map((q) => ({ text: q.quote, name: q.author, role: `${q.role} · ${q.project}` }));
 
   // Numbered sections in page order; optional ones count only when they render.
-  const numbered = ["offer", clients.length > 0 && "work", "why", cards.length > 0 && "testimonials", "contact"].filter(Boolean);
+  const numbered = ["offer", "why", clients.length > 0 && "work", cards.length > 0 && "testimonials", "contact"].filter(Boolean);
   const n = (sec: string) => num(numbered.indexOf(sec));
 
   const secLabel = (n: string, text: string, className = s.label) => (
@@ -141,9 +141,44 @@ export default async function HomeV2({ locale }: { locale: string }) {
         </div>
       </section>
 
-      {/* 3. Selected work: real clients, then the concept lab */}
+      {/* 3. Why IBDA3 */}
+      <section className={`${s.sec} ${s.secTight}`} id="why">
+        <div className={s.wrap}>
+          <div className={`${s.grid12} ${s.secHead}`} style={{ marginBottom: 28 }}>
+            {secLabel(n("why"), t("why_kicker"))}
+          </div>
+          <div className={s.grid12}>
+            <p className={s.whyStatement} data-reveal>{t("why_statement")}</p>
+            <ol className={s.reasons} data-reveal>
+              {REASONS.map((k, i) => (
+                <li key={k}>
+                  <span className={`${s.reasonNum} ${s.gradText}`} dir="ltr">{num(i)}</span>
+                  <div>
+                    <h3>{t(k)}</h3>
+                    <p>{t(`${k}_d`)}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Brand story: إبداع */}
+      <section className={`${s.sec} ${s.name}`}>
+        <div className={`${s.wrap} ${s.grid12} ${s.nameGrid}`} data-reveal>
+          <p className={s.nameWord} lang="ar" dir="rtl"><span className={s.gradText}>إبداع</span></p>
+          <div className={s.nameTxt}>
+            <span className={s.label}>{t("name_kicker")}</span>
+            <h2>{t("name_title")}</h2>
+            <p>{t("name_body")}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Selected work: real clients, then the concept lab */}
       {(clients.length > 0 || concepts.length > 0) && (
-        <section className={`${s.sec} ${s.secTight}`} id="work">
+        <section className={s.sec} id="work">
           <div className={s.wrap}>
             {clients.length > 0 && (
               <>
@@ -188,41 +223,6 @@ export default async function HomeV2({ locale }: { locale: string }) {
           </div>
         </section>
       )}
-
-      {/* 4. Why IBDA3 */}
-      <section className={s.sec} id="why">
-        <div className={s.wrap}>
-          <div className={`${s.grid12} ${s.secHead}`} style={{ marginBottom: 28 }}>
-            {secLabel(n("why"), t("why_kicker"))}
-          </div>
-          <div className={s.grid12}>
-            <p className={s.whyStatement} data-reveal>{t("why_statement")}</p>
-            <ol className={s.reasons} data-reveal>
-              {REASONS.map((k, i) => (
-                <li key={k}>
-                  <span className={`${s.reasonNum} ${s.gradText}`} dir="ltr">{num(i)}</span>
-                  <div>
-                    <h3>{t(k)}</h3>
-                    <p>{t(`${k}_d`)}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. Brand story: إبداع */}
-      <section className={`${s.sec} ${s.name}`}>
-        <div className={`${s.wrap} ${s.grid12} ${s.nameGrid}`} data-reveal>
-          <p className={s.nameWord} lang="ar" dir="rtl"><span className={s.gradText}>إبداع</span></p>
-          <div className={s.nameTxt}>
-            <span className={s.label}>{t("name_kicker")}</span>
-            <h2>{t("name_title")}</h2>
-            <p>{t("name_body")}</p>
-          </div>
-        </div>
-      </section>
 
       {/* 6. Testimonials: only approved quotes (lib/testimonials), in scrolling columns; otherwise not rendered at all */}
       {cards.length > 0 && (

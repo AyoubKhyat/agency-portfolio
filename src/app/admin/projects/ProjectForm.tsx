@@ -419,6 +419,9 @@ export default function ProjectForm({
               </div>
             </section>
 
+            {/* Client testimonial: saved and published on its own (TestimonialPanel), above the case study so it is easy to find */}
+            <TestimonialPanel projectId={mode === "edit" ? initial?.id : undefined} />
+
             {/* Case study */}
             <section className="bg-white border border-[#E5E7EB] rounded-xl">
               <button
@@ -511,8 +514,6 @@ export default function ProjectForm({
               )}
             </section>
 
-            {/* Client testimonial: saved and published on its own (TestimonialPanel) */}
-            <TestimonialPanel projectId={mode === "edit" ? initial?.id : undefined} />
           </div>
 
           {/* RIGHT — sticky */}

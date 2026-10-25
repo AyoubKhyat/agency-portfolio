@@ -208,6 +208,9 @@ textarea.dgCtl { resize: vertical; min-height: 76px; }
 .name { background: var(--plate); }
 .nameGrid { align-items: center; row-gap: 28px; }
 .nameWord { grid-column: 1 / span 5; margin: 0; font: 700 clamp(5rem, 12vw, 12rem)/1.15 var(--ar-display); text-align: center; }
+/* The gradient is clipped to the text's box: extend it below the line so the Arabic marks under the
+   baseline (the hamza of إ, the dot of ب, the tail of ع) are painted too, without moving the layout. */
+.nameWord .gradText { display: inline-block; padding-bottom: 0.3em; margin-bottom: -0.3em; }
 .nameTxt { grid-column: 7 / span 5; }
 .nameTxt h2 { margin: 14px 0 16px; font: italic 400 clamp(2.2rem, 3.6vw, 3.6rem)/1.05 var(--serif); letter-spacing: -0.01em; }
 .root[dir="rtl"] .nameTxt h2 { font: 600 clamp(1.8rem, 2.6vw, 2.6rem)/1.5 var(--ar-display); letter-spacing: 0; }

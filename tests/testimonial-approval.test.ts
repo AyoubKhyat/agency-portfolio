@@ -9,6 +9,7 @@ import {
   approvalProblem,
   approvalSchema,
   draftSchema,
+  duplicateQuoteLocales,
   localeStatus,
   planTestimonialSave,
   type TestimonialDraft,
@@ -134,4 +135,15 @@ test("status per locale, and a stable approval fingerprint that never contains t
   assert.match(a, /^[0-9a-f]{16}$/);
   assert.equal(a, await approvalFingerprint({ author: "A", role: "R", quote: "Q" }));
   assert.notEqual(a, await approvalFingerprint({ author: "A", role: "R", quote: "Q." }));
+});
+
+test("duplicate quotes across languages are reported per locale (advisory only)", () => {
+  const fr = "Une équipe très réactive.";
+  assert.deepEqual(duplicateQuoteLocales({ fr, en: fr, ar: fr }), { fr: ["en", "ar"], en: ["fr", "ar"], ar: ["fr", "en"] });
+  assert.deepEqual(duplicateQuoteLocales({ fr, en: `  ${fr.toUpperCase()}\n`, ar: "" }), { fr: ["en"], en: ["fr"] }, "case and whitespace ignored; empty never counts");
+  assert.deepEqual(duplicateQuoteLocales({ fr, en: "A very responsive team.", ar: "فريق سريع الاستجابة." }), {});
+  assert.deepEqual(duplicateQuoteLocales({}), {});
+  const input = { fr, en: fr };
+  duplicateQuoteLocales(input);
+  assert.deepEqual(input, { fr, en: fr }, "the quotes are not modified");
 });
