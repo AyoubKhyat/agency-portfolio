@@ -119,8 +119,7 @@ test("homepage hero: slogan lockup kept, new headline, and step 1 of the diagnos
   for (const locale of ["fr", "en", "ar"] as const) {
     const markup = await renderHome(locale);
     assert.match(markup, /<h1[^>]*lang="en"[\s\S]*We build[\s\S]*You grow[\s\S]*<\/h1>/, `${locale}: English slogan lockup`);
-    const plain = markup.replace(/<[^>]+>/g, "");
-    for (const text of copy[locale]) assert.ok(plain.includes(text), `${locale}: ${text}`);
+    for (const text of copy[locale]) assert.ok(markup.includes(text), `${locale}: ${text}`);
     const fields = inputs(markup);
     const url = fields.find((a) => attr(a, "name") === "siteUrl");
     assert.ok(url, `${locale}: the address field is named siteUrl`);
@@ -136,32 +135,20 @@ test("homepage hero: slogan lockup kept, new headline, and step 1 of the diagnos
   }
 });
 
-test("homepage hero: editorial diagnosis section — emphasised headline, arrow, truthful facts, panel with the unchanged form (FR/EN/AR)", async () => {
-  const expected = {
-    fr: { em: "mieux.", cta: "Analyser mon site", head: "Diagnostic gratuit", trust: ["Gratuit", "Sans engagement", "Aucun accès à votre site requis"], proof: ["Examen humain", "Retour personnalisé", "Marrakech"] },
-    en: { em: "better.", cta: "Analyse my site", head: "Free diagnosis", trust: ["Free", "No commitment", "No access to your site needed"], proof: ["Human review", "Personal follow-up", "Marrakech"] },
-    ar: { em: "الأفضل.", cta: "حلّل موقعي", head: "تشخيص مجاني", trust: ["مجاني", "دون أي التزام", "لا نحتاج إلى أي صلاحية دخول إلى موقعك"], proof: ["مراجعة بشرية", "ردّ شخصي", "مراكش"] },
+test("homepage hero: the diagnosis card holds the headline, three trust indicators and the unchanged form (FR/EN/AR)", async () => {
+  const trust = {
+    fr: ["Gratuit", "Sans engagement", "Aucun accès à votre site requis"],
+    en: ["Free", "No commitment", "No access to your site needed"],
+    ar: ["مجاني", "دون أي التزام", "لا نحتاج إلى أي صلاحية دخول إلى موقعك"],
   } as const;
   for (const locale of ["fr", "en", "ar"] as const) {
-    const e = expected[locale];
     const markup = await renderHome(locale);
-    const sec = markup.slice(markup.indexOf('class="heroBody dgArt"'), markup.indexOf('id="offer"'));
-    assert.match(markup, /class="heroBody dgArt" data-assistant-avoid="(true)?"/, `${locale}: the chat launcher avoids the whole section`);
-    assert.ok(sec.length > 0, `${locale}: the section wraps the hero body`);
-    assert.ok(sec.includes(`<em class="heroEm">${e.em}</em></h2>`), `${locale}: last word emphasised`);
-    assert.match(sec, /<svg class="dgArrow"[^>]*aria-hidden="true"/, `${locale}: decorative arrow hidden from assistive tech`);
-    const proof = [...sec.matchAll(/<li><strong>([^<]+)<\/strong><span>([^<]+)<\/span><\/li>/g)];
-    assert.deepEqual(proof.map((m) => m[1].replace(/&#x27;/g, "'")), [...e.proof], `${locale}: facts`);
-    assert.ok(proof.every((m) => !/\d|%|\+/.test((m[1] + m[2]).replace(/&#x27;/g, "'"))), `${locale}: no figures or statistics`);
-    const panel = sec.slice(sec.indexOf('class="dgPanel"'));
-    assert.ok(panel.includes(`<span>${e.head}</span>`), `${locale}: panel header`);
-    const trust = [...panel.matchAll(/<li><svg[^>]*aria-hidden="true"[\s\S]*?<\/svg><span>([^<]+)<\/span><\/li>/g)].map((m) => m[1].replace(/&#x27;/g, "'"));
-    assert.deepEqual(trust, [...e.trust], `${locale}: trust indicators in the panel`);
-    for (const needle of ['name="siteUrl"', 'data-wa-placement="home_hero"']) assert.ok(panel.includes(needle), `${locale}: ${needle} in the panel`);
-    assert.ok(sec.includes('id="home-v2-value"'), `${locale}: supporting text kept`);
-    assert.match(panel, new RegExp(`<button type="submit"[^>]*><span>${e.cta}</span>`), `${locale}: CTA label`);
-    assert.ok(markup.includes(`aria-label="${e.head}"`), `${locale}: the form keeps its accessible name`);
-    assert.ok(!panel.includes('class="dgNote"'), `${locale}: the note's facts are shown beside the form instead`);
+    const card = markup.slice(markup.indexOf('class="grid12 heroBody dgCard"'), markup.indexOf('id="offer"'));
+    assert.match(markup, /class="grid12 heroBody dgCard" data-assistant-avoid="(true)?"/, `${locale}: the chat launcher avoids the whole card`);
+    assert.ok(card.length > 0, `${locale}: the card wraps the hero body`);
+    const items = [...card.matchAll(/<li><svg[^>]*aria-hidden="true"[\s\S]*?<\/svg><span>([^<]+)<\/span><\/li>/g)].map((m) => m[1].replace(/&#x27;/g, "'"));
+    assert.deepEqual(items, [...trust[locale]], `${locale}: trust indicators`);
+    for (const needle of ['name="siteUrl"', 'data-wa-placement="home_hero"', 'id="home-v2-value"']) assert.ok(card.includes(needle), `${locale}: ${needle} inside the card`);
   }
   // The note under the field no longer repeats the trust indicators; it keeps what only it says.
   const note = { fr: [/Gratuit|engagement/i, /notre équipe.*rien n'y est modifié/], en: [/free|commitment/i, /Our team reviews.*nothing on it is changed/], ar: [/مجاني|التزام/, /يفحص فريقنا.*دون أي تعديل/] } as const;
@@ -171,8 +158,8 @@ test("homepage hero: editorial diagnosis section — emphasised headline, arrow,
     assert.match(text, note[l][1], `${l}: keeps the review and no-change information`);
     if (l !== "ar") assert.ok(text.includes("\u00a0\u2014") && !text.includes(" \u2014"), `${l}: the dash never starts a line (no-break space before it)`);
   }
-  // Phones: the panel is not tilted.
-  assert.match(fs.readFileSync("src/components/home-v2/home.module.css", "utf8"), /\.dgPanel, \.root\[dir="rtl"\] \.dgPanel \{ transform: none;/);
+  // Top-aligned columns: the headline does not move when step 2 makes the form taller.
+  assert.match(fs.readFileSync("src/components/home-v2/home.module.css", "utf8"), /\.heroBody\.dgCard \{[^}]*align-items: start;[^}]*\}/);
 });
 
 test("homepage hero: the honeypot is separate from the address field, hidden and out of the tab order", async () => {

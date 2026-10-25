@@ -121,79 +121,53 @@
 .heroAlt .linkU { align-items: center; }
 .heroAlt svg { width: 16px; height: 16px; flex: none; }
 
-/* Diagnosis section — editorial and asymmetric: a large serif headline (its last word in purple-blue
-   italic) with truthful facts on the start side; a slightly tilted off-white form panel on the end side,
-   reached by a thin curved arrow and lit by a soft purple glow. Uses the page tokens, so dark mode follows. */
-.heroBody.dgArt {
-  --dg-panel: #fdfcfa;
-  --dg-panel-edge: rgba(11, 11, 15, 0.08);
-  --dg-accent: #6d4ee8;
-  --dg-gap: clamp(32px, 4.5vw, 76px);
+/* Diagnosis card: dark charcoal/navy in both themes with a soft purple/blue glow. It redefines the
+   page tokens locally, so everything inside (headline, form, errors, step 2) reads light on dark. */
+.heroBody.dgCard {
+  --ink: #f4f3f8;
+  --muted: #a9a8bd;
+  --line: rgba(255, 255, 255, 0.12);
+  --line-2: rgba(255, 255, 255, 0.22);
+  --err: #ffa39a;
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1fr);
-  grid-template-areas: "copy panel" "proof panel";
-  /* The headline row is sized by its own content; extra height (a taller step 2) goes below the facts, so the headline never moves. */
-  grid-template-rows: auto 1fr;
-  column-gap: var(--dg-gap);
-  row-gap: clamp(28px, 3vw, 44px);
+  isolation: isolate;
+  margin-top: clamp(28px, 3.6vw, 52px);
+  padding: clamp(28px, 4vw, 56px);
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  border-radius: 28px;
+  background:
+    radial-gradient(70% 90% at 0% 0%, rgba(139, 111, 224, 0.30), transparent 60%),
+    radial-gradient(60% 80% at 100% 100%, rgba(37, 99, 235, 0.26), transparent 62%),
+    linear-gradient(160deg, #15131f 0%, #0c0e1a 100%);
+  color: var(--ink);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 40px 80px -44px rgba(40, 30, 120, 0.6);
+  /* Top-aligned: the headline stays put when step 2 makes the form taller. */
   align-items: start;
-  margin-top: clamp(40px, 5vw, 76px);
-  padding-top: 0;
-  border-top: 0;
 }
-:global(.dark) .heroBody.dgArt { --dg-panel: #141418; --dg-panel-edge: rgba(255, 255, 255, 0.1); --dg-accent: #a78bfa; }
-.dgArt .heroCopy { grid-area: copy; position: relative; }
-.dgArt .heroForm { grid-area: panel; position: relative; isolation: isolate; align-self: center; }
-.dgArt .heroTitle { font: 400 clamp(2.9rem, 5vw, 4.9rem)/0.98 var(--serif); letter-spacing: -0.02em; max-width: 11ch; }
-.root[dir="rtl"] .dgArt .heroTitle { font: 700 clamp(2.2rem, 3.7vw, 3.7rem)/1.35 var(--ar-display); letter-spacing: 0; max-width: 12ch; }
-.heroEm { font-style: italic; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; padding-inline-end: 0.06em; }
-.root[dir="rtl"] .heroEm { font-style: normal; padding-bottom: 0.15em; }
-.dgArt .heroSub { margin-top: clamp(18px, 2vw, 28px); font-size: 1.12rem; line-height: 1.6; color: var(--muted); max-width: 44ch; }
-/* Thin curved arrow from the headline towards the panel (mirrored in RTL; hidden once stacked). */
-/* Its tip touches the start of the panel column (second track: 1fr of 1.92fr, after the gap). */
-.dgArrow { position: absolute; top: clamp(4px, 1.4vw, 22px); inset-inline-end: calc((100% - var(--dg-gap)) / 1.92 - 6px); width: clamp(150px, 21vw, 300px); height: auto; color: var(--dg-accent); pointer-events: none; }
-/* Arabic headlines fill more of their column: a shorter arrow keeps clear of the text. */
-.root[dir="rtl"] .dgArrow { transform: scaleX(-1); width: clamp(110px, 11vw, 165px); }
-/* Truthful facts (no figures), separated by hairlines. */
-.dgProof { grid-area: proof; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-self: start; }
-.dgProof li { display: flex; flex-direction: column; gap: 6px; padding-inline: clamp(14px, 1.6vw, 26px); border-inline-start: 1px solid var(--line-2); }
-.dgProof li:first-child { padding-inline-start: 0; border-inline-start: 0; }
-.dgProof strong { font: 400 clamp(1.2rem, 1.6vw, 1.5rem)/1.15 var(--serif); color: var(--ink); }
-.root[dir="rtl"] .dgProof strong { font: 700 1.1rem/1.4 var(--ar-display); }
-.dgProof span { font-size: 13px; line-height: 1.45; color: var(--muted); }
-/* The floating form panel: off-white, minimal border, soft shadow, slight tilt, glow behind its end edge. */
-.dgArt .heroForm::before { content: ""; position: absolute; z-index: -1; inset: -22% calc(var(--gut) * -1 + 1px) -22% 35%; background: radial-gradient(70% 62% at 100% 50%, rgba(139, 111, 224, 0.5), rgba(96, 165, 250, 0.26) 48%, transparent 78%); pointer-events: none; }
-.root[dir="rtl"] .dgArt .heroForm::before { inset: -22% 35% -22% calc(var(--gut) * -1 + 1px); background: radial-gradient(70% 62% at 0% 50%, rgba(139, 111, 224, 0.5), rgba(96, 165, 250, 0.26) 48%, transparent 78%); }
-.dgPanel { position: relative; padding: clamp(22px, 2.2vw, 30px) clamp(22px, 2.4vw, 34px) clamp(20px, 2vw, 26px); background: var(--dg-panel); border: 1px solid var(--dg-panel-edge); border-radius: 22px; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 34px 70px -34px rgba(40, 30, 120, 0.35), 0 10px 24px -18px rgba(11, 11, 15, 0.18); transform: rotate(-2deg); }
-.root[dir="rtl"] .dgPanel { transform: rotate(2deg); }
-:global(.dark) .dgPanel { box-shadow: 0 34px 70px -34px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(167, 139, 250, 0.08); }
-.dgPanelHead { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
-.dgPanelHead span { font: italic 600 11.5px/1 var(--body); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
-.root[dir="rtl"] .dgPanelHead span { font-style: normal; letter-spacing: 0; font-size: 12.5px; }
-.dgPanelHead i { flex: 1; height: 1px; background: var(--line-2); }
-.dgPanelHead b { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--line-2); }
-.dgPanelHead b:first-of-type { border-color: var(--dg-accent); background: color-mix(in srgb, var(--dg-accent) 35%, transparent); }
-/* Compact form inside the panel: dark label, rounded input beside the gradient CTA. */
-.dgPanel .dgLabel { color: var(--ink); font-weight: 600; font-size: 13.5px; margin-bottom: 10px; }
-.dgPanel .dgRow { gap: 12px; border-bottom: 0; padding-bottom: 0; }
-.dgPanel .dgRow:focus-within { box-shadow: none; }
-.dgPanel .dgUrl { padding: 14px 20px; border: 1px solid var(--line-2); border-radius: 999px; background: color-mix(in srgb, var(--dg-panel) 70%, #fff); font: 500 15.5px/1.3 var(--body); letter-spacing: 0; transition: border-color 0.2s, box-shadow 0.2s; }
-:global(.dark) .dgPanel .dgUrl { background: rgba(255, 255, 255, 0.04); }
-.dgPanel .dgUrl:focus { border-color: var(--dg-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--dg-accent) 22%, transparent); }
-.dgPanel .dgRow[data-invalid] .dgUrl { border-color: var(--err); }
-.dgPanel .dgGo { padding: 15px 24px; font-size: 15px; box-shadow: 0 14px 28px -14px rgba(91, 76, 230, 0.75); }
-.dgPanel .dgErr:not(:empty) { margin-top: 10px; }
-/* Trust indicators: outlined check circles. */
-.dgTrust { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 20px; }
-.dgTrust li { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink); white-space: nowrap; }
-.dgTrust svg { width: 19px; height: 19px; flex: none; color: var(--dg-accent); }
-.dgPanel .heroAlt { margin: 16px 0 0; font-size: 13.5px; font-style: italic; }
-.root[dir="rtl"] .dgPanel .heroAlt { font-style: normal; }
-.dgPanel .heroAlt a { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
-.dgPanel .heroAlt a:hover span { text-decoration: underline; text-underline-offset: 3px; }
-.dgPanel .heroAlt a:focus-visible { outline: 2px solid var(--dg-accent); outline-offset: 3px; border-radius: 4px; }
-.dgPanel .heroAlt svg { color: var(--dg-accent); width: 17px; height: 17px; }
+:global(.dark) .heroBody.dgCard { border-color: rgba(167, 139, 250, 0.34); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 0 0 1px rgba(96, 165, 250, 0.06), 0 40px 90px -40px rgba(91, 76, 230, 0.45); }
+.dgCard .heroSub { color: var(--muted); }
+/* The address row becomes a soft field holding the input and the gradient button. */
+.dgCard .dgRow {
+  gap: 10px; padding: 8px; padding-inline-start: 20px;
+  border: 1px solid var(--line-2); border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+}
+.dgCard .dgRow:focus-within { border-color: rgba(167, 139, 250, 0.75); background: rgba(255, 255, 255, 0.07); box-shadow: 0 0 0 4px rgba(139, 111, 224, 0.22); }
+.dgCard .dgRow[data-invalid] { border-color: var(--err); }
+.dgCard .dgRow[data-invalid]:focus-within { box-shadow: 0 0 0 4px rgba(255, 163, 154, 0.2); }
+.dgCard .dgUrl { padding: 12px 0; }
+.dgCard .dgUrl::placeholder { color: var(--muted); opacity: 0.75; }
+.dgCard .pillGrad { box-shadow: 0 14px 34px -12px rgba(124, 92, 250, 0.75); }
+.dgCard .dgCtl { background: transparent; }
+.dgCard input:-webkit-autofill { -webkit-text-fill-color: var(--ink); box-shadow: 0 0 0 1000px #17152a inset; caret-color: var(--ink); }
+.dgCard .heroAlt .linkU { border-color: rgba(255, 255, 255, 0.28); }
+.dgCard .heroAlt .linkU:hover { border-color: currentColor; }
+.dgCard .dgGo:focus-visible, .dgCard .dgText:focus-visible, .dgCard .linkU:focus-visible { outline: 2px solid #c4b5fd; outline-offset: 3px; }
+/* Trust indicators */
+.dgTrust { list-style: none; margin: 22px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 18px; }
+.dgTrust li { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.dgTrust svg { width: 18px; height: 18px; flex: none; padding: 3px; border-radius: 50%; color: #c4b5fd; background: rgba(139, 111, 224, 0.22); }
 @keyframes fade { from { opacity: 0; transform: translateY(14px); } }
 .idxNum { font: 600 12.5px/1 var(--body); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; color: var(--muted); }
 
@@ -394,14 +368,6 @@ textarea.dgCtl { resize: vertical; min-height: 76px; }
   .ctaRow p, .ctaActions { grid-column: 1 / -1; }
   .ctaActions { justify-content: flex-start; }
 }
-/* Diagnosis section: stacked (headline, form, facts) below 900px; the arrow is only for side-by-side. */
-@media (max-width: 900px) {
-  .heroBody.dgArt { grid-template-columns: minmax(0, 1fr); grid-template-areas: "copy" "panel" "proof"; grid-template-rows: auto; row-gap: 32px; }
-  .dgArt .heroCopy { align-self: start; }
-  .dgArrow { display: none; }
-  .dgArt .heroTitle, .root[dir="rtl"] .dgArt .heroTitle { max-width: 14ch; }
-  .dgPanel { max-width: 640px; }
-}
 @media (max-width: 760px) {
   .heroHours { display: none; }
   .slogan { font-size: 19vw; }
@@ -430,15 +396,13 @@ textarea.dgCtl { resize: vertical; min-height: 76px; }
   .labList::-webkit-scrollbar { display: none; }
   .labList li { flex: none; width: 46%; scroll-snap-align: start; }
   .pillWhite { width: 100%; justify-content: center; }
-  /* Diagnosis on phones: no tilt; the input sits above a full-width CTA; facts stack. */
-  .dgPanel, .root[dir="rtl"] .dgPanel { transform: none; padding: 20px 18px 18px; border-radius: 18px; }
-  .dgPanel .dgUrl { flex-basis: 100%; border-bottom: 1px solid var(--line-2); font-size: 16px; }
-  .dgPanel .dgRow[data-invalid] .dgUrl { border-color: var(--err); }
-  .dgPanel .dgUrl:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--dg-accent) 22%, transparent); }
-  .dgArt .heroForm::before, .root[dir="rtl"] .dgArt .heroForm::before { inset: 10% calc(var(--gut) * -1 + 1px) -10% 30%; }
-  .dgProof { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
-  .dgProof li, .dgProof li:first-child { padding: 14px 0 0; border-inline-start: 0; border-top: 1px solid var(--line); }
-  .dgProof li:first-child { border-top: 0; padding-top: 0; }
+  /* Diagnosis card on phones: tighter frame; the field box holds the input above a full-width button. */
+  .heroBody.dgCard { margin-top: 22px; padding: 24px 18px; border-radius: 22px; }
+  .dgCard .dgRow { padding: 10px; padding-inline-start: 14px; border-radius: 16px; }
+  .dgCard .dgUrl, .dgCard .dgRow[data-invalid] .dgUrl { border-bottom: 0; padding: 6px 0; }
+  .dgCard .dgUrl:focus { box-shadow: none; }
+  .dgTrust { margin-top: 16px; gap: 8px 14px; }
+  .dgTrust li { font-size: 13px; }
 }
 /* Phones: the site's fixed cookie banner covers up to ~215px of the viewport on a first visit.
    Keyboard focus and scroll-into-view keep targets above that strip (homepage only). */
