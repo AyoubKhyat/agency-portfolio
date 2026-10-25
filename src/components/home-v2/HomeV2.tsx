@@ -40,6 +40,10 @@ export default async function HomeV2({ locale }: { locale: string }) {
   const sv = await getTranslations({ locale, namespace: "Services" });
   const pf = await getTranslations({ locale, namespace: "Portfolio" });
   const waUrl = buildWhatsAppUrl(wa("prefill_general"));
+  // Headline with its last word emphasised (Diagnosis.title_em); falls back to the plain title.
+  const heroTitle = t("hero_title");
+  const em = d("title_em");
+  const [titleLead, titleEm] = em && heroTitle.endsWith(em) ? [heroTitle.slice(0, -em.length), em] : [heroTitle, ""];
   // The four service groups from the shared catalog; the Services page lists every service.
   const groups = SERVICE_GROUPS.map((g) => ({
     id: g.id,
@@ -95,28 +99,56 @@ export default async function HomeV2({ locale }: { locale: string }) {
               </span>
             </span>
           </h1>
-          {/* Free website diagnosis: a dark card in both themes (its own colour tokens, see .dgCard). */}
-          <div className={`${s.grid12} ${s.heroBody} ${s.dgCard}`}>
+          {/* Free website diagnosis — editorial, asymmetric: serif headline and truthful facts on one side,
+              a slightly tilted form panel on the other (no tilt on phones). */}
+          {/* data-assistant-avoid: the floating chat launcher steps aside while any of this section (facts included) is under it. */}
+          <div className={`${s.heroBody} ${s.dgArt}`} data-assistant-avoid>
             <div className={s.heroCopy}>
-              <h2 className={s.heroTitle}>{t("hero_title")}</h2>
+              <h2 className={s.heroTitle}>
+                {titleLead}
+                {titleEm && <em className={s.heroEm}>{titleEm}</em>}
+              </h2>
               <p className={s.heroSub} id="home-v2-value">{t("hero_sub")}</p>
-              <ul className={s.dgTrust}>
-                {(["trust_free", "trust_no_commitment", "trust_no_access"] as const).map((k) => (
-                  <li key={k}>
-                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    <span>{d(k)}</span>
-                  </li>
-                ))}
-              </ul>
             </div>
-            <div className={s.heroForm} data-assistant-avoid>
-              <DiagnosisForm waUrl={waUrl} />
-              <p className={s.heroAlt}>
-                <a className={s.linkU} href={waUrl} target="_blank" rel="noopener noreferrer" data-wa-placement="home_hero">
-                  <FaWhatsapp aria-hidden="true" />
-                  <span>{d("or_wa")}</span>
-                </a>
-              </p>
+            {/* Decorative arrow from the headline to the form panel (its tip sits at the panel column). */}
+            <svg className={s.dgArrow} viewBox="0 0 300 100" aria-hidden="true" focusable="false">
+              <path d="M4 44 C 92 -4, 218 -6, 284 78" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+              <path d="M268 73 L 285 81 L 286 62" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+            </svg>
+            <ul className={s.dgProof}>
+              {(["proof1", "proof2", "proof3"] as const).map((k) => (
+                <li key={k}>
+                  <strong>{d(`${k}_title`)}</strong>
+                  <span>{d(`${k}_text`)}</span>
+                </li>
+              ))}
+            </ul>
+            <div className={s.heroForm}>
+              <div className={s.dgPanel}>
+                <div className={s.dgPanelHead} aria-hidden="true">
+                  <span>{d("start")}</span>
+                  <i />
+                  <b /><b /><b />
+                </div>
+                <DiagnosisForm waUrl={waUrl} submitLabel={d("cta")} showNote={false} />
+                <ul className={s.dgTrust}>
+                  {(["trust_free", "trust_no_commitment", "trust_no_access"] as const).map((k) => (
+                    <li key={k}>
+                      <svg viewBox="0 0 20 20" aria-hidden="true">
+                        <circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                        <path d="M6.5 10.3l2.3 2.3 4.7-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span>{d(k)}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className={s.heroAlt}>
+                  <a href={waUrl} target="_blank" rel="noopener noreferrer" data-wa-placement="home_hero">
+                    <FaWhatsapp aria-hidden="true" />
+                    <span>{d("or_wa")}</span>
+                  </a>
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -31,7 +31,9 @@ const id = (f: Field) => `dg-${f}`;
  * The request is saved as a CRM lead through the shared contact path
  * (lib/contact-submit); the site itself is never fetched or changed.
  */
-export default function DiagnosisForm({ waUrl }: { waUrl: string }) {
+/** `submitLabel`: the step-1 button text (default: Diagnosis.start). `showNote`: the note under the
+ *  address field (the homepage panel shows the same facts beside the form instead). */
+export default function DiagnosisForm({ waUrl, submitLabel, showNote = true }: { waUrl: string; submitLabel?: string; showNote?: boolean }) {
   const t = useTranslations("Diagnosis");
   const c = useTranslations("Contact");
   const v = useTranslations("Validation");
@@ -203,12 +205,12 @@ export default function DiagnosisForm({ waUrl }: { waUrl: string }) {
               aria-required="true"
             />
             <button type="submit" className={`${s.pill} ${s.pillGrad} ${s.dgGo}`}>
-              <span>{t("start")}</span>
+              <span>{submitLabel ?? t("start")}</span>
               <span className={s.flip} aria-hidden="true">→</span>
             </button>
           </div>
           {err(SITE_URL_FIELD)}
-          <p className={s.dgNote}>{t("note")}</p>
+          {showNote && <p className={s.dgNote}>{t("note")}</p>}
         </div>
       ) : (
         <div className={s.dgReveal}>

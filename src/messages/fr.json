@@ -795,6 +795,14 @@
     "or_wa": "Ou écrivez-nous sur WhatsApp",
     "trust_free": "Gratuit",
     "trust_no_commitment": "Sans engagement",
-    "trust_no_access": "Aucun accès à votre site requis"
+    "trust_no_access": "Aucun accès à votre site requis",
+    "title_em": "mieux.",
+    "cta": "Analyser mon site",
+    "proof1_title": "Examen humain",
+    "proof1_text": "par notre équipe, rien n'est modifié",
+    "proof2_title": "Retour personnalisé",
+    "proof2_text": "par email ou WhatsApp",
+    "proof3_title": "Marrakech",
+    "proof3_text": "et partout au Maroc"
   }
 }
