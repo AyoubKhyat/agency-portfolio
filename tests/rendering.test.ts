@@ -47,13 +47,15 @@ const projects = [
   { slug: "terrene", url: "https://terrene.webyms.com/", image: "/projects/terrene.webp", title: "Terrene Studio", sector: "Architecture", kind: "CLIENT", desc: "", tags: [] },
   { slug: "tannour", url: "https://tannour.vercel.app/", image: "/projects/tannour.webp", title: "Tannour", sector: "E-commerce", kind: "CONCEPT", desc: "", tags: [] },
 ];
-// What the database query returns per locale (empty unless a test sets it); lib/testimonials is real.
-let published: Partial<Record<string, PublishedTestimonialRow[]>> = {};
+// What the database query returns (empty unless a test sets it): the testimonial is shared, so the
+// same rows for every locale, with the project name in the page language. lib/testimonials is real.
+let published: PublishedTestimonialRow[] = [];
+const projectName: Record<string, string> = { fr: "Dandana Cabaret", en: "Dandana Cabaret (EN)", ar: "دندنة" };
 mock.module("@/lib/dal", {
   namedExports: {
     getHomepageProjects: async () => projects,
     getPortfolioProjects: async () => projects,
-    getPublishedTestimonials: async (locale: string) => published[locale] ?? [],
+    getPublishedTestimonials: async (locale: string) => published.map((r) => ({ ...r, project: projectName[locale] ?? r.project })),
   },
 });
 
@@ -159,26 +161,27 @@ test("homepage: the process section is gone and sections are numbered in order",
   }
 });
 
-test("homepage testimonials: hidden without an approved row, shown once approved for that locale", async () => {
+test("homepage testimonials: hidden until published, then the same testimonial on FR, EN and AR", async () => {
   const row = (over: Partial<PublishedTestimonialRow> = {}): PublishedTestimonialRow => ({
     slug: "dandana-cabaret", kind: "CLIENT", visible: true, project: "Dandana Cabaret",
     author: "Fixture Author", role: "Fixture role", quote: "Fixture stored quote.", approvedAt: new Date("2026-10-01"), ...over,
   });
-  published = {};
+  published = [];
   let markup = await renderHome("fr");
   assert.ok(!markup.includes('id="testimonials"'), "no empty section");
   assert.ok(!markup.includes("Témoignages"));
 
   // Rows that slip through must still be dropped: unapproved, concept, hidden project.
-  published = { fr: [row({ approvedAt: null }), row({ slug: "c", kind: "CONCEPT" }), row({ slug: "h", visible: false })] };
+  published = [row({ approvedAt: null }), row({ slug: "c", kind: "CONCEPT" }), row({ slug: "h", visible: false })];
   markup = await renderHome("fr");
   assert.ok(!markup.includes('id="testimonials"') && !markup.includes("Fixture stored quote."), "re-checked before rendering");
 
-  published = { fr: [row()] };
+  published = [row()];
   try {
     markup = await renderHome("fr");
     assert.ok(markup.includes('id="testimonials"'));
-    assert.match(markup, /<blockquote class="m-0"><p class="m-0">Fixture stored quote\.<\/p><\/blockquote>/);
+    // dir="auto": the quote reads in its own direction whatever the page language.
+    assert.match(markup, /<blockquote class="m-0"><p class="m-0" dir="auto">Fixture stored quote\.<\/p><\/blockquote>/);
     assert.ok(markup.includes("Ce que disent nos clients."));
     // One approved quote: static cards (nothing to loop), no hidden duplicate copy.
     assert.ok(!markup.includes('aria-hidden="true" class="contents"'));
@@ -187,10 +190,15 @@ test("homepage testimonials: hidden without an approved row, shown once approved
     assert.deepEqual(nums, ["01", "02", "03", "04", "05"], "testimonials take their number before contact");
     assert.ok(markup.indexOf('id="work"') < markup.indexOf('id="testimonials"'), "testimonials come after the work");
     assert.ok(markup.indexOf('id="testimonials"') < markup.indexOf('id="contact"'));
-    // Not approved for English: hidden there.
-    assert.ok(!(await renderHome("en")).includes('id="testimonials"'));
+    // One shared testimonial: exactly the same quote, author and role in English and Arabic (no translation).
+    for (const locale of ["en", "ar"] as const) {
+      const other = await renderHome(locale);
+      assert.match(other, /<p class="m-0" dir="auto">Fixture stored quote\.<\/p>/, `${locale}: same quote`);
+      assert.ok(other.includes(`Fixture role · ${projectName[locale]}`), `${locale}: same role, project name in the page language`);
+      assert.match(other, /<span class="[^"]*" dir="auto">Fixture Author<\/span>/, `${locale}: author, direction from its own text`);
+    }
   } finally {
-    published = {};
+    published = [];
   }
 });
 

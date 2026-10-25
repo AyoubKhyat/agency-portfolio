@@ -1,5 +1,6 @@
 /**
- * Testimonial write paths and public filtering against a REAL, ISOLATED Postgres database.
+ * Testimonial write paths and public filtering against a REAL, ISOLATED Postgres database
+ * (one shared testimonial per project, stored on the French translation row).
  *
  * Skipped unless TESTIMONIAL_TEST_DATABASE_URL points at a local database (127.0.0.1 / localhost);
  * it refuses anything else, so it can never run against the production database. Every test
@@ -38,11 +39,12 @@ after(async () => { await client?.$disconnect(); });
 
 const actor = { userId: "u-admin", userName: "Admin One", ipAddress: "127.0.0.1" };
 const content = (locale: string, title: string) => ({ locale, title, desc: `${title} desc`, tags: "a, b" });
+const LOCALES = ["fr", "en", "ar"] as const;
 
 async function makeProject(slug: string, kind = "CLIENT", visible = true) {
   const p = await dal.createProject({
     slug, category: "web", url: "https://example.test", image: "", tag: "Tag", visible, kind,
-    // A stale client could still send a testimonial on create: it must not be stored or copied.
+    // A stale client could still send a testimonial on create: it must not be stored.
     translations: [
       { ...content("fr", `${slug} FR`), testimonial: "Injected on create." } as any,
       content("en", `${slug} EN`),
@@ -55,164 +57,175 @@ async function makeProject(slug: string, kind = "CLIENT", visible = true) {
 async function saveDraft(id: string, draft: any) {
   const state = (await dal.getTestimonialState(id))!;
   const plan = rules.planTestimonialSave(state, rules.draftSchema.parse(draft));
-  return plan.changed ? dal.saveTestimonialDraft(id, plan, actor) : [];
+  return plan.changed ? dal.saveTestimonialDraft(id, plan, actor) : false;
 }
-const baseDraft = {
-  author: "Fixture Author", consent: "Fixture consent reference",
-  locales: { fr: { quote: "Citation FR.", role: "Rôle FR" }, en: { quote: "Quote EN.", role: "Role EN" } },
-};
-const expectedFor = async (id: string, locale: "fr" | "en" | "ar") => {
+const baseDraft = { author: "Fixture Author", consent: "Fixture consent reference", quote: "Fixture shared quote.", role: "Fixture role" };
+const expectedFor = async (id: string) => {
   const s = (await dal.getTestimonialState(id))!;
-  return { author: s.author, role: s.locales[locale]!.role, quote: s.locales[locale]!.quote };
+  return { author: s.author, role: s.role, quote: s.quote };
 };
+const publish = async (id: string) => dal.approveTestimonial(id, await expectedFor(id), actor, "fp");
 const audit = async () => (await client.auditLog.findMany({ orderBy: { createdAt: "asc" } })).map((a: any) => ({ action: a.action, ...JSON.parse(a.details ?? "{}") }));
+const publicIn = async (locale: string) => (await dal.getPublishedTestimonials(locale)).map((r) => [r.slug, r.quote, r.author, r.role, r.project]);
+const rowsOf = (id: string) => client.projectTranslation.findMany({ where: { projectId: id }, orderBy: { locale: "asc" } });
 
 beforeEach(async () => {
   if (!isolated) return;
   await client.$executeRawUnsafe('TRUNCATE TABLE "audit_logs", "project_translations", "projects" CASCADE');
 });
 
-test("create never stores or copies a testimonial between locales", { skip }, async () => {
+test("create never stores a testimonial", { skip }, async () => {
   const id = await makeProject("create-check");
-  const rows = await client.projectTranslation.findMany({ where: { projectId: id } });
-  assert.equal(rows.length, 3);
-  for (const r of rows) assert.deepEqual([r.testimonial, r.testimonialRole, r.testimonialApprovedAt], [null, null, null], r.locale);
+  for (const r of await rowsOf(id)) assert.deepEqual([r.testimonial, r.testimonialRole, r.testimonialApprovedAt], [null, null, null], r.locale);
 });
 
-test("approve → public; edit → revoked and hidden; every step audited in the same transaction", { skip }, async () => {
+test("publish once → the same testimonial on FR, EN and AR (project name in the page language); edit → hidden everywhere", { skip }, async () => {
   const id = await makeProject("flow");
   await saveDraft(id, baseDraft);
-  assert.equal((await dal.getPublishedTestimonials("fr")).length, 0, "a saved draft is not public");
+  for (const l of LOCALES) assert.deepEqual(await publicIn(l), [], `${l}: a draft is not public`);
 
-  assert.equal(await dal.approveTestimonial(id, "fr", await expectedFor(id, "fr"), actor, "fp1"), true);
-  const pub = await dal.getPublishedTestimonials("fr");
-  assert.deepEqual(pub.map((r) => [r.slug, r.quote, r.author, r.role]), [["flow", "Citation FR.", "Fixture Author", "Rôle FR"]]);
-  assert.equal(pub[0].approvedAt instanceof Date, true);
+  assert.equal(await publish(id), true);
+  for (const l of LOCALES) {
+    assert.deepEqual(await publicIn(l), [["flow", "Fixture shared quote.", "Fixture Author", "Fixture role", `flow ${l.toUpperCase()}`]], l);
+  }
+  // Only the French row was written: EN/AR testimonial columns untouched (null).
+  for (const r of await rowsOf(id)) {
+    if (r.locale === "fr") continue;
+    assert.deepEqual([r.testimonial, r.testimonialRole, r.testimonialApprovedAt], [null, null, null], r.locale);
+  }
 
-  const revoked = await saveDraft(id, { ...baseDraft, locales: { ...baseDraft.locales, fr: { quote: "Citation FR, modifiée.", role: "Rôle FR" } } });
-  assert.deepEqual(revoked, ["fr"]);
-  assert.equal((await dal.getPublishedTestimonials("fr")).length, 0, "edited quote is hidden");
-  const fr = await client.projectTranslation.findFirst({ where: { projectId: id, locale: "fr" } });
-  assert.deepEqual([fr.testimonial, fr.testimonialApprovedAt, fr.testimonialApprovedBy], ["Citation FR, modifiée.", null, null]);
-
-  assert.deepEqual((await audit()).map((a: any) => `${a.action}${a.locale ? ":" + a.locale : ""}${a.reason ? ":" + a.reason : ""}`), [
-    "TESTIMONIAL_UPDATED", "TESTIMONIAL_APPROVED:fr", "TESTIMONIAL_UPDATED", "TESTIMONIAL_REVOKED:fr:quote_or_role_edited",
+  assert.equal(await saveDraft(id, { ...baseDraft, quote: "Fixture shared quote, edited." }), true, "reported as unpublished");
+  for (const l of LOCALES) assert.deepEqual(await publicIn(l), [], `${l}: hidden after the edit`);
+  assert.deepEqual((await audit()).map((a: any) => `${a.action}${a.reason ? ":" + a.reason : ""}`), [
+    "TESTIMONIAL_UPDATED", "TESTIMONIAL_APPROVED", "TESTIMONIAL_UPDATED", "TESTIMONIAL_REVOKED:quote_or_role_edited",
   ]);
   const raw = JSON.stringify(await client.auditLog.findMany());
-  assert.ok(!raw.includes("Citation") && !raw.includes("Fixture consent"), "the audit never stores the quote or the consent note");
+  assert.ok(!raw.includes("Fixture shared quote") && !raw.includes("Fixture consent"), "the audit never stores the quote or the consent note");
 });
 
-test("language isolation: approving FR publishes FR only; editing EN leaves FR published", { skip }, async () => {
-  const id = await makeProject("iso");
-  await saveDraft(id, baseDraft);
-  await dal.approveTestimonial(id, "fr", await expectedFor(id, "fr"), actor, "fp");
-  assert.equal((await dal.getPublishedTestimonials("fr")).length, 1);
-  assert.equal((await dal.getPublishedTestimonials("en")).length, 0);
-  assert.equal((await dal.getPublishedTestimonials("ar")).length, 0);
-  await saveDraft(id, { ...baseDraft, locales: { ...baseDraft.locales, en: { quote: "Quote EN, edited.", role: "Role EN" } } });
-  assert.equal((await dal.getPublishedTestimonials("fr")).length, 1, "FR untouched by an EN edit");
+test("today's production shapes: legacy EN/AR rows are preserved but never shown or written", { skip }, async () => {
+  // Like Aylani: FR published with a newer quote; EN/AR published earlier with older text.
+  const a = await makeProject("like-aylani");
+  await saveDraft(a, { ...baseDraft, quote: "Newer French quote." });
+  await publish(a);
+  const legacyAt = new Date("2026-10-25T12:07:00Z");
+  for (const l of ["en", "ar"]) {
+    await client.projectTranslation.update({
+      where: { projectId_locale: { projectId: a, locale: l } },
+      data: { testimonial: "Older legacy text.", testimonialRole: "Legacy role", testimonialApprovedAt: legacyAt, testimonialApprovedBy: "Earlier admin" },
+    });
+  }
+  // Like Luxury Copro: published in French only. Like Hammam Nour: a concept with a draft.
+  const l = await makeProject("like-luxury");
+  await saveDraft(l, { ...baseDraft, quote: "Second client quote." });
+  await publish(l);
+  const h = await makeProject("like-concept", "CONCEPT");
+  await saveDraft(h, { ...baseDraft, quote: "Concept draft." });
+
+  for (const loc of LOCALES) {
+    const rows = await publicIn(loc);
+    assert.deepEqual(rows.map((r) => [r[0], r[1]]), [["like-aylani", "Newer French quote."], ["like-luxury", "Second client quote."]], loc);
+    assert.ok(!JSON.stringify(rows).includes("Older legacy text"), `${loc}: legacy text never shown`);
+  }
+  // Edits and publications keep the legacy rows exactly as they were.
+  const before = (await rowsOf(a)).filter((r: any) => r.locale !== "fr");
+  await saveDraft(a, { ...baseDraft, quote: "Newer French quote, edited." });
+  await publish(a);
+  await dal.revokeTestimonial(a, actor);
+  const after_ = (await rowsOf(a)).filter((r: any) => r.locale !== "fr");
+  assert.deepEqual(after_.map((r: any) => [r.locale, r.testimonial, r.testimonialRole, r.testimonialApprovedAt?.toISOString(), r.testimonialApprovedBy]),
+    before.map((r: any) => [r.locale, r.testimonial, r.testimonialRole, r.testimonialApprovedAt?.toISOString(), r.testimonialApprovedBy]));
+  // The admin state reads the French row only.
+  assert.equal((await dal.getTestimonialState(a))!.quote, "Newer French quote, edited.");
 });
 
-test("author change and consent removal revoke every published locale", { skip }, async () => {
+test("author change and consent removal unpublish; no publishing without a consent reference", { skip }, async () => {
   const id = await makeProject("author");
   await saveDraft(id, baseDraft);
-  await dal.approveTestimonial(id, "fr", await expectedFor(id, "fr"), actor, "fp");
-  await dal.approveTestimonial(id, "en", await expectedFor(id, "en"), actor, "fp");
-  assert.deepEqual((await saveDraft(id, { ...baseDraft, author: "Another Author" })).sort(), ["en", "fr"]);
-  assert.equal((await dal.getPublishedTestimonials("fr")).length + (await dal.getPublishedTestimonials("en")).length, 0);
-
-  await dal.approveTestimonial(id, "fr", await expectedFor(id, "fr"), actor, "fp");
-  assert.deepEqual(await saveDraft(id, { ...baseDraft, author: "Another Author", consent: "" }), ["fr"]);
-  assert.equal((await dal.getPublishedTestimonials("fr")).length, 0);
-  assert.equal(await dal.approveTestimonial(id, "fr", await expectedFor(id, "fr"), actor, "fp"), false, "no approval without a consent reference");
+  await publish(id);
+  assert.equal(await saveDraft(id, { ...baseDraft, author: "Another Author" }), true);
+  assert.deepEqual(await publicIn("en"), []);
+  await publish(id);
+  assert.equal(await saveDraft(id, { ...baseDraft, author: "Another Author", consent: "" }), true);
+  assert.deepEqual(await publicIn("fr"), []);
+  assert.equal(await publish(id), false, "no publication without a consent reference");
+  const reasons = (await audit()).filter((a: any) => a.action === "TESTIMONIAL_REVOKED").map((a: any) => a.reason);
+  assert.deepEqual(reasons, ["author_edited", "consent_removed"]);
 });
 
-test("compare-and-set: approval with stale values, or on a concept project, writes nothing", { skip }, async () => {
+test("compare-and-set: stale values or a concept project write nothing", { skip }, async () => {
   const id = await makeProject("cas");
   await saveDraft(id, baseDraft);
-  const before = (await audit()).length;
-  assert.equal(await dal.approveTestimonial(id, "fr", { author: "Fixture Author", role: "Rôle FR", quote: "Something else." }, actor, "fp"), false);
-  assert.equal(await dal.approveTestimonial(id, "fr", { author: "Someone", role: "Rôle FR", quote: "Citation FR." }, actor, "fp"), false);
+  const before_ = (await audit()).length;
+  assert.equal(await dal.approveTestimonial(id, { ...(await expectedFor(id)), quote: "Something else." }, actor, "fp"), false);
+  assert.equal(await dal.approveTestimonial(id, { ...(await expectedFor(id)), author: "Someone" }, actor, "fp"), false);
   await client.project.update({ where: { id }, data: { kind: "CONCEPT" } });
-  assert.equal(await dal.approveTestimonial(id, "fr", await expectedFor(id, "fr"), actor, "fp"), false);
-  assert.equal((await audit()).length, before, "refusals are not audited as approvals");
-  const fr = await client.projectTranslation.findFirst({ where: { projectId: id, locale: "fr" } });
-  assert.equal(fr.testimonialApprovedAt, null);
+  assert.equal(await publish(id), false);
+  assert.equal((await audit()).length, before_);
+  assert.equal((await dal.getTestimonialState(id))!.approvedAt, null);
 });
 
-test("an approval whose audit entry cannot be written is rolled back", { skip }, async () => {
+test("a publication whose audit entry cannot be written is rolled back", { skip }, async () => {
   const id = await makeProject("atomic");
   await saveDraft(id, baseDraft);
-  await assert.rejects(dal.approveTestimonial(id, "fr", await expectedFor(id, "fr"), { userId: undefined as any, userName: "x" }, "fp"));
-  const fr = await client.projectTranslation.findFirst({ where: { projectId: id, locale: "fr" } });
-  assert.equal(fr.testimonialApprovedAt, null, "no approval without its audit row");
+  await assert.rejects(dal.approveTestimonial(id, await expectedFor(id), { userId: undefined as any, userName: "x" }, "fp"));
+  assert.equal((await dal.getTestimonialState(id))!.approvedAt, null, "no publication without its audit row");
 });
 
-test("save preservation: project saves (any locale, stale payloads) never touch the testimonial or its approval", { skip }, async () => {
+test("save preservation: project saves never touch the testimonial or its publication", { skip }, async () => {
   const id = await makeProject("keep");
   await saveDraft(id, baseDraft);
-  await dal.approveTestimonial(id, "fr", await expectedFor(id, "fr"), actor, "fp");
-  const before = await client.projectTranslation.findMany({ where: { projectId: id }, orderBy: { locale: "asc" } });
-
-  // A normal save of all three locales, edited content, and a stale client sending old testimonial values.
+  await publish(id);
+  const before_ = await rowsOf(id);
   await dal.updateProject(id, {
     slug: "keep", category: "web", url: "https://example.test/new", image: "", tag: "Tag", visible: true, kind: "CLIENT",
     translations: [
       { ...content("fr", "keep FR, renamed"), testimonial: "Stale text from an old tab.", testimonialApprovedAt: null } as any,
-      { ...content("en", "keep EN"), testimonialRole: "Hacked role" } as any,
+      content("en", "keep EN"),
       content("ar", "keep AR"),
     ],
   });
-  const after_ = await client.projectTranslation.findMany({ where: { projectId: id }, orderBy: { locale: "asc" } });
-  for (const [b, a] of before.map((b: any, i: number) => [b, after_[i]])) {
-    assert.deepEqual(
-      [a.locale, a.testimonial, a.testimonialRole, a.testimonialApprovedAt?.toISOString() ?? null, a.testimonialApprovedBy],
-      [b.locale, b.testimonial, b.testimonialRole, b.testimonialApprovedAt?.toISOString() ?? null, b.testimonialApprovedBy],
-    );
-    assert.equal(a.id, b.id, `${a.locale}: updated in place, not recreated`);
+  const after_ = await rowsOf(id);
+  for (const [b, a] of before_.map((b: any, i: number) => [b, after_[i]])) {
+    assert.deepEqual([a.id, a.testimonial, a.testimonialRole, a.testimonialApprovedAt?.toISOString() ?? null], [b.id, b.testimonial, b.testimonialRole, b.testimonialApprovedAt?.toISOString() ?? null], a.locale);
   }
-  assert.equal(after_.find((t: any) => t.locale === "fr").title, "keep FR, renamed", "content is saved");
-  assert.equal((await dal.getPublishedTestimonials("fr"))[0]?.project, "keep FR, renamed", "still published, with the new project title");
-
-  // Saving with an empty payload keeps every translation (it used to delete them all).
+  assert.equal((await publicIn("fr"))[0]?.[4], "keep FR, renamed", "still published, with the new French title");
+  assert.equal((await publicIn("en"))[0]?.[4], "keep EN");
   await dal.updateProject(id, { slug: "keep", category: "web", url: "", image: "", tag: "Tag", visible: true, translations: [] });
   assert.equal(await client.projectTranslation.count({ where: { projectId: id } }), 3);
 });
 
-test("public data: only approved rows of visible Client projects; never unapproved text or the consent note", { skip }, async () => {
+test("public data: only visible Client projects; never drafts, legacy text or the consent note", { skip }, async () => {
   const shown = await makeProject("shown");
   const hidden = await makeProject("hidden-project", "CLIENT", false);
   const concept = await makeProject("concept", "CONCEPT");
   const draftOnly = await makeProject("draft-only");
   for (const id of [shown, hidden, concept, draftOnly]) await saveDraft(id, baseDraft);
-  await dal.approveTestimonial(shown, "fr", await expectedFor(shown, "fr"), actor, "fp");
-  await dal.approveTestimonial(hidden, "fr", await expectedFor(hidden, "fr"), actor, "fp");
-  // Approved while a client, then reclassified as a concept: must disappear.
+  await publish(shown);
+  await publish(hidden);
   await client.project.update({ where: { id: concept }, data: { kind: "CLIENT" } });
-  await dal.approveTestimonial(concept, "fr", await expectedFor(concept, "fr"), actor, "fp");
+  await publish(concept);
   await client.project.update({ where: { id: concept }, data: { kind: "CONCEPT" } });
 
-  const rows = await dal.getPublishedTestimonials("fr");
-  assert.deepEqual(rows.map((r) => r.slug), ["shown"]);
-  assert.deepEqual(Object.keys(rows[0]).sort(), ["approvedAt", "author", "kind", "project", "quote", "role", "slug", "visible"]);
-  assert.ok(!JSON.stringify(rows).includes("Fixture consent"));
-
-  // The case-study query loads no testimonial field at all, approved or not, and no consent note.
-  const cs = (await dal.getProjectBySlug("shown", "fr")) as Record<string, any>;
+  for (const l of LOCALES) {
+    const rows = await dal.getPublishedTestimonials(l);
+    assert.deepEqual(rows.map((r) => r.slug), ["shown"], l);
+    assert.deepEqual(Object.keys(rows[0]).sort(), ["approvedAt", "author", "kind", "project", "quote", "role", "slug", "visible"]);
+    assert.ok(!JSON.stringify(rows).includes("Fixture consent"));
+  }
+  const cs = (await dal.getProjectBySlug("shown", "en")) as Record<string, any>;
   const keys = [...Object.keys(cs), ...Object.keys(cs.translation ?? {}), ...Object.keys(cs.translations?.[0] ?? {})];
   assert.ok(!keys.some((k) => /testimonial/i.test(k)), keys.filter((k) => /testimonial/i.test(k)).join());
-  assert.ok(!JSON.stringify(cs).includes("Citation FR") && !JSON.stringify(cs).includes("Fixture consent"));
 });
 
-test("manual revoke hides it, is audited once, and a second revoke changes nothing", { skip }, async () => {
-  const id = await makeProject("revoke");
+test("manual hide unpublishes everywhere, is audited once, and keeps the text", { skip }, async () => {
+  const id = await makeProject("hide");
   await saveDraft(id, baseDraft);
-  await dal.approveTestimonial(id, "fr", await expectedFor(id, "fr"), actor, "fp");
-  assert.equal(await dal.revokeTestimonial(id, "fr", actor), true);
-  assert.equal(await dal.revokeTestimonial(id, "fr", actor), false);
-  assert.equal((await dal.getPublishedTestimonials("fr")).length, 0);
+  await publish(id);
+  assert.equal(await dal.revokeTestimonial(id, actor), true);
+  assert.equal(await dal.revokeTestimonial(id, actor), false);
+  for (const l of LOCALES) assert.deepEqual(await publicIn(l), []);
   const revokes = (await audit()).filter((a: any) => a.action === "TESTIMONIAL_REVOKED");
-  assert.deepEqual(revokes.map((a: any) => [a.locale, a.reason]), [["fr", "manual"]]);
-  const fr = await client.projectTranslation.findFirst({ where: { projectId: id, locale: "fr" } });
-  assert.equal(fr.testimonial, "Citation FR.", "the text is kept");
+  assert.deepEqual(revokes.map((a: any) => [a.reason, a.scope]), [["manual", "all_languages"]]);
+  assert.equal((await dal.getTestimonialState(id))!.quote, "Fixture shared quote.");
 });

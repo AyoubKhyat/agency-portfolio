@@ -17,11 +17,12 @@ import {
 } from "@/lib/testimonial-approval";
 
 /**
- * The project's client testimonial (see lib/testimonial-approval):
+ * The project's client testimonial, one per project, shown on every language
+ * (see lib/testimonial-approval):
  *   GET  — current state (any signed-in team member; admin data, never public)
- *   PUT  — save the draft (any signed-in team member); edits revoke the affected approvals
- *   POST — { action: "approve" | "revoke", locale } (admins only)
- * Approvals, revocations and edits are audited in the same transaction as the change.
+ *   PUT  — save the draft (any signed-in team member); edits unpublish it
+ *   POST — { action: "approve" | "revoke" } (admins only)
+ * Publications, unpublications and edits are audited in the same transaction as the change.
  */
 
 type Params = { params: Promise<{ id: string }> };
@@ -30,12 +31,11 @@ const serialize = (s: TestimonialState) => ({
   author: s.author,
   consent: s.consent,
   kind: s.kind,
-  locales: Object.fromEntries(
-    Object.entries(s.locales).map(([locale, l]) => [
-      locale,
-      { quote: l.quote, role: l.role, approvedAt: l.approvedAt?.toISOString() ?? null, approvedBy: l.approvedBy },
-    ]),
-  ),
+  quote: s.quote,
+  role: s.role,
+  approvedAt: s.approvedAt?.toISOString() ?? null,
+  approvedBy: s.approvedBy,
+  hasCanonicalRow: s.hasCanonicalRow,
 });
 
 async function readBody(req: Request): Promise<unknown> {
@@ -69,19 +69,16 @@ export async function PUT(req: Request, { params }: Params) {
   try {
     const state = await getTestimonialState(id);
     if (!state) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    const plan = planTestimonialSave(state, parsed.data);
-    if (plan.missingLocales.length > 0) {
-      return NextResponse.json(
-        { error: `Save the project in ${plan.missingLocales.join(", ").toUpperCase()} first, then add its testimonial.` },
-        { status: 409 },
-      );
+    if (!state.hasCanonicalRow) {
+      return NextResponse.json({ error: "Save the project in French first, then add its testimonial." }, { status: 409 });
     }
-    let revoked: string[] = [];
+    const plan = planTestimonialSave(state, parsed.data);
+    let unpublished = false;
     if (plan.changed) {
-      revoked = await saveTestimonialDraft(id, plan, { userId: session.userId, userName: session.fullName, ipAddress: getClientIp(req) });
+      unpublished = await saveTestimonialDraft(id, plan, { userId: session.userId, userName: session.fullName, ipAddress: getClientIp(req) });
     }
     const next = await getTestimonialState(id);
-    return NextResponse.json({ ...serialize(next!), revoked });
+    return NextResponse.json({ ...serialize(next!), unpublished });
   } catch (e) {
     console.error("[testimonial] save failed:", e);
     return NextResponse.json({ error: "Could not save the testimonial. Please try again." }, { status: 500 });
@@ -106,24 +103,24 @@ export async function POST(req: Request, { params }: Params) {
     if (!state) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     if (request.action === "revoke") {
-      await revokeTestimonial(id, request.locale, actor);
+      await revokeTestimonial(id, actor);
       return NextResponse.json(serialize((await getTestimonialState(id))!));
     }
 
-    const problem = approvalProblem(state, request.locale, request.expected);
+    const problem = approvalProblem(state, request.expected);
     if (problem) return NextResponse.json({ error: problem }, { status: 409 });
-    if (state.locales[request.locale]?.approvedAt) return NextResponse.json(serialize(state));
+    if (state.approvedAt) return NextResponse.json(serialize(state));
 
-    const ok = await approveTestimonial(id, request.locale, request.expected, actor, await approvalFingerprint(request.expected));
+    const ok = await approveTestimonial(id, request.expected, actor, await approvalFingerprint(request.expected));
     if (!ok) {
       return NextResponse.json(
-        { error: "This testimonial changed since you loaded it. Reload and review it before approving." },
+        { error: "This testimonial changed since you loaded it. Reload and review it before publishing." },
         { status: 409 },
       );
     }
     return NextResponse.json(serialize((await getTestimonialState(id))!));
   } catch (e) {
-    console.error("[testimonial] approval failed:", e);
+    console.error("[testimonial] publication failed:", e);
     return NextResponse.json({ error: "Could not update the publication. Please try again." }, { status: 500 });
   }
 }

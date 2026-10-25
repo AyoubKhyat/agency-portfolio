@@ -58,7 +58,8 @@ export function TestimonialsColumn({
     testimonials.map(({ text, image, name, role }, i) => (
       <figure key={`${copy}-${i}`} className={cx("m-0 w-full max-w-xs rounded-3xl border border-line p-8", cardClassName)}>
         <blockquote className="m-0">
-          <p className="m-0">{text}</p>
+          {/* dir="auto": the quote reads in its own direction whatever the page language (one shared testimonial). */}
+          <p className="m-0" dir="auto">{text}</p>
         </blockquote>
         <figcaption className="mt-5 flex items-center gap-3">
           {image && (
@@ -66,8 +67,8 @@ export function TestimonialsColumn({
             <img width={40} height={40} src={image} alt="" className="h-10 w-10 rounded-full object-cover" />
           )}
           <span className="flex flex-col">
-            <span className="font-semibold leading-5 tracking-tight">{name}</span>
-            <span className="leading-5 tracking-tight opacity-70">{role}</span>
+            <span className="font-semibold leading-5 tracking-tight" dir="auto">{name}</span>
+            <span className="leading-5 tracking-tight opacity-70" dir="auto">{role}</span>
           </span>
         </figcaption>
       </figure>

@@ -1,32 +1,26 @@
 /**
- * Client testimonials managed in Ibda3 OS (Projects → Edit → Testimonial).
+ * Client testimonials managed in Ibda3 OS (Projects → Edit → Client testimonial).
  *
- * One testimonial per project: an author and a private consent reference on the
- * project, and per locale a quote and the author's role. Each locale is published
- * independently, only by an admin's explicit approval of the exact quote, role and
- * author, and only for a Client project. Rules (enforced by the API, tested here):
- *   - nothing is copied or translated between locales;
- *   - any change to a locale's quote or role revokes that locale's approval;
- *   - any change to the author, or removing the consent reference, revokes every locale;
- *   - approving needs a Client project, a consent reference, an author, a role and a
- *     quote within the limits, and the values the admin saw must still be the saved ones.
+ * One testimonial per project, shown as-is on the FR, EN and AR homepages (nothing is
+ * translated): a quote, the author, the author's role, a private consent reference and one
+ * publication status. Storage, no extra tables: the author and the consent reference are on
+ * the project; the quote, role and approval are on the project's French translation row (the
+ * canonical row: every project has one). The EN/AR testimonial columns are legacy: kept as
+ * they are, never read or written.
+ *
+ * Rules (enforced by the API, tested here):
+ *   - publishing needs an admin, a Client project, a consent reference, an author, a role and
+ *     a quote within the limits, and the values the admin saw must still be the saved ones;
+ *   - any change to the quote, the role or the author unpublishes it;
+ *   - removing the consent reference unpublishes it.
  * Pure: no database or framework imports (shared by the API, the admin panel and tests).
  */
 import { z } from "zod";
 
-export const TESTIMONIAL_LOCALES = ["fr", "en", "ar"] as const;
-export type TestimonialLocale = (typeof TESTIMONIAL_LOCALES)[number];
-export const isTestimonialLocale = (v: unknown): v is TestimonialLocale =>
-  typeof v === "string" && (TESTIMONIAL_LOCALES as readonly string[]).includes(v);
+/** The translation row that holds the shared testimonial. */
+export const CANONICAL_LOCALE = "fr";
 
 export const TESTIMONIAL_LIMITS = { quote: 700, role: 120, author: 80, consent: 500 } as const;
-
-export type TestimonialLocaleState = {
-  quote: string;
-  role: string;
-  approvedAt: Date | null;
-  approvedBy: string | null;
-};
 
 /** What the admin API reads and writes. Empty strings stand for "not set". */
 export type TestimonialState = {
@@ -34,29 +28,32 @@ export type TestimonialState = {
   kind: string;
   author: string;
   consent: string;
-  /** Only locales that have a translation row (a testimonial needs the project saved in that language). */
-  locales: Partial<Record<TestimonialLocale, TestimonialLocaleState>>;
+  quote: string;
+  role: string;
+  approvedAt: Date | null;
+  approvedBy: string | null;
+  /** False only if the project has no French translation row (the testimonial needs one). */
+  hasCanonicalRow: boolean;
 };
 
 const text = (max: number) => z.string().max(max * 4).transform((s) => s.trim()).pipe(z.string().max(max));
 
-// Strict everywhere: a draft can never carry approval fields (approval has its own admin-only action).
-const localeDraft = z.object({ quote: text(TESTIMONIAL_LIMITS.quote), role: text(TESTIMONIAL_LIMITS.role) }).strict().optional();
+// Strict: a draft can never carry approval fields (approval has its own admin-only action).
 export const draftSchema = z.object({
   author: text(TESTIMONIAL_LIMITS.author),
   consent: text(TESTIMONIAL_LIMITS.consent),
-  locales: z.object({ fr: localeDraft, en: localeDraft, ar: localeDraft }).strict(),
+  quote: text(TESTIMONIAL_LIMITS.quote),
+  role: text(TESTIMONIAL_LIMITS.role),
 }).strict();
 export type TestimonialDraft = z.infer<typeof draftSchema>;
 
 export const approvalSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("approve"),
-    locale: z.enum(TESTIMONIAL_LOCALES),
     /** Exactly what the admin saw and approves; must equal the saved values. */
     expected: z.object({ author: z.string(), role: z.string(), quote: z.string() }).strict(),
   }).strict(),
-  z.object({ action: z.literal("revoke"), locale: z.enum(TESTIMONIAL_LOCALES) }).strict(),
+  z.object({ action: z.literal("revoke") }).strict(),
 ]);
 export type ApprovalRequest = z.infer<typeof approvalSchema>;
 
@@ -65,99 +62,56 @@ export type RevokeReason = "quote_or_role_edited" | "author_edited" | "consent_r
 export type SavePlan = {
   /** Project columns to write (undefined: unchanged). Empty strings are stored as null. */
   project: { author?: string; consent?: string };
-  /** Locales whose quote/role changed: write them and clear their approval. */
-  locales: { locale: TestimonialLocale; quote: string; role: string }[];
-  /** Locales whose approval this save removes (they were approved before), with why. */
-  revoked: { locale: TestimonialLocale; reason: RevokeReason }[];
-  /** Locales to clear approval on without changing their text (author/consent changes). */
-  clearOnly: TestimonialLocale[];
-  missingLocales: TestimonialLocale[];
+  /** New quote and role for the canonical row (undefined: unchanged). */
+  text?: { quote: string; role: string };
+  /** Clear the publication (set whenever a change requires it, whatever the state when read). */
+  unpublish: boolean;
+  /** Why it is unpublished, when it was published before this save. */
+  reason?: RevokeReason;
   changed: boolean;
 };
 
 /**
- * What saving `draft` over `state` must write. Only changed fields are written, and every
- * change resets the affected approvals, whatever the approval state was when it was read.
+ * What saving `draft` over `state` must write. Only changed values are written, and any change
+ * to the quote, role or author (or removing the consent reference) clears the publication.
  */
 export function planTestimonialSave(state: TestimonialState, draft: TestimonialDraft): SavePlan {
-  const plan: SavePlan = { project: {}, locales: [], revoked: [], clearOnly: [], missingLocales: [], changed: false };
+  const plan: SavePlan = { project: {}, unpublish: false, changed: false };
+  const textChanged = draft.quote !== state.quote || draft.role !== state.role;
   const authorChanged = draft.author !== state.author;
   const consentRemoved = state.consent.trim() !== "" && draft.consent === "";
   if (authorChanged) plan.project.author = draft.author;
   if (draft.consent !== state.consent) plan.project.consent = draft.consent;
-
-  const touched = new Set<TestimonialLocale>();
-  for (const locale of TESTIMONIAL_LOCALES) {
-    const next = draft.locales[locale];
-    if (!next) continue;
-    const cur = state.locales[locale];
-    if (!cur) {
-      if (next.quote || next.role) plan.missingLocales.push(locale);
-      continue;
-    }
-    if (next.quote !== cur.quote || next.role !== cur.role) {
-      plan.locales.push({ locale, quote: next.quote, role: next.role });
-      touched.add(locale);
-      if (cur.approvedAt) plan.revoked.push({ locale, reason: "quote_or_role_edited" });
-    }
+  if (textChanged) plan.text = { quote: draft.quote, role: draft.role };
+  plan.unpublish = textChanged || authorChanged || consentRemoved;
+  if (plan.unpublish && state.approvedAt) {
+    plan.reason = textChanged ? "quote_or_role_edited" : authorChanged ? "author_edited" : "consent_removed";
   }
-  if (authorChanged || consentRemoved) {
-    const reason: RevokeReason = authorChanged ? "author_edited" : "consent_removed";
-    for (const locale of TESTIMONIAL_LOCALES) {
-      const cur = state.locales[locale];
-      if (!cur || touched.has(locale)) continue;
-      plan.clearOnly.push(locale);
-      if (cur.approvedAt) plan.revoked.push({ locale, reason });
-    }
-  }
-  plan.changed = Object.keys(plan.project).length > 0 || plan.locales.length > 0;
+  plan.changed = Object.keys(plan.project).length > 0 || !!plan.text;
   return plan;
 }
 
-/** Why `locale` cannot be approved right now, or null when it can. */
-export function approvalProblem(
-  state: TestimonialState,
-  locale: TestimonialLocale,
-  expected: { author: string; role: string; quote: string },
-): string | null {
-  const cur = state.locales[locale];
-  if (!cur) return "Save the project in this language first.";
+/** Why the testimonial cannot be published right now, or null when it can. */
+export function approvalProblem(state: TestimonialState, expected: { author: string; role: string; quote: string }): string | null {
+  if (!state.hasCanonicalRow) return "Save the project in French first.";
   if (state.kind !== "CLIENT") return "Only Client projects can publish a testimonial.";
   if (!state.consent.trim()) return "Add the private consent reference first (where the client's written approval is kept).";
   if (!state.author.trim()) return "Add the author's name first.";
-  if (!cur.role.trim()) return "Add the author's role for this language first.";
-  if (!cur.quote.trim()) return "Add the quote for this language first.";
-  if (cur.quote.length > TESTIMONIAL_LIMITS.quote || cur.role.length > TESTIMONIAL_LIMITS.role || state.author.length > TESTIMONIAL_LIMITS.author) {
+  if (!state.role.trim()) return "Add the author's role first.";
+  if (!state.quote.trim()) return "Add the quote first.";
+  if (state.quote.length > TESTIMONIAL_LIMITS.quote || state.role.length > TESTIMONIAL_LIMITS.role || state.author.length > TESTIMONIAL_LIMITS.author) {
     return "The quote, role or author is too long.";
   }
-  if (expected.author !== state.author || expected.role !== cur.role || expected.quote !== cur.quote) {
-    return "This testimonial changed since you loaded it. Reload and review it before approving.";
+  if (expected.author !== state.author || expected.role !== state.role || expected.quote !== state.quote) {
+    return "This testimonial changed since you loaded it. Reload and review it before publishing.";
   }
   return null;
 }
 
-/**
- * For each locale, the other locales whose quote is the same text (ignoring case, surrounding and
- * repeated whitespace). Advisory only: the panel warns, nothing is blocked, translated or changed.
- */
-export function duplicateQuoteLocales(
-  quotes: Partial<Record<TestimonialLocale, string>>,
-): Partial<Record<TestimonialLocale, TestimonialLocale[]>> {
-  const norm = (s: string | undefined) => (s ?? "").trim().replace(/\s+/g, " ").toLowerCase();
-  const out: Partial<Record<TestimonialLocale, TestimonialLocale[]>> = {};
-  for (const l of TESTIMONIAL_LOCALES) {
-    const q = norm(quotes[l]);
-    if (!q) continue;
-    const same = TESTIMONIAL_LOCALES.filter((o) => o !== l && norm(quotes[o]) === q);
-    if (same.length) out[l] = same;
-  }
-  return out;
-}
-
 export type TestimonialStatus = "empty" | "draft" | "published";
-export function localeStatus(cur: TestimonialLocaleState | undefined): TestimonialStatus {
-  if (!cur || (!cur.quote.trim() && !cur.role.trim())) return "empty";
-  return cur.approvedAt ? "published" : "draft";
+export function testimonialStatus(s: Pick<TestimonialState, "quote" | "role" | "approvedAt">): TestimonialStatus {
+  if (!s.quote.trim() && !s.role.trim()) return "empty";
+  return s.approvedAt ? "published" : "draft";
 }
 
 /** Short fingerprint of exactly what was approved, for the audit log (the text itself is not logged). */

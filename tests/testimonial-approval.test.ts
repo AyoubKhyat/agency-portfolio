@@ -1,149 +1,115 @@
 /**
- * Testimonial rules (lib/testimonial-approval): what a save writes and revokes, and when a
- * locale may be approved. Fixtures are test data, not testimonials.
+ * Testimonial rules (lib/testimonial-approval): one shared testimonial per project. What a save
+ * writes and unpublishes, and when it may be published. Fixtures are test data, not testimonials.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  CANONICAL_LOCALE,
   approvalFingerprint,
   approvalProblem,
   approvalSchema,
   draftSchema,
-  duplicateQuoteLocales,
-  localeStatus,
   planTestimonialSave,
+  testimonialStatus,
   type TestimonialDraft,
   type TestimonialState,
 } from "../src/lib/testimonial-approval";
 
-const approved = new Date("2026-10-20T10:00:00Z");
+const published = new Date("2026-10-20T10:00:00Z");
 const state = (over: Partial<TestimonialState> = {}): TestimonialState => ({
   projectId: "p1",
   kind: "CLIENT",
   author: "Fixture Author",
   consent: "Fixture consent reference",
-  locales: {
-    fr: { quote: "Citation FR.", role: "Rôle FR", approvedAt: approved, approvedBy: "Admin" },
-    en: { quote: "Quote EN.", role: "Role EN", approvedAt: approved, approvedBy: "Admin" },
-    ar: { quote: "", role: "", approvedAt: null, approvedBy: null },
-  },
+  quote: "Fixture quote.",
+  role: "Fixture role",
+  approvedAt: published,
+  approvedBy: "Admin",
+  hasCanonicalRow: true,
   ...over,
 });
-const draftFrom = (s: TestimonialState): TestimonialDraft => ({
-  author: s.author,
-  consent: s.consent,
-  locales: Object.fromEntries(Object.entries(s.locales).map(([l, v]) => [l, { quote: v!.quote, role: v!.role }])),
+const draftFrom = (s: TestimonialState): TestimonialDraft => ({ author: s.author, consent: s.consent, quote: s.quote, role: s.role });
+const expectedFrom = (s: TestimonialState) => ({ author: s.author, role: s.role, quote: s.quote });
+
+test("the shared testimonial lives on the French row", () => {
+  assert.equal(CANONICAL_LOCALE, "fr");
 });
 
-test("saving unchanged values writes and revokes nothing", () => {
+test("saving unchanged values writes and unpublishes nothing", () => {
   const plan = planTestimonialSave(state(), draftFrom(state()));
-  assert.equal(plan.changed, false);
-  assert.deepEqual([plan.locales, plan.revoked, plan.clearOnly, plan.project], [[], [], [], {}]);
+  assert.deepEqual(plan, { project: {}, unpublish: false, changed: false });
 });
 
-test("editing an approved quote revokes that locale only (language isolation)", () => {
-  const d = draftFrom(state());
-  d.locales.fr = { quote: "Citation FR modifiée.", role: "Rôle FR" };
-  const plan = planTestimonialSave(state(), d);
-  assert.deepEqual(plan.locales, [{ locale: "fr", quote: "Citation FR modifiée.", role: "Rôle FR" }]);
-  assert.deepEqual(plan.revoked, [{ locale: "fr", reason: "quote_or_role_edited" }]);
-  assert.deepEqual(plan.clearOnly, [], "EN keeps its approval and its text is not written");
+test("editing the quote or the role unpublishes it", () => {
+  for (const edit of [{ quote: "Fixture quote, edited." }, { role: "Another role" }]) {
+    const plan = planTestimonialSave(state(), { ...draftFrom(state()), ...edit });
+    assert.equal(plan.unpublish, true, JSON.stringify(edit));
+    assert.equal(plan.reason, "quote_or_role_edited");
+    assert.ok(plan.text && plan.changed);
+  }
 });
 
-test("editing an approved role revokes that locale", () => {
-  const d = draftFrom(state());
-  d.locales.en = { quote: "Quote EN.", role: "Founder" };
-  assert.deepEqual(planTestimonialSave(state(), d).revoked, [{ locale: "en", reason: "quote_or_role_edited" }]);
+test("changing the author unpublishes it", () => {
+  const plan = planTestimonialSave(state(), { ...draftFrom(state()), author: "Another Author" });
+  assert.deepEqual([plan.unpublish, plan.reason, plan.project.author, plan.text], [true, "author_edited", "Another Author", undefined]);
 });
 
-test("editing a draft locale writes it; no revocation is recorded because none was approved", () => {
-  const d = draftFrom(state());
-  d.locales.ar = { quote: "اقتباس.", role: "مديرة" };
-  const plan = planTestimonialSave(state(), d);
-  assert.deepEqual(plan.locales.map((l) => l.locale), ["ar"]);
-  assert.deepEqual(plan.revoked, []);
-});
-
-test("changing the author revokes every approved locale", () => {
-  const d = { ...draftFrom(state()), author: "Another Author" };
-  const plan = planTestimonialSave(state(), d);
-  assert.equal(plan.project.author, "Another Author");
-  assert.deepEqual(plan.clearOnly.sort(), ["ar", "en", "fr"]);
-  assert.deepEqual(plan.revoked.map((r) => [r.locale, r.reason]).sort(), [["en", "author_edited"], ["fr", "author_edited"]]);
-});
-
-test("removing the consent reference revokes every approved locale; editing it does not", () => {
+test("removing the consent reference unpublishes it; editing it does not", () => {
   let plan = planTestimonialSave(state(), { ...draftFrom(state()), consent: "" });
-  assert.deepEqual(plan.revoked.map((r) => r.reason), ["consent_removed", "consent_removed"]);
+  assert.deepEqual([plan.unpublish, plan.reason], [true, "consent_removed"]);
   plan = planTestimonialSave(state(), { ...draftFrom(state()), consent: "Updated reference" });
-  assert.equal(plan.project.consent, "Updated reference");
-  assert.deepEqual([plan.revoked, plan.clearOnly], [[], []]);
+  assert.deepEqual([plan.unpublish, plan.reason, plan.project.consent], [false, undefined, "Updated reference"]);
 });
 
-test("a locale without a saved translation cannot receive a testimonial", () => {
-  const s = state({ locales: { fr: state().locales.fr } });
-  const plan = planTestimonialSave(s, { ...draftFrom(s), locales: { fr: { quote: "Citation FR.", role: "Rôle FR" }, en: { quote: "New", role: "x" } } });
-  assert.deepEqual(plan.missingLocales, ["en"]);
+test("an edit always clears the publication, even if it was not published when read (no reason recorded)", () => {
+  const plan = planTestimonialSave(state({ approvedAt: null, approvedBy: null }), { ...draftFrom(state()), quote: "New." });
+  assert.deepEqual([plan.unpublish, plan.reason], [true, undefined]);
 });
 
-test("nothing is copied between locales: a draft with only FR leaves EN and AR untouched", () => {
-  const plan = planTestimonialSave(state(), { author: "Fixture Author", consent: "Fixture consent reference", locales: { fr: { quote: "Nouvelle citation.", role: "Rôle FR" } } });
-  assert.deepEqual(plan.locales.map((l) => l.locale), ["fr"]);
-});
-
-test("draft validation trims, enforces limits and rejects unknown fields and locales", () => {
-  const ok = draftSchema.parse({ author: "  A  ", consent: " c ", locales: { fr: { quote: " q ", role: " r " } } });
-  assert.deepEqual(ok, { author: "A", consent: "c", locales: { fr: { quote: "q", role: "r" } } });
+test("draft validation trims, enforces limits and rejects locales or approval fields", () => {
+  assert.deepEqual(
+    draftSchema.parse({ author: "  A  ", consent: " c ", quote: " q ", role: " r " }),
+    { author: "A", consent: "c", quote: "q", role: "r" },
+  );
   for (const bad of [
-    { author: "A", consent: "", locales: { de: { quote: "q", role: "r" } } },
-    { author: "A", consent: "", locales: {}, approvedAt: "2026-01-01" },
-    { author: "A", consent: "", locales: { fr: { quote: "q", role: "r", approvedAt: "2026-01-01" } } },
-    { author: "x".repeat(81), consent: "", locales: {} },
-    { author: "A", consent: "", locales: { fr: { quote: "x".repeat(701), role: "" } } },
+    { author: "A", consent: "", quote: "q", role: "r", approvedAt: "2026-01-01" },
+    { author: "A", consent: "", quote: "q", role: "r", locales: { fr: { quote: "q", role: "r" } } },
+    { author: "A", consent: "", quote: "q" },
+    { author: "x".repeat(81), consent: "", quote: "q", role: "r" },
+    { author: "A", consent: "", quote: "x".repeat(701), role: "r" },
   ]) assert.equal(draftSchema.safeParse(bad).success, false, JSON.stringify(bad).slice(0, 80));
 });
 
-test("approval requests: approve needs the expected values; nothing else is accepted", () => {
-  assert.equal(approvalSchema.safeParse({ action: "approve", locale: "fr" }).success, false);
-  assert.equal(approvalSchema.safeParse({ action: "approve", locale: "fr", expected: { author: "a", role: "r", quote: "q" } }).success, true);
-  assert.equal(approvalSchema.safeParse({ action: "revoke", locale: "ar" }).success, true);
-  assert.equal(approvalSchema.safeParse({ action: "publish", locale: "fr" }).success, false);
-  assert.equal(approvalSchema.safeParse({ action: "revoke", locale: "de" }).success, false);
+test("approval requests: publish needs the expected values; no locale is accepted", () => {
+  assert.equal(approvalSchema.safeParse({ action: "approve" }).success, false);
+  assert.equal(approvalSchema.safeParse({ action: "approve", expected: { author: "a", role: "r", quote: "q" } }).success, true);
+  assert.equal(approvalSchema.safeParse({ action: "approve", locale: "fr", expected: { author: "a", role: "r", quote: "q" } }).success, false);
+  assert.equal(approvalSchema.safeParse({ action: "revoke" }).success, true);
+  assert.equal(approvalSchema.safeParse({ action: "revoke", locale: "en" }).success, false);
+  assert.equal(approvalSchema.safeParse({ action: "publish" }).success, false);
 });
 
-test("approval preconditions: client project, consent, author, role, quote, unchanged values", () => {
-  const s = state();
-  const exp = { author: "Fixture Author", role: "Rôle FR", quote: "Citation FR." };
-  assert.equal(approvalProblem(s, "fr", exp), null);
-  assert.match(approvalProblem(state({ kind: "CONCEPT" }), "fr", exp)!, /Client/);
-  assert.match(approvalProblem(state({ consent: "  " }), "fr", exp)!, /consent/);
-  assert.match(approvalProblem(state({ author: "" }), "fr", { ...exp, author: "" })!, /author/);
-  assert.match(approvalProblem(s, "ar", { author: "Fixture Author", role: "", quote: "" })!, /role/);
-  const noQuote = state({ locales: { fr: { quote: "", role: "Rôle FR", approvedAt: null, approvedBy: null } } });
-  assert.match(approvalProblem(noQuote, "fr", { ...exp, quote: "" })!, /quote/);
-  assert.match(approvalProblem(s, "fr", { ...exp, quote: "Citation FR (old)." })!, /changed since you loaded it/);
-  assert.match(approvalProblem(s, "fr", { ...exp, author: "Someone else" })!, /changed since you loaded it/);
-  assert.match(approvalProblem(state({ locales: {} }), "fr", exp)!, /Save the project in this language/);
+test("publishing needs a Client project, a consent reference, author, role, quote and unchanged values", () => {
+  const s = state({ approvedAt: null, approvedBy: null });
+  assert.equal(approvalProblem(s, expectedFrom(s)), null);
+  assert.match(approvalProblem(state({ kind: "CONCEPT" }), expectedFrom(s))!, /Client/);
+  assert.match(approvalProblem(state({ consent: "  " }), expectedFrom(s))!, /consent/);
+  assert.match(approvalProblem(state({ author: "" }), { ...expectedFrom(s), author: "" })!, /author/);
+  assert.match(approvalProblem(state({ role: "" }), { ...expectedFrom(s), role: "" })!, /role/);
+  assert.match(approvalProblem(state({ quote: " " }), { ...expectedFrom(s), quote: " " })!, /quote/);
+  assert.match(approvalProblem(state({ hasCanonicalRow: false }), expectedFrom(s))!, /French/);
+  assert.match(approvalProblem(s, { ...expectedFrom(s), quote: "Old text." })!, /changed since you loaded it/);
+  assert.match(approvalProblem(s, { ...expectedFrom(s), author: "Someone else" })!, /changed since you loaded it/);
+  assert.match(approvalProblem(state({ quote: "x".repeat(701) }), { ...expectedFrom(s), quote: "x".repeat(701) })!, /too long/);
 });
 
-test("status per locale, and a stable approval fingerprint that never contains the text", async () => {
-  assert.equal(localeStatus(undefined), "empty");
-  assert.equal(localeStatus(state().locales.ar), "empty");
-  assert.equal(localeStatus(state().locales.fr), "published");
-  assert.equal(localeStatus({ quote: "q", role: "", approvedAt: null, approvedBy: null }), "draft");
+test("status, and a stable approval fingerprint that never contains the text", async () => {
+  assert.equal(testimonialStatus({ quote: " ", role: "", approvedAt: null }), "empty");
+  assert.equal(testimonialStatus({ quote: "q", role: "", approvedAt: null }), "draft");
+  assert.equal(testimonialStatus(state()), "published");
   const a = await approvalFingerprint({ author: "A", role: "R", quote: "Q" });
   assert.match(a, /^[0-9a-f]{16}$/);
   assert.equal(a, await approvalFingerprint({ author: "A", role: "R", quote: "Q" }));
   assert.notEqual(a, await approvalFingerprint({ author: "A", role: "R", quote: "Q." }));
-});
-
-test("duplicate quotes across languages are reported per locale (advisory only)", () => {
-  const fr = "Une équipe très réactive.";
-  assert.deepEqual(duplicateQuoteLocales({ fr, en: fr, ar: fr }), { fr: ["en", "ar"], en: ["fr", "ar"], ar: ["fr", "en"] });
-  assert.deepEqual(duplicateQuoteLocales({ fr, en: `  ${fr.toUpperCase()}\n`, ar: "" }), { fr: ["en"], en: ["fr"] }, "case and whitespace ignored; empty never counts");
-  assert.deepEqual(duplicateQuoteLocales({ fr, en: "A very responsive team.", ar: "فريق سريع الاستجابة." }), {});
-  assert.deepEqual(duplicateQuoteLocales({}), {});
-  const input = { fr, en: fr };
-  duplicateQuoteLocales(input);
-  assert.deepEqual(input, { fr, en: fr }, "the quotes are not modified");
 });
