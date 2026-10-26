@@ -6,7 +6,7 @@ import { z } from "zod";
 
 const updateSchema = z.object({
   fullName: z.string().min(1).optional(),
-  email: z.string().email().optional(),
+  email: z.string().trim().toLowerCase().email().optional(),
   role: z.enum(["admin", "sales", "designer", "developer"]).optional(),
   avatarInitials: z.string().min(1).max(3).optional(),
   isActive: z.boolean().optional(),

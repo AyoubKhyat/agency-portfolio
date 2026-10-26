@@ -31,11 +31,20 @@ const db = {
       Object.assign(u, data);
       return pick(u, select);
     },
+    create: async ({ data, select }: { data: Omit<U, "id" | "isActive" | "createdAt">; select?: Record<string, boolean> }) => {
+      const u: U = { id: `u-${users.length + 1}`, isActive: true, createdAt: new Date(0), ...data };
+      users.push(u);
+      return pick(u, select);
+    },
   },
   adminUser: {
     findUnique: async ({ where }: { where: { email: string } }) => {
       const l = logins.find((x) => x.email === where.email);
       return l ? { ...l } : null;
+    },
+    create: async ({ data }: { data: { email: string; passwordHash: string } }) => {
+      logins.push({ email: data.email, passwordHash: data.passwordHash });
+      return data;
     },
     updateMany: async ({ where, data }: { where: { email: string }; data: { passwordHash?: string; email?: string } }) => {
       if (data.email && logins.some((x) => x.email === data.email)) throw new Error("unique");
@@ -55,7 +64,6 @@ mock.module("@/lib/audit", { namedExports: { getClientIp: () => "127.0.0.1", log
 mock.module("@/lib/dal", {
   namedExports: {
     getUsers: async () => users.map((u) => ({ ...u, passwordHash: undefined })),
-    createUser: async (d: { email: string }) => ({ id: "u-new", email: d.email }),
   },
 });
 
@@ -185,7 +193,19 @@ test("anyone can edit their own name and initials; the owner can manage others b
   assert.equal((await patch("u-owner", { isActive: false })).status, 400, "owner cannot deactivate themselves");
   assert.equal((await patch("u-staff", { isActive: false, role: "sales" })).status, 200);
   assert.deepEqual(audits, ["UPDATE_USER"]);
-  assert.equal((await create({ fullName: "N", email: "n@x.ma", password: NEW, role: "sales", avatarInitials: "N" })).status, 201);
+});
+
+test("an owner-created team member gets a working login (both tables, same hash); duplicates are refused", async () => {
+  await as("u-owner");
+  const res = await create({ fullName: "New Member", email: " New.Member@X.ma ", password: NEW, role: "sales", avatarInitials: "NM" });
+  assert.equal(res.status, 201);
+  const made = users.find((u) => u.email === "new.member@x.ma");
+  assert.ok(made, "email stored trimmed and lower-case");
+  assert.equal(await sec.checkLoginPassword("new.member@x.ma", NEW), true, "the login row exists with that password");
+  assert.equal(made.passwordHash, loginHash("new.member@x.ma"), "both tables hold the same hash");
+  assert.deepEqual(audits, ["CREATE_USER"]);
+  assert.equal((await create({ fullName: "Dup", email: "staff@x.ma", password: NEW, role: "sales", avatarInitials: "D" })).status, 409);
+  assert.equal(logins.filter((l) => l.email === "staff@x.ma").length, 1);
 });
 
 test("an owner email change moves the login row with it, and duplicates are refused", async () => {

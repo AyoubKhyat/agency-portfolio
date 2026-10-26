@@ -1,7 +1,6 @@
 import { prisma, hasPrisma } from "./prisma";
 import { FALLBACK_PROJECTS, FALLBACK_SLUGS } from "./fallback-projects";
 import { getTranslations } from "next-intl/server";
-import { hashPassword } from "./auth";
 import { bulkUpdateStatusWith, updateProspectStatusWith } from "./prospect-first-contact";
 import { DEFAULT_PROJECT_KIND } from "./project-kind";
 import { CANONICAL_LOCALE, type SavePlan, type TestimonialState } from "./testimonial-approval";
@@ -714,34 +713,6 @@ export async function getUsers() {
 export async function getUserById(id: string) {
   return db().user.findUnique({
     where: { id },
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      role: true,
-      avatarInitials: true,
-      isActive: true,
-      createdAt: true,
-    },
-  });
-}
-
-export async function createUser(data: {
-  fullName: string;
-  email: string;
-  password: string;
-  role: string;
-  avatarInitials: string;
-}) {
-  const passwordHash = await hashPassword(data.password);
-  return db().user.create({
-    data: {
-      fullName: data.fullName,
-      email: data.email,
-      passwordHash,
-      role: data.role,
-      avatarInitials: data.avatarInitials,
-    },
     select: {
       id: true,
       fullName: true,

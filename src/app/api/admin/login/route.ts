@@ -7,7 +7,7 @@ import { loginLimiter } from "@/lib/rate-limit";
 import { withApiLogging } from "@/lib/api-logger";
 
 const schema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().toLowerCase().email(),
   password: z.string().min(1),
 });
 

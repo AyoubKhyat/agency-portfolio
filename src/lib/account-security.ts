@@ -46,7 +46,32 @@ export async function setLoginPassword(userId: string, newPassword: string): Pro
 
 const PUBLIC_USER = { id: true, fullName: true, email: true, role: true, avatarInitials: true, isActive: true, createdAt: true } as const;
 
-/** Profile, email, role and active-flag changes. An email change moves the login row with it. */
+/**
+ * Create a team member who can actually sign in: the login row (admin_users) and the team row
+ * (users) are created together, with the same email and password hash. Returns null when the
+ * email is already used by either table.
+ */
+export async function createTeamUser(data: {
+  fullName: string;
+  email: string;
+  password: string;
+  role: string;
+  avatarInitials: string;
+}) {
+  const passwordHash = await hashPassword(data.password);
+  const { fullName, email, role, avatarInitials } = data;
+  return prisma.$transaction(async (tx) => {
+    const [login, user] = await Promise.all([
+      tx.adminUser.findUnique({ where: { email: data.email }, select: { id: true } }),
+      tx.user.findUnique({ where: { email: data.email }, select: { id: true } }),
+    ]);
+    if (login || user) return null;
+    await tx.adminUser.create({ data: { email: data.email, passwordHash, name: data.fullName } });
+    return tx.user.create({ data: { fullName, email, role, avatarInitials, passwordHash }, select: PUBLIC_USER });
+  });
+}
+
+/** Profile, email, role and active-flag changes. Email and name changes are applied to the login row too. */
 export async function updateTeamUser(id: string, data: {
   fullName?: string;
   email?: string;
@@ -57,8 +82,11 @@ export async function updateTeamUser(id: string, data: {
   return prisma.$transaction(async (tx) => {
     const before = await tx.user.findUnique({ where: { id }, select: { email: true } });
     if (!before) return null;
-    if (data.email !== undefined && data.email !== before.email) {
-      await tx.adminUser.updateMany({ where: { email: before.email }, data: { email: data.email } });
+    const login: { email?: string; name?: string } = {};
+    if (data.email !== undefined && data.email !== before.email) login.email = data.email;
+    if (data.fullName !== undefined) login.name = data.fullName;
+    if (Object.keys(login).length > 0) {
+      await tx.adminUser.updateMany({ where: { email: before.email }, data: login });
     }
     return tx.user.update({ where: { id }, data, select: PUBLIC_USER });
   });
