@@ -75,20 +75,36 @@ async function verifyFor(purpose: Purpose, token: string) {
 
 const isText = (v: unknown): v is string => typeof v === "string" && v.length > 0;
 
-export async function signToken(user: SessionUser) {
+/**
+ * Sessions are bound to the login password: the token carries a keyed fingerprint of the current
+ * password hash, so setting a new password ends every existing session of that user. The
+ * fingerprint reveals nothing about the hash without JWT_SECRET.
+ */
+function passwordStamp(passwordHash: string): string | null {
+  const key = keyFor("session");
+  return key ? createHmac("sha256", key).update(`pwd:${passwordHash}`).digest("base64url").slice(0, 22) : null;
+}
+
+export async function signToken(user: SessionUser, passwordHash: string) {
   const { userId, email, fullName, role, avatarInitials } = user;
   if (!isText(userId)) throw new Error("A session needs a userId");
-  return signFor("session", userId, { userId, email, fullName, role, avatarInitials }, "7d");
+  const pwd = isText(passwordHash) ? passwordStamp(passwordHash) : null;
+  if (!pwd) throw new Error("A session needs the current password hash");
+  return signFor("session", userId, { userId, email, fullName, role, avatarInitials, pwd }, "7d");
+}
+
+async function readSessionToken(token: string): Promise<{ user: SessionUser; pwd: string } | null> {
+  const p = await verifyFor("session", token);
+  if (!p) return null;
+  const { userId, email, fullName, role, avatarInitials, pwd } = p;
+  if (!isText(userId) || p.sub !== userId || !isText(email) || !isText(role) || !isText(pwd)) return null;
+  if (typeof fullName !== "string" || typeof avatarInitials !== "string") return null;
+  return { user: { userId, email, fullName, role, avatarInitials }, pwd };
 }
 
 /** A session token's user, or null unless every claim is present and well-formed. */
 export async function verifyToken(token: string): Promise<SessionUser | null> {
-  const p = await verifyFor("session", token);
-  if (!p) return null;
-  const { userId, email, fullName, role, avatarInitials } = p;
-  if (!isText(userId) || p.sub !== userId || !isText(email) || !isText(role)) return null;
-  if (typeof fullName !== "string" || typeof avatarInitials !== "string") return null;
-  return { userId, email, fullName, role, avatarInitials };
+  return (await readSessionToken(token))?.user ?? null;
 }
 
 /** Public contract-signing link token. It is only accepted by /api/sign/[token]. */
@@ -105,22 +121,25 @@ export async function verifyContractToken(token: string): Promise<{ contractId: 
 
 /**
  * Decode the cookie and return the session. Fails closed: the token must be a valid admin-session
- * token AND its `userId` must point at an active `User` row with the same email. No database,
- * a database error or any mismatch all mean "no session".
+ * token, its `userId` must point at an active `User` row with the same email, and that email's
+ * login password must be the one the session was issued for. No database, a database error or
+ * any mismatch all mean "no session".
  */
 export async function getSession(): Promise<SessionUser | null> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get(COOKIE_NAME)?.value;
     if (!token) return null;
-    const payload = await verifyToken(token);
-    if (!payload || !hasPrisma()) return null;
+    const read = await readSessionToken(token);
+    if (!read || !hasPrisma()) return null;
+    const { user: payload, pwd } = read;
 
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: { email: true, isActive: true },
-    });
-    if (!user?.isActive || user.email !== payload.email) return null;
+    const [user, login] = await Promise.all([
+      prisma.user.findUnique({ where: { id: payload.userId }, select: { email: true, isActive: true } }),
+      prisma.adminUser.findUnique({ where: { email: payload.email }, select: { passwordHash: true } }),
+    ]);
+    if (!user?.isActive || user.email !== payload.email || !login) return null;
+    if (passwordStamp(login.passwordHash) !== pwd) return null;
     return payload;
   } catch (e) {
     console.error("[auth] session check failed; denying access:", e instanceof Error ? e.name : "error");

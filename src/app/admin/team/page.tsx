@@ -204,7 +204,7 @@ export default function TeamPage() {
                       value={formData.password}
                       onChange={(e) => setFormData((d) => ({ ...d, password: e.target.value }))}
                       required
-                      minLength={6}
+                      minLength={12}
                       placeholder="••••••••"
                     />
                   </Field>

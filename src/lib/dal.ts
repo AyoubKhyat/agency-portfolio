@@ -754,37 +754,6 @@ export async function createUser(data: {
   });
 }
 
-export async function updateUser(id: string, data: {
-  fullName?: string;
-  email?: string;
-  role?: string;
-  avatarInitials?: string;
-  isActive?: boolean;
-  password?: string;
-}) {
-  const updateData: Record<string, unknown> = {};
-  if (data.fullName !== undefined) updateData.fullName = data.fullName;
-  if (data.email !== undefined) updateData.email = data.email;
-  if (data.role !== undefined) updateData.role = data.role;
-  if (data.avatarInitials !== undefined) updateData.avatarInitials = data.avatarInitials;
-  if (data.isActive !== undefined) updateData.isActive = data.isActive;
-  if (data.password) updateData.passwordHash = await hashPassword(data.password);
-
-  return db().user.update({
-    where: { id },
-    data: updateData,
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      role: true,
-      avatarInitials: true,
-      isActive: true,
-      createdAt: true,
-    },
-  });
-}
-
 // ─── Prospecting ────────────────────────────────────────────────
 
 export async function getProspects(page = 1, status?: string, sector?: string, ownerUserId?: string, search?: string, qualityLabel?: string, segment?: string, due?: string) {

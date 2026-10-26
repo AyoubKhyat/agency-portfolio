@@ -93,8 +93,8 @@ export default function SettingsPage() {
 
   async function changePassword() {
     if (!me || !currentPassword || !newPassword) return;
-    if (newPassword.length < 6) {
-      flash("Password must be at least 6 characters", "error");
+    if (newPassword.length < 12) {
+      flash("Password must be at least 12 characters", "error");
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -102,28 +102,20 @@ export default function SettingsPage() {
       return;
     }
     setPasswordSaving(true);
-    const verifyRes = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: me.email, password: currentPassword }),
-    });
-    if (!verifyRes.ok) {
-      flash("Current password is incorrect", "error");
-      setPasswordSaving(false);
-      return;
-    }
+    // The server checks the current password and changes the real login password.
     const res = await fetch(`/api/admin/users/${me.userId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: newPassword }),
+      body: JSON.stringify({ currentPassword, password: newPassword }),
     });
     if (res.ok) {
-      flash("Password changed successfully", "success");
+      flash("Password changed. Other devices are signed out.", "success");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } else {
-      flash("Failed to change password", "error");
+      const data = await res.json().catch(() => null);
+      flash(res.status === 403 && typeof data?.error === "string" ? data.error : "Failed to change password", "error");
     }
     setPasswordSaving(false);
   }

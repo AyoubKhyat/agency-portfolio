@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getUsers, createUser } from "@/lib/dal";
+import { isOwner, MIN_PASSWORD_LENGTH } from "@/lib/account-security";
 import { z } from "zod";
 
 export async function GET() {
@@ -14,18 +15,19 @@ export async function GET() {
 const createSchema = z.object({
   fullName: z.string().min(1),
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(MIN_PASSWORD_LENGTH),
   role: z.enum(["admin", "sales", "designer", "developer"]),
   avatarInitials: z.string().min(1).max(3),
 });
 
 export async function POST(req: Request) {
   const session = await getSession();
-  if (!session || session.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await isOwner(session))) {
+    return NextResponse.json({ error: "Only the account owner can add team members" }, { status: 403 });
   }
 
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });

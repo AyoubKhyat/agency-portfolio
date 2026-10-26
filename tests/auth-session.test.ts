@@ -1,6 +1,7 @@
 /**
  * Admin-session authentication must fail closed. Only an admin-session token (its own typ, audience,
- * issuer and derived key) whose userId points at an active User with the same email gets a session.
+ * issuer and derived key) whose userId points at an active User with the same email, issued for that
+ * account's current login password, gets a session.
  * Contract-signing links, legacy tokens, malformed or expired tokens, and any database problem never do.
  * Cookies and Prisma are mocked; no database. Needs --experimental-test-module-mocks (see "test").
  */
@@ -16,6 +17,7 @@ type Row = { email: string; isActive: boolean } | null;
 let cookie: string | undefined;
 let dbUp = true;
 let row: Row = null;
+let login: { passwordHash: string } | null = null;
 let dbError: Error | null = null;
 const lookups: unknown[] = [];
 
@@ -31,6 +33,12 @@ mock.module("@/lib/prisma", {
           lookups.push(args.where.id);
           if (dbError) throw dbError;
           return row;
+        },
+      },
+      adminUser: {
+        findUnique: async () => {
+          if (dbError) throw dbError;
+          return login;
         },
       },
       contract: {
@@ -49,13 +57,16 @@ before(async () => {
 });
 
 const user = { userId: "u1", email: "owner@x.ma", fullName: "Owner", role: "admin", avatarInitials: "OW" };
+const HASH = "$2b$12$fixture-current-login-hash";
 beforeEach(() => {
   process.env.JWT_SECRET = SECRET;
   cookie = undefined; dbUp = true; dbError = null; lookups.length = 0;
   row = { email: user.email, isActive: true };
+  login = { passwordHash: HASH };
 });
 
 const key = (purpose: string, secret = SECRET) => new Uint8Array(createHmac("sha256", secret).update(`ibda3:jwt:${purpose}:v1`).digest());
+const stamp = (hash = HASH) => createHmac("sha256", key("session")).update(`pwd:${hash}`).digest("base64url").slice(0, 22);
 /** A token signed with the real session key but hand-built claims, to test claim checks. */
 const forge = (claims: Record<string, unknown>, o: { typ?: string; aud?: string; iss?: string; exp?: number | string; sub?: string; purpose?: string } = {}) => {
   const j = new SignJWT(claims).setProtectedHeader({ alg: "HS256", typ: o.typ ?? "admin-session+jwt" })
@@ -67,7 +78,7 @@ const session = async (token: string | undefined) => { cookie = token; return au
 const signGet = (token: string) => signRoute.GET(new Request(`http://x/api/sign/${token}`), { params: Promise.resolve({ token }) });
 
 test("a real admin-session token for an active user gets a session", async () => {
-  const s = await session(await auth.signToken(user));
+  const s = await session(await auth.signToken(user, HASH));
   assert.deepEqual(s, user);
   assert.deepEqual(lookups, ["u1"]);
 });
@@ -93,7 +104,7 @@ test("a sign-link-shaped payload is rejected even when signed with the session k
 });
 
 test("session tokens need a non-empty string userId that matches sub, plus email and role", async () => {
-  const good = { ...user };
+  const good = { ...user, pwd: stamp() };
   const cases: [string, Record<string, unknown>, string | undefined][] = [
     ["no userId", { ...good, userId: undefined }, "u1"],
     ["numeric userId", { ...good, userId: 1 }, "u1"],
@@ -103,21 +114,23 @@ test("session tokens need a non-empty string userId that matches sub, plus email
     ["no sub", good, undefined],
     ["no email", { ...good, email: undefined }, "u1"],
     ["no role", { ...good, role: "" }, "u1"],
+    ["no password stamp", { ...good, pwd: undefined }, "u1"],
   ];
   for (const [name, claims, sub] of cases) {
     assert.equal(await session(await forge(claims, { sub })), null, name);
   }
   assert.deepEqual(lookups, [], "none of them reached the database");
+  assert.deepEqual(await session(await forge(good, { sub: "u1" })), user, "control: the same claims, well-formed, are accepted");
 });
 
 test("wrong typ, audience, issuer, purpose key or secret are rejected", async () => {
-  const c = { ...user };
+  const c = { ...user, pwd: stamp() };
   assert.equal(await session(await forge(c, { sub: "u1", typ: "JWT" })), null, "typ");
   assert.equal(await session(await forge(c, { sub: "u1", aud: "ibda3-contract-sign" })), null, "audience");
   assert.equal(await session(await forge(c, { sub: "u1", iss: "elsewhere" })), null, "issuer");
   assert.equal(await session(await forge(c, { sub: "u1", purpose: "contractSign" })), null, "contract key");
   process.env.JWT_SECRET = "another-secret-0123456789-abcdefghijklmnopq";
-  const other = await auth.signToken(user);
+  const other = await auth.signToken(user, HASH);
   process.env.JWT_SECRET = SECRET;
   assert.equal(await session(other), null, "token from a different secret (e.g. a preview environment)");
 });
@@ -131,11 +144,22 @@ test("malformed tokens are rejected", async () => {
 });
 
 test("expired tokens are rejected", async () => {
-  assert.equal(await session(await forge({ ...user }, { sub: "u1", exp: Math.floor(Date.now() / 1000) - 60 })), null);
+  assert.equal(await session(await forge({ ...user, pwd: stamp() }, { sub: "u1", exp: Math.floor(Date.now() / 1000) - 60 })), null);
+});
+
+test("a new login password ends every session issued for the old one", async () => {
+  const t = await auth.signToken(user, HASH);
+  assert.deepEqual(await session(t), user);
+  login = { passwordHash: "$2b$12$fixture-new-login-hash" };
+  assert.equal(await session(t), null, "old session after a password change");
+  assert.deepEqual(await session(await auth.signToken(user, "$2b$12$fixture-new-login-hash")), user, "a session for the new password works");
+  login = null;
+  assert.equal(await session(t), null, "no login account any more");
+  await assert.rejects(auth.signToken(user, ""), "a session cannot be issued without the password hash");
 });
 
 test("database problems fail closed", async () => {
-  const t = await auth.signToken(user);
+  const t = await auth.signToken(user, HASH);
   dbUp = false;
   assert.equal(await session(t), null, "no database configured");
   dbUp = true;
@@ -143,10 +167,12 @@ test("database problems fail closed", async () => {
   assert.equal(await session(t), null, "Prisma validation error");
   dbError = new Error("connection reset");
   assert.equal(await session(t), null, "transient connection error");
+  dbError = null;
+  assert.deepEqual(await session(t), user, "and works again once the database is back");
 });
 
 test("a missing, inactive or different user gets no session", async () => {
-  const t = await auth.signToken(user);
+  const t = await auth.signToken(user, HASH);
   row = null;
   assert.equal(await session(t), null, "user deleted");
   row = { email: user.email, isActive: false };
@@ -157,10 +183,10 @@ test("a missing, inactive or different user gets no session", async () => {
 
 test("no cookie or no JWT_SECRET means no session, and no token can be minted without a secret", async () => {
   assert.equal(await session(undefined), null);
-  const t = await auth.signToken(user);
+  const t = await auth.signToken(user, HASH);
   delete process.env.JWT_SECRET;
   assert.equal(await session(t), null);
-  await assert.rejects(auth.signToken(user));
+  await assert.rejects(auth.signToken(user, HASH));
   await assert.rejects(auth.signContractToken("c123"));
   process.env.JWT_SECRET = "too-short";
   assert.equal(await session(t), null, "secrets under 32 characters are refused");
@@ -168,6 +194,6 @@ test("no cookie or no JWT_SECRET means no session, and no token can be minted wi
 
 test("the public signing endpoint accepts sign links but never admin-session tokens", async () => {
   assert.equal((await signGet(await auth.signContractToken("c123"))).status, 200);
-  assert.equal((await signGet(await auth.signToken(user))).status, 401);
-  assert.equal(await auth.verifyContractToken(await auth.signToken(user)), null);
+  assert.equal((await signGet(await auth.signToken(user, HASH))).status, 401);
+  assert.equal(await auth.verifyContractToken(await auth.signToken(user, HASH)), null);
 });

@@ -78,7 +78,7 @@ async function loginHandler(req: Request) {
       fullName: teamUser.fullName,
       role,
       avatarInitials: teamUser.avatarInitials,
-    });
+    }, admin.passwordHash);
     const cookie = createSessionCookie(token);
 
     // Audit: successful login
