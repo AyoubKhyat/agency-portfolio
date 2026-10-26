@@ -2,6 +2,7 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
 import en from "../src/messages/en.json";
 import fr from "../src/messages/fr.json";
 import ar from "../src/messages/ar.json";
@@ -10,11 +11,11 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 const TEAM_MEMBERS = [
-  { fullName: "Ayoub Khyat", email: "ayoubkhyat@gmail.com", role: "admin", avatarInitials: "AK", password: "AyoubKhyat2026" },
-  { fullName: "Mohammed Yousfi", email: "mohammed.yousfi@ibda3digital.com", role: "sales", avatarInitials: "MY", password: "MohammedYousfi2026" },
-  { fullName: "Ismail Sarhir", email: "ismail.sarhir@ibda3digital.com", role: "sales", avatarInitials: "IS", password: "IsmailSarhir2026" },
-  { fullName: "Soufiane El Kaabaoui", email: "soufiane.elkaabaoui@ibda3digital.com", role: "sales", avatarInitials: "SE", password: "SoufianeElKaabaoui2026" },
-  { fullName: "Abderrahmane Ait Taleb", email: "abderrahmane.aittaleb@ibda3digital.com", role: "developer", avatarInitials: "AA", password: "AbderrahmaneAitTaleb2026" },
+  { fullName: "Ayoub Khyat", email: "ayoubkhyat@gmail.com", role: "admin", avatarInitials: "AK" },
+  { fullName: "Mohammed Yousfi", email: "mohammed.yousfi@ibda3digital.com", role: "sales", avatarInitials: "MY" },
+  { fullName: "Ismail Sarhir", email: "ismail.sarhir@ibda3digital.com", role: "sales", avatarInitials: "IS" },
+  { fullName: "Soufiane El Kaabaoui", email: "soufiane.elkaabaoui@ibda3digital.com", role: "sales", avatarInitials: "SE" },
+  { fullName: "Abderrahmane Ait Taleb", email: "abderrahmane.aittaleb@ibda3digital.com", role: "developer", avatarInitials: "AA" },
 ];
 
 const PROJECTS = [
@@ -63,16 +64,17 @@ function getTranslation(
 async function main() {
   console.log("Seeding database...");
 
-  // Team members (new User model)
+  // Team members (new User model). Passwords are never seeded: existing rows keep theirs and new
+  // rows get a random unusable hash. Set real passwords with the admin "reset password" action.
   for (const member of TEAM_MEMBERS) {
-    const hash = await bcrypt.hash(member.password, 12);
+    const unusableHash = await bcrypt.hash(randomBytes(32).toString("base64url"), 12);
     await prisma.user.upsert({
       where: { email: member.email },
-      update: { passwordHash: hash, fullName: member.fullName, role: member.role, avatarInitials: member.avatarInitials },
+      update: { fullName: member.fullName, role: member.role, avatarInitials: member.avatarInitials },
       create: {
         fullName: member.fullName,
         email: member.email,
-        passwordHash: hash,
+        passwordHash: unusableHash,
         role: member.role,
         avatarInitials: member.avatarInitials,
       },
@@ -80,15 +82,19 @@ async function main() {
     console.log(`  User: ${member.fullName} (${member.email}) — role: ${member.role}`);
   }
 
-  // Legacy admin user (keep for backward compat)
-  const adminEmail = process.env.ADMIN_EMAIL || "ayoubkhyat@gmail.com";
-  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
-  const adminHash = await bcrypt.hash(adminPassword, 12);
-  await prisma.adminUser.upsert({
-    where: { email: adminEmail },
-    update: { passwordHash: adminHash },
-    create: { email: adminEmail, passwordHash: adminHash, name: "Ayoub Khyat" },
-  });
+  // Legacy admin user (keep for backward compat). Only from env; there is no default password.
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (adminEmail && adminPassword && adminPassword.length >= 12) {
+    const adminHash = await bcrypt.hash(adminPassword, 12);
+    await prisma.adminUser.upsert({
+      where: { email: adminEmail },
+      update: { passwordHash: adminHash },
+      create: { email: adminEmail, passwordHash: adminHash, name: "Ayoub Khyat" },
+    });
+  } else {
+    console.log("  Skip admin login: set ADMIN_EMAIL and ADMIN_PASSWORD (12+ characters) to create it.");
+  }
 
   // Projects
   for (let i = 0; i < PROJECTS.length; i++) {
@@ -119,15 +125,6 @@ async function main() {
       },
     });
     console.log(`  Created: ${p.slug}`);
-  }
-
-  console.log("\n=== TEAM CREDENTIALS ===");
-  console.log("Change these passwords after first login!\n");
-  for (const m of TEAM_MEMBERS) {
-    console.log(`  ${m.fullName}`);
-    console.log(`    Email:    ${m.email}`);
-    console.log(`    Password: ${m.password}`);
-    console.log(`    Role:     ${m.role}\n`);
   }
 
   console.log("Seed complete.");

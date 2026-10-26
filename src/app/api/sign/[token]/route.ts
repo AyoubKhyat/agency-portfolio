@@ -1,21 +1,7 @@
 import { NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { z } from "zod";
 import { prisma, hasPrisma } from "@/lib/prisma";
-
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "fallback-dev-secret-do-not-use-in-prod"
-);
-
-async function verifySignToken(token: string): Promise<{ contractId: string } | null> {
-  try {
-    const { payload } = await jwtVerify(token, SECRET);
-    if (typeof payload.contractId !== "string") return null;
-    return { contractId: payload.contractId };
-  } catch {
-    return null;
-  }
-}
+import { verifyContractToken as verifySignToken } from "@/lib/auth";
 
 /**
  * GET /api/sign/[token]

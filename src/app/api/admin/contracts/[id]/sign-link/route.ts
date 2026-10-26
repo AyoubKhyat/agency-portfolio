@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
-import { SignJWT } from "jose";
-import { getSession } from "@/lib/auth";
+import { getSession, signContractToken } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
-
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "fallback-dev-secret-do-not-use-in-prod"
-);
 
 /**
  * POST /api/admin/contracts/[id]/sign-link
@@ -49,12 +44,8 @@ export async function POST(
     );
   }
 
-  // Generate a JWT token valid for 7 days
-  const token = await new SignJWT({ contractId: contract.id })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime("7d")
-    .setIssuedAt()
-    .sign(SECRET);
+  // Signing-link token valid for 7 days; its own type, audience and key, so it never works as a session
+  const token = await signContractToken(contract.id);
 
   // If still DRAFT, move to PENDING_SIGNATURE
   if (contract.status === "DRAFT") {
