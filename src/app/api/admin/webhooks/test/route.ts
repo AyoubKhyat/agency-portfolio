@@ -1,23 +1,28 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireOwner } from "@/lib/authz";
+import { prisma, hasPrisma } from "@/lib/prisma";
 import { sendTestWebhook } from "@/lib/webhooks";
 import { z } from "zod";
 
+// Tests a SAVED webhook: the URL and signing secret are read on the server, never sent by the browser.
 const testSchema = z.object({
-  url: z.string().url(),
-  secret: z.string().nullable().optional(),
+  id: z.string().min(1),
 });
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireOwner();
+  if (auth.response) return auth.response;
+  if (!hasPrisma()) return NextResponse.json({ error: "No database" }, { status: 500 });
 
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
   const parsed = testSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 
-  const result = await sendTestWebhook(parsed.data.url, parsed.data.secret);
+  const webhook = await prisma.webhook.findUnique({ where: { id: parsed.data.id }, select: { url: true, secret: true } });
+  if (!webhook) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const result = await sendTestWebhook(webhook.url, webhook.secret);
   return NextResponse.json(result);
 }

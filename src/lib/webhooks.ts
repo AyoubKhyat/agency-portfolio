@@ -1,6 +1,12 @@
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { createHmac } from "crypto";
 
+/** A webhook as API responses show it: the signing secret never leaves the server, only whether one is set. */
+export function toPublicWebhook<T extends { secret?: string | null }>(webhook: T): Omit<T, "secret"> & { hasSecret: boolean } {
+  const { secret, ...rest } = webhook;
+  return { ...rest, hasSecret: !!secret };
+}
+
 /**
  * Fire-and-forget webhook dispatcher.
  * Queries all active webhooks matching the given event, POSTs the payload

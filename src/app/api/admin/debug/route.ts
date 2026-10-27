@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma, hasPrisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
-import { isAdmin } from "@/lib/authz";
+import { requireOwner } from "@/lib/authz";
 
 export async function GET() {
-  const session = await getSession();
-  if (!session || !isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const auth = await requireOwner();
+  if (auth.response) return auth.response;
 
   const info: Record<string, unknown> = { hasPrisma: hasPrisma() };
 

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { isAdmin } from "@/lib/authz";
+import { requireOwner } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 
 /**
@@ -16,13 +15,8 @@ import { prisma, hasPrisma } from "@/lib/prisma";
  *   entity   - filter by entity type (e.g. "project", "lead")
  */
 export async function GET(req: Request) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  if (!isAdmin(session)) {
-    return NextResponse.json({ error: "Admin only" }, { status: 403 });
-  }
+  const auth = await requireOwner();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) {
     return NextResponse.json({ error: "Database not available" }, { status: 503 });
   }

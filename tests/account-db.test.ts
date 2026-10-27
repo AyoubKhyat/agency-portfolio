@@ -43,6 +43,8 @@ let resetRoute: typeof import("../src/app/api/admin/reset-password/route");
 let signLinkRoute: typeof import("../src/app/api/admin/contracts/[id]/sign-link/route");
 let signRoute: typeof import("../src/app/api/sign/[token]/route");
 let prospectRoute: typeof import("../src/app/api/admin/prospecting/[id]/route");
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+const R: Record<string, any> = {};
 
 const run = randomBytes(4).toString("hex");
 const mail = (who: string) => `it-${run}-${who}@example.test`;
@@ -63,6 +65,17 @@ before(async () => {
   signLinkRoute = await import("../src/app/api/admin/contracts/[id]/sign-link/route");
   signRoute = await import("../src/app/api/sign/[token]/route");
   prospectRoute = await import("../src/app/api/admin/prospecting/[id]/route");
+  R.export = await import("../src/app/api/admin/export/route");
+  R.csv = await import("../src/app/api/admin/export/csv/route");
+  R.backup = await import("../src/app/api/admin/export/backup/route");
+  R.audit = await import("../src/app/api/admin/audit/route");
+  R.debug = await import("../src/app/api/admin/debug/route");
+  R.webhooks = await import("../src/app/api/admin/webhooks/route");
+  R.webhook = await import("../src/app/api/admin/webhooks/[id]/route");
+  R.webhookTest = await import("../src/app/api/admin/webhooks/test/route");
+  R.leads = await import("../src/app/api/admin/leads/route");
+  R.clients = await import("../src/app/api/admin/clients/route");
+  R.prospecting = await import("../src/app/api/admin/prospecting/route");
 
   // Bootstrap two accounts the way they exist in production today: both "admin" in the database.
   for (const who of ["owner", "staff"] as const) {
@@ -218,4 +231,73 @@ test("contract-signing tokens never authenticate admin APIs; sessions never sign
   assert.equal(view.status, 200, "the signing link itself works");
   const asSign = await signRoute.GET(new Request("http://x/api/sign/s"), { params: Promise.resolve({ token: ownerCookie! }) });
   assert.equal(asSign.status, 401, "an admin session is not a signing link");
+});
+
+// ── S2: owner tier ────────────────────────────────────────────────────────────
+const get = (url: string) => new Request(url);
+const ownerCalls = (whId: string): [string, () => Promise<Response>][] => [
+  ["export (prospects)", () => R.export.GET(get("http://x/api/admin/export?type=prospects"))],
+  ["export/csv (leads)", () => R.csv.GET(get("http://x/api/admin/export/csv?type=leads"))],
+  ["export/csv (clients)", () => R.csv.GET(get("http://x/api/admin/export/csv?type=clients"))],
+  ["export/backup", () => R.backup.GET()],
+  ["audit", () => R.audit.GET(get("http://x/api/admin/audit"))],
+  ["debug", () => R.debug.GET()],
+  ["webhooks GET", () => R.webhooks.GET()],
+  ["webhooks POST", () => R.webhooks.POST(post("http://x/api/admin/webhooks", { name: "x", url: "https://example.test/x", events: "lead.new" }))],
+  ["webhook PATCH", () => R.webhook.PATCH(post("http://x/api/admin/webhooks/w", { name: "renamed" }, "PATCH"), { params: Promise.resolve({ id: whId }) })],
+  ["webhook DELETE", () => R.webhook.DELETE(new Request("http://x", { method: "DELETE" }), { params: Promise.resolve({ id: whId }) })],
+  ["webhooks/test", () => R.webhookTest.POST(post("http://x/api/admin/webhooks/test", { id: whId }))],
+];
+
+test("exports, backup, audit, debug and webhooks: 401 signed out, 403 for a non-owner admin, open to the owner", { skip }, async () => {
+  const wh = await prisma.webhook.create({ data: { name: `IT ${run}`, url: "https://example.test/hook", events: "lead.new", secret: `whsec-${run}` } });
+  const staffCookie = (await login(mail("staff"), PW.staff)).cookie;
+  assert.equal((await as(staffCookie))?.role, "admin", "the non-owner really has the admin role");
+  const before = await prisma.webhook.findUnique({ where: { id: wh.id } });
+  for (const [name, call] of ownerCalls(wh.id)) {
+    cookie = undefined;
+    assert.equal((await call()).status, 401, `${name}: signed out`);
+    cookie = staffCookie;
+    assert.equal((await call()).status, 403, `${name}: non-owner admin`);
+  }
+  assert.deepEqual(await prisma.webhook.findUnique({ where: { id: wh.id } }), before, "the refused calls changed nothing");
+  assert.equal(await prisma.webhook.count({ where: { name: "x" } }), 0, "no webhook was created by the non-owner");
+
+  cookie = (await login(mail("owner"), PW.owner)).cookie;
+  for (const [name, call] of ownerCalls(wh.id).filter(([n]) => !/POST|PATCH|DELETE|webhooks\/test/.test(n))) {
+    assert.equal((await call()).status, 200, `${name}: owner`);
+  }
+  const backup = await (await R.backup.GET()).text();
+  assert.equal(/password_?hash/i.test(backup), false, "the backup never contains password hashes");
+  await prisma.webhook.delete({ where: { id: wh.id } });
+});
+
+test("webhook signing secrets never leave the server; tests use the stored secret", { skip }, async () => {
+  cookie = (await login(mail("owner"), PW.owner)).cookie;
+  const SECRET = `whsec-never-shown-${run}`;
+  const created = await R.webhooks.POST(post("http://x/api/admin/webhooks", { name: `IT2 ${run}`, url: "https://example.test/h2", events: "lead.new", secret: SECRET }));
+  assert.equal(created.status, 201);
+  const c = await created.text();
+  assert.equal(c.includes(SECRET), false, "create response");
+  const id = JSON.parse(c).id;
+  assert.equal(JSON.parse(c).hasSecret, true);
+
+  const list = await (await R.webhooks.GET()).text();
+  assert.equal(list.includes(SECRET), false, "listing");
+  assert.equal(list.includes('"secret"'), false, "no secret field at all in the listing");
+
+  const patched = await (await R.webhook.PATCH(post("http://x", { name: `IT2 renamed ${run}` }, "PATCH"), { params: Promise.resolve({ id }) })).text();
+  assert.equal(patched.includes(SECRET), false, "update response");
+  assert.equal((await prisma.webhook.findUnique({ where: { id } })).secret, SECRET, "a blank secret in the form keeps the stored one");
+
+  assert.equal((await R.webhookTest.POST(post("http://x", { url: "https://evil.test", secret: "x" }))).status, 400, "ad-hoc URLs are no longer accepted");
+  assert.equal((await R.webhookTest.POST(post("http://x", { id: "missing" }))).status, 404);
+  assert.equal((await R.webhook.DELETE(new Request("http://x", { method: "DELETE" }), { params: Promise.resolve({ id }) })).status, 200);
+});
+
+test("ordinary CRM access is unchanged for non-owner team members", { skip }, async () => {
+  cookie = (await login(mail("staff"), PW.staff)).cookie;
+  assert.equal((await R.leads.GET(get("http://x/api/admin/leads"))).status, 200, "leads");
+  assert.equal((await R.clients.GET(get("http://x/api/admin/clients"))).status, 200, "clients");
+  assert.equal((await R.prospecting.GET(get("http://x/api/admin/prospecting"))).status, 200, "prospects");
 });

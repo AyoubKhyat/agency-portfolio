@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireOwner } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
+import { toPublicWebhook } from "@/lib/webhooks";
 import { z } from "zod";
 
 const patchSchema = z.object({
@@ -15,8 +16,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireOwner();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ error: "No database" }, { status: 500 });
 
   const { id } = await params;
@@ -37,15 +38,15 @@ export async function PATCH(
     data: parsed.data,
   });
 
-  return NextResponse.json(webhook);
+  return NextResponse.json(toPublicWebhook(webhook));
 }
 
 export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireOwner();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ error: "No database" }, { status: 500 });
 
   const { id } = await params;

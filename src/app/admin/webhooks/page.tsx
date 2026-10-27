@@ -18,7 +18,7 @@ type Webhook = {
   url: string;
   events: string;
   isActive: boolean;
-  secret: string | null;
+  hasSecret: boolean; // the secret itself never reaches the browser
   createdAt: string;
   updatedAt: string;
 };
@@ -97,7 +97,7 @@ export default function WebhooksPage() {
     setFormName(wh.name);
     setFormUrl(wh.url);
     setFormEvents(wh.events.split(",").map((e) => e.trim()));
-    setFormSecret(wh.secret || "");
+    setFormSecret(""); // blank keeps the current secret
     setEditingId(wh.id);
     setShowForm(true);
   }
@@ -189,7 +189,7 @@ export default function WebhooksPage() {
       const res = await fetch("/api/admin/webhooks/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: wh.url, secret: wh.secret }),
+        body: JSON.stringify({ id: wh.id }),
       });
       const data = await res.json();
       if (data.success) {
@@ -316,7 +316,7 @@ export default function WebhooksPage() {
               </label>
               <Input
                 type="password"
-                placeholder="Optional HMAC-SHA256 secret"
+                placeholder={editingId ? "Leave blank to keep the current secret" : "Optional HMAC-SHA256 secret"}
                 value={formSecret}
                 onChange={(e) => setFormSecret(e.target.value)}
                 autoComplete="off"

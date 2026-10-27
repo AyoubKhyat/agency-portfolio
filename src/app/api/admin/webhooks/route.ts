@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireOwner } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
+import { toPublicWebhook } from "@/lib/webhooks";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -12,20 +13,20 @@ const createSchema = z.object({
 });
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireOwner();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ error: "No database" }, { status: 500 });
 
   const webhooks = await prisma.webhook.findMany({
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(webhooks);
+  return NextResponse.json(webhooks.map(toPublicWebhook));
 }
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireOwner();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ error: "No database" }, { status: 500 });
 
   const body = await req.json();
@@ -47,5 +48,5 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json(webhook, { status: 201 });
+  return NextResponse.json(toPublicWebhook(webhook), { status: 201 });
 }
