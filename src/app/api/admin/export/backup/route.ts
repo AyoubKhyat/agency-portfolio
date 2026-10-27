@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { isAdmin } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -7,7 +8,7 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  if (session.role !== "admin" && session.role !== "Admin") {
+  if (!isAdmin(session)) {
     return NextResponse.json({ error: "Forbidden — admin only" }, { status: 403 });
   }
   if (!hasPrisma()) {

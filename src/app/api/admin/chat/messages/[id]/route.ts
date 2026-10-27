@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
+import { isAdmin } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 
 const editSchema = z.object({
@@ -39,8 +40,8 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const message = await prisma.chatMessage.findUnique({ where: { id }, select: { authorId: true } });
   if (!message) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const isAdmin = session.role === "admin";
-  if (message.authorId !== session.userId && !isAdmin) {
+  const admin = isAdmin(session);
+  if (message.authorId !== session.userId && !admin) {
     return NextResponse.json({ error: "Can only delete your own messages" }, { status: 403 });
   }
 

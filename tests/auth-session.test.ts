@@ -13,7 +13,7 @@ import { SignJWT } from "jose";
 const SECRET = "test-secret-0123456789-abcdefghijklmnopqrstuvwxyz";
 process.env.JWT_SECRET = SECRET;
 
-type Row = { email: string; isActive: boolean } | null;
+type Row = { email: string; isActive: boolean; role: string; fullName: string; avatarInitials: string } | null;
 let cookie: string | undefined;
 let dbUp = true;
 let row: Row = null;
@@ -50,9 +50,11 @@ mock.module("@/lib/prisma", {
 });
 
 let auth: typeof import("../src/lib/auth");
+let authz: typeof import("../src/lib/authz");
 let signRoute: typeof import("../src/app/api/sign/[token]/route");
 before(async () => {
   auth = await import("../src/lib/auth");
+  authz = await import("../src/lib/authz");
   signRoute = await import("../src/app/api/sign/[token]/route");
 });
 
@@ -61,7 +63,7 @@ const HASH = "$2b$12$fixture-current-login-hash";
 beforeEach(() => {
   process.env.JWT_SECRET = SECRET;
   cookie = undefined; dbUp = true; dbError = null; lookups.length = 0;
-  row = { email: user.email, isActive: true };
+  row = { email: user.email, isActive: true, role: user.role, fullName: user.fullName, avatarInitials: user.avatarInitials };
   login = { passwordHash: HASH };
 });
 
@@ -175,9 +177,9 @@ test("a missing, inactive or different user gets no session", async () => {
   const t = await auth.signToken(user, HASH);
   row = null;
   assert.equal(await session(t), null, "user deleted");
-  row = { email: user.email, isActive: false };
+  row = { email: user.email, isActive: false, role: user.role, fullName: user.fullName, avatarInitials: user.avatarInitials };
   assert.equal(await session(t), null, "user deactivated");
-  row = { email: "someone-else@x.ma", isActive: true };
+  row = { email: "someone-else@x.ma", isActive: true, role: "admin", fullName: "Other", avatarInitials: "OT" };
   assert.equal(await session(t), null, "userId now belongs to another email");
 });
 
@@ -196,4 +198,53 @@ test("the public signing endpoint accepts sign links but never admin-session tok
   assert.equal((await signGet(await auth.signContractToken("c123"))).status, 200);
   assert.equal((await signGet(await auth.signToken(user, HASH))).status, 401);
   assert.equal(await auth.verifyContractToken(await auth.signToken(user, HASH)), null);
+});
+
+test("role, name and initials come from the database on every request, never from the token", async () => {
+  const t = await auth.signToken(user, HASH); // token claims role "admin"
+  row = { ...row!, role: " Sales ", fullName: "Renamed Owner", avatarInitials: "RO" };
+  const s = await session(t);
+  assert.equal(s?.role, "sales", "database role, normalised (trimmed, lower-case)");
+  assert.equal(s?.fullName, "Renamed Owner");
+  assert.equal(s?.avatarInitials, "RO");
+  assert.equal(authz.isAdmin(s), false, "the token's admin claim grants nothing");
+  row = { ...row!, role: "ADMIN" };
+  assert.equal(authz.isAdmin(await session(t)), true, "a role change applies on the next request, no re-login");
+});
+
+test("requireTeam / requireAdmin / requireOwner: 401 without a session, 403 without the tier", async () => {
+  const t = await auth.signToken(user, HASH);
+  cookie = undefined;
+  for (const guard of [authz.requireTeam, authz.requireAdmin, authz.requireOwner]) {
+    assert.equal((await guard()).response?.status, 401);
+  }
+  cookie = t;
+  row = { ...row!, role: "sales" };
+  assert.equal((await authz.requireTeam()).session?.userId, "u1", "any active member passes team");
+  assert.equal((await authz.requireAdmin()).response?.status, 403, "sales is not admin");
+  row = { ...row!, role: "admin" };
+  assert.equal((await authz.requireAdmin()).session?.userId, "u1");
+  delete process.env.OWNER_USER_ID;
+  assert.equal((await authz.requireOwner()).response?.status, 403, "no OWNER_USER_ID → nobody is owner");
+  process.env.OWNER_USER_ID = "someone-else";
+  assert.equal((await authz.requireOwner()).response?.status, 403, "admin role is not ownership");
+  process.env.OWNER_USER_ID = "u1";
+  assert.equal((await authz.requireOwner()).session?.userId, "u1", "the configured owner row passes");
+  delete process.env.OWNER_USER_ID;
+});
+
+test("no hard-coded role map remains, and no route compares session.role inline", async () => {
+  const { readFileSync, readdirSync, statSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const root = new URL("../src/", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
+  const files: string[] = [];
+  (function walk(d: string) {
+    for (const f of readdirSync(d)) {
+      const p = join(d, f);
+      if (statSync(p).isDirectory()) { if (f !== "generated") walk(p); } else if (/\.(ts|tsx)$/.test(f)) files.push(p);
+    }
+  })(root);
+  assert.ok(files.length > 100, `scanned ${files.length} source files`);
+  const offenders = files.filter((f) => /ROLE_MAP|session\??\.role\s*[!=]==?\s*["']/.test(readFileSync(f, "utf8")));
+  assert.deepEqual(offenders, []);
 });

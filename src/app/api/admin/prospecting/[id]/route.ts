@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { isAdmin } from "@/lib/authz";
 import { getProspectById, updateProspectStatus, updateProspect, deleteProspect, assignProspectOwner, logProspectActivity, setProspectFirstContact, setProspectSentBy, notifyTeam } from "@/lib/dal";
 import { resolveStatusChange } from "@/lib/prospect-status-guard";
 import { z } from "zod";
@@ -236,7 +237,7 @@ export async function DELETE(
 ) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.role !== "admin") return NextResponse.json({ error: "Only admins can delete prospects" }, { status: 403 });
+  if (!isAdmin(session)) return NextResponse.json({ error: "Only admins can delete prospects" }, { status: 403 });
 
   const { id } = await params;
   await deleteProspect(id);

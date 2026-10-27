@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { isAdmin } from "@/lib/authz";
 
 export async function GET() {
   const session = await getSession();
-  if (!session || session.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!session || !isAdmin(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const info: Record<string, unknown> = { hasPrisma: hasPrisma() };
 

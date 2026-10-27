@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
+import { isAdmin } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { notifyUser } from "@/lib/notify";
 
@@ -123,7 +124,7 @@ export async function DELETE(
 ) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.role !== "admin") {
+  if (!isAdmin(session)) {
     return NextResponse.json({ error: "Admin only" }, { status: 403 });
   }
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { verifyPassword, signToken, createSessionCookie } from "@/lib/auth";
+import { normalizeRole } from "@/lib/roles";
 import { logAudit, getClientIp } from "@/lib/audit";
 import { z } from "zod";
 import { loginLimiter } from "@/lib/rate-limit";
@@ -10,14 +11,6 @@ const schema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(1),
 });
-
-const ROLE_MAP: Record<string, string> = {
-  "ayoubkhyat@gmail.com": "admin",
-  "mohammed.yousfi@ibda3digital.com": "admin",
-  "ismail.sarhir@ibda3digital.com": "admin",
-  "soufiane.elkaabaoui@ibda3digital.com": "admin",
-  "abderrahmane.aittaleb@ibda3digital.com": "admin",
-};
 
 async function loginHandler(req: Request) {
   // Rate limiting: max 5 login attempts per minute per IP
@@ -71,7 +64,8 @@ async function loginHandler(req: Request) {
       return NextResponse.json({ error: "Your account is inactive." }, { status: 403 });
     }
 
-    const role = ROLE_MAP[email] ?? teamUser.role ?? "sales";
+    // The role in the token is informational only: getSession reads the current role from the database.
+    const role = normalizeRole(teamUser.role) || "sales";
     const token = await signToken({
       userId: teamUser.id,
       email: admin.email,

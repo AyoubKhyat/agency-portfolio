@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { isAdmin } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { logProspectActivity, notifyTeam, updateProspectStatus } from "@/lib/dal";
 import { z } from "zod";
@@ -31,7 +32,7 @@ export async function PATCH(
   const current = await prisma.proposal.findUnique({ where: { id } });
   if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  if (parsed.data.status === "ACCEPTED" && session.role !== "admin") {
+  if (parsed.data.status === "ACCEPTED" && !isAdmin(session)) {
     return NextResponse.json({ error: "Only admins can accept proposals" }, { status: 403 });
   }
 
@@ -207,7 +208,7 @@ export async function DELETE(
 ) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.role !== "admin") return NextResponse.json({ error: "Only admins can delete proposals" }, { status: 403 });
+  if (!isAdmin(session)) return NextResponse.json({ error: "Only admins can delete proposals" }, { status: 403 });
   if (!hasPrisma()) return NextResponse.json({ error: "No database" }, { status: 500 });
 
   const { id } = await params;

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { isAdmin } from "@/lib/authz";
 import {
   getProjectByIdForAdmin,
   getProjectIdBySlug,
@@ -113,7 +114,7 @@ export async function DELETE(
 ) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.role !== "admin") return NextResponse.json({ error: "Admin only" }, { status: 403 });
+  if (!isAdmin(session)) return NextResponse.json({ error: "Admin only" }, { status: 403 });
 
   const { id } = await params;
 

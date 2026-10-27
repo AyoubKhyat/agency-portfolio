@@ -3,6 +3,9 @@ import { createHmac } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { prisma, hasPrisma } from "@/lib/prisma";
+import { normalizeRole } from "@/lib/roles";
+
+export { normalizeRole };
 
 const COOKIE_NAME = "admin_token";
 const ISSUER = "ibda3digital";
@@ -124,6 +127,9 @@ export async function verifyContractToken(token: string): Promise<{ contractId: 
  * token, its `userId` must point at an active `User` row with the same email, and that email's
  * login password must be the one the session was issued for. No database, a database error or
  * any mismatch all mean "no session".
+ *
+ * Role, name and initials come from the database on every request, never from the token, so a
+ * role change applies immediately.
  */
 export async function getSession(): Promise<SessionUser | null> {
   try {
@@ -135,12 +141,15 @@ export async function getSession(): Promise<SessionUser | null> {
     const { user: payload, pwd } = read;
 
     const [user, login] = await Promise.all([
-      prisma.user.findUnique({ where: { id: payload.userId }, select: { email: true, isActive: true } }),
+      prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: { email: true, isActive: true, role: true, fullName: true, avatarInitials: true },
+      }),
       prisma.adminUser.findUnique({ where: { email: payload.email }, select: { passwordHash: true } }),
     ]);
     if (!user?.isActive || user.email !== payload.email || !login) return null;
     if (passwordStamp(login.passwordHash) !== pwd) return null;
-    return payload;
+    return { ...payload, role: normalizeRole(user.role), fullName: user.fullName, avatarInitials: user.avatarInitials };
   } catch (e) {
     console.error("[auth] session check failed; denying access:", e instanceof Error ? e.name : "error");
     return null;

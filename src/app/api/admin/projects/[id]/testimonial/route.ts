@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { isAdmin } from "@/lib/authz";
 import { getClientIp } from "@/lib/audit";
 import {
   approveTestimonial,
@@ -88,7 +89,7 @@ export async function PUT(req: Request, { params }: Params) {
 export async function POST(req: Request, { params }: Params) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.role !== "admin") {
+  if (!isAdmin(session)) {
     return NextResponse.json({ error: "Only admins can publish or hide testimonials." }, { status: 403 });
   }
   const { id } = await params;

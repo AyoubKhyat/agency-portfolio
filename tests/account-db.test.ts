@@ -42,6 +42,7 @@ let userRoute: typeof import("../src/app/api/admin/users/[id]/route");
 let resetRoute: typeof import("../src/app/api/admin/reset-password/route");
 let signLinkRoute: typeof import("../src/app/api/admin/contracts/[id]/sign-link/route");
 let signRoute: typeof import("../src/app/api/sign/[token]/route");
+let prospectRoute: typeof import("../src/app/api/admin/prospecting/[id]/route");
 
 const run = randomBytes(4).toString("hex");
 const mail = (who: string) => `it-${run}-${who}@example.test`;
@@ -61,6 +62,7 @@ before(async () => {
   resetRoute = await import("../src/app/api/admin/reset-password/route");
   signLinkRoute = await import("../src/app/api/admin/contracts/[id]/sign-link/route");
   signRoute = await import("../src/app/api/sign/[token]/route");
+  prospectRoute = await import("../src/app/api/admin/prospecting/[id]/route");
 
   // Bootstrap two accounts the way they exist in production today: both "admin" in the database.
   for (const who of ["owner", "staff"] as const) {
@@ -106,6 +108,23 @@ test("owner creates a team member who can really sign in; both tables match", { 
   cookie = owner.cookie;
   assert.equal((await createUser({ fullName: "Dup", email: mail("staff"), password: PW.member, role: "sales", avatarInitials: "D" })).status, 409);
   assert.equal(await prisma.adminUser.count({ where: { email: mail("staff") } }), 1, "no duplicate login row");
+});
+
+test("a role change by the owner applies to an open session at once; the token's role claim is ignored", { skip }, async () => {
+  const staffCookie = (await login(mail("staff"), PW.staff)).cookie;
+  const fixture = await prisma.prospect.create({ data: { name: `IT prospect ${run}`, phone: "+000", whatsappLink: "https://example.test", sector: "test" } });
+  const delProspect = () => prospectRoute.DELETE(new Request("http://x/api/admin/prospecting/x", { method: "DELETE" }), { params: Promise.resolve({ id: fixture.id }) });
+  cookie = (await login(mail("owner"), PW.owner)).cookie;
+  assert.equal((await patchUser(ids.staff, { role: "sales" })).status, 200);
+  cookie = staffCookie;
+  assert.equal((await auth.getSession())?.role, "sales", "same cookie, new role, no re-login");
+  assert.equal((await delProspect()).status, 403, "admin-only action refused for the token that still says admin");
+  cookie = (await login(mail("owner"), PW.owner)).cookie;
+  assert.equal((await patchUser(ids.staff, { role: "admin" })).status, 200);
+  cookie = staffCookie;
+  assert.equal((await auth.getSession())?.role, "admin");
+  assert.equal((await delProspect()).status, 200, "admin again: the same session may delete");
+  assert.equal(await prisma.prospect.count({ where: { id: fixture.id } }), 0);
 });
 
 test("a non-owner admin cannot manage accounts, whatever its role", { skip }, async () => {

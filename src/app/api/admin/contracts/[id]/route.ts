@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
+import { isAdmin } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { notifyUser, notifyUsers } from "@/lib/notify";
 
@@ -213,7 +214,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!before) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   // SIGNED is admin-only because it converts the prospect into a Client.
-  if (data.status === "SIGNED" && session.role !== "admin") {
+  if (data.status === "SIGNED" && !isAdmin(session)) {
     return NextResponse.json({ error: "Only admins can sign contracts" }, { status: 403 });
   }
 
@@ -273,7 +274,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.role !== "admin") return NextResponse.json({ error: "Admin only" }, { status: 403 });
+  if (!isAdmin(session)) return NextResponse.json({ error: "Admin only" }, { status: 403 });
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
   const { id } = await params;
   await prisma.contract.delete({ where: { id } });
