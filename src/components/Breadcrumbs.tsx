@@ -4,6 +4,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { HiChevronRight } from "react-icons/hi2";
 import { SITE_URL } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 const BASE_URL = SITE_URL;
 
@@ -70,7 +71,7 @@ export default function Breadcrumbs({ projectTitle }: { projectTitle?: string } 
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbSchema) }}
       />
       <nav
         aria-label="Breadcrumb"

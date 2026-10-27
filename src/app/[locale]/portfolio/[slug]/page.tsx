@@ -6,6 +6,7 @@ import ProjectDetailV2 from "@/components/project-detail-v2/ProjectDetailV2";
 import { getProjectBySlug } from "@/lib/dal";
 import { isClientProject } from "@/lib/project-kind";
 import { SITE_URL, pageMetadata } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 const BASE_URL = SITE_URL;
 
@@ -32,7 +33,7 @@ function CaseStudyJsonLd({ locale, slug, name, description, image }: { locale: s
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }}
     />
   );
 }

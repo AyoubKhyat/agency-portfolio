@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { HiOutlineCheck, HiOutlineChatBubbleLeft } from "react-icons/hi2";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
 import { SITE_URL } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 type SectorData = {
   slug: string;
@@ -200,7 +201,7 @@ function SectorJsonLd({ slug, sector }: { slug: string; sector: SectorData }) {
     },
     areaServed: { "@type": "City", name: "Marrakech" },
   };
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />;
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }} />;
 }
 
 function FaqJsonLd({ faq }: { faq: { q: string; a: string }[] }) {
@@ -213,7 +214,7 @@ function FaqJsonLd({ faq }: { faq: { q: string; a: string }[] }) {
       acceptedAnswer: { "@type": "Answer", text: f.a },
     })),
   };
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />;
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }} />;
 }
 
 // Sector landing pages are offline until their content and translations are reviewed: every slug

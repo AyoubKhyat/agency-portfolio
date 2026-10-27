@@ -7,6 +7,8 @@ import { FadeIn } from "@/components/motion";
 import { getPostBySlug, getAllPostSlugs } from "@/lib/blog";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { SITE_URL, pageMetadata } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/json-ld";
+import { SAFE_MARKDOWN_OPTIONS, SAFE_MARKDOWN_COMPONENTS } from "@/lib/safe-markdown";
 
 const BASE_URL = SITE_URL;
 
@@ -44,7 +46,7 @@ function BlogPostJsonLd({
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }}
     />
   );
 }
@@ -137,7 +139,7 @@ export default async function BlogPostPage({
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn delay={0.1}>
             <article className="prose-blog">
-              <MDXRemote source={post.content} />
+              <MDXRemote source={post.content} options={SAFE_MARKDOWN_OPTIONS} components={SAFE_MARKDOWN_COMPONENTS} />
             </article>
           </FadeIn>
         </div>

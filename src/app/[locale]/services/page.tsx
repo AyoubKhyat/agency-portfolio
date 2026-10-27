@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import ServicesV2 from "@/components/services-v2/ServicesV2";
 import { pageMetadata } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 export async function generateMetadata({
   params,
@@ -27,7 +28,7 @@ function FaqJsonLd({ items }: { items: { question: string; answer: string }[] })
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }}
     />
   );
 }

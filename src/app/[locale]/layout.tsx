@@ -14,6 +14,7 @@ import BackToTop from "@/components/BackToTop";
 import CookieConsent from "@/components/CookieConsent";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { SITE_URL, localeAlternates } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 const BASE_URL = SITE_URL;
 
@@ -169,11 +170,11 @@ function JsonLd({ locale }: { locale: string }) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusiness) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(localBusiness) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(website) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(website) }}
       />
     </>
   );

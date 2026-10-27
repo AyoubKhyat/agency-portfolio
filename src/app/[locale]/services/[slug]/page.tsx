@@ -9,6 +9,7 @@ import { DETAIL_PAGE_IDS, contactHref, getService } from "@/lib/services-catalog
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { FaWhatsapp } from "react-icons/fa";
 import ProcessBars from "@/components/services-v2/ProcessBars";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 // Services with their own page come from the shared catalog.
 const SLUGS = DETAIL_PAGE_IDS;
@@ -43,7 +44,7 @@ function ServiceJsonLd({ locale, slug, name, description }: { locale: string; sl
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }}
     />
   );
 }
