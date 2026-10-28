@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Archive, ArchiveRestore, CalendarDays, ChevronLeft, ChevronRight, CircleDot,
@@ -97,9 +97,12 @@ export default function ContentPlannerPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ kind: "error" | "success"; msg: string } | null>(null);
 
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showToast = useCallback((kind: "error" | "success", msg: string) => {
     setToast({ kind, msg });
-    setTimeout(() => setToast(null), 4000);
+    // A newer toast restarts the timer, so an older one cannot hide it early.
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 4000);
   }, []);
 
   /* ---- data ---- */
@@ -152,12 +155,15 @@ export default function ContentPlannerPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return posts.filter((p) => {
-      if (statusFilter !== "ALL" && p.status !== statusFilter) return false;
-      if (formatFilter !== "ALL" && p.format !== formatFilter) return false;
-      if (!q) return true;
-      return [p.title, p.caption, p.hook, p.pillar, p.hashtags, p.nextAction].some((t) => t.toLowerCase().includes(q));
-    });
+    return posts
+      .filter((p) => {
+        if (statusFilter !== "ALL" && p.status !== statusFilter) return false;
+        if (formatFilter !== "ALL" && p.format !== formatFilter) return false;
+        if (!q) return true;
+        return [p.title, p.caption, p.hook, p.pillar, p.hashtags, p.nextAction].some((t) => t.toLowerCase().includes(q));
+      })
+      // Same order as the API (soonest first, unplanned last), also for posts created or re-dated here.
+      .sort((a, b) => (a.plannedAt ? Date.parse(a.plannedAt) : Number.MAX_SAFE_INTEGER) - (b.plannedAt ? Date.parse(b.plannedAt) : Number.MAX_SAFE_INTEGER));
   }, [posts, search, statusFilter, formatFilter]);
 
   const statusTabs = useMemo(
@@ -197,7 +203,7 @@ export default function ContentPlannerPage() {
     setFormOpen(true);
   }
 
-  function handleSaved(post: ContentPostDTO, mode: "created" | "updated") {
+  function handleSaved(post: ContentPostDTO, mode: "created" | "updated" | "metrics") {
     if (mode === "created") {
       setFormOpen(false);
       if (!showArchived) setPosts((prev) => [...prev, post]);
@@ -205,6 +211,12 @@ export default function ContentPlannerPage() {
       return;
     }
     setPosts((prev) => prev.map((p) => (p.id === post.id ? post : p)));
+    // Same status, so the form is not remounted: unsaved edits in it are kept.
+    if (mode === "metrics") {
+      setEditing(post);
+      showToast("success", "Metrics saved.");
+      return;
+    }
     // Status changes from the panels keep the form open on the fresh row.
     if (editing && editing.status !== post.status) {
       setEditing(post);
@@ -266,7 +278,7 @@ export default function ContentPlannerPage() {
                 <button onClick={() => openEdit(p)} className="w-full flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1 py-2 text-left hover:bg-[#F8FAFC] rounded-lg px-2 -mx-2">
                   <span className="text-[12px] text-[var(--os-text-muted)] w-28 shrink-0">{formatWhen(p.plannedAt)}</span>
                   <span className="text-[13px] font-medium text-[var(--os-text)] truncate min-w-0 flex-1">{p.title}</span>
-                  <span className="text-[12.5px] text-[#475569] truncate sm:max-w-[45%]">→ {p.nextAction}</span>
+                  <span className="text-[12.5px] text-[#475569] truncate basis-full sm:basis-auto sm:max-w-[45%]">→ {p.nextAction}</span>
                   {p.overdue && <Badge variant="red" dot>Overdue</Badge>}
                 </button>
               </li>
@@ -300,6 +312,7 @@ export default function ContentPlannerPage() {
                   key={v}
                   onClick={() => setView(v)}
                   aria-pressed={view === v}
+                  aria-label={label}
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 rounded-lg text-[12.5px] font-medium transition-colors",
                     view === v ? "bg-purple-50 text-[#7C3AED]" : "text-[#475569] hover:bg-[#F1F5F9]",
@@ -430,7 +443,7 @@ export default function ContentPlannerPage() {
                 <span className="inline-flex items-center gap-1.5 text-[12px] text-[#475569] w-24 shrink-0">
                   <Icon className="w-4 h-4" /> {CONTENT_FORMAT_LABELS[p.format]}
                 </span>
-                <button onClick={() => openEdit(p)} className="text-[13px] font-medium text-[var(--os-text)] hover:text-[#7C3AED] text-left truncate min-w-0 flex-1">
+                <button onClick={() => openEdit(p)} className="text-[13px] font-medium text-[var(--os-text)] hover:text-[#7C3AED] text-left truncate min-w-0 flex-1 order-first basis-full sm:order-none sm:basis-0">
                   {p.title}
                 </button>
                 {p.nextAction && p.status !== "PUBLISHED" && (

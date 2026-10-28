@@ -69,7 +69,8 @@ type Props = {
   /** Prefills the planned date when creating from a calendar day (YYYY-MM-DD). */
   defaultDate?: string | null;
   onClose: () => void;
-  onSaved: (post: ContentPostDTO, mode: "created" | "updated") => void;
+  /** "metrics": saved from the Published panel; the form stays open on the fresh row. */
+  onSaved: (post: ContentPostDTO, mode: "created" | "updated" | "metrics") => void;
 };
 
 export function ContentPostForm({ post, defaultDate = null, onClose, onSaved }: Props) {
@@ -250,7 +251,7 @@ export function ContentPostForm({ post, defaultDate = null, onClose, onSaved }: 
         {post && !isPublished && (post.status === "READY" || post.status === "SCHEDULED") && (
           <PublishPanel post={post} dirty={dirty} saving={saving} send={send} onSaved={onSaved} />
         )}
-        {post && isPublished && <PublishedPanel post={post} saving={saving} send={send} onSaved={onSaved} />}
+        {post && isPublished && <PublishedPanel post={post} dirty={dirty} saving={saving} send={send} onSaved={onSaved} />}
       </div>
     </div>
   );
@@ -315,7 +316,7 @@ function PublishPanel({ post, dirty, saving, send, onSaved }: PanelProps & { dir
 
 /* ---------- published: link, metrics, move back ---------- */
 
-function PublishedPanel({ post, saving, send, onSaved }: PanelProps) {
+function PublishedPanel({ post, dirty, saving, send, onSaved }: PanelProps & { dirty: boolean }) {
   const [metrics, setMetrics] = useState<Record<ContentMetric, string>>(
     () => Object.fromEntries(CONTENT_METRICS.map((m) => [m, post[m] == null ? "" : String(post[m])])) as Record<ContentMetric, string>,
   );
@@ -325,7 +326,7 @@ function PublishedPanel({ post, saving, send, onSaved }: PanelProps) {
     const body: Record<string, number | null> = {};
     for (const m of CONTENT_METRICS) body[m] = metrics[m].trim() === "" ? null : Math.max(0, Math.round(Number(metrics[m])));
     const saved = await send("PATCH", body);
-    if (saved) onSaved(saved, "updated");
+    if (saved) onSaved(saved, "metrics");
   }
 
   async function moveBack() {
@@ -375,9 +376,12 @@ function PublishedPanel({ post, saving, send, onSaved }: PanelProps) {
           <input type="checkbox" className="mt-0.5" checked={confirmBack} onChange={(e) => setConfirmBack(e.target.checked)} />
           Move back to Ready (the link and metrics are kept).
         </label>
-        <FormButton type="button" variant="ghost" size="sm" icon={<Undo2 className="w-4 h-4" />} disabled={!confirmBack || saving} onClick={moveBack}>
-          Move out of Published
-        </FormButton>
+        <div className="flex items-center gap-3">
+          {dirty && <span className="text-[12px] text-amber-700">Save your changes first.</span>}
+          <FormButton type="button" variant="ghost" size="sm" icon={<Undo2 className="w-4 h-4" />} disabled={!confirmBack || saving || dirty} onClick={moveBack}>
+            Move out of Published
+          </FormButton>
+        </div>
       </div>
     </div>
   );
