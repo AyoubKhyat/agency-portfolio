@@ -9,7 +9,7 @@ import {
   BarChart3, Settings, LogOut, PanelLeftClose, PanelLeft, Menu, X,
   Activity, UsersRound, Bell, Search, Layers, Shield, CheckSquare, BellRing,
   Calendar, FileSignature, Crown, MessageSquare, Moon, Sun, Gauge, Receipt, PenLine,
-  Webhook, BookOpen, Compass, Flame, Inbox, Banknote, Sparkles, FileText,
+  Webhook, BookOpen, Compass, Flame, Inbox, Banknote, Sparkles, FileText, CalendarDays,
 } from "lucide-react";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { cn } from "@/lib/utils";
@@ -58,6 +58,7 @@ const SECONDARY_SECTION: NavSection = {
     { href: "/admin/meetings", label: "Meetings", icon: Calendar, badgeKey: "meetings" as const },
     { href: "/admin/tasks", label: "Tasks", icon: CheckSquare, badgeKey: "tasks" as const },
     { href: "/admin/documents", label: "Documents", icon: FileText },
+    { href: "/admin/content", label: "Content Planner", icon: CalendarDays },
   ],
 };
 

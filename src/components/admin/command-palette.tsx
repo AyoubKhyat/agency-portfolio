@@ -6,7 +6,7 @@ import {
   Search, Target, Users, Building2, FolderKanban, CheckSquare,
   Calendar, MessageSquare, X, ArrowRight, Loader2,
   LayoutDashboard, BarChart3, Settings, Activity, Layers,
-  FileSignature, Crown, BellRing, Sun, Sparkles, FileText,
+  FileSignature, Crown, BellRing, Sun, Sparkles, FileText, CalendarDays,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/admin/badge";
@@ -73,6 +73,7 @@ const QUICK_ACTIONS: QuickAction[] = [
   { id: "qa-dashboard", label: "Full Dashboard",    sublabel: "All metrics (previous dashboard)", href: "/admin/overview", icon: LayoutDashboard },
   { id: "qa-cmd",       label: "Command Center",   sublabel: "Overview & quick stats",  href: "/admin/command-center", icon: Crown },
   { id: "qa-documents", label: "Documents",         sublabel: "Uploaded PDFs",           href: "/admin/documents",      icon: FileText },
+  { id: "qa-content",   label: "Content Planner",   sublabel: "Instagram 30-day plan",   href: "/admin/content",        icon: CalendarDays },
   { id: "qa-tasks",     label: "Tasks",             sublabel: "Task board",              href: "/admin/tasks",          icon: CheckSquare },
   { id: "qa-meetings",  label: "Meetings",          sublabel: "Calendar & meetings",     href: "/admin/meetings",       icon: Calendar },
   { id: "qa-chat",      label: "Chat",              sublabel: "Team chat",               href: "/admin/chat",           icon: MessageSquare },

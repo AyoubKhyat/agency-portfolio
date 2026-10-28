@@ -866,3 +866,44 @@ model DocumentFile {
 
   @@map("document_files")
 }
+
+// Instagram Content Planner (/admin/content). Publishing and metrics are entered by hand;
+// workflow rules live in src/lib/content-posts.ts. Standalone table: no relations, so the
+// CRM models are untouched.
+model ContentPost {
+  id               String    @id @default(cuid())
+  title            String
+  format           String // REEL | CAROUSEL | POST | STORY
+  status           String    @default("IDEA") // IDEA | DRAFT | READY | SCHEDULED | PUBLISHED
+  plannedAt        DateTime? @map("planned_at")
+  pillar           String    @default("")
+  hook             String    @default("")
+  caption          String    @default("")
+  hashtags         String    @default("")
+  cta              String    @default("")
+  mediaPaths       String[]  @default([]) @map("media_paths") // ordered: carousel slide order
+  nextAction       String    @default("") @map("next_action")
+  notes            String    @default("")
+  publishedAt      DateTime? @map("published_at")
+  publishedUrl     String    @default("") @map("published_url")
+  // Metrics: null = not recorded yet (different from 0).
+  views            Int?
+  reach            Int?
+  likes            Int?
+  comments         Int?
+  saves            Int?
+  shares           Int?
+  follows          Int?
+  metricsUpdatedAt DateTime? @map("metrics_updated_at")
+  sourceKey        String?   @unique @map("source_key") // set by the calendar import; re-runs skip existing keys
+  archivedAt       DateTime? @map("archived_at") // soft archive — reversible
+  createdById      String?   @map("created_by_id")
+  createdByName    String?   @map("created_by_name")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([plannedAt])
+  @@index([archivedAt])
+  @@map("content_posts")
+}
