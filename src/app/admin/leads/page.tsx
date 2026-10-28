@@ -10,8 +10,10 @@ import { Badge } from "@/components/admin/badge";
 import { FilterTabs } from "@/components/admin/filter-tabs";
 import { EmptyState } from "@/components/admin/empty-state";
 import { cn } from "@/lib/utils";
+import { LEAD_BOARD_STATUSES, LEAD_TEST_STATUS, leadStatusLabel } from "@/lib/lead-status";
 
-const COLUMNS = ["NEW", "CONTACTED", "QUALIFIED", "CLOSED"] as const;
+// Board columns are the working stages; internal tests (TEST) are kept off the board but listed below.
+const COLUMNS = LEAD_BOARD_STATUSES;
 const COL_COLORS: Record<string, { border: string; bg: string; dot: string; badge: string; cardLeft: string }> = {
   NEW: { border: "border-blue-200", bg: "bg-blue-50/50", dot: "bg-blue-600", badge: "blue", cardLeft: "border-l-blue-500" },
   CONTACTED: { border: "border-amber-200", bg: "bg-amber-50/50", dot: "bg-amber-600", badge: "amber", cardLeft: "border-l-amber-500" },
@@ -43,10 +45,15 @@ function LeadsContent() {
   const [loading, setLoading] = useState(true);
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
+  const [testCount, setTestCount] = useState(0);
 
   useEffect(() => {
     setLoading(true);
     if (view === "kanban") {
+      fetch(`/api/admin/leads?status=${LEAD_TEST_STATUS}&page=1`)
+        .then((r) => r.ok ? r.json() : { total: 0 })
+        .then((d) => setTestCount(d.total ?? 0))
+        .catch(() => {});
       Promise.all(
         COLUMNS.map((s) => fetch(`/api/admin/leads?status=${s}&page=1`).then((r) => r.ok ? r.json() : { leads: [], total: 0 }))
       ).then((results) => {
@@ -133,6 +140,16 @@ function LeadsContent() {
         }
       />
 
+      {view === "kanban" && testCount > 0 && (
+        <button
+          type="button"
+          onClick={() => { setView("list"); navigate(LEAD_TEST_STATUS); }}
+          className="mb-4 text-[12px] text-[#64748B] hover:text-[#0F172A]"
+        >
+          {testCount} enquir{testCount === 1 ? "y is" : "ies are"} marked as internal test{testCount === 1 ? "" : "s"} and kept off this board — <span className="text-purple-600">show them</span>
+        </button>
+      )}
+
       {view === "kanban" ? (
         loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -217,7 +234,7 @@ function LeadsContent() {
         /* List View */
         <>
           <FilterTabs
-            items={[{ value: "ALL", label: "All" }, ...COLUMNS.map((s) => ({ value: s, label: s }))]}
+            items={[{ value: "ALL", label: "All" }, ...COLUMNS.map((s) => ({ value: s, label: s })), { value: LEAD_TEST_STATUS, label: "Internal tests" }]}
             active={statusFilter}
             onChange={(v) => navigate(v)}
             className="mb-6"
@@ -235,7 +252,7 @@ function LeadsContent() {
                   <Link key={lead.id} href={`/admin/leads/${lead.id}`} className="block p-3.5 rounded-xl border border-[var(--os-border)] bg-white/80 hover:border-[var(--os-border-hover)] transition-all">
                     <div className="flex items-start justify-between gap-2 mb-1.5">
                       <span className="text-[13px] font-medium text-[#0F172A] truncate">{lead.fullName}</span>
-                      <Badge variant={COL_COLORS[lead.status]?.badge as "blue" | "amber" | "green" | "default" || "default"} size="sm">{lead.status}</Badge>
+                      <Badge variant={COL_COLORS[lead.status]?.badge as "blue" | "amber" | "green" | "default" || "default"} size="sm">{leadStatusLabel(lead.status)}</Badge>
                     </div>
                     <p className="text-[11px] text-[#475569] truncate mb-1">{lead.subject}</p>
                     <div className="flex items-center gap-2 text-[10px] text-[#64748B]">
@@ -270,7 +287,7 @@ function LeadsContent() {
                         <td className="px-4 py-3 text-[#475569] text-xs">{lead.email}</td>
                         <td className="px-4 py-3 text-[#475569] text-xs max-w-xs truncate hidden lg:table-cell">{lead.subject}</td>
                         <td className="px-4 py-3">
-                          <Badge variant={COL_COLORS[lead.status]?.badge as "blue" | "amber" | "green" | "default" || "default"} size="sm">{lead.status}</Badge>
+                          <Badge variant={COL_COLORS[lead.status]?.badge as "blue" | "amber" | "green" | "default" || "default"} size="sm">{leadStatusLabel(lead.status)}</Badge>
                         </td>
                         <td className="px-4 py-3 text-[#475569] text-xs hidden lg:table-cell">
                           {lead.assignedToName ? (

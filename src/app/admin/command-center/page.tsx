@@ -183,6 +183,10 @@ export default function CommandCenterPage() {
               <HealthRow key={s.label} label={s.label} count={s.count} severity={s.severity} />
             ))}
           </div>
+          <p className="text-[11px] text-[#94A3B8] mt-3 leading-relaxed">
+            Follow-up dates include historical records, many from before the July 2026 cleanup.{" "}
+            <Link href="/admin" className="text-purple-600 hover:text-purple-700">Today</Link> shows which are backed by a recorded send.
+          </p>
         </GlassCard>
       </div>
 

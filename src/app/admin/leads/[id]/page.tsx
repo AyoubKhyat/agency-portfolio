@@ -8,12 +8,14 @@ import { FormCard, Field, Select, FormButton } from "@/components/admin/form";
 import { Badge } from "@/components/admin/badge";
 import { MentionTextarea, HighlightedMentions } from "@/components/admin/mention-textarea";
 
-const STATUSES = ["NEW", "CONTACTED", "QUALIFIED", "CLOSED"];
+import { LEAD_STATUSES, LEAD_TEST_STATUS, leadStatusLabel } from "@/lib/lead-status";
+
 const STATUS_VARIANT: Record<string, "blue" | "amber" | "green" | "default"> = {
   NEW: "blue",
   CONTACTED: "amber",
   QUALIFIED: "green",
   CLOSED: "default",
+  TEST: "default",
 };
 
 type Note = { id: string; content: string; createdAt: string };
@@ -52,6 +54,8 @@ export default function LeadDetailPage() {
   }, [id, router]);
 
   async function handleStatusChange(newStatus: string) {
+    // Marking a test is an explicit, one-enquiry decision — confirm it. It is reversible.
+    if (newStatus === LEAD_TEST_STATUS && !confirm("Mark this enquiry as an internal test?\n\nIt will stop counting as a new enquiry. Nothing is deleted, and you can change the status back at any time.")) return;
     const res = await fetch(`/api/admin/leads/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -111,8 +115,8 @@ export default function LeadDetailPage() {
         action={
           <div className="w-44">
             <Select value={lead.status} onChange={(e) => handleStatusChange(e.target.value)}>
-              {STATUSES.map((s) => (
-                <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>
+              {LEAD_STATUSES.map((s) => (
+                <option key={s} value={s}>{leadStatusLabel(s)}</option>
               ))}
             </Select>
           </div>
@@ -139,7 +143,7 @@ export default function LeadDetailPage() {
           </div>
           <div>
             <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-[0.06em] mb-1.5">Status</p>
-            <Badge variant={STATUS_VARIANT[lead.status]} size="sm" dot>{lead.status}</Badge>
+            <Badge variant={STATUS_VARIANT[lead.status] ?? "default"} size="sm" dot>{leadStatusLabel(lead.status)}</Badge>
           </div>
           <div>
             <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-[0.06em] mb-1.5">Assigned to</p>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getLeadById, updateLeadStatus } from "@/lib/dal";
 import { z } from "zod";
+import { LEAD_STATUSES } from "@/lib/lead-status";
 
 export async function GET(
   _req: Request,
@@ -25,7 +26,7 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await req.json();
-  const parsed = z.object({ status: z.enum(["NEW", "CONTACTED", "QUALIFIED", "CLOSED"]) }).safeParse(body);
+  const parsed = z.object({ status: z.enum(LEAD_STATUSES) }).safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
 
   const lead = await updateLeadStatus(id, parsed.data.status);

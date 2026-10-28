@@ -6,7 +6,7 @@ import {
   Search, Target, Users, Building2, FolderKanban, CheckSquare,
   Calendar, MessageSquare, X, ArrowRight, Loader2,
   LayoutDashboard, BarChart3, Settings, Activity, Layers,
-  FileSignature, Crown, BellRing,
+  FileSignature, Crown, BellRing, Sun, Sparkles, FileText,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/admin/badge";
@@ -64,12 +64,15 @@ type QuickAction = {
 };
 
 const QUICK_ACTIONS: QuickAction[] = [
-  { id: "qa-cmd",       label: "Command Center",   sublabel: "Overview & quick stats",  href: "/admin/command-center", icon: Crown },
-  { id: "qa-dashboard", label: "Dashboard",         sublabel: "Main dashboard",          href: "/admin",                icon: LayoutDashboard },
-  { id: "qa-leads",     label: "Leads",             sublabel: "Manage incoming leads",   href: "/admin/leads",          icon: Users },
-  { id: "qa-prospects", label: "Prospecting",       sublabel: "Manage prospects",        href: "/admin/prospecting",    icon: Target },
+  { id: "qa-today",     label: "Today",             sublabel: "What to do right now",    href: "/admin",                icon: Sun },
+  { id: "qa-prospects", label: "Prospects",         sublabel: "Everyone you are talking to", href: "/admin/prospecting", icon: Target },
+  { id: "qa-discovery", label: "Find New",          sublabel: "Discover new prospects",  href: "/admin/discovery",      icon: Sparkles },
   { id: "qa-clients",   label: "Clients",           sublabel: "Client management",       href: "/admin/clients",        icon: Building2 },
-  { id: "qa-projects",  label: "Projects",          sublabel: "Portfolio projects",       href: "/admin/projects",       icon: FolderKanban },
+  { id: "qa-projects",  label: "Website Portfolio", sublabel: "Projects on the public site", href: "/admin/projects",   icon: FolderKanban },
+  { id: "qa-leads",     label: "Website Enquiries", sublabel: "Contact-form leads",      href: "/admin/leads",          icon: Users },
+  { id: "qa-dashboard", label: "Full Dashboard",    sublabel: "All metrics (previous dashboard)", href: "/admin/overview", icon: LayoutDashboard },
+  { id: "qa-cmd",       label: "Command Center",   sublabel: "Overview & quick stats",  href: "/admin/command-center", icon: Crown },
+  { id: "qa-documents", label: "Documents",         sublabel: "Uploaded PDFs",           href: "/admin/documents",      icon: FileText },
   { id: "qa-tasks",     label: "Tasks",             sublabel: "Task board",              href: "/admin/tasks",          icon: CheckSquare },
   { id: "qa-meetings",  label: "Meetings",          sublabel: "Calendar & meetings",     href: "/admin/meetings",       icon: Calendar },
   { id: "qa-chat",      label: "Chat",              sublabel: "Team chat",               href: "/admin/chat",           icon: MessageSquare },

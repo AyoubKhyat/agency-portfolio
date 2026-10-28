@@ -4,6 +4,11 @@ import { getTranslations } from "next-intl/server";
 import { bulkUpdateStatusWith, updateProspectStatusWith } from "./prospect-first-contact";
 import { DEFAULT_PROJECT_KIND } from "./project-kind";
 import { CANONICAL_LOCALE, type SavePlan, type TestimonialState } from "./testimonial-approval";
+import {
+  statusWhere, channelWhere, evidenceWhere, countByStage, VERIFIED_CHANNEL_WHERE, UNVERIFIED_CHANNEL_WHERE,
+  CONTACTED_WHERE, RECORDED_SEND_WHERE, LEGACY_SEND_WHERE, NO_RECORDED_SEND_WHERE, sendRecordInclude, latestSendAt,
+} from "./prospect-stages";
+import { LEAD_TEST_STATUS } from "./lead-status";
 
 function db() {
   if (!hasPrisma()) throw new Error("Database not available");
@@ -727,11 +732,13 @@ export async function getUserById(id: string) {
 
 // ─── Prospecting ────────────────────────────────────────────────
 
-export async function getProspects(page = 1, status?: string, sector?: string, ownerUserId?: string, search?: string, qualityLabel?: string, segment?: string, due?: string) {
+export async function getProspects(page = 1, status?: string, sector?: string, ownerUserId?: string, search?: string, qualityLabel?: string, segment?: string, due?: string, channel?: string, evidence?: string) {
   const take = 20;
   const skip = (page - 1) * take;
   const where: Record<string, unknown> = {};
-  if (status && status !== "ALL") where.status = status;
+  // One status keeps the old exact match; a comma list (a simple stage) becomes status IN (...).
+  const statusFilter = statusWhere(status);
+  if (statusFilter) where.status = statusFilter;
   if (sector && sector !== "ALL") where.sector = sector;
   if (qualityLabel && qualityLabel !== "ALL") where.qualityLabel = qualityLabel;
   if (segment && segment !== "ALL") where.segment = segment;
@@ -761,6 +768,9 @@ export async function getProspects(page = 1, status?: string, sector?: string, o
       { neighborhood: { contains: search, mode: "insensitive" } },
     ];
   }
+  // Channel / send-evidence filters go under AND so they never collide with the search OR.
+  const andFilters = [channelWhere(channel), evidenceWhere(evidence)].filter(Boolean);
+  if (andFilters.length) where.AND = andFilters;
 
   // Follow-up views sort oldest-first so the most urgent row rises to the top;
   // every other view keeps the default newest-first order.
@@ -778,12 +788,19 @@ export async function getProspects(page = 1, status?: string, sector?: string, o
         notes: { orderBy: { createdAt: "desc" }, take: 1 },
         owner: { select: { id: true, fullName: true, avatarInitials: true } },
         sentByUser: { select: { id: true, fullName: true, avatarInitials: true } },
+        ...sendRecordInclude(),
       },
     }),
     db().prospect.count({ where }),
   ]);
 
-  return { prospects, total, pages: Math.ceil(total / take) };
+  // Reduce the send-record includes to one date; the list shows evidence, not message bodies.
+  const rows = prospects.map(({ outreachMessages, activities, ...p }) => ({
+    ...p,
+    lastSendAt: latestSendAt([outreachMessages[0]?.sentAt, activities[0]?.createdAt]),
+  }));
+
+  return { prospects: rows, total, pages: Math.ceil(total / take) };
 }
 
 export async function getProspectById(id: string) {
@@ -1073,6 +1090,77 @@ export async function getDashboardStats() {
 
   return { leadsByStatus, prospectsByStatus, prospectsBySector, followUpCandidates, totalProjects, recentLeads, followUpsDueToday, followUpsOverdue, followUpsUpcoming };
 }
+
+/**
+ * Today dashboard — what needs doing now. Read-only.
+ * Follow-up windows use the same rules as the prospect list's ?due= filter, so
+ * every number here matches the list its link opens. Website enquiries count
+ * status NEW only. Nothing guesses which enquiries are tests: an enquiry drops
+ * out only when a person marks it "Internal test" (status TEST) by hand.
+ */
+export async function getTodaySummary(now: Date = new Date()) {
+  const startOfToday = new Date(now); startOfToday.setHours(0, 0, 0, 0);
+  const endOfToday = new Date(now); endOfToday.setHours(23, 59, 59, 999);
+  const activeStatus = { notIn: ["CONVERTI", "CLIENT", "LOST"] };
+  const prospectRow = { id: true, name: true, sector: true, followUpDate: true, lastActionAt: true, whatsappStatus: true, instagramStatus: true } as const;
+
+  const [
+    newEnquiries, latestEnquiries, testEnquiries,
+    replied, repliedList,
+    dueToday, overdue, dueTodayRecorded, overdueRecorded, dueLegacy, followUpList,
+    readyVerified, readyUnverified,
+    meetingsToday,
+    byStatus,
+    contacted, contactedRecorded, contactedLegacy, contactedNotRecorded, contactedChannelVerified,
+  ] = await Promise.all([
+    db().lead.count({ where: { status: "NEW" } }),
+    db().lead.findMany({ where: { status: "NEW" }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, fullName: true, subject: true, createdAt: true } }),
+    db().lead.count({ where: { status: LEAD_TEST_STATUS } }),
+    db().prospect.count({ where: { status: "REPONDU" } }),
+    db().prospect.findMany({ where: { status: "REPONDU" }, orderBy: { lastActionAt: { sort: "desc", nulls: "last" } }, take: 5, select: prospectRow }),
+    db().prospect.count({ where: { followUpDate: { gte: startOfToday, lte: endOfToday }, status: activeStatus } }),
+    db().prospect.count({ where: { followUpDate: { lt: startOfToday }, status: activeStatus } }),
+    // Same windows, limited to a send recorded since the July 2026 cleanup — the only follow-ups backed by evidence.
+    db().prospect.count({ where: { followUpDate: { gte: startOfToday, lte: endOfToday }, status: activeStatus, ...RECORDED_SEND_WHERE } }),
+    db().prospect.count({ where: { followUpDate: { lt: startOfToday }, status: activeStatus, ...RECORDED_SEND_WHERE } }),
+    db().prospect.count({ where: { followUpDate: { lte: endOfToday }, status: activeStatus, ...LEGACY_SEND_WHERE } }),
+    db().prospect.findMany({ where: { followUpDate: { lte: endOfToday }, status: activeStatus, ...RECORDED_SEND_WHERE }, orderBy: { followUpDate: "asc" }, take: 5, select: prospectRow }),
+    db().prospect.count({ where: { status: "A_ENVOYER", ...VERIFIED_CHANNEL_WHERE } }),
+    db().prospect.count({ where: { status: "A_ENVOYER", ...UNVERIFIED_CHANNEL_WHERE } }),
+    db().meeting.findMany({
+      where: { status: "SCHEDULED", startAt: { gte: startOfToday, lte: endOfToday } },
+      orderBy: { startAt: "asc" }, take: 10,
+      select: { id: true, title: true, type: true, startAt: true, client: { select: { id: true, companyName: true } }, prospect: { select: { id: true, name: true } } },
+    }),
+    db().prospect.groupBy({ by: ["status"], _count: true }),
+    db().prospect.count({ where: CONTACTED_WHERE }),
+    db().prospect.count({ where: { AND: [CONTACTED_WHERE, RECORDED_SEND_WHERE] } }),
+    db().prospect.count({ where: { AND: [CONTACTED_WHERE, LEGACY_SEND_WHERE] } }),
+    db().prospect.count({ where: { AND: [CONTACTED_WHERE, NO_RECORDED_SEND_WHERE] } }),
+    db().prospect.count({ where: { AND: [CONTACTED_WHERE, VERIFIED_CHANNEL_WHERE] } }),
+  ]);
+
+  return {
+    enquiries: { new: newEnquiries, latest: latestEnquiries, markedTest: testEnquiries },
+    replies: { count: replied, list: repliedList },
+    followUps: {
+      dueToday, overdue, list: followUpList,
+      recorded: { dueToday: dueTodayRecorded, overdue: overdueRecorded },
+      // Not backed: only pre-cleanup send records (legacy) or none at all.
+      unbacked: { dueToday: dueToday - dueTodayRecorded, overdue: overdue - overdueRecorded, legacy: dueLegacy },
+    },
+    readyToContact: { verified: readyVerified, unverified: readyUnverified },
+    meetingsToday,
+    stages: countByStage(byStatus.map((r) => ({ status: r.status, count: r._count }))),
+    // Send records and channel state are separate facts; never add one to the other.
+    outreach: {
+      contacted, sendRecorded: contactedRecorded, legacySendOnly: contactedLegacy,
+      noSendRecord: contactedNotRecorded, channelVerified: contactedChannelVerified,
+    },
+  };
+}
+
+export type TodaySummary = Awaited<ReturnType<typeof getTodaySummary>>;
 
 export async function getAnalyticsData() {
   const [

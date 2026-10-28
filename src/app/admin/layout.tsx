@@ -27,76 +27,78 @@ const FOCUS_MODE = true;
 
 type BadgeKey = "leads" | "prospects" | "activities" | "team" | "tasks" | "notifications" | "meetings" | "contracts" | "chat";
 type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; badgeKey?: BadgeKey };
-type NavSection = { label: string; collapsed?: boolean; items: NavItem[] };
+type NavSection = { label: string; collapsed?: boolean; secondary?: boolean; items: NavItem[] };
 
-// Visible in Focus Mode — every page answers one question:
-//   Dashboard → what should I do today?   Relationships → who am I working with?
-//   AI Discovery → who should I contact next?   Clients → active customers.
-//   Projects → delivery.   (Workspace is reachable via buttons, not the sidebar.)
+// Visible in Focus Mode — six entries, each answers one question:
+//   Today → what should I do right now?   Prospects → who am I talking to?
+//   Find New → who should I contact next?   Clients → active customers.
+//   Website Portfolio → the projects shown on the public site.   Settings (bottom).
+// URLs are unchanged; only the labels are plainer.
 const SECTIONS: NavSection[] = [
+  {
+    label: "Work",
+    items: [
+      { href: "/admin", label: "Today", icon: Sun },
+      { href: "/admin/prospecting", label: "Prospects", icon: Target, badgeKey: "prospects" as const },
+      { href: "/admin/discovery", label: "Find New", icon: Sparkles },
+      { href: "/admin/clients", label: "Clients", icon: Building2 },
+      { href: "/admin/projects", label: "Website Portfolio", icon: FolderKanban },
+    ],
+  },
+];
+
+// Secondary — everyday tools that are not part of the main flow. Always
+// visible under the main entries, in a quieter style.
+const SECONDARY_SECTION: NavSection = {
+  label: "More",
+  secondary: true,
+  items: [
+    { href: "/admin/leads", label: "Website Enquiries", icon: Users, badgeKey: "leads" as const },
+    { href: "/admin/inbox", label: "Reply Inbox", icon: Inbox },
+    { href: "/admin/meetings", label: "Meetings", icon: Calendar, badgeKey: "meetings" as const },
+    { href: "/admin/tasks", label: "Tasks", icon: CheckSquare, badgeKey: "tasks" as const },
+    { href: "/admin/documents", label: "Documents", icon: FileText },
+  ],
+};
+
+// ── Other tools — kept alive, folded away in Focus Mode ──
+// Pages and APIs still work at their URLs. In Focus Mode they are listed in a
+// collapsed "All other tools" group at the bottom of the sidebar.
+// To show them as full sections again: set FOCUS_MODE = false.
+const HIDDEN_SECTIONS: NavSection[] = [
   {
     label: "Overview",
     items: [
-      { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/admin/overview", label: "Full Dashboard", icon: LayoutDashboard },
+      { href: "/admin/command-center", label: "Command Center", icon: Crown },
     ],
   },
   {
     label: "Sales",
     items: [
-      { href: "/admin/prospecting", label: "Relationships", icon: Target, badgeKey: "prospects" as const },
-      { href: "/admin/discovery", label: "AI Discovery", icon: Sparkles },
-    ],
-  },
-  {
-    label: "Delivery",
-    items: [
-      { href: "/admin/clients", label: "Clients", icon: Building2 },
-      { href: "/admin/projects", label: "Projects", icon: FolderKanban },
-      { href: "/admin/documents", label: "Documents", icon: FileText },
-    ],
-  },
-];
-
-// ── Hidden Features — kept alive, hidden from the sidebar in Focus Mode ──
-// Pages and APIs still work at their URLs; these just don't render while
-// FOCUS_MODE is true. Restore by flipping FOCUS_MODE or moving items up.
-const HIDDEN_SECTIONS: NavSection[] = [
-  {
-    label: "Overview · Hidden",
-    items: [
-      { href: "/admin/command-center", label: "Command Center", icon: Crown },
-    ],
-  },
-  {
-    label: "Sales · Hidden",
-    items: [
       { href: "/admin/outreach", label: "Outreach", icon: Flame },
-      { href: "/admin/inbox", label: "Reply Inbox", icon: Inbox },
-      { href: "/admin/leads", label: "Leads", icon: Users, badgeKey: "leads" as const },
       { href: "/admin/sales-playbook", label: "Sales Playbook", icon: BookOpen },
     ],
   },
   {
-    label: "Operations · Hidden",
+    label: "Operations",
     items: [
-      { href: "/admin/tasks", label: "Tasks", icon: CheckSquare, badgeKey: "tasks" as const },
       { href: "/admin/notifications", label: "Notifications", icon: BellRing, badgeKey: "notifications" as const },
       { href: "/admin/activity", label: "Activity Feed", icon: Activity, badgeKey: "activities" as const },
     ],
   },
   {
-    label: "Delivery · Hidden",
+    label: "Delivery",
     items: [
-      { href: "/admin/meetings", label: "Meetings", icon: Calendar, badgeKey: "meetings" as const },
       { href: "/admin/pipeline", label: "Pipeline", icon: Layers },
       { href: "/admin/contracts", label: "Contracts", icon: FileSignature, badgeKey: "contracts" as const },
       { href: "/admin/invoices", label: "Invoices", icon: Receipt },
       { href: "/admin/revenue", label: "Revenue", icon: Banknote },
     ],
   },
-  { label: "Intelligence · Hidden", items: [{ href: "/admin/analytics", label: "Analytics", icon: BarChart3 }] },
+  { label: "Intelligence", items: [{ href: "/admin/analytics", label: "Analytics", icon: BarChart3 }] },
   {
-    label: "Legacy · Hidden",
+    label: "Legacy",
     collapsed: true,
     items: [
       { href: "/admin/marrakech-audit", label: "Marrakech Audit", icon: Target },
@@ -108,9 +110,7 @@ const HIDDEN_SECTIONS: NavSection[] = [
   },
 ];
 
-const VISIBLE_SECTIONS = FOCUS_MODE ? SECTIONS : [...SECTIONS, ...HIDDEN_SECTIONS];
-
-// Bottom nav — Settings stays; developer/technical entries hidden in Focus Mode.
+// Bottom nav — Settings stays; developer/technical entries folded away in Focus Mode.
 const BOTTOM_NAV = [
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
@@ -118,12 +118,28 @@ const HIDDEN_BOTTOM_NAV = [
   { href: "/admin/system-status", label: "System Status", icon: Shield },
   { href: "/admin/webhooks", label: "Webhooks", icon: Webhook },
 ];
+
+const OTHER_TOOLS_SECTION: NavSection = {
+  label: "All other tools",
+  collapsed: true,
+  items: [...HIDDEN_SECTIONS.flatMap((s) => s.items), ...HIDDEN_BOTTOM_NAV],
+};
+
+const VISIBLE_SECTIONS = FOCUS_MODE
+  ? [...SECTIONS, SECONDARY_SECTION, OTHER_TOOLS_SECTION]
+  : [...SECTIONS, SECONDARY_SECTION, ...HIDDEN_SECTIONS];
 const VISIBLE_BOTTOM_NAV = FOCUS_MODE ? BOTTOM_NAV : [...BOTTOM_NAV, ...HIDDEN_BOTTOM_NAV];
 
+const PAGE_TITLES: Record<string, string> = {
+  prospecting: "Prospects", discovery: "Find New", projects: "Website Portfolio", overview: "Full Dashboard",
+  leads: "Website Enquiries", inbox: "Reply Inbox",
+};
+
 function getPageTitle(pathname: string): string {
-  if (pathname === "/admin") return "Dashboard";
+  if (pathname === "/admin") return "Today";
   const segment = pathname.split("/").filter(Boolean)[1];
-  if (!segment) return "Dashboard";
+  if (!segment) return "Today";
+  if (PAGE_TITLES[segment]) return PAGE_TITLES[segment];
   return segment.charAt(0).toUpperCase() + segment.slice(1);
 }
 
@@ -285,6 +301,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
         {VISIBLE_SECTIONS.map((section) => {
           const showLabel = !collapsed || isMobileDrawer;
+          // Folded groups would be a wall of unlabeled icons in the narrow sidebar; Ctrl+K covers them there.
+          if (section.collapsed && !showLabel) return null;
           const isCollapsibleGroup = "collapsed" in section && section.collapsed === true && showLabel;
           const renderItems = () => (
             <div className="space-y-1">
@@ -301,13 +319,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       !showLabel ? "justify-center h-10 w-10 mx-auto" : "px-3 py-2",
                       active
                         ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20"
-                        : "text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"
+                        : section.secondary || section.collapsed
+                          ? "text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]"
+                          : "text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"
                     )}
                   >
-                    <item.icon className={cn("shrink-0", !showLabel ? "w-[18px] h-[18px]" : "w-[16px] h-[16px]")} />
+                    <item.icon className={cn("shrink-0", !showLabel ? "w-[18px] h-[18px]" : section.secondary || section.collapsed ? "w-[15px] h-[15px]" : "w-[16px] h-[16px]")} />
                     {showLabel && (
                       <>
-                        <span className="text-[13px] font-medium">{item.label}</span>
+                        <span className={cn(section.secondary || section.collapsed ? "text-[12.5px]" : "text-[13px] font-medium")}>{item.label}</span>
                         {badge > 0 && (
                           <span className={cn(
                             "ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center",
@@ -329,7 +349,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           if (isCollapsibleGroup) {
             return (
-              <details key={section.label}>
+              <details key={section.label} open={section.items.some((i) => isActive(i.href)) || undefined}>
                 <summary className="cursor-pointer text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] px-2 mb-2 hover:text-[#475569] transition-colors select-none">
                   {section.label}
                 </summary>

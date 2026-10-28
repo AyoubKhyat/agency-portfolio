@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Plus, Upload, Send, CheckCircle, PhoneOff, Pencil, Trash2, Phone, LayoutGrid, List, Target, Search, X, Zap, ArrowUpDown } from "lucide-react";
+import { Plus, Upload, Send, CheckCircle, PhoneOff, Pencil, Trash2, Phone, LayoutGrid, List, Target, Search, X, Zap, ArrowUpDown, ShieldCheck, ShieldAlert, FileQuestion, History } from "lucide-react";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { PageHeader } from "@/components/admin/page-header";
 import { FilterTabs } from "@/components/admin/filter-tabs";
@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/admin/empty-state";
 import { ProspectDrawer } from "@/components/admin/prospect-drawer";
 import { cn } from "@/lib/utils";
 import { PROSPECT_SEGMENTS, SEGMENT_LABELS, SEGMENT_TOKENS, type ProspectSegment } from "@/lib/prospect-segments";
+import { STAGES, getStage, stageStatusParam, stageForStatusParam, getChannelState, getSendEvidence, CHANNEL_LABELS, SEND_LABELS, SEND_ACTION_TYPES } from "@/lib/prospect-stages";
 
 type MsgTemplate = (ig: string, followers: string) => string;
 
@@ -87,7 +88,6 @@ let followupCounter = 0;
 
 const STATUSES = ["ALL", "A_ENVOYER", "ENVOYE", "REPONDU", "MEETING", "PROPOSAL_SENT", "NEGOTIATION", "PAS_DE_WHATSAPP", "CLIENT", "CONVERTI", "LOST"] as const;
 const STATUS_LABELS: Record<string, string> = { ALL: "All", A_ENVOYER: "To send", ENVOYE: "Sent", REPONDU: "Replied", MEETING: "Meeting", PROPOSAL_SENT: "Proposal", NEGOTIATION: "Negotiation", PAS_DE_WHATSAPP: "No WA", CLIENT: "Client", CONVERTI: "Converted", LOST: "Lost" };
-const STATUS_BADGE: Record<string, string> = { A_ENVOYER: "blue", ENVOYE: "amber", REPONDU: "green", MEETING: "purple", PROPOSAL_SENT: "blue", NEGOTIATION: "amber", PAS_DE_WHATSAPP: "red", CLIENT: "green", CONVERTI: "purple", LOST: "default" };
 const PRIORITY_BADGE: Record<number, string> = { 1: "green", 2: "amber", 3: "default" };
 const PRIORITY_LABELS: Record<number, string> = { 1: "IG no site", 2: "No site", 3: "Has site" };
 const SECTORS = [
@@ -123,6 +123,8 @@ type Prospect = {
   scoredAt: string | null;
   owner?: { id: string; fullName: string; avatarInitials: string } | null;
   notes: { id: string; content: string; authorName: string | null; createdAt: string }[];
+  /** Latest send record (outreach message or SENT_WHATSAPP / SENT_INSTAGRAM activity), if any. */
+  lastSendAt?: string | null;
 };
 
 type OwnerStat = { id: string; fullName: string; avatarInitials: string; count: number };
@@ -233,6 +235,50 @@ function ScoreBadge({ prospect, factors }: { prospect: Prospect; factors?: strin
   );
 }
 
+/** Simple stage badge; the detailed stored status stays visible on hover. */
+function StageBadge({ status }: { status: string }) {
+  const stage = getStage(status);
+  return (
+    <span title={`Detailed status: ${STATUS_LABELS[status] ?? status}`}>
+      <Badge variant={stage?.badge ?? "default"} size="sm" dot>{stage?.label ?? (STATUS_LABELS[status] ?? status)}</Badge>
+    </span>
+  );
+}
+
+/** Contact channel: can this prospect be reached? Says nothing about whether a message was sent. */
+function ChannelChip({ prospect }: { prospect: Prospect }) {
+  const state = getChannelState(prospect);
+  const meta = CHANNEL_LABELS[state];
+  const verified = state === "VERIFIED";
+  return (
+    <span title={meta.title} className={cn(
+      "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium border",
+      verified ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-slate-50 text-slate-500 border-slate-200",
+    )}>
+      {verified ? <ShieldCheck className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />}
+      {meta.label}
+    </span>
+  );
+}
+
+/** Outreach evidence: does the app hold a record of a message being sent? Only for prospects marked contacted. */
+function SendChip({ prospect }: { prospect: Prospect }) {
+  const evidence = getSendEvidence(prospect);
+  if (evidence === "NOT_CONTACTED") return null;
+  const meta = SEND_LABELS[evidence];
+  return (
+    <span title={meta.title} className={cn(
+      "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium border",
+      evidence === "RECORDED" && "bg-blue-50 text-blue-700 border-blue-100",
+      evidence === "LEGACY" && "bg-slate-50 text-slate-500 border-slate-200",
+      evidence === "NOT_RECORDED" && "bg-amber-50 text-amber-800 border-amber-100",
+    )}>
+      {evidence === "RECORDED" ? <Send className="w-3 h-3" /> : evidence === "LEGACY" ? <History className="w-3 h-3" /> : <FileQuestion className="w-3 h-3" />}
+      {meta.label}
+    </span>
+  );
+}
+
 function ProspectingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -242,6 +288,8 @@ function ProspectingContent() {
   const qualityFilter = searchParams.get("qualityLabel") ?? "ALL";
   const segmentFilter = searchParams.get("segment") ?? "ALL";
   const dueFilter = searchParams.get("due") ?? "ALL";
+  const channelFilter = searchParams.get("channel") ?? "ALL";
+  const evidenceFilter = searchParams.get("evidence") ?? "ALL";
   const pageParam = parseInt(searchParams.get("page") ?? "1", 10);
 
   const [prospects, setProspects] = useState<Prospect[]>([]);
@@ -283,6 +331,8 @@ function ProspectingContent() {
     if (qualityFilter !== "ALL") qs.set("qualityLabel", qualityFilter);
     if (segmentFilter !== "ALL") qs.set("segment", segmentFilter);
     if (dueFilter !== "ALL") qs.set("due", dueFilter);
+    if (channelFilter !== "ALL") qs.set("channel", channelFilter);
+    if (evidenceFilter !== "ALL") qs.set("evidence", evidenceFilter);
     if (ownerFilter !== "ALL" && ownerFilter !== "UNASSIGNED") qs.set("owner", ownerFilter);
     if (ownerFilter === "UNASSIGNED") qs.set("unassigned", "true");
     if (debouncedSearch.trim()) qs.set("search", debouncedSearch.trim());
@@ -290,18 +340,25 @@ function ProspectingContent() {
     fetch(`/api/admin/prospecting?${qs}`)
       .then((r) => { if (r.status === 401) { router.push("/admin/login"); return null; } return r.json(); })
       .then((data) => { if (data) { setProspects(data.prospects); setTotal(data.total); setPages(data.pages); } setLoading(false); });
-  }, [statusFilter, sectorFilter, qualityFilter, segmentFilter, dueFilter, ownerFilter, debouncedSearch, pageParam, router]);
+  }, [statusFilter, sectorFilter, qualityFilter, segmentFilter, dueFilter, channelFilter, evidenceFilter, ownerFilter, debouncedSearch, pageParam, router]);
 
-  function navigate(status: string, sector: string, page = 1, owner = ownerFilter, quality = qualityFilter, segment = segmentFilter, due = dueFilter) {
+  function navigate(status: string, sector: string, page = 1, owner = ownerFilter, quality = qualityFilter, segment = segmentFilter, due = dueFilter, channel = channelFilter, evidence = evidenceFilter) {
     const qs = new URLSearchParams();
     if (status !== "ALL") qs.set("status", status);
     if (sector !== "ALL") qs.set("sector", sector);
     if (quality !== "ALL") qs.set("qualityLabel", quality);
     if (segment !== "ALL") qs.set("segment", segment);
     if (due !== "ALL") qs.set("due", due);
+    if (channel !== "ALL") qs.set("channel", channel);
+    if (evidence !== "ALL") qs.set("evidence", evidence);
     if (owner !== "ALL") qs.set("owner", owner);
     if (page > 1) qs.set("page", String(page));
     router.push(`/admin/prospecting${qs.toString() ? `?${qs}` : ""}`);
+  }
+
+  // A send logged from this page is a new send record, so the chip is right without a reload.
+  function withSendRecord(pr: Prospect, actionType: string): Prospect {
+    return SEND_ACTION_TYPES.includes(actionType) ? { ...pr, lastSendAt: new Date().toISOString() } : pr;
   }
 
   async function markSent(p: Prospect, actionType?: string) {
@@ -312,7 +369,7 @@ function ProspectingContent() {
     });
     if (res.ok) {
       const updated = await res.json();
-      setProspects((prev) => prev.map((pr) => pr.id === p.id ? { ...pr, ...updated, notes: pr.notes } : pr));
+      setProspects((prev) => prev.map((pr) => pr.id === p.id ? withSendRecord({ ...pr, ...updated, notes: pr.notes }, actionType || "SENT_WHATSAPP") : pr));
       if (updated.suggestedFollowUp) {
         fetch(`/api/admin/prospecting/${p.id}`, {
           method: "PATCH",
@@ -490,14 +547,23 @@ function ProspectingContent() {
     return { color: "bg-zinc-500/15 text-[#64748B]", icon: <Send className="w-3.5 h-3.5" />, label: "—" };
   }
 
+  const activeStage = stageForStatusParam(statusFilter);
+  const advancedCount = [
+    segmentFilter !== "ALL",
+    statusFilter !== "ALL" && !activeStage,
+    evidenceFilter !== "ALL",
+    sectorFilter !== "ALL",
+    qualityFilter !== "ALL",
+    ownerFilter !== "ALL",
+  ].filter(Boolean).length;
   const canFollowUp = (p: Prospect) => p.status === "ENVOYE" && p.sentAt && (Date.now() - new Date(p.sentAt).getTime()) > 3 * 86400000;
 
   return (
     <div>
       <PageHeader
-        title="Relationships"
+        title="Prospects"
         count={total}
-        subtitle="Every business relationship, one place."
+        subtitle="Everyone you are talking to, by stage."
         actions={
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <div className="flex items-center bg-white border border-[var(--os-border)] rounded-lg p-0.5">
@@ -553,8 +619,8 @@ function ProspectingContent() {
           { label: "Pipeline", value: kpis ? `${(kpis.pipelineValue / 1000).toFixed(0)}k` : "0", suffix: kpis?.currency ?? "MAD", tone: "slate" },
           { label: "Meetings", value: kpis?.meetingsScheduled ?? 0, tone: "slate" },
           { label: "Clients", value: kpis?.clientsWon ?? 0, tone: "emerald" },
-          { label: "Follow-ups", value: kpis?.upcomingFollowups ?? 0, tone: "slate", due: "today" as const },
-          { label: "Overdue", value: kpis?.overdueFollowups ?? 0, tone: "amber", due: "overdue" as const },
+          { label: "Follow-up dates", value: kpis?.upcomingFollowups ?? 0, tone: "slate", due: "today" as const, title: "Follow-up dates set in the next 14 days. A date is not evidence that a first message was sent." },
+          { label: "Overdue dates", value: kpis?.overdueFollowups ?? 0, tone: "amber", due: "overdue" as const, title: "Follow-up dates in the past, including historical records from before the July 2026 cleanup. Today shows which are backed by a recorded send." },
         ].map((k) => {
           const clickable = "due" in k && k.due;
           const content = (
@@ -578,6 +644,7 @@ function ProspectingContent() {
               <button
                 key={k.label}
                 type="button"
+                title={"title" in k ? k.title : undefined}
                 onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, k.due)}
                 className={cn(
                   "text-left rounded-xl border px-3 py-2.5 transition-all",
@@ -616,40 +683,11 @@ function ProspectingContent() {
             )}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
-            {dueFilter === "overdue" ? "Overdue follow-ups" : "Today's follow-ups"}
+            {dueFilter === "overdue" ? "Overdue follow-up dates" : "Follow-up dates today"}
             <X className="w-3.5 h-3.5 opacity-70" />
           </button>
         </div>
       )}
-
-      {/* Segment pills — muted, tone-on-tone identity */}
-      <div className="flex items-center gap-1.5 flex-wrap mb-4">
-        {[
-          { value: "ALL" as const, label: "All", dot: "bg-slate-300" },
-          ...PROSPECT_SEGMENTS.map((s) => ({
-            value: s,
-            label: SEGMENT_LABELS[s],
-            dot: SEGMENT_TOKENS[s].dot,
-          })),
-        ].map((seg) => {
-          const active = segmentFilter === seg.value;
-          return (
-            <button
-              key={seg.value}
-              onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, seg.value)}
-              className={cn(
-                "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium border transition-all",
-                active
-                  ? "bg-[#0F172A] text-white border-[#0F172A] shadow-sm"
-                  : "bg-white text-[#475569] border-[var(--os-border)] hover:border-[#CBD5E1] hover:bg-gray-50"
-              )}
-            >
-              <span className={cn("w-1.5 h-1.5 rounded-full", active ? "bg-white/70" : seg.dot)} />
-              {seg.label}
-            </button>
-          );
-        })}
-      </div>
 
       {/* Search */}
       <div className="relative mb-3">
@@ -668,38 +706,29 @@ function ProspectingContent() {
         )}
       </div>
 
-      {/* Filters */}
+      {/* Stage filter — simple stages group the stored statuses (display only, no data change) */}
       <FilterTabs
-        items={STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] || s }))}
-        active={statusFilter}
+        items={[{ value: "ALL", label: "All" }, ...STAGES.map((s) => ({ value: stageStatusParam(s), label: s.label }))]}
+        active={statusFilter === "ALL" ? "ALL" : activeStage ? stageStatusParam(activeStage) : ""}
         onChange={(v) => navigate(v, sectorFilter, 1, ownerFilter)}
         className="mb-2"
       />
-      <FilterTabs
-        items={SECTORS.map((s) => ({ value: s, label: s === "ALL" ? "All sectors" : s }))}
-        active={sectorFilter}
-        onChange={(v) => navigate(statusFilter, v, 1, ownerFilter)}
-        className="mb-2"
-        scrollable
-      />
-
-      {/* Quality filter chips */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-2">
-        <span className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mr-1">Quality</span>
+      {/* Contact readiness — a WhatsApp or Instagram confirmed by hand. Not evidence of a send. */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-3">
+        <span className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mr-1 shrink-0">Contact readiness</span>
         {[
-          { id: "ALL", label: "All", emoji: "" },
-          { id: "HOT", label: "🔥 HOT only", emoji: "" },
-          { id: "WARM", label: "WARM", emoji: "" },
-          { id: "COLD", label: "COLD", emoji: "" },
+          { id: "ALL", label: "All" },
+          { id: "verified", label: "Channel verified" },
+          { id: "unverified", label: "Channel unverified" },
         ].map((item) => (
           <button
             key={item.id}
-            onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, item.id)}
+            onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, dueFilter, item.id)}
             className={cn(
               "text-[11.5px] px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-all",
-              qualityFilter === item.id
-                ? item.id === "HOT" ? "bg-rose-500 text-white shadow-sm"
-                  : item.id === "WARM" ? "bg-amber-500 text-white shadow-sm"
+              channelFilter === item.id
+                ? item.id === "verified" ? "bg-emerald-600 text-white shadow-sm"
+                  : item.id === "unverified" ? "bg-amber-500 text-white shadow-sm"
                   : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
                 : "text-[#475569] bg-white border border-[var(--os-border)] hover:bg-gray-50"
             )}
@@ -709,32 +738,155 @@ function ProspectingContent() {
         ))}
       </div>
 
-      {/* Owner filter chips */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-6">
-        {[
-          { id: "ALL", label: "All", count: total },
-          { id: "UNASSIGNED", label: "Unassigned", count: 0 },
-          ...ownerStats.map((o) => ({ id: o.id, label: o.avatarInitials, count: o.count })),
-        ].map((item) => (
-          <button
-            key={item.id}
-            onClick={() => navigate(statusFilter, sectorFilter, 1, item.id)}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all shrink-0",
-              ownerFilter === item.id
-                ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
-                : "bg-white text-[#475569] border border-[#E2E8F0] hover:border-[#CBD5E1]"
-            )}
-          >
-            {item.label}
-            {item.count > 0 && (
-              <span className={cn("text-[10px] font-bold px-1 rounded-full", ownerFilter === item.id ? "bg-white/25" : "bg-[#F1F5F9]")}>
-                {item.count}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      {/* Advanced filters — every other filter, unchanged, folded away. Opens when one is in use. */}
+      <details className="mb-6 rounded-xl border border-[var(--os-border)] bg-white/40" open={advancedCount > 0 || undefined}>
+        <summary className="cursor-pointer select-none px-3 py-2 text-[12px] font-medium text-[#475569] hover:text-[#0F172A] flex items-center gap-2">
+          Advanced filters
+          {advancedCount > 0 && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 text-[#7C3AED]">{advancedCount} active</span>
+          )}
+          <span className="text-[11px] font-normal text-[#94A3B8]">Segment, detailed status, outreach record, sector, quality, owner</span>
+        </summary>
+        <div className="px-3 pb-3 pt-1 space-y-1">
+          <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mb-1.5">Segment</div>
+        {/* Segment pills — muted, tone-on-tone identity */}
+        <div className="flex items-center gap-1.5 flex-wrap mb-3">
+          {[
+            { value: "ALL" as const, label: "All", dot: "bg-slate-300" },
+            ...PROSPECT_SEGMENTS.map((s) => ({
+              value: s,
+              label: SEGMENT_LABELS[s],
+              dot: SEGMENT_TOKENS[s].dot,
+            })),
+          ].map((seg) => {
+            const active = segmentFilter === seg.value;
+            return (
+              <button
+                key={seg.value}
+                onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, seg.value)}
+                className={cn(
+                  "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium border transition-all",
+                  active
+                    ? "bg-[#0F172A] text-white border-[#0F172A] shadow-sm"
+                    : "bg-white text-[#475569] border-[var(--os-border)] hover:border-[#CBD5E1] hover:bg-gray-50"
+                )}
+              >
+                <span className={cn("w-1.5 h-1.5 rounded-full", active ? "bg-white/70" : seg.dot)} />
+                {seg.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center gap-1.5 mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mr-1 w-[104px] shrink-0">Detailed status</span>
+          <FilterTabs
+            items={STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] || s }))}
+            active={statusFilter}
+            onChange={(v) => navigate(v, sectorFilter, 1, ownerFilter)}
+            className="min-w-0"
+          />
+        </div>
+        {/* Send-evidence filter — independent of the channel filter above */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mr-1 w-[104px] shrink-0">Outreach</span>
+          {[
+            { id: "ALL", label: "All" },
+            { id: "recorded", label: "Send recorded" },
+            { id: "legacy", label: "Old send, unconfirmed" },
+            { id: "none", label: "No send record" },
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, dueFilter, channelFilter, item.id)}
+              className={cn(
+                "text-[11.5px] px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-all",
+                evidenceFilter === item.id
+                  ? item.id === "recorded" ? "bg-blue-600 text-white shadow-sm"
+                    : item.id === "none" ? "bg-amber-500 text-white shadow-sm"
+                    : item.id === "legacy" ? "bg-slate-600 text-white shadow-sm"
+                    : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
+                  : "text-[#475569] bg-white border border-[var(--os-border)] hover:bg-gray-50"
+              )}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+          <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mb-1.5">Sector</div>
+        <FilterTabs
+          items={SECTORS.map((s) => ({ value: s, label: s === "ALL" ? "All sectors" : s }))}
+          active={sectorFilter}
+          onChange={(v) => navigate(statusFilter, v, 1, ownerFilter)}
+          className="mb-2"
+          scrollable
+        />
+
+        {/* Quality filter chips */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mr-1 w-[104px] shrink-0">Quality</span>
+          {[
+            { id: "ALL", label: "All", emoji: "" },
+            { id: "HOT", label: "🔥 HOT only", emoji: "" },
+            { id: "WARM", label: "WARM", emoji: "" },
+            { id: "COLD", label: "COLD", emoji: "" },
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, item.id)}
+              className={cn(
+                "text-[11.5px] px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-all",
+                qualityFilter === item.id
+                  ? item.id === "HOT" ? "bg-rose-500 text-white shadow-sm"
+                    : item.id === "WARM" ? "bg-amber-500 text-white shadow-sm"
+                    : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
+                  : "text-[#475569] bg-white border border-[var(--os-border)] hover:bg-gray-50"
+              )}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+          <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mb-1.5">Owner</div>
+        {/* Owner filter chips */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {[
+            { id: "ALL", label: "All", count: total },
+            { id: "UNASSIGNED", label: "Unassigned", count: 0 },
+            ...ownerStats.map((o) => ({ id: o.id, label: o.avatarInitials, count: o.count })),
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => navigate(statusFilter, sectorFilter, 1, item.id)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all shrink-0",
+                ownerFilter === item.id
+                  ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
+                  : "bg-white text-[#475569] border border-[#E2E8F0] hover:border-[#CBD5E1]"
+              )}
+            >
+              {item.label}
+              {item.count > 0 && (
+                <span className={cn("text-[10px] font-bold px-1 rounded-full", ownerFilter === item.id ? "bg-white/25" : "bg-[#F1F5F9]")}>
+                  {item.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+          {advancedCount > 0 && (
+            <button
+              type="button"
+              onClick={() => navigate(activeStage || statusFilter === "ALL" ? statusFilter : "ALL", "ALL", 1, "ALL", "ALL", "ALL", dueFilter, channelFilter, "ALL")}
+              className="text-[11.5px] text-[#7C3AED] hover:underline mt-1"
+            >
+              Clear advanced filters
+            </button>
+          )}
+        </div>
+      </details>
 
       {loading ? (
         <div className="space-y-2">{[...Array(8)].map((_, i) => <div key={i} className="os-skeleton h-14 rounded-lg" />)}</div>
@@ -751,11 +903,12 @@ function ProspectingContent() {
                     <button onClick={() => setDrawerProspectId(p.id)} className="text-[14px] font-semibold text-[#0F172A] hover:text-[#8B00FF] transition-colors text-left">{p.name}</button>
                     {p.instagram && <span className="ml-1.5 text-[11px] text-[#64748B]">@{p.instagram.replace(/^@/, "")}</span>}
                   </div>
-                  <Badge variant={STATUS_BADGE[p.status] as "blue" | "amber" | "green" | "red" | "purple"} size="sm" dot>{STATUS_LABELS[p.status]}</Badge>
+                  <StageBadge status={p.status} />
                 </div>
                 <div className="flex items-center gap-2 flex-wrap mb-2.5">
                   <Badge variant="default" size="sm">{p.sector}</Badge>
                   <ScoreBadge prospect={p} factors={scoreFactors[p.id]} />
+                  <ChannelChip prospect={p} /><SendChip prospect={p} />
                   {p.neighborhood && <span className="text-[11px] text-[#64748B]">{p.neighborhood}</span>}
                   {p.notes?.[0] && <span className="text-[10px] text-[#64748B] truncate max-w-[180px]" title={p.notes[0].content}>{p.notes[0].content}</span>}
                 </div>
@@ -831,7 +984,7 @@ function ProspectingContent() {
                       <td className="px-4 py-2.5 text-[#475569] text-xs hidden lg:table-cell">{p.neighborhood || "—"}</td>
                       <td className="px-4 py-2.5"><Badge variant={PRIORITY_BADGE[p.priority] as "green" | "amber" | "default"} size="sm">{PRIORITY_LABELS[p.priority]}</Badge></td>
                       <td className="px-4 py-2.5"><ScoreBadge prospect={p} factors={scoreFactors[p.id]} /></td>
-                      <td className="px-4 py-2.5"><Badge variant={STATUS_BADGE[p.status] as "blue" | "amber" | "green" | "red" | "purple"} size="sm" dot>{STATUS_LABELS[p.status]}</Badge></td>
+                      <td className="px-4 py-2.5"><div className="flex flex-col items-start gap-1"><StageBadge status={p.status} /><ChannelChip prospect={p} /><SendChip prospect={p} /></div></td>
                       <td className="px-4 py-2.5 text-[#64748B] text-xs hidden lg:table-cell">{p.sentAt ? new Date(p.sentAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) : "—"}</td>
                       <td className="px-4 py-2.5">
                         <div className="flex items-center justify-end gap-1">
@@ -908,11 +1061,12 @@ function ProspectingContent() {
                   className="group rounded-xl border border-[var(--os-border)] bg-white/80 p-4 hover:border-[var(--os-border-hover)] hover:bg-white/80 transition-all">
                   <div className="flex items-start justify-between mb-2">
                     <button onClick={() => setDrawerProspectId(p.id)} className="text-[14px] font-semibold text-[#0F172A] hover:text-[#8B00FF] transition-colors truncate text-left">{p.name}</button>
-                    <Badge variant={STATUS_BADGE[p.status] as "blue" | "amber" | "green" | "red" | "purple"} size="sm" dot>{STATUS_LABELS[p.status]}</Badge>
+                    <StageBadge status={p.status} />
                   </div>
                   <div className="flex items-center gap-2 mb-3">
                     <Badge variant="default" size="sm">{p.sector}</Badge>
                     <ScoreBadge prospect={p} factors={scoreFactors[p.id]} />
+                    <ChannelChip prospect={p} /><SendChip prospect={p} />
                     {p.neighborhood && <span className="text-[11px] text-[#64748B]">{p.neighborhood}</span>}
                   </div>
                   <div className="flex items-center gap-3 text-[11px] text-[#475569] mb-3">

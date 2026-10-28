@@ -232,7 +232,8 @@ export async function GET() {
   const crmHealthSignals = [
     { label: "Unassigned prospects",     count: unassignedProspects,    severity: severityFor(unassignedProspects, 5, 20) },
     { label: "Missing phone",            count: missingPhone,           severity: severityFor(missingPhone, 5, 30) },
-    { label: "Overdue follow-ups",       count: overdueFollowUps,       severity: severityFor(overdueFollowUps, 1, 10) },
+    // Counts stored follow-up dates, including historical records; not all are backed by a recorded send.
+    { label: "Overdue follow-up dates",  count: overdueFollowUps,       severity: severityFor(overdueFollowUps, 1, 10) },
     { label: "Stale clients (30d)",      count: staleClients,           severity: severityFor(staleClients, 1, 5) },
     { label: "Contracts expiring 30d",   count: contractsExpiring,      severity: severityFor(contractsExpiring, 1, 3) },
     { label: "Meetings missing outcome", count: meetingsWithoutOutcome, severity: severityFor(meetingsWithoutOutcome, 1, 5) },
