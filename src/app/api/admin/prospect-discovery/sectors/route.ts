@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { SECTORS, CITIES, NEIGHBORHOODS_MARRAKECH } from "@/lib/discovery-providers";
 
 // Static reference data — sectors / cities / neighborhoods. Keeps client in sync with server.
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
 
   return NextResponse.json({
     sectors: SECTORS.map((s) => ({ key: s.key, label: s.label, category: s.category })),

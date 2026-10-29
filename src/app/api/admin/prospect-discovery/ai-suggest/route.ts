@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { requireTeam } from "@/lib/authz";
 import Anthropic from "@anthropic-ai/sdk";
-import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { getAnthropic, SALES_AI_MODEL, MissingApiKeyError } from "@/lib/anthropic";
 
@@ -30,8 +30,8 @@ const OUTPUT_SCHEMA = {
 const SINCE_DAYS = 90;
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 
   const since = new Date(Date.now() - SINCE_DAYS * 86_400_000);

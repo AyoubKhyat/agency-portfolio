@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { requireTeam } from "@/lib/authz";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { getAiProvider } from "@/lib/ai";
 
@@ -15,8 +15,8 @@ const schema = z.object({
  * provider (which itself falls back to Mock on error).
  */
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
 
   const body = await req.json().catch(() => ({}));
   const parsed = schema.safeParse(body);
