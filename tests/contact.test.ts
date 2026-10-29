@@ -320,7 +320,7 @@ test("notification-status rejects bad input and unknown or old leads", async () 
 });
 
 test("the database duplicate query matches email (case-insensitive), message and service", () => {
-  const dal = fs.readFileSync("src/lib/dal.ts", "utf8");
+  const dal = fs.readFileSync("src/lib/dal/leads.ts", "utf8");
   const fn = dal.slice(dal.indexOf("export async function findRecentDuplicateLead"));
   assert.match(fn.slice(0, 600), /where: \{ email: \{ equals: email, mode: "insensitive" \}, message, subject, createdAt: \{ gte: since \} \}/);
 });

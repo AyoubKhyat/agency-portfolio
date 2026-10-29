@@ -166,7 +166,7 @@ test("Today route: team guard first, no bare session check", () => {
 });
 
 test("Today summary is read-only and does not filter enquiries", () => {
-  const dal = read("src/lib/dal.ts");
+  const dal = read("src/lib/dal/stats.ts");
   const start = dal.indexOf("export async function getTodaySummary");
   assert.ok(start > 0, "getTodaySummary not found");
   const fn = dal.slice(start, dal.indexOf("\nexport ", start + 1));
