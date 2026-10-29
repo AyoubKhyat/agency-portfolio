@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Send, Check, Loader2, BookOpen, Copy, ChevronDown, ChevronUp, ExternalLink, Sparkles, ClipboardList, X, AlertCircle, RefreshCw, ShieldAlert } from "lucide-react";
+import { Send, Check, Loader2, BookOpen, Copy, ChevronDown, ChevronUp, ExternalLink, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { analyzeMessage, hasBlockingError, type Warning } from "@/lib/message-quality";
@@ -47,32 +47,6 @@ type OutreachMessage = {
   template: { name: string; key: string } | null;
 };
 
-type MessageVariants = {
-  whatsapp_short: string;
-  whatsapp_long: string;
-  instagram_short: string;
-  instagram_long: string;
-  rationale: string;
-};
-
-type AuditHypothesis = {
-  hypothesis: string;
-  why_it_matters: string;
-  how_to_verify: string;
-  recommendation: string;
-};
-/**
- * `knownFacts` is built server-side from stored columns and is the only part
- * of this payload that is factual. `hypotheses` are explicitly unverified —
- * nothing in the system has inspected the prospect's site or feed.
- */
-type AuditResult = {
-  knownFacts: string[];
-  hypotheses: AuditHypothesis[];
-  conversation_opener: string;
-  evidence_gap: string;
-};
-
 const REPLY_REASONS = [
   { value: "MEETING_REQUESTED", label: "Wants a meeting" },
   { value: "PROPOSAL_REQUESTED", label: "Wants a proposal" },
@@ -82,31 +56,6 @@ const REPLY_REASONS = [
   { value: "HAS_PROVIDER", label: "Already has provider" },
   { value: "TOO_EXPENSIVE", label: "Too expensive" },
   { value: "NO_BUDGET", label: "No budget" },
-];
-
-const TONES = [
-  { value: "PROFESSIONAL", label: "Professional" },
-  { value: "FRIENDLY", label: "Friendly" },
-  { value: "DIRECT", label: "Direct" },
-  { value: "DARIJA_LIGHT", label: "Darija light" },
-  { value: "FRENCH_BUSINESS", label: "French business" },
-  { value: "ENGLISH", label: "English" },
-];
-
-const OBJECTIVES = [
-  { value: "GET_REPLY", label: "Get reply" },
-  { value: "BOOK_MEETING", label: "Book meeting" },
-  { value: "SEND_AUDIT", label: "Send audit" },
-  { value: "RECONNECT", label: "Reconnect" },
-  { value: "FOLLOW_UP", label: "Follow up" },
-];
-
-const FEEDBACK_CHIPS = [
-  { value: "TOO_GENERIC", label: "Too generic" },
-  { value: "TOO_LONG", label: "Too long" },
-  { value: "TOO_SALESY", label: "Too salesy" },
-  { value: "MAKE_WARMER", label: "Make it warmer" },
-  { value: "MAKE_SHORTER", label: "Make it shorter" },
 ];
 
 const STEP_LABELS = {
@@ -140,19 +89,6 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
   const [body, setBody] = useState("");
   const [channel, setChannel] = useState("WHATSAPP");
   const [scoring, setScoring] = useState(false);
-
-  // AI feature state
-  const [generating, setGenerating] = useState<null | "message" | "audit" | "regenerate">(null);
-  const [generation, setGeneration] = useState<{ variants: MessageVariants; tone: string; objective: string } | null>(null);
-  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [tone, setTone] = useState<string>("FRIENDLY");
-  const [objective, setObjective] = useState<string>("GET_REPLY");
-
-  // Tracks which variant letter (A/B/C/D) the user picked for logging
-  const [pendingVariantLabel, setPendingVariantLabel] = useState<string | null>(null);
-  const [pendingTone, setPendingTone] = useState<string | null>(null);
-  const [pendingObjective, setPendingObjective] = useState<string | null>(null);
 
   // Quality guard
   const [qualityOverride, setQualityOverride] = useState(false);
@@ -215,9 +151,6 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
           templateId: selectedTemplate || null,
           channel,
           body,
-          variantLabel: pendingVariantLabel,
-          tone: pendingTone,
-          objective: pendingObjective,
         }),
       });
       if (res.ok) {
@@ -226,9 +159,6 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
         setBody("");
         setSelectedTemplate("");
         setShowLogger(false);
-        setPendingVariantLabel(null);
-        setPendingTone(null);
-        setPendingObjective(null);
         setQualityOverride(false);
         load(); // refresh sequence (initial contact may be auto-set)
         recomputeScore();
@@ -249,70 +179,6 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
       setMessages((prev) => prev.map((m) => m.id === messageId ? { ...m, ...updated } : m));
       recomputeScore();
     }
-  }
-
-  async function generateMessage(opts?: { feedback?: string; previousAttempt?: string }) {
-    if (generating) return;
-    setGenerating(opts?.feedback ? "regenerate" : "message");
-    setAiError(null);
-    try {
-      const res = await fetch(`/api/admin/prospecting/${prospect.id}/generate-message`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          language: tone === "ENGLISH" ? "en" : "fr",
-          tone,
-          objective,
-          feedback: opts?.feedback ?? null,
-          previousAttempt: opts?.previousAttempt ?? null,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setAiError(data.message || data.error || `Failed (${res.status})`);
-        return;
-      }
-      setGeneration({ variants: data.variants, tone: data.tone, objective: data.objective });
-    } catch (err) {
-      setAiError(err instanceof Error ? err.message : "Generation failed");
-    } finally {
-      setGenerating(null);
-    }
-  }
-
-  async function generateAudit() {
-    if (generating) return;
-    setGenerating("audit");
-    setAiError(null);
-    try {
-      const res = await fetch(`/api/admin/prospecting/${prospect.id}/generate-audit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language: "fr" }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setAiError(data.message || data.error || `Failed (${res.status})`);
-        return;
-      }
-      setAuditResult(data.audit);
-    } catch (err) {
-      setAiError(err instanceof Error ? err.message : "Generation failed");
-    } finally {
-      setGenerating(null);
-    }
-  }
-
-  function useVariant(text: string, ch: string, variantLabel: string | null = null, srcTone: string | null = null, srcObjective: string | null = null) {
-    setBody(text);
-    setChannel(ch);
-    setShowLogger(true);
-    setGeneration(null); // close modal
-    setPendingVariantLabel(variantLabel);
-    setPendingTone(srcTone);
-    setPendingObjective(srcObjective);
-    setQualityOverride(false);
-    setTimeout(() => document.querySelector('textarea[placeholder*="Paste"]')?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
   }
 
   async function recomputeScore() {
@@ -359,60 +225,6 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
           </Link>
         </div>
       </div>
-
-      {/* AI controls — tone + objective selectors */}
-      <div className="mb-3 grid grid-cols-2 gap-2">
-        <div>
-          <label className="block text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-1">Tone</label>
-          <select
-            value={tone}
-            onChange={(e) => setTone(e.target.value)}
-            disabled={!!generating}
-            className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--os-border)] bg-white text-[12px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300 disabled:opacity-50"
-          >
-            {TONES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-1">Objective</label>
-          <select
-            value={objective}
-            onChange={(e) => setObjective(e.target.value)}
-            disabled={!!generating}
-            className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--os-border)] bg-white text-[12px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300 disabled:opacity-50"
-          >
-            {OBJECTIVES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        </div>
-      </div>
-
-      {/* AI actions */}
-      <div className="mb-5 grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <button
-          onClick={() => generateMessage()}
-          disabled={!!generating}
-          className="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-medium border border-purple-200 bg-purple-50/60 text-[#7C3AED] hover:bg-purple-100/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-        >
-          {generating === "message" || generating === "regenerate" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          {generating === "message" ? "Generating..." : generating === "regenerate" ? "Regenerating..." : "Generate Outreach Message"}
-        </button>
-        <button
-          onClick={generateAudit}
-          disabled={!!generating}
-          className="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-medium border border-purple-200 bg-purple-50/60 text-[#7C3AED] hover:bg-purple-100/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-        >
-          {generating === "audit" ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}
-          {generating === "audit" ? "Auditing..." : "Generate Quick Audit"}
-        </button>
-      </div>
-
-      {aiError && (
-        <div className="mb-4 px-3 py-2 rounded-xl bg-red-50 border border-red-200 flex items-start gap-2 text-[12px] text-red-700">
-          <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-          <span className="flex-1">{aiError}</span>
-          <button onClick={() => setAiError(null)} className="text-red-500"><X className="w-3.5 h-3.5" /></button>
-        </div>
-      )}
 
       {/* Sequence */}
       <div className="mb-5">
@@ -529,17 +341,6 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
               </div>
             )}
 
-            {(pendingVariantLabel || pendingTone) && (
-              <div className="flex items-center gap-1.5 text-[11px] text-[#64748B]">
-                <span className="text-[#94A3B8]">Tracking as:</span>
-                {pendingVariantLabel && (
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-purple-100 text-[#7C3AED] font-bold">{pendingVariantLabel}</span>
-                )}
-                {pendingTone && <span className="text-[#475569]">{TONES.find((t) => t.value === pendingTone)?.label}</span>}
-                {pendingObjective && <span className="text-[#94A3B8]">· {OBJECTIVES.find((o) => o.value === pendingObjective)?.label}</span>}
-              </div>
-            )}
-
             <div className="flex items-center justify-between gap-2">
               <button
                 onClick={() => body && navigator.clipboard.writeText(body)}
@@ -591,24 +392,6 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
           </div>
         )}
       </div>
-
-      {generation && (
-        <MessageVariantsModal
-          generation={generation}
-          regenerating={generating === "regenerate"}
-          onClose={() => setGeneration(null)}
-          onUse={(text, ch, label) => useVariant(text, ch, label, generation.tone, generation.objective)}
-          onRegenerate={(feedback, previousAttempt) => generateMessage({ feedback, previousAttempt })}
-        />
-      )}
-
-      {auditResult && (
-        <AuditModal
-          audit={auditResult}
-          onClose={() => setAuditResult(null)}
-          onUseOpener={(text) => useVariant(text, "WHATSAPP")}
-        />
-      )}
     </div>
   );
 }
@@ -659,240 +442,6 @@ function ReplyButton({ message, onUpdate }: { message: OutreachMessage; onUpdate
           </button>
         </div>
       )}
-    </div>
-  );
-}
-
-/* ------------------------- AI: Message variants modal ------------------------- */
-function MessageVariantsModal({
-  generation,
-  regenerating,
-  onClose,
-  onUse,
-  onRegenerate,
-}: {
-  generation: { variants: MessageVariants; tone: string; objective: string };
-  regenerating: boolean;
-  onClose: () => void;
-  onUse: (text: string, channel: string, label: string) => void;
-  onRegenerate: (feedback: string, previousAttempt: string) => void;
-}) {
-  const [copied, setCopied] = useState<string | null>(null);
-
-  async function copy(text: string, key: string) {
-    await navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 1500);
-  }
-
-  const { variants } = generation;
-
-  // A=ws_short, B=ws_long, C=ig_short, D=ig_long — fixed mapping for A/B testing
-  const variantList: Array<{ label: string; key: string; surface: string; channel: string; text: string }> = [
-    { label: "A", key: "ws", surface: "WhatsApp · short", channel: "WHATSAPP", text: variants.whatsapp_short },
-    { label: "B", key: "wl", surface: "WhatsApp · long", channel: "WHATSAPP", text: variants.whatsapp_long },
-    { label: "C", key: "is", surface: "Instagram · short", channel: "INSTAGRAM", text: variants.instagram_short },
-    { label: "D", key: "il", surface: "Instagram · long", channel: "INSTAGRAM", text: variants.instagram_long },
-  ];
-
-  function regenerate(feedback: string) {
-    // Use variant B (WhatsApp long) as the "previous attempt" reference — it's the canonical long-form
-    onRegenerate(feedback, variants.whatsapp_long);
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-6 sm:pt-12 px-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-3xl bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--os-border)]">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#8B00FF]" />
-            <div>
-              <h2 className="text-lg font-semibold text-[#0F172A]">Personalized messages</h2>
-              <div className="flex items-center gap-1.5 text-[11px] text-[#64748B] mt-0.5">
-                <span>Tone: {TONES.find((t) => t.value === generation.tone)?.label}</span>
-                <span>·</span>
-                <span>Objective: {OBJECTIVES.find((o) => o.value === generation.objective)?.label}</span>
-              </div>
-            </div>
-          </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"><X className="w-5 h-5" /></button>
-        </div>
-
-        <div className="p-6 space-y-4 max-h-[calc(100vh-160px)] overflow-y-auto">
-          <div className="text-[12px] text-[#64748B] italic border-l-2 border-purple-200 pl-3 py-1">
-            {variants.rationale}
-          </div>
-
-          {/* Regenerate row */}
-          <div className="rounded-xl border border-[var(--os-border)] bg-gray-50/60 p-3">
-            <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-2">
-              <RefreshCw className={cn("w-3 h-3", regenerating && "animate-spin")} />
-              Not quite right? Regenerate with feedback
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {FEEDBACK_CHIPS.map((chip) => (
-                <button
-                  key={chip.value}
-                  onClick={() => regenerate(chip.value)}
-                  disabled={regenerating}
-                  className="text-[11px] px-2.5 py-1 rounded-full border border-purple-200 bg-white text-[#7C3AED] hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  {chip.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {variantList.map((v) => (
-              <div key={v.key} className="rounded-xl border border-[var(--os-border)] bg-white p-3 hover:border-purple-200 transition-colors">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[11px] font-bold">{v.label}</span>
-                    <span className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium">{v.surface}</span>
-                  </div>
-                  <span className="text-[10px] text-[#94A3B8] tabular-nums">{v.text.split(/\s+/).filter(Boolean).length} words</span>
-                </div>
-                <p className="text-[12.5px] text-[#0F172A] whitespace-pre-wrap leading-relaxed mb-3">{v.text}</p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => copy(v.text, v.key)}
-                    className="inline-flex items-center gap-1 text-[11px] text-[#475569] hover:text-[#0F172A] px-2 py-1 rounded hover:bg-gray-50"
-                  >
-                    {copied === v.key ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                    {copied === v.key ? "Copied" : "Copy"}
-                  </button>
-                  <button
-                    onClick={() => onUse(v.text, v.channel, v.label)}
-                    className="inline-flex items-center gap-1 text-[11px] text-white bg-gradient-to-r from-[#8B00FF] to-[#C026D3] px-2.5 py-1 rounded font-medium hover:shadow-md"
-                  >
-                    Use {v.label} &amp; log
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------- AI: Audit modal ------------------------- */
-function AuditModal({ audit, onClose, onUseOpener }: { audit: AuditResult; onClose: () => void; onUseOpener: (text: string) => void }) {
-  const [copied, setCopied] = useState(false);
-
-  async function copyAll() {
-    const text = [
-      "KNOWN (from our records):",
-      ...audit.knownFacts.map((f) => `- ${f}`),
-      "",
-      "UNVERIFIED HYPOTHESES — check before mentioning any of these:",
-      ...audit.hypotheses.map((h, i) =>
-        `${i + 1}. ${h.hypothesis}\n   Why it matters: ${h.why_it_matters}\n   Verify: ${h.how_to_verify}\n   → ${h.recommendation}`
-      ),
-      "",
-      audit.conversation_opener,
-    ].join("\n");
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-6 sm:pt-12 px-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--os-border)]">
-          <div className="flex items-center gap-2">
-            <ClipboardList className="w-4 h-4 text-[#8B00FF]" />
-            <h2 className="text-lg font-semibold text-[#0F172A]">Pre-call checklist · unverified</h2>
-          </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"><X className="w-5 h-5" /></button>
-        </div>
-
-        <div className="p-6 space-y-4 max-h-[calc(100vh-160px)] overflow-y-auto">
-          <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
-            <p className="text-[12px] text-amber-900 leading-relaxed">
-              <strong>Nothing below has been checked.</strong> We have not opened this
-              business&apos;s website or Instagram — only the records we already hold.
-              Treat every item as a question to verify, not a finding to send.
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-[var(--os-border)] bg-white p-4">
-            <div className="text-[10px] uppercase tracking-wider text-emerald-700 font-bold mb-2">
-              Known — from our records
-            </div>
-            <ul className="space-y-1">
-              {audit.knownFacts.map((f, i) => (
-                <li key={i} className="text-[13px] text-[#0F172A] flex gap-2">
-                  <Check className="w-3 h-3 text-emerald-600 mt-1 shrink-0" />
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="space-y-3">
-            <div className="text-[10px] uppercase tracking-wider text-amber-700 font-bold">
-              Unverified hypotheses — verify before mentioning
-            </div>
-            {audit.hypotheses.map((h, i) => (
-              <div key={i} className="rounded-xl border border-[var(--os-border)] bg-white p-4">
-                <div className="flex items-baseline gap-3 mb-2">
-                  <span className="text-[20px] font-bold text-[#8B00FF] tabular-nums leading-none">{String(i + 1).padStart(2, "0")}</span>
-                  <div className="flex-1 space-y-2">
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-amber-700 font-medium mb-0.5">Hypothesis (unverified)</div>
-                      <p className="text-[13px] text-[#0F172A]">{h.hypothesis}</p>
-                    </div>
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-medium mb-0.5">Why it matters</div>
-                      <p className="text-[13px] text-[#475569]">{h.why_it_matters}</p>
-                    </div>
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-medium mb-0.5">How to verify</div>
-                      <p className="text-[13px] text-[#0F172A]">{h.how_to_verify}</p>
-                    </div>
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-medium mb-0.5">Recommendation (if it holds)</div>
-                      <p className="text-[13px] text-[#0F172A] font-medium">{h.recommendation}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {audit.evidence_gap && (
-            <div className="rounded-xl border border-[var(--os-border)] bg-[#F8FAFC] px-4 py-3">
-              <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-medium mb-0.5">Evidence gap</div>
-              <p className="text-[13px] text-[#475569]">{audit.evidence_gap}</p>
-            </div>
-          )}
-
-          <div className="rounded-xl border-2 border-purple-200 bg-gradient-to-br from-purple-50/40 to-violet-50/40 p-4">
-            <div className="text-[10px] uppercase tracking-wider text-[#8B00FF] font-bold mb-2">Suggested conversation opener</div>
-            <p className="text-[13px] text-[#0F172A] whitespace-pre-wrap leading-relaxed mb-3">{audit.conversation_opener}</p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onUseOpener(audit.conversation_opener)}
-                className="inline-flex items-center gap-1.5 text-[12px] text-white bg-gradient-to-r from-[#8B00FF] to-[#C026D3] px-3 py-1.5 rounded-lg font-medium hover:shadow-md"
-              >
-                <Send className="w-3 h-3" />
-                Use as outreach
-              </button>
-              <button
-                onClick={copyAll}
-                className="inline-flex items-center gap-1.5 text-[12px] text-[#475569] hover:text-[#0F172A] px-3 py-1.5 rounded-lg hover:bg-white"
-              >
-                {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                {copied ? "Copied" : "Copy checklist"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
