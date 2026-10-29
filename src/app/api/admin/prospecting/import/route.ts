@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { createProspect } from "@/lib/dal";
 
 const STATUS_MAP: Record<string, string> = {
@@ -26,8 +26,8 @@ function parseCSVLine(line: string): string[] {
 }
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;

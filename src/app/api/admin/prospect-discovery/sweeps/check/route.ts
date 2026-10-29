@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { requireTeam } from "@/lib/authz";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
 
 const checkSchema = z.object({
@@ -21,8 +21,8 @@ const checkSchema = z.object({
 // Returns which (city, sector, neighborhood) tuples in the proposed batch were
 // already swept successfully within the last N days. Used to skip redundant work.
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ matches: [], staleQueries: [] });
 
   const parsed = checkSchema.safeParse(await req.json());

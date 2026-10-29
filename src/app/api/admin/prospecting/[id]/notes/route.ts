@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { addProspectNote, logProspectActivity } from "@/lib/dal";
 import { notifyMentionsInText } from "@/lib/notify";
 import { prisma, hasPrisma } from "@/lib/prisma";
@@ -9,8 +9,9 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
 
   const { id } = await params;
   const body = await req.json();

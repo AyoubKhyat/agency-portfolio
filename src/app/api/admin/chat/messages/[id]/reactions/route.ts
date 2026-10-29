@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { requireTeam } from "@/lib/authz";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
 
 const schema = z.object({ emoji: z.string().min(1).max(12) });
@@ -15,8 +15,9 @@ async function assertMember(messageId: string, userId: string) {
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 
   const { id } = await params;

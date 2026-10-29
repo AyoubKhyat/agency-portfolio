@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { isAdmin } from "@/lib/authz";
+import { isAdmin, requireTeam } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { logProspectActivity, notifyTeam, updateProspectStatus } from "@/lib/dal";
 import { z } from "zod";
@@ -20,8 +19,9 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
   if (!hasPrisma()) return NextResponse.json({ error: "No database" }, { status: 500 });
 
   const { id } = await params;
@@ -206,8 +206,9 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
   if (!isAdmin(session)) return NextResponse.json({ error: "Only admins can delete proposals" }, { status: 403 });
   if (!hasPrisma()) return NextResponse.json({ error: "No database" }, { status: 500 });
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 
 /**
@@ -11,8 +11,8 @@ import { prisma, hasPrisma } from "@/lib/prisma";
  *  - hotOpportunities: replyReason in MEETING/PROPOSAL/INTERESTED AND not yet converted/lost
  */
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ unanswered: 0, today: 0, meetingsWaiting: 0, proposalsRequested: 0, hotOpportunities: 0 });
 
   const todayStart = new Date(new Date().toDateString());

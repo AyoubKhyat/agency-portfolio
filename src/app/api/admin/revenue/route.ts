@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 
 /**
@@ -44,8 +44,8 @@ function startOfMonth(d: Date) { return new Date(d.getFullYear(), d.getMonth(), 
 function startOfQuarter(d: Date) { const q = Math.floor(d.getMonth() / 3) * 3; return new Date(d.getFullYear(), q, 1); }
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 
   const now = new Date();

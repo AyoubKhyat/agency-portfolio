@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { getProjectsForAdmin, createProject, getProjectIdBySlug } from "@/lib/dal";
 import { logAudit, getClientIp } from "@/lib/audit";
 import { findSlugConflict, isUniqueSlugViolation, slugConflict } from "@/lib/project-slug";
@@ -62,16 +62,17 @@ const createSchema = z.object({
 });
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
 
   const projects = await getProjectsForAdmin();
   return NextResponse.json(projects);
 }
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
 
   let body: unknown;
   try {

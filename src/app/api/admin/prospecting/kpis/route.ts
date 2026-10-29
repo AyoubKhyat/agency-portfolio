@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 
 // Reads cookie → dynamic. Never cache; segment/proposal state changes are the whole point.
@@ -11,8 +11,8 @@ export const dynamic = "force-dynamic";
  * No new schema.
  */
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
 
   const empty = {
     warmRelationships: 0,

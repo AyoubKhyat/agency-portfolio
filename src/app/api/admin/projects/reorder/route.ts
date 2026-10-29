@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { reorderProjects } from "@/lib/dal";
 import { z } from "zod";
 
@@ -8,8 +8,8 @@ const schema = z.object({
 });
 
 export async function PUT(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
 
   const body = await req.json();
   const parsed = schema.safeParse(body);

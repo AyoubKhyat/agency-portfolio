@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { requireTeam } from "@/lib/authz";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { computeQualityLabel, isMobileMA } from "@/lib/prospect-quality";
 import { scoreProspect } from "@/lib/prospect-scoring";
@@ -45,8 +45,9 @@ function cleanInstagram(handle: string): string {
 }
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 
   const parsed = schema.safeParse(await req.json());
