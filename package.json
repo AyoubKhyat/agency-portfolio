@@ -16,7 +16,6 @@
     "lead:erase": "tsx scripts/erase-lead.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.104.0",
     "@emailjs/browser": "^4.4.1",
     "@neondatabase/serverless": "^1.1.0",
     "@prisma/adapter-neon": "^7.10.1",
