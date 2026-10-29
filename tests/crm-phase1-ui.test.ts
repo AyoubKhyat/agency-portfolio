@@ -32,7 +32,7 @@ test("marking a test is one enquiry at a time, confirmed, through the existing P
   const page = read("src/app/admin/leads/[id]/page.tsx");
   assert.match(page, /newStatus === LEAD_TEST_STATUS && !confirm\(/);
   // No code path picks tests by content (name, email, subject...) or marks several at once.
-  for (const rel of ["src/lib/dal.ts", "src/app/admin/page.tsx", "src/app/admin/leads/page.tsx", "src/lib/lead-status.ts"]) {
+  for (const rel of ["src/lib/dal/leads.ts", "src/lib/dal/stats.ts", "src/lib/dal/prospects.ts", "src/app/admin/page.tsx", "src/app/admin/leads/page.tsx", "src/lib/lead-status.ts"]) {
     const src = read(rel);
     assert.doesNotMatch(src, /status:\s*(LEAD_TEST_STATUS|"TEST")\s*}\s*,?\s*data:/, `${rel} writes TEST in bulk`);
     assert.doesNotMatch(src, /(email|fullName|subject|message):\s*\{[^}]*contains/, `${rel} filters leads by content`);
