@@ -1,4 +1,4 @@
-import sharp from "sharp";
+import sharp, { type Metadata } from "sharp";
 import path from "path";
 import fs from "fs/promises";
 import { put } from "@vercel/blob";
@@ -44,7 +44,7 @@ export function checkCoverFile(file: File): void {
 
 /** Sniff the real bytes, then resize/crop to 1280×800 WebP. */
 export async function convertCover(input: Buffer): Promise<Buffer> {
-  let meta: sharp.Metadata;
+  let meta: Metadata;
   try {
     meta = await sharp(input).metadata();
   } catch {
