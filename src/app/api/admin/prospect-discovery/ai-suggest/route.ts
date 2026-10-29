@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireTeam } from "@/lib/authz";
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma, hasPrisma } from "@/lib/prisma";
-import { getAnthropic, SALES_AI_MODEL, MissingApiKeyError } from "@/lib/anthropic";
+import { getAnthropic, SALES_AI_MODEL, MissingApiKeyError } from "@/lib/ai/anthropic-client";
 
 const OUTPUT_SCHEMA = {
   type: "object" as const,

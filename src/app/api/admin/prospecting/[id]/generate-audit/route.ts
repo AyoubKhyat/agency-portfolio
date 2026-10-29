@@ -3,7 +3,7 @@ import { requireTeam } from "@/lib/authz";
 import { z } from "zod";
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma, hasPrisma } from "@/lib/prisma";
-import { getAnthropic, SALES_AI_MODEL, MissingApiKeyError } from "@/lib/anthropic";
+import { getAnthropic, SALES_AI_MODEL, MissingApiKeyError } from "@/lib/ai/anthropic-client";
 
 /**
  * "Quick audit" generator.
