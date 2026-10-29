@@ -3,7 +3,7 @@ import { requireTeam } from "@/lib/authz";
 import { z } from "zod";
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma, hasPrisma } from "@/lib/prisma";
-import { getAnthropic, SALES_AI_MODEL, MissingApiKeyError } from "@/lib/anthropic";
+import { getAnthropic, SALES_AI_MODEL, MissingApiKeyError } from "@/lib/ai/anthropic-client";
 
 const TONES = ["PROFESSIONAL", "FRIENDLY", "DIRECT", "DARIJA_LIGHT", "FRENCH_BUSINESS", "ENGLISH"] as const;
 const OBJECTIVES = ["GET_REPLY", "BOOK_MEETING", "SEND_AUDIT", "RECONNECT", "FOLLOW_UP"] as const;

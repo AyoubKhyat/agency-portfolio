@@ -8,11 +8,13 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { MockAiProvider } from "./mock";
+import { SALES_AI_MODEL } from "./anthropic-client";
 import type {
   AiProvider, AuditInput, AuditOutput, EmailDraft, OutreachInput,
 } from "./types";
 
-const MODEL = "claude-opus-4-8";
+
+const MODEL = SALES_AI_MODEL;
 
 export class AnthropicAiProvider implements AiProvider {
   readonly name = "ANTHROPIC" as const;
