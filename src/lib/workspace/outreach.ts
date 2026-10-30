@@ -17,7 +17,7 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { getAiProvider } from "@/lib/ai";
 import type { WorkspaceSource } from "@/lib/workspace/types";
@@ -177,8 +177,8 @@ type Ctx = { params: Promise<{ id: string }> };
 export function makeOutreachHandlers(source: WorkspaceSource) {
   return {
     async GET(_req: Request, { params }: Ctx) {
-      const session = await getSession();
-      if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      const auth = await requireTeam();
+      if (auth.response) return auth.response;
       if (!hasPrisma()) return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
       const { id } = await params;
       const data = await getOutreach(source, id);
@@ -187,8 +187,8 @@ export function makeOutreachHandlers(source: WorkspaceSource) {
     },
 
     async POST(req: Request, { params }: Ctx) {
-      const session = await getSession();
-      if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      const auth = await requireTeam();
+      if (auth.response) return auth.response;
       if (!hasPrisma()) return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
       const parsed = postSchema.safeParse(await req.json().catch(() => ({})));
       if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
@@ -199,8 +199,8 @@ export function makeOutreachHandlers(source: WorkspaceSource) {
     },
 
     async PUT(req: Request, { params }: Ctx) {
-      const session = await getSession();
-      if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      const auth = await requireTeam();
+      if (auth.response) return auth.response;
       if (!hasPrisma()) return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
       const parsed = putSchema.safeParse(await req.json().catch(() => ({})));
       if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
