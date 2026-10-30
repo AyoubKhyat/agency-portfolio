@@ -53,6 +53,9 @@ next-env.d.ts
 # Local outreach/lead files (never commit)
 ALL-LEADS.md
 OUTREACH-DAY1.md
-leads/
+/leads/
 send-batch*.sh
 team-credentials.html
+
+# the template with placeholders only is tracked
+!.env.example
