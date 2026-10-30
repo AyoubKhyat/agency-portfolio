@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Tests
+        run: npm test
+      - name: Build
+        run: npm run build
+        env:
+          # No database is needed to build; pages are rendered per request.
+          JWT_SECRET: ci-only-secret-not-used-in-production-0000
+      # Lint is reported but not blocking yet: the repository has 80 pre-existing React-rule errors.
+      - name: Lint (informational)
+        run: npm run lint
+        continue-on-error: true
