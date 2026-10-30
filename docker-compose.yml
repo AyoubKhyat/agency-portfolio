@@ -1,0 +1,74 @@
+# Production stack: Caddy (HTTPS) -> app -> Postgres. Only Caddy publishes ports (80/443).
+# Copy deploy/.env.example to .env next to this file and fill it in.
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ibda3
+      POSTGRES_USER: ibda3
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ibda3 -d ibda3"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # no "ports": the database is reachable only from this compose network
+
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_EMAILJS_SERVICE_ID: ${NEXT_PUBLIC_EMAILJS_SERVICE_ID:-}
+        NEXT_PUBLIC_EMAILJS_TEMPLATE_ID: ${NEXT_PUBLIC_EMAILJS_TEMPLATE_ID:-}
+        NEXT_PUBLIC_EMAILJS_PUBLIC_KEY: ${NEXT_PUBLIC_EMAILJS_PUBLIC_KEY:-}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://ibda3:${POSTGRES_PASSWORD}@db:5432/ibda3
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET (32+ chars)}
+      OWNER_USER_ID: ${OWNER_USER_ID:-}
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+
+  # One-off tools, not started by "up": docker compose --profile tools run --rm migrate
+  migrate:
+    profiles: ["tools"]
+    build:
+      context: .
+      target: build
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://ibda3:${POSTGRES_PASSWORD}@db:5432/ibda3
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+    command: ["npx", "prisma", "migrate", "deploy"]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on: [app]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?set SITE_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  pgdata:
+  uploads:
+  caddy_data:
+  caddy_config:
