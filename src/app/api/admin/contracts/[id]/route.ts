@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
-import { isAdmin } from "@/lib/authz";
+import { isAdmin, requireTeam } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { notifyUser, notifyUsers } from "@/lib/notify";
 
@@ -20,8 +19,8 @@ const patchSchema = z.object({
 });
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
   const { id } = await params;
   const c = await prisma.contract.findUnique({
@@ -200,8 +199,9 @@ async function signContract(args: {
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 
   const { id } = await params;
@@ -272,8 +272,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
   if (!isAdmin(session)) return NextResponse.json({ error: "Admin only" }, { status: 403 });
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
   const { id } = await params;

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
+import { requireTeam } from "@/lib/authz";
 import { getDashboardStats } from "@/lib/dal";
-import { getSession } from "@/lib/auth";
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
 
   try {
     const stats = await getDashboardStats();

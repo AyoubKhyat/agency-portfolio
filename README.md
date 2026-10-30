@@ -56,7 +56,6 @@ Copy `.env.example` to `.env` and set:
 
 - `DATABASE_URL` — PostgreSQL connection string (Neon or self-hosted)
 - `JWT_SECRET` — 32+ char random string
-- `ANTHROPIC_API_KEY` — for AI-powered admin features
 - `ADMIN_EMAIL`, `ADMIN_PASSWORD` — bootstrap admin login
 - `NEXT_PUBLIC_EMAILJS_SERVICE_ID`, `NEXT_PUBLIC_EMAILJS_TEMPLATE_ID`, `NEXT_PUBLIC_EMAILJS_PUBLIC_KEY` — contact form delivery
 

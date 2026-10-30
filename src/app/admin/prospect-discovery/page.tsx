@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import {
-  Compass, Search, Sparkles, Target as TargetIcon, AlertCircle, CheckCircle2,
-  ExternalLink, Loader2, X, Star, Megaphone, ChevronDown, ChevronUp, RefreshCw, Info,
+  Compass, Search, Target as TargetIcon, AlertCircle, CheckCircle2,
+  ExternalLink, Loader2, X, Star, Megaphone, Info,
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { EmptyState } from "@/components/admin/empty-state";
@@ -39,13 +39,6 @@ type SearchResponse = {
   total: number;
   counts: { new: number; possible: number; exists: number };
   items: SearchItem[];
-};
-
-type AiSuggestion = { sector: string; reason: string; action: string };
-type AiSuggestResponse = {
-  aiEnabled: boolean;
-  summary: string;
-  suggestions: AiSuggestion[];
 };
 
 type Target = {
@@ -113,8 +106,6 @@ export default function ProspectDiscoveryPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [targets, setTargets] = useState<Target[]>([]);
-  const [aiSuggestions, setAiSuggestions] = useState<AiSuggestResponse | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
 
   // Campaign modal
   const [campaignModalOpen, setCampaignModalOpen] = useState(false);
@@ -153,17 +144,6 @@ export default function ProspectDiscoveryPage() {
       setTargets(data.targets || []);
     }
   }, []);
-
-  async function loadAiSuggestions() {
-    if (aiLoading) return;
-    setAiLoading(true);
-    try {
-      const res = await fetch("/api/admin/prospect-discovery/ai-suggest");
-      if (res.ok) setAiSuggestions(await res.json());
-    } finally {
-      setAiLoading(false);
-    }
-  }
 
   async function handleSearch() {
     if (searching) return;
@@ -304,9 +284,6 @@ export default function ProspectDiscoveryPage() {
 
       {/* Provider status banner */}
       <ProviderStatusBanner provider={providerName} />
-
-      {/* AI suggestions banner — always visible */}
-      <AiSuggestionsBlock data={aiSuggestions} loading={aiLoading} onLoad={loadAiSuggestions} />
 
       {/* Tab nav */}
       <div className="mt-5 mb-4">
@@ -615,7 +592,6 @@ export default function ProspectDiscoveryPage() {
   );
 }
 
-/* ---------------- AI Suggestions Block ---------------- */
 /* ---------------- Provider Status Banner ---------------- */
 function ProviderStatusBanner({ provider }: { provider: "GOOGLE" | "OSM" }) {
   if (provider === "GOOGLE") {
@@ -656,50 +632,6 @@ function ProviderStatusBanner({ provider }: { provider: "GOOGLE" | "OSM" }) {
           <span className="text-[#94A3B8]">3. Redeploy — UI auto-switches</span>
         </div>
       </div>
-    </div>
-  );
-}
-
-function AiSuggestionsBlock({ data, loading, onLoad }: { data: AiSuggestResponse | null; loading: boolean; onLoad: () => void }) {
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50/40 to-violet-50/40 p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#8B00FF]" />
-          <h2 className="text-[14px] font-semibold text-[#0F172A]">Best sectors to target this week</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          {data && (
-            <button onClick={() => setExpanded((v) => !v)} className="text-[11px] text-[#475569] hover:text-[#0F172A] inline-flex items-center gap-1">
-              {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-              {expanded ? "Hide" : "Show"}
-            </button>
-          )}
-          <button onClick={onLoad} disabled={loading} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-purple-300 bg-white text-[#7C3AED] hover:bg-purple-50 disabled:opacity-50">
-            {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-            {data ? "Refresh" : "Generate suggestions"}
-          </button>
-        </div>
-      </div>
-
-      {data && (
-        <>
-          <div className="text-[13px] text-[#0F172A] font-medium mt-2">{data.summary}</div>
-          {expanded && data.suggestions.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-              {data.suggestions.map((s, i) => (
-                <div key={i} className="rounded-xl border border-purple-200 bg-white p-3">
-                  <div className="text-[13px] font-semibold text-[#0F172A]">{s.sector}</div>
-                  <div className="text-[11px] text-[#64748B] mt-1">{s.reason}</div>
-                  <div className="text-[11px] text-[#7C3AED] font-medium mt-2">→ {s.action}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
     </div>
   );
 }

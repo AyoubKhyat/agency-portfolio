@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { CoverUploadError, checkCoverFile, convertCover, storeCover } from "@/lib/project-cover";
 
 // Uploads only return a URL; the project record is written later by the form's
 // save, so a failure here never creates or changes a project.
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
 
   let formData: FormData;
   try {

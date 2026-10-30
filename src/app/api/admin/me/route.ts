@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
   return NextResponse.json(session);
 }

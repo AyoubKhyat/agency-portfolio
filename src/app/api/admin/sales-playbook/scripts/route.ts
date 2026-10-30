@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { requireTeam } from "@/lib/authz";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
 
 const CATEGORIES = ["WHATSAPP", "INSTAGRAM_DM", "CALL", "OBJECTION_HANDLING"] as const;
@@ -15,8 +15,8 @@ const createSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json([]);
 
   const { searchParams } = new URL(req.url);
@@ -35,8 +35,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 
   const parsed = createSchema.safeParse(await req.json());

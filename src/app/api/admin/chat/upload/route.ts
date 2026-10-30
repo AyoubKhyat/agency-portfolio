@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -9,8 +9,9 @@ const ALLOWED_TYPES = [
 ];
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 
   const formData = await req.formData();

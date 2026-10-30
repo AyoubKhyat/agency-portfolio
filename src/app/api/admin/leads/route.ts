@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { getLeads } from "@/lib/dal";
 
 export async function GET(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
 
   const url = new URL(req.url);
   const page = parseInt(url.searchParams.get("page") || "1");

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { computeQualityLabel } from "@/lib/prospect-quality";
 
@@ -13,8 +13,8 @@ import { computeQualityLabel } from "@/lib/prospect-quality";
  *  - prospects missing both name and phone (broken imports)
  */
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 
   const prospects = await prisma.prospect.findMany({
@@ -129,8 +129,8 @@ function slim(p: { id: string; name: string; phone: string; whatsappLink: string
 const FIX_ACTIONS = ["FIX_WHATSAPP_LINKS", "REFRESH_QUALITY_LABELS"] as const;
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 
   const body = await req.json().catch(() => ({}));
