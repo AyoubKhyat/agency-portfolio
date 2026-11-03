@@ -60,6 +60,10 @@ export const CONTENT_METRIC_LABELS: Record<ContentMetric, string> = {
 export const CAPTION_MAX = 2200;
 /** Instagram carousels hold up to 20 items. */
 export const MAX_MEDIA = 20;
+/** Readiness messages about media (exported so the form can link them to the Media field). */
+export const MEDIA_REQUIRED_PROBLEM = "Add at least one media path or link in the Media field (one per line).";
+export const CAROUSEL_MEDIA_PROBLEM = "A carousel needs at least 2 media lines (one per slide).";
+export const isMediaProblem = (p: string) => p === MEDIA_REQUIRED_PROBLEM || p === CAROUSEL_MEDIA_PROBLEM;
 /** Clock skew tolerated on a publication date before it counts as "in the future". */
 const FUTURE_TOLERANCE_MS = 60 * 60 * 1000;
 
@@ -135,8 +139,8 @@ export function readinessProblems(post: ContentFields, status: string = post.sta
   if (rank < RANK.READY) return problems;
 
   const media = post.mediaPaths.filter((m) => m.trim() !== "");
-  if (media.length === 0) problems.push("Add at least one media file.");
-  else if (post.format === "CAROUSEL" && media.length < 2) problems.push("A carousel needs at least 2 slides.");
+  if (media.length === 0) problems.push(MEDIA_REQUIRED_PROBLEM);
+  else if (post.format === "CAROUSEL" && media.length < 2) problems.push(CAROUSEL_MEDIA_PROBLEM);
   if (post.format !== "STORY" && !post.caption.trim()) problems.push("Write the caption.");
 
   if (status === "SCHEDULED" && !post.plannedAt) problems.push("Set the planned date.");

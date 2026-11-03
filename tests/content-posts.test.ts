@@ -14,6 +14,8 @@ import {
   planContentCreate,
   planContentUpdate,
   readinessProblems,
+  MEDIA_REQUIRED_PROBLEM,
+  CAROUSEL_MEDIA_PROBLEM,
   type ContentRow,
 } from "../src/lib/content-posts";
 
@@ -53,9 +55,9 @@ test("readiness: Idea/Draft need a title; Ready needs media and caption (not for
   assert.deepEqual(readinessProblems(empty, "IDEA"), []);
   assert.deepEqual(readinessProblems(empty, "DRAFT"), []);
   assert.deepEqual(readinessProblems({ ...empty, title: "  " }, "DRAFT"), ["Add a title."]);
-  assert.deepEqual(readinessProblems(empty, "READY"), ["Add at least one media file.", "Write the caption."]);
+  assert.deepEqual(readinessProblems(empty, "READY"), [MEDIA_REQUIRED_PROBLEM, "Write the caption."]);
   assert.deepEqual(readinessProblems({ ...empty, format: "STORY", mediaPaths: ["s.mp4"] }, "READY"), []);
-  assert.deepEqual(readinessProblems(row({ format: "CAROUSEL" }), "READY"), ["A carousel needs at least 2 slides."]);
+  assert.deepEqual(readinessProblems(row({ format: "CAROUSEL" }), "READY"), [CAROUSEL_MEDIA_PROBLEM]);
   assert.deepEqual(readinessProblems(row({ format: "CAROUSEL", mediaPaths: ["1.png", "2.png"] }), "READY"), []);
 });
 

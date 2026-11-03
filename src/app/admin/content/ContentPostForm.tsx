@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { CheckCircle2, ExternalLink, Undo2, X } from "lucide-react";
 import { Field, FormButton, FormError, Input, Select, Textarea } from "@/components/admin/form";
 import {
@@ -11,6 +11,7 @@ import {
   CONTENT_METRIC_LABELS,
   CONTENT_STATUS_LABELS,
   PRE_PUBLISH_STATUSES,
+  isMediaProblem,
   readinessProblems,
   type ContentMetric,
   type ContentPostDTO,
@@ -80,6 +81,13 @@ export function ContentPostForm({ post, defaultDate = null, onClose, onSaved }: 
   const [error, setError] = useState<string | null>(null);
 
   const isPublished = post?.status === "PUBLISHED";
+  const mediaRef = useRef<HTMLTextAreaElement>(null);
+  const mediaCount = mediaList(form.media).length;
+  const mediaShort = (form.status === "READY" || form.status === "SCHEDULED") && (mediaCount === 0 || (form.format === "CAROUSEL" && mediaCount < 2));
+  const focusMedia = () => {
+    mediaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    mediaRef.current?.focus({ preventScroll: true });
+  };
   const dirty = JSON.stringify(form) !== JSON.stringify(initial);
   const set = (k: keyof FormState) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -190,10 +198,47 @@ export function ContentPostForm({ post, defaultDate = null, onClose, onSaved }: 
               </Field>
             </div>
 
+            <Field
+              label="Media (file paths or links)"
+              htmlFor="cp-media"
+              hint={
+                <>
+                  <span className={mediaShort ? "text-amber-700 font-medium" : undefined}>
+                    {mediaCount} {mediaCount === 1 ? "item" : "items"}
+                  </span>
+                  {" · one per line"}
+                  {form.format === "CAROUSEL" ? ", in slide order · a carousel needs at least 2" : ""}
+                  {" · nothing is uploaded: paste the path or link of each file"}
+                </>
+              }
+            >
+              <Textarea
+                id="cp-media"
+                ref={mediaRef}
+                rows={3}
+                value={form.media}
+                onChange={set("media")}
+                placeholder={"E:\\…\\exports\\slide-01.png\nhttps://…"}
+                className="font-mono text-[12.5px] min-h-[72px]"
+              />
+            </Field>
+
             {problems.length > 0 && (
               <div className="px-4 py-3 rounded-xl bg-amber-50 border border-amber-100 text-[13px] text-amber-800">
                 <p className="font-medium mb-1">Before it can be {CONTENT_STATUS_LABELS[form.status as keyof typeof CONTENT_STATUS_LABELS]?.toLowerCase() ?? "saved"}:</p>
-                <ul className="list-disc pl-5 space-y-0.5">{problems.map((p) => <li key={p}>{p}</li>)}</ul>
+                <ul className="list-disc pl-5 space-y-0.5">
+                  {problems.map((p) => (
+                    <li key={p}>
+                      {isMediaProblem(p) ? (
+                        <button type="button" onClick={focusMedia} className="text-left underline underline-offset-2 hover:text-amber-900">
+                          {p}
+                        </button>
+                      ) : (
+                        p
+                      )}
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 
@@ -221,14 +266,6 @@ export function ContentPostForm({ post, defaultDate = null, onClose, onSaved }: 
 
             <Field label="Hashtags" htmlFor="cp-hashtags">
               <Input id="cp-hashtags" value={form.hashtags} onChange={set("hashtags")} maxLength={1000} placeholder="#ibda3digital #marrakech" />
-            </Field>
-
-            <Field
-              label="Media paths"
-              htmlFor="cp-media"
-              hint={form.format === "CAROUSEL" ? "One per line, in slide order." : "One per line (file path or link)."}
-            >
-              <Textarea id="cp-media" rows={3} value={form.media} onChange={set("media")} className="font-mono text-[12.5px] min-h-[72px]" />
             </Field>
 
             <Field label="Next action" htmlFor="cp-next" hint="Shown in the daily follow-up list until the post is published.">
