@@ -230,7 +230,7 @@ export function ContentPostForm({ post, defaultDate = null, onClose, onSaved }: 
                   {problems.map((p) => (
                     <li key={p}>
                       {isMediaProblem(p) ? (
-                        <button type="button" onClick={focusMedia} className="text-left underline underline-offset-2 hover:text-amber-900">
+                        <button type="button" onClick={focusMedia} className="align-top text-left underline underline-offset-2 hover:text-amber-900">
                           {p}
                         </button>
                       ) : (
