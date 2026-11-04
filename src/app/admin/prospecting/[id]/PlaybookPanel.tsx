@@ -222,7 +222,7 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
       });
       if (res.ok) {
         const msg = await res.json();
-        setMessages((prev) => [{ ...msg, template: templates.find((t) => t.id === selectedTemplate) ? { name: templates.find((t) => t.id === selectedTemplate)!.name, key: templates.find((t) => t.id === selectedTemplate)!.key } : null }, ...prev]);
+        setMessages((prev) => [{ ...msg, template: templates.find((t) => t.id === selectedTemplate) ? { name: templates.find((t) => t.id === selectedTemplate)!.name, key: templates.find((t) => t.id === selectedTemplate)!.key } : null }, ...prev.filter((m) => m.id !== msg.id)]);
         setBody("");
         setSelectedTemplate("");
         setShowLogger(false);

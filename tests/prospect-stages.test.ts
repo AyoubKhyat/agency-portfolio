@@ -182,7 +182,7 @@ test("Today summary is read-only and does not filter enquiries", () => {
   assert.doesNotMatch(fn.slice(fn.indexOf("followUps: {")), /VERIFIED_CHANNEL_WHERE[^\n]*followUp/);
 });
 
-test("sidebar: six main entries, a visible secondary section, nothing dropped", () => {
+test("classic sidebar (SIMPLE_NAV off): six main entries, a secondary section, nothing dropped", () => {
   const src = read("src/app/admin/layout.tsx");
   const labelsIn = (from: string, to: string) =>
     [...src.slice(src.indexOf(from), src.indexOf(to)).matchAll(/label: "([^"]+)", icon/g)].map((m) => m[1]);

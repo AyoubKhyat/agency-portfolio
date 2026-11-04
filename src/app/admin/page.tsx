@@ -9,6 +9,7 @@ import { GlassCard } from "@/components/admin/glass-card";
 import { Badge } from "@/components/admin/badge";
 import { cn } from "@/lib/utils";
 import { STAGES, stageStatusParam, type StageKey } from "@/lib/prospect-stages";
+import type { LeadQueue } from "@/lib/next-action";
 
 // TODAY — the admin home. One question: what should I do right now?
 // The previous all-metrics dashboard lives on, unchanged, at /admin/overview.
@@ -33,13 +34,6 @@ type Today = {
 function shortDate(iso: string | null): string {
   if (!iso) return "";
   return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
-}
-
-function daysLate(iso: string | null): string {
-  if (!iso) return "";
-  const diff = Math.round((new Date(iso).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86_400_000);
-  if (diff < 0) return `${-diff}d late`;
-  return diff === 0 ? "today" : shortDate(iso);
 }
 
 function ActionCard({
@@ -92,6 +86,7 @@ export default function TodayPage() {
   const router = useRouter();
   const [data, setData] = useState<Today | null>(null);
   const [error, setError] = useState(false);
+  const [queue, setQueue] = useState<LeadQueue | null | undefined>(undefined);
 
   useEffect(() => {
     fetch("/api/admin/today")
@@ -102,6 +97,11 @@ export default function TodayPage() {
       })
       .then((d) => { if (d) setData(d); })
       .catch(() => setError(true));
+    // The Replies and Follow-ups cards use the queue's rules. If it fails they say so instead of showing old dates.
+    fetch("/api/admin/lead-queue")
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setQueue)
+      .catch(() => setQueue(null));
   }, [router]);
 
   const dateLabel = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
@@ -126,9 +126,11 @@ export default function TodayPage() {
     );
   }
 
-  const fuRecorded = data.followUps.recorded;
+  // Recorded replies only. A possible old reply is a check for Leads, not someone waiting for an answer.
+  const replyItems = queue?.items.filter((i) => i.kind === "reply") ?? [];
+  const followUpItems = queue?.items.filter((i) => i.group === "followUps") ?? [];
+  const queueEmpty = (text: string) => (queue === null ? "Couldn't load the queue. Open Leads to try again." : text);
   const fuUnbacked = data.followUps.unbacked;
-  const recordedTotal = fuRecorded.dueToday + fuRecorded.overdue;
   const unbackedTotal = fuUnbacked.dueToday + fuUnbacked.overdue;
   const unbackedNone = unbackedTotal - fuUnbacked.legacy;
 
@@ -147,16 +149,14 @@ export default function TodayPage() {
       {/* 1. Do these first */}
       <h2 className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] mb-3">Do these first</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ActionCard title="Replies waiting for you" count={data.replies.count} href="/admin/prospecting?status=REPONDU"
-          icon={<Reply className="w-5 h-5" />} tone="green" empty="No one is waiting on a reply.">
-          <RowList rows={data.replies.list.map((p) => ({ key: p.id, href: `/admin/prospecting/${p.id}`, primary: p.name, secondary: p.sector }))} />
+        <ActionCard title="Replies waiting for you" count={replyItems.length} href="/admin/lead-queue?view=replies"
+          icon={<Reply className="w-5 h-5" />} tone="green" empty={queueEmpty("No replies recorded.")}>
+          <RowList rows={replyItems.slice(0, 3).map((i) => ({ key: i.key, href: "/admin/lead-queue?view=replies", primary: i.name, secondary: i.detail }))} />
         </ActionCard>
 
-        <ActionCard title={fuRecorded.overdue > 0 ? `Follow-ups after a recorded send · ${fuRecorded.overdue} late` : "Follow-ups after a recorded send"}
-          count={recordedTotal}
-          href={fuRecorded.overdue > 0 ? "/admin/prospecting?due=overdue&evidence=recorded" : "/admin/prospecting?due=today&evidence=recorded"}
-          icon={<CalendarClock className="w-5 h-5" />} tone="amber" empty="No follow-ups due after a recorded send.">
-          <RowList rows={data.followUps.list.map((p) => ({ key: p.id, href: `/admin/prospecting/${p.id}`, primary: p.name, secondary: daysLate(p.followUpDate) }))} />
+        <ActionCard title="Follow-ups" count={followUpItems.length} href="/admin/lead-queue?view=followUps"
+          icon={<CalendarClock className="w-5 h-5" />} tone="amber" empty={queueEmpty("No follow-ups need a decision.")}>
+          <RowList rows={followUpItems.slice(0, 3).map((i) => ({ key: i.key, href: "/admin/lead-queue?view=followUps", primary: i.name, secondary: i.detail }))} />
         </ActionCard>
 
         <ActionCard title="New website enquiries" count={data.enquiries.new} href="/admin/leads?status=NEW"

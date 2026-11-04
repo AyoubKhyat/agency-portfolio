@@ -108,6 +108,7 @@ body {
   --os-surface: #ffffff;
   --os-surface-2: #FAFAFE;
   --os-surface-3: #ffffff;
+  --os-hover: #F1F5F9;
   --os-border: #E5E7EB;
   --os-border-hover: #D1D5DB;
   --os-text: #0F172A;
@@ -130,6 +131,7 @@ body {
   --os-surface: #131320;
   --os-surface-2: #1A1A2E;
   --os-surface-3: #1E1E32;
+  --os-hover: #24243A;
   --os-border: #2A2A3E;
   --os-border-hover: #3A3A52;
   --os-text: #E4E4E7;

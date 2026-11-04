@@ -24,15 +24,15 @@ export function FilterTabs({ items, active, onChange, size = "sm", className, sc
             "flex items-center gap-1.5 rounded-lg font-medium whitespace-nowrap transition-all duration-150",
             size === "sm" ? "text-[12px] px-3 py-1.5" : "text-[13px] px-3.5 py-2",
             active === item.value
-              ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#7C3AED] border border-purple-200"
-              : "text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] border border-transparent"
+              ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[var(--os-purple)] border border-[var(--os-purple)]/30"
+              : "text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)] border border-transparent"
           )}
         >
           {item.label}
           {typeof item.count === "number" && (
             <span className={cn(
               "text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center",
-              active === item.value ? "bg-purple-200 text-[#7C3AED]" : "bg-[#F1F5F9] text-[#475569]"
+              active === item.value ? "bg-[var(--os-purple-glow)] text-[var(--os-purple)]" : "bg-[var(--os-hover)] text-[var(--os-text-muted)]"
             )}>
               {item.count}
             </span>

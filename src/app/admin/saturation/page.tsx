@@ -9,6 +9,9 @@ import {
 } from "lucide-react";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { PageHeader } from "@/components/admin/page-header";
+import { SendConfirm } from "@/components/admin/send-confirm";
+import { browserToday, recordConfirmedSend } from "@/lib/lead-actions";
+import type { SendChannel } from "@/lib/next-action";
 import { cn } from "@/lib/utils";
 
 /* ---------- Types ---------- */
@@ -49,6 +52,8 @@ function fmt(n: number): string {
 export default function SaturationPage() {
   const [data, setData] = useState<SatData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pendingSend, setPendingSend] = useState<{ id: string; name: string; channel: SendChannel } | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,11 +64,15 @@ export default function SaturationPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function markSent(id: string) {
-    await fetch(`/api/admin/prospecting/${id}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "ENVOYE", actionType: "SENT_WHATSAPP" }),
-    });
+  /** Opening a link records nothing. The send is saved only if the user confirms it. */
+  async function confirmPendingSend() {
+    if (!pendingSend) return;
+    const pending = pendingSend;
+    const result = await recordConfirmedSend(fetch.bind(window), { kind: "first", prospectId: pending.id, channel: pending.channel, today: browserToday() });
+    if (!result.ok && !result.recorded) { setSendError(result.error); return; }
+    if (!result.ok) alert(result.error);
+    setPendingSend((current) => (current === pending ? null : current));
+    setSendError(null);
     load();
   }
 
@@ -179,7 +188,12 @@ export default function SaturationPage() {
       </div>
 
       {/* Next Marrakech Prospects */}
-      <NextQueueSection queue={data.nextQueue} minScore={data.config.nextQueueMinScore} onMarkSent={markSent} />
+      <NextQueueSection queue={data.nextQueue} minScore={data.config.nextQueueMinScore} onMarkSent={(id, name, channel) => { setPendingSend({ id, name, channel }); setSendError(null); }} />
+      {pendingSend && (
+        <div className="fixed z-50 left-4 right-4 bottom-20 lg:bottom-6 lg:left-auto lg:w-[420px] shadow-2xl rounded-xl bg-[var(--os-surface)]">
+          <SendConfirm key={`${pendingSend.id}:${pendingSend.channel}`} channel={pendingSend.channel} name={pendingSend.name} error={sendError} onConfirm={() => confirmPendingSend()} onCancel={() => { setPendingSend(null); setSendError(null); }} />
+        </div>
+      )}
 
       {/* Expansion cities */}
       <ExpansionSection cities={data.expansionCities} unlocked={s.unlockedExpansion} />
@@ -235,7 +249,7 @@ function FunnelRow({ label, value, max, tone }: { label: string; value: number; 
 }
 
 /* ============================================================ */
-function NextQueueSection({ queue, minScore, onMarkSent }: { queue: SatData["nextQueue"]; minScore: number; onMarkSent: (id: string) => void }) {
+function NextQueueSection({ queue, minScore, onMarkSent }: { queue: SatData["nextQueue"]; minScore: number; onMarkSent: (id: string, name: string, channel: SendChannel) => void }) {
   return (
     <div className="mt-5">
       <h2 className="text-[14px] font-semibold text-[#0F172A] mb-1 flex items-center gap-2">
@@ -290,14 +304,14 @@ function NextQueueSection({ queue, minScore, onMarkSent }: { queue: SatData["nex
                           {p.hasMobile && (
                             <a
                               href={wa} target="_blank" rel="noopener noreferrer"
-                              onClick={() => onMarkSent(p.id)}
+                              onClick={() => onMarkSent(p.id, p.name, "WHATSAPP")}
                               className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-500 text-white shadow-sm hover:shadow"
                             ><FaWhatsapp className="w-3 h-3" /> WA</a>
                           )}
                           {p.hasInstagram && (
                             <a
                               href={ig} target="_blank" rel="noopener noreferrer"
-                              onClick={() => onMarkSent(p.id)}
+                              onClick={() => onMarkSent(p.id, p.name, "INSTAGRAM")}
                               className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm hover:shadow"
                             ><FaInstagram className="w-3 h-3" /> IG</a>
                           )}

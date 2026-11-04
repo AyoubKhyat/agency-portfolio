@@ -65,11 +65,11 @@ type QuickAction = {
 
 const QUICK_ACTIONS: QuickAction[] = [
   { id: "qa-today",     label: "Today",             sublabel: "What to do right now",    href: "/admin",                icon: Sun },
-  { id: "qa-prospects", label: "Prospects",         sublabel: "Everyone you are talking to", href: "/admin/prospecting", icon: Target },
-  { id: "qa-discovery", label: "Find New",          sublabel: "Discover new prospects",  href: "/admin/discovery",      icon: Sparkles },
+  { id: "qa-prospects", label: "Leads",             sublabel: "Everyone you are talking to", href: "/admin/prospecting", icon: Target },
+  { id: "qa-discovery", label: "Find new",          sublabel: "Discover new prospects",  href: "/admin/discovery",      icon: Sparkles },
   { id: "qa-clients",   label: "Clients",           sublabel: "Client management",       href: "/admin/clients",        icon: Building2 },
   { id: "qa-projects",  label: "Website Portfolio", sublabel: "Projects on the public site", href: "/admin/projects",   icon: FolderKanban },
-  { id: "qa-leads",     label: "Website Enquiries", sublabel: "Contact-form leads",      href: "/admin/leads",          icon: Users },
+  { id: "qa-leads",     label: "Enquiries",         sublabel: "Contact-form leads",      href: "/admin/leads",          icon: Users },
   { id: "qa-dashboard", label: "Full Dashboard",    sublabel: "All metrics (previous dashboard)", href: "/admin/overview", icon: LayoutDashboard },
   { id: "qa-cmd",       label: "Command Center",   sublabel: "Overview & quick stats",  href: "/admin/command-center", icon: Crown },
   { id: "qa-documents", label: "Documents",         sublabel: "Uploaded PDFs",           href: "/admin/documents",      icon: FileText },
@@ -77,7 +77,7 @@ const QUICK_ACTIONS: QuickAction[] = [
   { id: "qa-tasks",     label: "Tasks",             sublabel: "Task board",              href: "/admin/tasks",          icon: CheckSquare },
   { id: "qa-meetings",  label: "Meetings",          sublabel: "Calendar & meetings",     href: "/admin/meetings",       icon: Calendar },
   { id: "qa-chat",      label: "Chat",              sublabel: "Team chat",               href: "/admin/chat",           icon: MessageSquare },
-  { id: "qa-pipeline",  label: "Pipeline",          sublabel: "Sales pipeline",          href: "/admin/pipeline",       icon: Layers },
+  { id: "qa-pipeline",  label: "Projects",          sublabel: "Client projects",          href: "/admin/pipeline",       icon: Layers },
   { id: "qa-contracts", label: "Contracts",         sublabel: "Contract management",     href: "/admin/contracts",      icon: FileSignature },
   { id: "qa-analytics", label: "Analytics",         sublabel: "Reports & stats",         href: "/admin/analytics",      icon: BarChart3 },
   { id: "qa-activity",  label: "Activity Feed",     sublabel: "Recent activity",         href: "/admin/activity",       icon: Activity },

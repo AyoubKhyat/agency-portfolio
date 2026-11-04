@@ -12,6 +12,9 @@ import { Badge } from "@/components/admin/badge";
 import { StatCard } from "@/components/admin/stat-card";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ProspectDrawer } from "@/components/admin/prospect-drawer";
+import { SendConfirm } from "@/components/admin/send-confirm";
+import { browserToday, recordConfirmedSend, type NextFollowUp } from "@/lib/lead-actions";
+import type { SendChannel } from "@/lib/next-action";
 import { cn } from "@/lib/utils";
 import { PROSPECT_SEGMENTS, SEGMENT_LABELS, SEGMENT_TOKENS, type ProspectSegment } from "@/lib/prospect-segments";
 import { STAGES, getStage, stageStatusParam, stageForStatusParam, getChannelState, getSendEvidence, CHANNEL_LABELS, SEND_LABELS, SEND_ACTION_TYPES } from "@/lib/prospect-stages";
@@ -299,6 +302,8 @@ function ProspectingContent() {
   const [importing, setImporting] = useState(false);
   const [view, setView] = useState<"list" | "grid">("list");
   const [copied, setCopied] = useState<string | null>(null);
+  const [pendingSend, setPendingSend] = useState<{ prospect: Prospect; channel: SendChannel; kind: "first" | "follow_up"; body: string } | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [ownerStats, setOwnerStats] = useState<OwnerStat[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -361,23 +366,26 @@ function ProspectingContent() {
     return SEND_ACTION_TYPES.includes(actionType) ? { ...pr, lastSendAt: new Date().toISOString() } : pr;
   }
 
-  async function markSent(p: Prospect, actionType?: string) {
-    const res = await fetch(`/api/admin/prospecting/${p.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "ENVOYE", actionType: actionType || "SENT_WHATSAPP" }),
-    });
-    if (res.ok) {
-      const updated = await res.json();
-      setProspects((prev) => prev.map((pr) => pr.id === p.id ? withSendRecord({ ...pr, ...updated, notes: pr.notes }, actionType || "SENT_WHATSAPP") : pr));
-      if (updated.suggestedFollowUp) {
-        fetch(`/api/admin/prospecting/${p.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ followUpDate: updated.suggestedFollowUp }),
-        }).catch(() => {});
-      }
-    }
+  function armSend(send: NonNullable<typeof pendingSend>) {
+    setPendingSend(send);
+    setSendError(null);
+  }
+
+  /** Opening a channel records nothing. The send is saved only if the user confirms it below. */
+  async function confirmPendingSend(next?: NextFollowUp) {
+    if (!pendingSend) return;
+    const pending = pendingSend;
+    const { prospect: p, channel, kind, body } = pending;
+    const today = browserToday();
+    const result = await recordConfirmedSend(fetch.bind(window), kind === "first"
+      ? { kind: "first", prospectId: p.id, channel, body, today }
+      : { kind: "follow_up", prospectId: p.id, channel, body, today, step: null, next: next ?? 3 });
+    if (!result.ok && !result.recorded) { setSendError(result.error); return; }
+    if (!result.ok) alert(result.error);
+    const actionType = channel === "WHATSAPP" ? "SENT_WHATSAPP" : "SENT_INSTAGRAM";
+    setProspects((prev) => prev.map((pr) => pr.id === p.id ? withSendRecord({ ...pr, status: pr.status === "A_ENVOYER" ? "ENVOYE" : pr.status }, actionType) : pr));
+    setPendingSend((current) => (current === pending ? null : current)); // another prospect may have been opened meanwhile
+    setSendError(null);
   }
 
   async function handleSendWA(p: Prospect) {
@@ -398,7 +406,7 @@ function ProspectingContent() {
     if (phone.startsWith("0")) phone = "212" + phone.slice(1);
     else if (!phone.startsWith("212") && !phone.startsWith("33")) phone = "212" + phone;
     openLink(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);
-    await markSent(p, "SENT_WHATSAPP");
+    armSend({ prospect: p, channel: "WHATSAPP", kind: "first", body: msg });
   }
 
   async function handleSendIG(p: Prospect) {
@@ -414,7 +422,7 @@ function ProspectingContent() {
       return;
     }
     openLink(`https://ig.me/m/${handle}`);
-    await markSent(p, "SENT_INSTAGRAM");
+    armSend({ prospect: p, channel: "INSTAGRAM", kind: "first", body: msg });
   }
 
   async function handleSend(p: Prospect) {
@@ -435,21 +443,18 @@ function ProspectingContent() {
       if (phone.startsWith("0")) phone = "212" + phone.slice(1);
       else if (!phone.startsWith("212") && !phone.startsWith("33")) phone = "212" + phone;
       openLink(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);
+      armSend({ prospect: p, channel: "WHATSAPP", kind: "follow_up", body: msg });
     } else if (p.instagram && p.instagramStatus === "VERIFIED") {
       const handle = p.instagram.replace(/^@/, "");
       navigator.clipboard.writeText(msg).catch(() => {});
       openLink(`https://ig.me/m/${handle}`);
+      armSend({ prospect: p, channel: "INSTAGRAM", kind: "follow_up", body: msg });
     } else {
       // No verified channel — copy the follow-up so it can still be sent
       // manually after confirming, but never open a dead link.
       navigator.clipboard.writeText(msg).catch(() => {});
       alert("No confirmed WhatsApp/Instagram for this prospect. Follow-up message copied — confirm a channel on the prospect to enable one-click send.");
       return;
-    }
-    const res = await fetch(`/api/admin/prospecting/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "ENVOYE", actionType: "FOLLOW_UP" }) });
-    if (res.ok) {
-      const updated = await res.json();
-      setProspects((prev) => prev.map((pr) => pr.id === p.id ? { ...pr, ...updated, notes: pr.notes } : pr));
     }
   }
 
@@ -1130,6 +1135,19 @@ function ProspectingContent() {
             </div>
           )}
         </>
+      )}
+      {pendingSend && (
+        <div className="fixed z-50 left-4 right-4 bottom-20 lg:bottom-6 lg:left-auto lg:w-[420px] shadow-2xl rounded-xl bg-[var(--os-surface)]">
+          <SendConfirm
+            key={`${pendingSend.prospect.id}:${pendingSend.channel}:${pendingSend.kind}`}
+            channel={pendingSend.channel}
+            name={pendingSend.prospect.name}
+            askNext={pendingSend.kind === "follow_up"}
+            error={sendError}
+            onConfirm={confirmPendingSend}
+            onCancel={() => { setPendingSend(null); setSendError(null); }}
+          />
+        </div>
       )}
       <ProspectDrawer
         prospectId={drawerProspectId}

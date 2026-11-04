@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth";
 import { isAdmin } from "@/lib/authz";
 import { getProspectById, updateProspectStatus, updateProspect, deleteProspect, assignProspectOwner, logProspectActivity, setProspectFirstContact, setProspectSentBy, notifyTeam } from "@/lib/dal";
 import { resolveStatusChange } from "@/lib/prospect-status-guard";
+import { sendAlreadyLogged } from "@/lib/record-send";
+import { QUEUE_ACTIVITY_TYPES } from "@/lib/next-action";
 import { z } from "zod";
 
 export async function GET(
@@ -66,6 +68,12 @@ export async function PATCH(
     await updateProspect(id, { followUpDate: parsed.data.followUpDate ? new Date(parsed.data.followUpDate) : null });
   }
 
+  // A queue decision with no status change: "no more follow-ups", or "this was not a reply".
+  const decision = parsed.data.actionType;
+  if (!parsed.data.status && decision && (QUEUE_ACTIVITY_TYPES as readonly string[]).includes(decision)) {
+    await logProspectActivity({ prospectId: id, userId: session.userId, userName: session.fullName, actionType: decision, details: parsed.data.details });
+  }
+
   if (parsed.data.segment) {
     const previousSegment = (current as { segment?: string }).segment;
     await updateProspect(id, { segment: parsed.data.segment });
@@ -113,20 +121,23 @@ export async function PATCH(
   if (parsed.data.status) {
     const previousStatus = current.status;
     const actionType = parsed.data.actionType || `STATUS_${parsed.data.status}`;
+    const repeatSend = await sendAlreadyLogged(id, session.userId, actionType);
 
     // A send on a prospect who already replied (or moved further) records the
     // send but keeps their status — it must never drop them back to ENVOYE.
     const change = resolveStatusChange(previousStatus, parsed.data.status);
     if (change.preserved) {
-      await logProspectActivity({
-        prospectId: id,
-        userId: session.userId,
-        userName: session.fullName,
-        actionType,
-        previousStatus,
-        newStatus: previousStatus,
-        details: parsed.data.details ?? `Status kept at ${previousStatus} (send does not undo a reply)`,
-      });
+      if (!repeatSend) {
+        await logProspectActivity({
+          prospectId: id,
+          userId: session.userId,
+          userName: session.fullName,
+          actionType,
+          previousStatus,
+          newStatus: previousStatus,
+          details: parsed.data.details ?? `Status kept at ${previousStatus} (send does not undo a reply)`,
+        });
+      }
       const unchanged = await getProspectById(id);
       return NextResponse.json({ ...unchanged, statusPreserved: true });
     }
@@ -146,15 +157,17 @@ export async function PATCH(
         await setProspectFirstContact(id, session.userId, session.fullName);
       }
 
-      await logProspectActivity({
-        prospectId: id,
-        userId: session.userId,
-        userName: session.fullName,
-        actionType,
-        previousStatus,
-        newStatus: parsed.data.status,
-        details: parsed.data.details,
-      });
+      if (!repeatSend) {
+        await logProspectActivity({
+          prospectId: id,
+          userId: session.userId,
+          userName: session.fullName,
+          actionType,
+          previousStatus,
+          newStatus: parsed.data.status,
+          details: parsed.data.details,
+        });
+      }
     } catch (e) {
       return NextResponse.json({ error: e instanceof Error ? e.message : "Status update failed" }, { status: 500 });
     }

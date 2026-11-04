@@ -9,10 +9,16 @@ import {
   BarChart3, Settings, LogOut, PanelLeftClose, PanelLeft, Menu, X,
   Activity, UsersRound, Bell, Search, Layers, Shield, CheckSquare, BellRing,
   Calendar, FileSignature, Crown, MessageSquare, Moon, Sun, Gauge, Receipt, PenLine,
-  Webhook, BookOpen, Compass, Flame, Inbox, Banknote, Sparkles, FileText, CalendarDays,
+  Webhook, BookOpen, Compass, Flame, Inbox, Banknote, Sparkles, FileText, CalendarDays, LayoutGrid,
 } from "lucide-react";
 import { CommandPalette } from "@/components/admin/command-palette";
+import { SectionTabs } from "@/components/admin/section-tabs";
+import { MAIN_NAV, activeTab, sectionForPath, type SectionKey } from "@/lib/admin-nav";
 import { cn } from "@/lib/utils";
+
+// Five-section navigation (see src/lib/admin-nav.ts).
+// To RESTORE the previous sidebar: set SIMPLE_NAV = false. Nothing else changes.
+const SIMPLE_NAV = true;
 
 // ─────────────────────────────────────────────────────────────────────────
 // FOCUS MODE
@@ -126,10 +132,22 @@ const OTHER_TOOLS_SECTION: NavSection = {
   items: [...HIDDEN_SECTIONS.flatMap((s) => s.items), ...HIDDEN_BOTTOM_NAV],
 };
 
-const VISIBLE_SECTIONS = FOCUS_MODE
+const SECTION_ICONS: Record<SectionKey, NavItem["icon"]> = {
+  today: Sun, leads: Target, clients: Building2, money: Banknote, more: LayoutGrid,
+};
+const SIMPLE_ITEMS: NavItem[] = MAIN_NAV.map((s) => ({
+  href: s.href, label: s.label, icon: SECTION_ICONS[s.key],
+  ...(s.key === "leads" ? { badgeKey: "leads" as const } : {}),
+}));
+
+const VISIBLE_SECTIONS: NavSection[] = SIMPLE_NAV
+  ? [{ label: "", items: SIMPLE_ITEMS }]
+  : FOCUS_MODE
   ? [...SECTIONS, SECONDARY_SECTION, OTHER_TOOLS_SECTION]
   : [...SECTIONS, SECONDARY_SECTION, ...HIDDEN_SECTIONS];
-const VISIBLE_BOTTOM_NAV = FOCUS_MODE ? BOTTOM_NAV : [...BOTTOM_NAV, ...HIDDEN_BOTTOM_NAV];
+const VISIBLE_BOTTOM_NAV: typeof BOTTOM_NAV = SIMPLE_NAV
+  ? []
+  : FOCUS_MODE ? BOTTOM_NAV : [...BOTTOM_NAV, ...HIDDEN_BOTTOM_NAV];
 
 const PAGE_TITLES: Record<string, string> = {
   prospecting: "Prospects", discovery: "Find New", projects: "Website Portfolio", overview: "Full Dashboard",
@@ -154,6 +172,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [badges, setBadges] = useState({ leads: 0, prospects: 0, activities: 0, team: 0, tasks: 0, notifications: 0, meetings: 0, contracts: 0, chat: 0 });
   const isLogin = pathname === "/admin/login";
+  const tab = activeTab(pathname);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -247,6 +266,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   function isActive(href: string) {
+    if (SIMPLE_NAV) return sectionForPath(pathname).href === href;
     if (href === "/admin") return pathname === "/admin";
     return pathname.startsWith(href);
   }
@@ -265,13 +285,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="text-white text-[11px] font-bold">I</span>
             </div>
             <div>
-              <div className="text-[14px] font-bold text-[#0F172A] leading-none tracking-tight">IBDA3</div>
-              <div className="text-[10px] text-[#64748B] leading-none mt-0.5 font-medium tracking-widest">OS</div>
+              <div className="text-[14px] font-bold text-[var(--os-text)] leading-none tracking-tight">IBDA3</div>
+              <div className="text-[10px] text-[var(--os-text-muted)] leading-none mt-0.5 font-medium tracking-widest">OS</div>
             </div>
           </div>
         )}
         {isMobileDrawer && (
-          <button onClick={closeMobile} className="ml-auto p-1.5 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-gray-100">
+          <button onClick={closeMobile} className="ml-auto p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]">
             <X className="w-5 h-5" />
           </button>
         )}
@@ -282,7 +302,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <button
           onClick={() => { setSearchOpen(true); if (isMobileDrawer) closeMobile(); }}
           className={cn(
-            "flex items-center gap-2.5 w-full rounded-xl border border-[var(--os-border)] transition-all duration-200 text-[#94A3B8] hover:text-[#475569] hover:border-[#8B00FF]/30 hover:bg-[#F8F5FF]",
+            "flex items-center gap-2.5 w-full rounded-xl border border-[var(--os-border)] transition-all duration-200 text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:border-[#8B00FF]/30 hover:bg-[var(--os-hover)]",
             collapsed && !isMobileDrawer ? "justify-center h-10 w-10 mx-auto px-0" : "px-3 py-2"
           )}
         >
@@ -290,7 +310,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {(!collapsed || isMobileDrawer) && (
             <>
               <span className="text-[13px] font-medium flex-1 text-left">Search...</span>
-              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 bg-[#F1F5F9] border border-[#E5E7EB] rounded text-[10px] font-medium text-[#94A3B8]">
+              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 bg-[var(--os-surface-2)] border border-[var(--os-border)] rounded text-[10px] font-medium text-[var(--os-text-muted)]">
                 Ctrl+K
               </kbd>
             </>
@@ -321,8 +341,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       active
                         ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20"
                         : section.secondary || section.collapsed
-                          ? "text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]"
-                          : "text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"
+                          ? "text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]"
+                          : "text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]"
                     )}
                   >
                     <item.icon className={cn("shrink-0", !showLabel ? "w-[18px] h-[18px]" : section.secondary || section.collapsed ? "w-[15px] h-[15px]" : "w-[16px] h-[16px]")} />
@@ -351,7 +371,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           if (isCollapsibleGroup) {
             return (
               <details key={section.label} open={section.items.some((i) => isActive(i.href)) || undefined}>
-                <summary className="cursor-pointer text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] px-2 mb-2 hover:text-[#475569] transition-colors select-none">
+                <summary className="cursor-pointer text-[10px] font-bold text-[var(--os-text-muted)] uppercase tracking-[0.14em] px-2 mb-2 hover:text-[var(--os-text)] transition-colors select-none">
                   {section.label}
                 </summary>
                 {renderItems()}
@@ -361,8 +381,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           return (
             <div key={section.label}>
-              {showLabel && (
-                <div className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] px-2 mb-2">
+              {showLabel && section.label && (
+                <div className="text-[10px] font-bold text-[var(--os-text-muted)] uppercase tracking-[0.14em] px-2 mb-2">
                   {section.label}
                 </div>
               )}
@@ -382,7 +402,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className={cn(
                 "flex items-center gap-2.5 rounded-xl transition-all duration-200",
                 !showLabel ? "justify-center h-10 w-10 mx-auto" : "px-3 py-2",
-                active ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20" : "text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"
+                active ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20" : "text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]"
               )}>
               <item.icon className={cn("shrink-0", !showLabel ? "w-[18px] h-[18px]" : "w-4 h-4")} />
               {showLabel && <span className="text-[13px] font-medium">{item.label}</span>}
@@ -391,7 +411,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         })}
         <button onClick={toggleDark} title={(!collapsed || isMobileDrawer) ? (osDark ? "Light mode" : "Dark mode") : (osDark ? "Light" : "Dark")}
           className={cn(
-            "flex items-center gap-2.5 rounded-xl transition-all duration-200 w-full text-[var(--os-text-dim)] hover:text-[var(--os-text)] hover:bg-[var(--os-surface-2)]",
+            "flex items-center gap-2.5 rounded-xl transition-all duration-200 w-full text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-surface-2)]",
             (!collapsed || isMobileDrawer) ? "px-3 py-2" : "justify-center h-10 w-10 mx-auto"
           )}>
           {osDark
@@ -401,7 +421,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </button>
         <button onClick={handleLogout} title={(!collapsed || isMobileDrawer) ? undefined : "Logout"}
           className={cn(
-            "flex items-center gap-2.5 rounded-xl transition-all duration-200 w-full text-[#94A3B8] hover:text-red-500 hover:bg-red-50/80",
+            "flex items-center gap-2.5 rounded-xl transition-all duration-200 w-full text-[var(--os-text-muted)] hover:text-red-500 hover:bg-red-50/80",
             (!collapsed || isMobileDrawer) ? "px-3 py-2" : "justify-center h-10 w-10 mx-auto"
           )}>
           <LogOut className={cn("shrink-0", (!collapsed || isMobileDrawer) ? "w-4 h-4" : "w-[18px] h-[18px]")} />
@@ -410,7 +430,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {!isMobileDrawer && (
           <button onClick={toggleSidebar}
             className={cn(
-              "hidden lg:flex items-center gap-2.5 rounded-xl transition-all duration-200 w-full text-[#94A3B8] hover:text-[#475569] hover:bg-[#F1F5F9]",
+              "hidden lg:flex items-center gap-2.5 rounded-xl transition-all duration-200 w-full text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]",
               collapsed ? "justify-center h-10 w-10 mx-auto" : "px-3 py-2"
             )}>
             {collapsed ? <PanelLeft className="w-[18px] h-[18px]" /> : <><PanelLeftClose className="w-4 h-4" /><span className="text-[13px] font-medium">Collapse</span></>}
@@ -429,27 +449,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Mobile header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center justify-between px-4 backdrop-blur-xl border-b border-[var(--os-border)] shadow-sm" style={{ backgroundColor: `color-mix(in srgb, var(--os-surface) 90%, transparent)` }}>
         <div className="flex items-center gap-3">
-          <button onClick={() => setMobileOpen(true)} className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]">
+          <button onClick={() => setMobileOpen(true)} className="p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]">
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#8B00FF] to-[#C026D3] flex items-center justify-center shadow-sm shadow-purple-500/20">
               <span className="text-white text-[9px] font-bold">I</span>
             </div>
-            <span className="text-sm font-bold text-[#0F172A]">{getPageTitle(pathname)}</span>
+            <span className="text-sm font-bold text-[var(--os-text)]">{SIMPLE_NAV && tab ? sectionForPath(pathname).label : getPageTitle(pathname)}</span>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <button onClick={toggleDark} className="p-1.5 rounded-lg text-[var(--os-text-dim)] hover:text-[var(--os-text)] hover:bg-[var(--os-surface-2)]" title="Toggle dark mode">
+          <button onClick={toggleDark} className="p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-surface-2)]" title="Toggle dark mode">
             {osDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
-          <button onClick={() => setSearchOpen(true)} className="p-1.5 rounded-lg text-[var(--os-text-dim)] hover:text-[var(--os-text)] hover:bg-[var(--os-surface-2)]">
+          <button onClick={() => setSearchOpen(true)} className="p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-surface-2)]">
             <Search className="w-5 h-5" />
           </button>
           <Link
             href="/admin/notifications"
             aria-label="Notifications"
-            className="p-1.5 rounded-lg text-[var(--os-text-dim)] hover:text-[var(--os-text)] hover:bg-[var(--os-surface-2)] relative"
+            className="p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-surface-2)] relative"
           >
             <Bell className="w-5 h-5" />
             {unreadNotifs > 0 && <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full" />}
@@ -497,8 +517,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden pt-14 lg:pt-0 relative z-[1]">
-        <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto">
+      <main className={cn("flex-1 overflow-y-auto overflow-x-hidden pt-14 lg:pt-0 relative z-[1]", SIMPLE_NAV && "pb-16 lg:pb-0")}>
+        <div className={cn("p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto", SIMPLE_NAV && tab?.hideTitleOnPhone && pathname === tab.href && "max-lg:[&_h1]:sr-only")}>
+          {SIMPLE_NAV && <SectionTabs pathname={pathname} />}
           <AnimatePresence mode="wait">
             <motion.div key={pathname} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
               {children}
@@ -506,6 +527,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </AnimatePresence>
         </div>
       </main>
+
+      {/* Phone bottom bar: the same five sections, one tap away */}
+      {SIMPLE_NAV && (
+        <nav
+          aria-label="Main"
+          className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex border-t border-[var(--os-border)] pb-[env(safe-area-inset-bottom)]"
+          style={{ backgroundColor: "var(--os-surface)" }}
+        >
+          {SIMPLE_ITEMS.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={cn("flex-1 flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium", active ? "text-[var(--os-purple)]" : "text-[var(--os-text-muted)]")}
+              >
+                <item.icon className="w-5 h-5" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+      )}
 
       <CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>

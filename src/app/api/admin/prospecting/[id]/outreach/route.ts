@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
+import { createMessageOnce } from "@/lib/record-send";
 
 const CHANNELS = ["WHATSAPP", "INSTAGRAM", "EMAIL", "CALL"] as const;
 
@@ -63,39 +64,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     templateKey = t?.key ?? null;
   }
 
-  const message = await prisma.outreachMessage.create({
-    data: {
-      prospectId: id,
-      templateId: parsed.data.templateId ?? null,
-      templateKey,
-      channel: parsed.data.channel,
-      body: parsed.data.body,
-      variantLabel: parsed.data.variantLabel ?? null,
-      tone: parsed.data.tone ?? null,
-      objective: parsed.data.objective ?? null,
-      sentById: session.userId,
-      sentByName: session.fullName,
-    },
-  });
+  const { message, duplicate } = await createMessageOnce({
+    prospectId: id,
+    templateId: parsed.data.templateId ?? null,
+    templateKey,
+    channel: parsed.data.channel,
+    body: parsed.data.body,
+    variantLabel: parsed.data.variantLabel ?? null,
+    tone: parsed.data.tone ?? null,
+    objective: parsed.data.objective ?? null,
+  }, session);
 
-  // Stamp prospect last-action + sentAt if not set
-  await prisma.prospect.update({
-    where: { id },
-    data: {
-      sentAt: { set: undefined }, // don't overwrite; this is a no-op signal we just touched the row
-      lastActionAt: new Date(),
-      lastActionByUserId: session.userId,
-      lastActionByName: session.fullName,
-    },
-  }).catch(() => null);
-
-  // If no initial contact was set, set it now
-  const prospect = await prisma.prospect.findUnique({ where: { id }, select: { sentAt: true } });
-  if (prospect && !prospect.sentAt) {
-    await prisma.prospect.update({ where: { id }, data: { sentAt: new Date() } });
-  }
-
-  return NextResponse.json(message, { status: 201 });
+  return duplicate ? NextResponse.json({ ...message, duplicate: true }) : NextResponse.json(message, { status: 201 });
 }
 
 export async function PATCH(req: Request) {

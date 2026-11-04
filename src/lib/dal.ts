@@ -9,6 +9,8 @@ import {
   CONTACTED_WHERE, RECORDED_SEND_WHERE, LEGACY_SEND_WHERE, NO_RECORDED_SEND_WHERE, sendRecordInclude, latestSendAt,
 } from "./prospect-stages";
 import { LEAD_TEST_STATUS } from "./lead-status";
+import { LEAD_QUEUE_CLOCK_SQL, LEAD_QUEUE_ENQUIRIES_SQL, LEAD_QUEUE_PROSPECTS_SQL } from "./lead-queue-sql";
+import { buildLeadQueue, type EnquiryRow, type LeadQueue, type ProspectRow } from "./next-action";
 
 function db() {
   if (!hasPrisma()) throw new Error("Database not available");
@@ -1161,6 +1163,16 @@ export async function getTodaySummary(now: Date = new Date()) {
 }
 
 export type TodaySummary = Awaited<ReturnType<typeof getTodaySummary>>;
+
+/** The Leads Command Center queue. Read-only. The SQL holds no parameters and the rules are in next-action.ts. */
+export async function getLeadQueue(): Promise<LeadQueue> {
+  const [clock, prospects, enquiries] = await Promise.all([
+    db().$queryRawUnsafe<{ today: string }[]>(LEAD_QUEUE_CLOCK_SQL),
+    db().$queryRawUnsafe<ProspectRow[]>(LEAD_QUEUE_PROSPECTS_SQL),
+    db().$queryRawUnsafe<EnquiryRow[]>(LEAD_QUEUE_ENQUIRIES_SQL),
+  ]);
+  return buildLeadQueue(prospects, enquiries, clock[0].today);
+}
 
 export async function getAnalyticsData() {
   const [
