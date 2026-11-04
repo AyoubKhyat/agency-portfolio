@@ -120,3 +120,22 @@ export function buildDiagnosisInquiry(req: DiagnosisRequest): Inquiry {
     message,
   };
 }
+
+/** What a diagnosis lead's stored message says. All of it was typed by a visitor: treat it as untrusted. */
+export type ParsedDiagnosis = { siteUrl: string; locale: "fr" | "en" | "ar"; problem: string };
+
+/**
+ * Reads back the message written by buildDiagnosisInquiry, or null when the site line is missing or
+ * is not a plausible public website. Line order is fixed, so a "Site :" typed inside the visitor's
+ * problem text can never replace the real one.
+ */
+export function parseDiagnosisMessage(message: string): ParsedDiagnosis | null {
+  const lines = message.replace(/\r/g, "").split("\n");
+  const siteLine = /^Site : (.+)$/.exec(lines[1] ?? "");
+  const siteUrl = siteLine ? normalizeSiteUrl(siteLine[1]) : null;
+  if (!siteUrl) return null;
+  const lang = /^Langue : (FR|EN|AR)$/.exec(lines[2] ?? "")?.[1]?.toLowerCase();
+  const locale = lang === "en" || lang === "ar" ? lang : "fr";
+  const first = /^Problème décrit : ([\s\S]*)$/.exec(lines.slice(3).join("\n"))?.[1]?.trim() ?? "";
+  return { siteUrl, locale, problem: first === "non précisé" ? "" : first };
+}

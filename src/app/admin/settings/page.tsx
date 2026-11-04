@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/admin/page-header";
 import { GlassCard } from "@/components/admin/glass-card";
 import { FormButton } from "@/components/admin/form";
+import { AiControlsCard } from "@/components/admin/ai-controls-card";
 import {
   User, Lock, Shield, CheckCircle, AlertCircle, Eye, EyeOff, Loader2,
 } from "lucide-react";
@@ -268,6 +269,8 @@ export default function SettingsPage() {
           {passwordSaving ? "Changing..." : "Change Password"}
         </FormButton>
       </GlassCard>
+
+      <AiControlsCard />
 
       {/* Team Management (Admin only) */}
       {isAdmin && (

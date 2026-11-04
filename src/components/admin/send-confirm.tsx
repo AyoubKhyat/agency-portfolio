@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   channel: SendChannel;
+  /** Names the channel in the question when it is not WhatsApp or Instagram, such as email. */
+  channelLabel?: string;
   /** Who this is about, when the panel isn't already on their card. */
   name?: string;
   /** After "Yes, sent", ask what happens next instead of recording straight away. */
@@ -29,12 +31,12 @@ const ghost = `${button} border border-[var(--os-border)] bg-[var(--os-surface)]
  * mind. Cancelling writes nothing. Give it a `key` per prospect wherever one panel
  * can move between prospects, so an earlier "Yes, sent" never carries over.
  */
-export function SendConfirm({ channel, name, askNext, allowStop = true, error, onConfirm, onCancel, className }: Props) {
+export function SendConfirm({ channel, channelLabel, name, askNext, allowStop = true, error, onConfirm, onCancel, className }: Props) {
   const [askingNext, setAskingNext] = useState(false);
   const [busy, setBusy] = useState(false);
   // A ref flips immediately, so two clicks in the same tick cannot record twice.
   const used = useRef(false);
-  const label = channel === "WHATSAPP" ? "WhatsApp" : "Instagram";
+  const label = channelLabel ?? (channel === "WHATSAPP" ? "WhatsApp" : "Instagram");
 
   async function record(next?: NextFollowUp) {
     if (used.current) return;

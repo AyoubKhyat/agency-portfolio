@@ -124,7 +124,8 @@ model Lead {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  notes LeadNote[]
+  notes  LeadNote[]
+  aiRuns AiRun[]
 
   @@map("leads")
 }
@@ -906,4 +907,67 @@ model ContentPost {
   @@index([plannedAt])
   @@index([archivedAt])
   @@map("content_posts")
+}
+
+// ─── AI Workforce ────────────────────────────────────────────────
+// One row per attempt, including attempts refused by the kill switch or a cap.
+// status: DENIED | RUNNING | BLOCKED | FAILED | AUDIT_ONLY | DRAFT_READY | APPROVED | SENT | DISCARDED
+model AiRun {
+  id                  String    @id @default(cuid())
+  agent               String    @default("INBOUND_DIAGNOSIS")
+  status              String
+  leadId              String?   @map("lead_id") // SetNull, so removing a lead can't erase spend history
+  targetUrl           String    @map("target_url")
+  finalUrl            String?   @map("final_url")
+  evidence            Json      @default("[]")
+  findings            Json?
+  gapScore            Int?      @map("gap_score")
+  fitLabel            String?   @map("fit_label") // internal, never in a draft
+  duplicateStatus     String?   @map("duplicate_status")
+  duplicateReason     String?   @map("duplicate_reason")
+  duplicateProspectId String?   @map("duplicate_prospect_id")
+  draftLanguage       String?   @map("draft_language")
+  draftSubject        String?   @map("draft_subject")
+  draftBody           String?   @map("draft_body")
+  approvedSubject     String?   @map("approved_subject")
+  approvedBody        String?   @map("approved_body")
+  channel             String? // EMAIL | WHATSAPP
+  model               String?
+  promptVersion       String?   @map("prompt_version")
+  inputTokens         Int       @default(0) @map("input_tokens")
+  outputTokens        Int       @default(0) @map("output_tokens")
+  reservedMicros      Int       @default(0) @map("reserved_micros")
+  costMicros          Int       @default(0) @map("cost_micros")
+  durationMs          Int?      @map("duration_ms")
+  errorCode           String?   @map("error_code")
+  errorDetail         String?   @map("error_detail")
+  startedById         String    @map("started_by_id")
+  startedByName       String    @map("started_by_name")
+  approvedById        String?   @map("approved_by_id")
+  approvedByName      String?   @map("approved_by_name")
+  approvedAt          DateTime? @map("approved_at")
+  sentConfirmedById   String?   @map("sent_confirmed_by_id")
+  sentConfirmedByName String?   @map("sent_confirmed_by_name")
+  sentConfirmedAt     DateTime? @map("sent_confirmed_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  lead Lead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([leadId, createdAt])
+  @@index([createdAt])
+  @@map("ai_runs")
+}
+
+// Single row (id = "singleton"). Missing row, or any read failure, means off.
+model AiControl {
+  id                  String   @id @default("singleton")
+  enabled             Boolean  @default(false)
+  aiEnabled           Boolean  @default(false) @map("ai_enabled")
+  dailyRunCap         Int      @default(10) @map("daily_run_cap")
+  monthlyBudgetMicros Int      @default(5000000) @map("monthly_budget_micros")
+  updatedById         String?  @map("updated_by_id")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("ai_controls")
 }

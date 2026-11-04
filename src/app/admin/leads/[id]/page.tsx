@@ -8,6 +8,8 @@ import { FormCard, Field, Select, FormButton } from "@/components/admin/form";
 import { Badge } from "@/components/admin/badge";
 import { MentionTextarea, HighlightedMentions } from "@/components/admin/mention-textarea";
 
+import { DiagnosisPanel } from "@/components/admin/diagnosis-panel";
+import { DIAGNOSIS_SUBJECT } from "@/lib/diagnosis";
 import { LEAD_STATUSES, LEAD_TEST_STATUS, leadStatusLabel } from "@/lib/lead-status";
 
 const STATUS_VARIANT: Record<string, "blue" | "amber" | "green" | "default"> = {
@@ -62,6 +64,12 @@ export default function LeadDetailPage() {
       body: JSON.stringify({ status: newStatus }),
     });
     if (res.ok) setLead((prev) => (prev ? { ...prev, status: newStatus } : prev));
+  }
+
+  // After a confirmed send: the new note and status live on the server.
+  async function reloadLead() {
+    const res = await fetch(`/api/admin/leads/${id}`);
+    if (res.ok) setLead(await res.json());
   }
 
   async function handleAddNote(e: React.FormEvent) {
@@ -167,6 +175,10 @@ export default function LeadDetailPage() {
           <p className="text-[14px] text-[#475569] whitespace-pre-wrap leading-relaxed">{lead.message}</p>
         </div>
       </FormCard>
+
+      {lead.subject === DIAGNOSIS_SUBJECT && (
+        <DiagnosisPanel leadId={lead.id} email={lead.email} phone={lead.phone} fullName={lead.fullName} onSent={reloadLead} />
+      )}
 
       <FormCard
         title="Internal notes"

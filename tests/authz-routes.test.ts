@@ -18,6 +18,7 @@ const OWNER_ROUTES = [
   "webhooks/route.ts",
   "webhooks/[id]/route.ts",
   "webhooks/test/route.ts",
+  "ai-controls/route.ts",
 ];
 
 test("every handler of an owner-tier route is guarded by requireOwner()", () => {

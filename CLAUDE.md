@@ -134,6 +134,7 @@ the change explicitly (`npx prisma db push`, without `--accept-data-loss`) only 
   - Contact form submissions saved to DB alongside EmailJS
 - **Database**: SQLite file at `./dev.db` (project root)
 - **Env vars**: `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+- **AI Workforce**: off unless `AI_WORKFORCE_ENABLED=1` AND the owner switches it on in Settings (`ai_controls`). Paid drafting also needs `ANTHROPIC_API_KEY`. Capped at 10 runs per 24 hours and $5 a month. Schema: `prisma/sql/20261105_add_ai_workforce.sql`. New files under any `leads/` folder need `git add -f`, because `.gitignore` has a `leads/` rule.
 
 ## Services (displayed on Services page)
 1. **Websites** — Modern, responsive showcase sites
