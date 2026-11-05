@@ -191,6 +191,86 @@ const sitemapOf = async (fetcher: SafeFetch) => {
 };
 const baseRoutes = { "/robots.txt": () => page("User-agent: *\nDisallow:"), "/": () => page(GOOD) };
 
+/* ───────────────── Bot checks and pages too thin to judge ───────────────── */
+
+const WAF_BODY = `<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width">
+  <script src="https://abc.token.awswaf.com/abc/challenge.js"></script></head><body><div id="challenge-container"></div></body></html>`;
+const auditOf = (main: () => SafeResponse) => auditWebsite(SITE, { fetcher: fakeNet({ ...baseRoutes, "/": main }) });
+
+test("the Dribbble answer (202, WAF header, small script page) is a bot check, not a healthy page", async () => {
+  const requested: string[] = [];
+  const net = fakeNet({ ...baseRoutes, "/": () => page(WAF_BODY, { status: 202, headers: { "x-amzn-waf-action": "challenge", "strict-transport-security": "max-age=1" } }) });
+  const a = await auditWebsite(SITE, { fetcher: (url, opts) => { requested.push(new URL(url).pathname); return net(url, opts); } });
+  assert.equal(a.outcome, "UNVERIFIED");
+  assert.equal(a.code, "BOT_CHALLENGE");
+  assert.equal(a.gapScore, null);
+  assert.equal(a.fitLabel, null);
+  assert.deepEqual(a.evidence.map((e) => [e.id, e.status]), [["E_REACHABLE", "unknown"]], "nothing from the bot check counts as evidence");
+  assert.deepEqual(requested, ["/robots.txt", "/"], "a site challenging us gets no more requests");
+});
+
+test("bot checks are recognised by their headers on any status, and by their body on any status", async () => {
+  for (const [label, res] of [
+    ["Cloudflare header, 403", page("<html><body>Blocked</body></html>", { status: 403, headers: { "cf-mitigated": "challenge" } })],
+    ["Vercel header, 429", page("", { status: 429, headers: { "x-vercel-mitigated": "challenge" } })],
+    ["AWS header, 200", page(GOOD, { headers: { "x-amzn-waf-action": "captcha" } })],
+    ["AWS body, 200, no header", page(WAF_BODY)],
+    ["Cloudflare body, 403", page("<html><title>Just a moment...</title><script>window._cf_chl_opt={}</script></html>", { status: 403 })],
+    ["DataDome body, 200", page('<html><script src="https://geo.captcha-delivery.com/c.js"></script></html>')],
+    ["wording only, 200", page("<html><title>Access denied</title><body><p>Access denied.</p></body></html>")],
+  ] as const) {
+    const a = await auditOf(() => res);
+    assert.equal(a.outcome, "UNVERIFIED", label);
+    assert.equal(a.code, "BOT_CHALLENGE", label);
+    assert.equal(a.gapScore, null, label);
+    assert.equal(a.evidence[0].status, "unknown", label);
+  }
+});
+
+test("an empty success, or a success code that delivers no page, is not a healthy page", async () => {
+  for (const [label, res] of [
+    ["200, empty", page("")],
+    ["200, empty document", page("<!doctype html><html><head></head><body></body></html>")],
+    ["202 with no bot signs", page(GOOD, { status: 202 })],
+    ["204", page("", { status: 204 })],
+  ] as const) {
+    const a = await auditOf(() => res);
+    assert.equal(a.outcome, "UNVERIFIED", label);
+    assert.equal(a.code, "NO_PAGE_CONTENT", label);
+    assert.equal(a.fitLabel, null, label);
+  }
+});
+
+test("a JavaScript shell with too little to read is unverified, however good its server settings are", async () => {
+  const shell = '<html lang="fr"><head><title>App</title><meta name="viewport" content="width=device-width"><script src="/a.js"></script></head><body><div id="root"></div></body></html>';
+  const a = await auditOf(() => page(shell));
+  assert.equal(a.outcome, "UNVERIFIED");
+  assert.equal(a.code, "INSUFFICIENT_EVIDENCE");
+  assert.equal(a.gapScore, null);
+  assert.equal(a.fitLabel, null);
+  assert.equal(a.evidence.find((e) => e.id === "E_TITLE")?.status, "pass", "what could be read is kept");
+  assert.equal(a.evidence.find((e) => e.id === "E_H1")?.status, "unknown");
+});
+
+test("real pages still complete: the fix doesn't catch pages that merely mention these things", async () => {
+  const article = GOOD.replace("</body>", "<p>Why a captcha helps: access denied, verify you are human, just a moment...</p></body>");
+  const thinButReal = '<!doctype html><html lang="fr"><head><title>Riad</title></head><body><h1>Riad</h1><p>Bienvenue</p></body></html>';
+  const goodHeadShell = `<html lang="fr"><head><title>App</title><meta name="description" content="Un site"><meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://site.ma/"><meta property="og:title" content="App"><script src="/a.js"></script></head><body><div id="root"></div></body></html>`;
+  for (const [label, html] of [["full page", GOOD], ["article about bot checks", article], ["short real page", thinButReal], ["shell with a complete head", goodHeadShell]] as const) {
+    const a = await auditOf(() => page(html));
+    assert.equal(a.outcome, "COMPLETE", label);
+    assert.equal(a.code, null, label);
+    assert.notEqual(a.gapScore, null, label);
+  }
+});
+
+test("site errors with no bot signs are still unreadable, as before", async () => {
+  const a = await auditOf(() => page("<html><body>Server error</body></html>", { status: 500 }));
+  assert.equal(a.outcome, "UNREADABLE");
+  assert.equal(a.code, "HTTP_500");
+});
+
 test("sitemap: a timeout, refusal or server error is unknown; a 404 or an HTML page is missing", async () => {
   for (const code of ["TIMEOUT", "NETWORK_ERROR", "DNS_FAILED", "TLS_ERROR", "BLOCKED_ADDRESS"] as const) {
     assert.equal((await sitemapOf(fakeNet({ ...baseRoutes, "/sitemap.xml": failing(code) }))).status, "unknown", code);

@@ -2,13 +2,14 @@
  * Shared Website Auditor: one public page, robots.txt and the sitemap, read through safeFetch.
  * Never throws for anything the site does, and respects robots.txt before reading the page.
  */
-import { buildEvidence, fitLabelFor, gapScore, robotsAllows, robotsSitemaps, type AuditInputs, type Evidence } from "./checks";
+import { buildEvidence, fitLabelFor, gapScore, hasEnoughContentEvidence, notARealPage, robotsAllows, robotsSitemaps, type AuditInputs, type Evidence } from "./checks";
 import { safeFetch as defaultFetch, SafeFetchError, SSRF_CODES, TOTAL_BUDGET_MS, type SafeFetch, type SafeResponse } from "./safe-fetch";
 
 export type { Evidence } from "./checks";
 
 export type AuditOutcome =
   | "COMPLETE"             // page read; the evidence is usable
+  | "UNVERIFIED"           // answered, but with a bot check, no content, or too little to judge the page
   | "UNREADABLE"           // site down, broken or answering with an error
   | "ROBOTS_DISALLOWED"    // the site asks automated tools not to read this page
   | "ROBOTS_UNREACHABLE"   // robots.txt answered 5xx, which RFC 9309 treats as disallow
@@ -76,6 +77,12 @@ export async function auditWebsite(targetUrl: string, opts: { fetcher?: SafeFetc
     return finish({ ...base, outcome: "UNREADABLE", code: codeOf(err), evidence: [note("E_REACHABLE", "Page responds", `Could not read the page (${codeOf(err)})`, targetUrl)] });
   }
 
+  // Stop here: a site that is challenging us gets no further requests, and this answer proves nothing about it.
+  const notPage = notARealPage(page);
+  if (notPage) {
+    return finish({ ...base, finalUrl: page.finalUrl, outcome: "UNVERIFIED", code: notPage.code, evidence: [note("E_REACHABLE", "Page responds", notPage.observed, page.finalUrl)] });
+  }
+
   const optional = async (url: string, kind: "html" | "text", followRedirects: boolean) => {
     try {
       return await fetcher(url, { kind, followRedirects, deadlineAt });
@@ -112,13 +119,14 @@ export async function auditWebsite(targetUrl: string, opts: { fetcher?: SafeFetc
   const evidence = buildEvidence({ page, httpProbe, robotsFound, robotsUrl, sitemap, fetchedAt });
   const score = gapScore(evidence);
   const ok = page.status >= 200 && page.status < 300;
+  const complete = ok && hasEnoughContentEvidence(evidence);
   return finish({
-    outcome: ok ? "COMPLETE" : "UNREADABLE",
+    outcome: complete ? "COMPLETE" : ok ? "UNVERIFIED" : "UNREADABLE",
     targetUrl,
     finalUrl: page.finalUrl,
     evidence,
-    gapScore: ok ? score : null,
-    fitLabel: ok ? fitLabelFor(score) : null,
-    code: ok ? null : `HTTP_${page.status}`,
+    gapScore: complete ? score : null,
+    fitLabel: complete ? fitLabelFor(score) : null,
+    code: complete ? null : ok ? "INSUFFICIENT_EVIDENCE" : `HTTP_${page.status}`,
   });
 }

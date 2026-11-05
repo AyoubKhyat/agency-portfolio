@@ -371,6 +371,43 @@ export function buildEvidence(input: AuditInputs): Evidence[] {
   return out;
 }
 
+/* ───────────────── Not the site's real page ───────────────── */
+
+/** Set by these services only when they stopped the request, so they count whatever the status or body. */
+const BOT_CHECK_HEADERS = ["x-amzn-waf-action", "cf-mitigated", "x-vercel-mitigated"];
+/** Only read on pages with little visible text: a real article may well mention a captcha. */
+const BOT_CHECK_BODY = /awswaf|_cf_chl_opt|cf-chl-|captcha-delivery\.com|_incapsula_resource|px-captcha|verify you are (?:a )?human|checking your browser|are you a robot|just a moment\.\.\.|attention required|access denied/i;
+const BOT_CHECK_MAX_TEXT_CHARS = 500;
+/** Success codes that don't deliver a page. */
+const NO_PAGE_STATUSES = [202, 204, 205];
+
+export type NotARealPage = { code: "BOT_CHALLENGE" | "NO_PAGE_CONTENT"; observed: string };
+
+/**
+ * A bot check or an empty answer says nothing about the site, and its headers and tags aren't the site's.
+ * Being wrong here is cheap: the run stays audit-only and someone looks at the site by hand.
+ */
+export function notARealPage(page: SafeResponse): NotARealPage | null {
+  const challenge: NotARealPage = { code: "BOT_CHALLENGE", observed: `HTTP ${page.status}: a bot check answered instead of the site, so its content wasn't checked` };
+  if (BOT_CHECK_HEADERS.some((h) => page.headers[h])) return challenge;
+  const parsed = parsePage(page.body);
+  if (parsed.textChars < BOT_CHECK_MAX_TEXT_CHARS && BOT_CHECK_BODY.test(page.body)) return challenge;
+  const nothingThere = parsed.textChars === 0 && parsed.scriptCount === 0 && parsed.imgTotal === 0;
+  if (NO_PAGE_STATUSES.includes(page.status) || (page.status >= 200 && page.status < 300 && nothingThere)) {
+    return { code: "NO_PAGE_CONTENT", observed: `HTTP ${page.status}: no page content was returned, so nothing could be checked` };
+  }
+  return null;
+}
+
+/** What the page itself shows. Reachability, headers, robots.txt and the sitemap say nothing about its content. */
+const CONTENT_CHECKS = ["E_TITLE", "E_DESCRIPTION", "E_VIEWPORT", "E_LANG", "E_CANONICAL", "E_OPEN_GRAPH", "E_STRUCTURED_DATA", "E_H1", "E_IMAGE_ALT", "E_CONTACT"];
+export const MIN_KNOWN_CONTENT_CHECKS = 5;
+
+/** Below this, a score or a draft would rest on server settings rather than on the page. */
+export function hasEnoughContentEvidence(evidence: Evidence[]): boolean {
+  return evidence.filter((e) => CONTENT_CHECKS.includes(e.id) && e.status !== "unknown").length >= MIN_KNOWN_CONTENT_CHECKS;
+}
+
 /** Share of checks with a known answer that failed. Internal only, and null when too little is known. */
 export function gapScore(evidence: Evidence[]): number | null {
   const known = evidence.filter((e) => e.status !== "unknown");
