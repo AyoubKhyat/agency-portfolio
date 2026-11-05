@@ -56,7 +56,8 @@ Copy `.env.example` to `.env` and set:
 
 - `DATABASE_URL` — PostgreSQL connection string (Neon or self-hosted)
 - `JWT_SECRET` — 32+ char random string
-- `ANTHROPIC_API_KEY` — for AI-powered admin features
+- `ANTHROPIC_API_KEY` — for AI-powered admin features (these have no spend cap)
+- `AI_WORKFORCE_ANTHROPIC_API_KEY` — only for AI Workforce drafting, which has its own caps; give it its own spend limit in the Anthropic console
 - `ADMIN_EMAIL`, `ADMIN_PASSWORD` — bootstrap admin login
 - `NEXT_PUBLIC_EMAILJS_SERVICE_ID`, `NEXT_PUBLIC_EMAILJS_TEMPLATE_ID`, `NEXT_PUBLIC_EMAILJS_PUBLIC_KEY` — contact form delivery
 

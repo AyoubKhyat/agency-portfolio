@@ -27,9 +27,9 @@ const TLD = /^(?:[a-z]{2,63}|xn--[a-z0-9-]{1,59})$/i;
  * The visitor's site address as an absolute http(s) URL, or null when it is not
  * a plausible public website. "votresite.ma" becomes "https://votresite.ma".
  */
-export function normalizeSiteUrl(input: string): string | null {
+export function normalizeSiteUrl(input: string, maxChars = SITE_URL_MAX): string | null {
   const raw = input.trim();
-  if (!raw || raw.length > SITE_URL_MAX || /\s/.test(raw)) return null;
+  if (!raw || raw.length > maxChars || /\s/.test(raw)) return null;
   const withScheme = SCHEME.test(raw) ? raw : `https://${raw.replace(/^\/+/, "")}`;
   let url: URL;
   try {

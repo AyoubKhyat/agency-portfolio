@@ -26,14 +26,23 @@ type Run = {
   errorCode: string | null;
   startedByName: string;
   approvedByName: string | null;
+  approvedAt: string | null;
   sentConfirmedByName: string | null;
   createdAt: string;
 };
-type State = { eligible: boolean; enabled: boolean; aiEnabled: boolean; usage: { runsInWindow: number; dailyRunCap: number }; runs: Run[] };
+type State = {
+  eligible: boolean;
+  enabled: boolean;
+  aiEnabled: boolean;
+  usage: { runsInWindow: number; dailyRunCap: number };
+  viewer: { canAct: boolean; isOwner: boolean };
+  runs: Run[];
+};
 
 const WHY: Record<string, string> = {
   AI_DISABLED: "AI drafting is off, so this run is the automatic checks only.",
-  NO_API_KEY: "No AI key is set up, so this run is the automatic checks only.",
+  NO_API_KEY: "The AI Workforce key isn't set up, so this run is the automatic checks only.",
+  REDIRECT_TOO_LONG: "This site redirects to an address too long to follow, so it wasn't read. Check it by hand.",
   BUDGET_EXHAUSTED: "This month's AI budget is used up, so this run is the automatic checks only.",
   KILL_SWITCH: "AI Workforce was switched off during this run, so no draft was written.",
   ROBOTS_DISALLOWED: "This site asks automated tools not to read this page, so it wasn't read. Check it by hand.",
@@ -87,10 +96,13 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
     void load();
   }, [load]);
 
-  async function start() {
+  async function start(retryOfRunId?: string) {
     setRunning(true);
     setError(null);
-    const res = await fetch(`/api/admin/leads/${leadId}/diagnosis`, { method: "POST" });
+    const res = await fetch(`/api/admin/leads/${leadId}/diagnosis`, {
+      method: "POST",
+      ...(retryOfRunId ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify({ retryOfRunId }) } : {}),
+    });
     if (!res.ok) {
       const data = await res.json().catch(() => null);
       setError(typeof data?.error === "string" ? data.error : "Couldn't start the check.");
@@ -110,8 +122,12 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
     if (!res.ok) {
       if (data?.error === "quality") setError(`Fix before approving: ${(data.detail ?? []).join(", ")}.`);
       else if (data?.error === "no_phone") setError("This enquiry has no usable phone number for WhatsApp.");
-      else if (data?.error === "wrong_state") setError("This draft changed in another tab. Reload and check it.");
-      else setError("Couldn't save that.");
+      else if (data?.error === "wrong_state") {
+        // Show the current version. The confirmation closes, because it was about the old one.
+        setError("This draft changed somewhere else. The latest version is shown below: check it before going on.");
+        setConfirming(false);
+        await load();
+      } else setError("Couldn't save that.");
       return false;
     }
     await load();
@@ -120,9 +136,12 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
 
   if (!state?.eligible) return null;
   const run = state.runs.find((r) => r.status !== "DENIED") ?? null;
-  const canStart = state.enabled && !running && state.usage.runsInWindow < state.usage.dailyRunCap;
-  const editable = run && ["AUDIT_ONLY", "DRAFT_READY"].includes(run.status);
-  const approved = run?.status === "APPROVED";
+  const { canAct, isOwner } = state.viewer;
+  const capLeft = state.enabled && !running && state.usage.runsInWindow < state.usage.dailyRunCap;
+  const canStart = canAct && capLeft;
+  const canRetry = isOwner && capLeft && run?.status === "FAILED";
+  const editable = canAct && run && ["AUDIT_ONLY", "DRAFT_READY"].includes(run.status);
+  const approved = canAct && run?.status === "APPROVED";
   const warnings = editable && body ? analyzeMessage(body, { name: fullName }) : [];
   const sendLink = approved && run?.channel ? buildSendLink(run.channel, { email, phone }, run.approvedSubject ?? "", run.approvedBody ?? "") : null;
   const channelLabel = run?.channel === "WHATSAPP" ? "WhatsApp" : "Email";
@@ -133,13 +152,18 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
       title="Website diagnosis"
       subtitle="Automatic checks on one page, and a reply draft for you to review. Nothing is sent by the app."
       icon={<Sparkles className="w-4 h-4" />}
-      action={
-        <FormButton variant="primary" disabled={!canStart} loading={running} onClick={start}>
-          {running ? "Checking..." : run ? "Check again" : "Run check"}
-        </FormButton>
-      }
+      action={canAct ? (
+        canRetry ? (
+          <FormButton variant="primary" onClick={() => start(run?.id)}>Retry failed run</FormButton>
+        ) : (
+          <FormButton variant="primary" disabled={!canStart} loading={running} onClick={() => start()}>
+            {running ? "Checking..." : run ? "Check again" : "Run check"}
+          </FormButton>
+        )
+      ) : undefined}
     >
       <div className="space-y-4">
+        {!canAct && <p className="text-[13px] text-[#64748B]">Only the owner or an admin can run checks and approve replies.</p>}
         {!state.enabled && <p className="text-[13px] text-[#64748B]">AI Workforce is switched off.</p>}
         {state.enabled && !state.aiEnabled && <p className="text-[13px] text-[#64748B]">AI drafting is off: a run gives the automatic checks only.</p>}
         {state.enabled && (
@@ -250,7 +274,12 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
                   <FormButton
                     variant="secondary"
                     onClick={async () => {
-                      await navigator.clipboard.writeText(run.approvedBody ?? "");
+                      try {
+                        await navigator.clipboard.writeText(run.approvedBody ?? "");
+                      } catch {
+                        setError("Couldn't copy automatically. Select the text above and copy it yourself.");
+                        return;
+                      }
                       setCopied(true);
                       setConfirming(true);
                       setTimeout(() => setCopied(false), 2000);
@@ -270,7 +299,7 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
                     error={confirmError}
                     onCancel={() => setConfirming(false)}
                     onConfirm={async () => {
-                      const ok = await act(run, { action: "confirm_sent" });
+                      const ok = await act(run, { action: "confirm_sent", approvedAt: run.approvedAt });
                       if (ok) { setConfirming(false); onSent(); }
                       else setConfirmError("Couldn't confirm this was saved. Try again: it won't be recorded twice.");
                     }}

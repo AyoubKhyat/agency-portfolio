@@ -7,11 +7,18 @@
 --
 -- Safety:
 -- - Additive only: two new tables, their indexes and one foreign key from ai_runs to leads
---   (ON DELETE SET NULL). No existing table, column or row is changed.
+--   (ON DELETE SET NULL). No existing column or row is changed.
+-- - The foreign key takes a brief SHARE ROW EXCLUSIVE lock on "leads", which blocks writes to that table
+--   until the transaction commits. ai_runs is empty, so this should take milliseconds.
 -- - Inserts one row, with everything switched off.
+-- - One transaction: if any statement fails, nothing is created.
+-- - Running it twice fails at CREATE TABLE and changes nothing.
+-- - Rollback (only before any run has been recorded): DROP TABLE "ai_runs"; DROP TABLE "ai_controls";
 -- - When the least-privilege role from Stage B exists, it needs:
 --     GRANT SELECT, INSERT, UPDATE ON ai_runs TO ibda3_app;
 --     GRANT SELECT, INSERT, UPDATE ON ai_controls TO ibda3_app;
+
+BEGIN;
 
 -- CreateTable
 CREATE TABLE "ai_runs" (
@@ -83,3 +90,5 @@ ALTER TABLE "ai_runs" ADD CONSTRAINT "ai_runs_lead_id_fkey" FOREIGN KEY ("lead_i
 INSERT INTO "ai_controls" ("id", "enabled", "ai_enabled", "daily_run_cap", "monthly_budget_micros", "updated_at")
 VALUES ('singleton', false, false, 10, 5000000, CURRENT_TIMESTAMP)
 ON CONFLICT ("id") DO NOTHING;
+
+COMMIT;

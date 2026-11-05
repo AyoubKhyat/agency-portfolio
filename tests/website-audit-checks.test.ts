@@ -4,8 +4,9 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildEvidence, fitLabelFor, gapScore, parsePage, robotsAllows, sanitizeObserved, type Evidence } from "../src/lib/website-audit/checks";
-import type { SafeResponse } from "../src/lib/website-audit/safe-fetch";
+import { buildEvidence, fitLabelFor, gapScore, parsePage, robotsAllows, robotsSitemaps, sanitizeObserved, type Evidence } from "../src/lib/website-audit/checks";
+import { auditWebsite } from "../src/lib/website-audit";
+import { SafeFetchError, type SafeFetch, type SafeResponse } from "../src/lib/website-audit/safe-fetch";
 import { buildDiagnosisInquiry, parseDiagnosisMessage } from "../src/lib/diagnosis";
 
 const page = (body: string, over: Partial<SafeResponse> = {}): SafeResponse => ({
@@ -14,7 +15,7 @@ const page = (body: string, over: Partial<SafeResponse> = {}): SafeResponse => (
 });
 const evidence = (p: SafeResponse, extra = {}) => buildEvidence({
   page: p, httpProbe: page("", { status: 301, finalUrl: "http://site.ma/", headers: { location: "https://site.ma/" } }),
-  robotsFound: true, robotsUrl: "https://site.ma/robots.txt", sitemap: page("", { status: 200 }), sitemapUrl: "https://site.ma/sitemap.xml",
+  robotsFound: true, robotsUrl: "https://site.ma/robots.txt", sitemap: { state: "found", url: "https://site.ma/sitemap.xml" },
   fetchedAt: "2026-11-04T00:00:00.000Z", ...extra,
 });
 const status = (list: Evidence[], id: string) => list.find((e) => e.id === id)?.status;
@@ -39,7 +40,7 @@ test("a complete page passes every check it can see", () => {
 
 test("missing items on a real content page are failures, with what was observed", () => {
   const list = evidence(page(`<html><head></head><body><h1>A</h1><h1>B</h1>${lorem}<img src="a.jpg"><img src="b.jpg" alt=""></body></html>`), {
-    sitemap: null, robotsFound: false,
+    sitemap: { state: "missing", url: "https://site.ma/sitemap.xml" }, robotsFound: false,
   });
   for (const id of ["E_TITLE", "E_DESCRIPTION", "E_VIEWPORT", "E_LANG", "E_CANONICAL", "E_OPEN_GRAPH", "E_STRUCTURED_DATA", "E_H1", "E_IMAGE_ALT", "E_CONTACT", "E_ROBOTS", "E_SITEMAP"]) {
     assert.equal(status(list, id), "fail", id);
@@ -103,7 +104,135 @@ test("a hostile page can't make the parser hang", () => {
   parsePage('<img alt="' + "a".repeat(500_000));
   parsePage("<!--".repeat(100_000));
   parsePage("<script".repeat(100_000));
+  parsePage('<a x="<a y=\'<a z="'.repeat(80_000));
+  parsePage('<a x="" '.repeat(180_000));
+  parsePage("<styled-".repeat(180_000));
   assert.ok(Date.now() - started < 3000, `took ${Date.now() - started} ms`);
+});
+
+test('a ">" inside a quoted value doesn\'t hide the tag', () => {
+  const p = parsePage(`<html lang="fr"><head>
+    <meta name="description" content="Prix > 100 et qualité > tout">
+    <meta content='a > b' property="og:title">
+    <link href="/x>y" rel="canonical">
+  </head><body><a title="1 > 0" href="tel:+212600000000">Appeler</a><img title="x > y" alt="ok" src="a.jpg"></body></html>`);
+  assert.equal(p.description, "Prix > 100 et qualité > tout");
+  assert.deepEqual(p.ogTags, ["og:title"]);
+  assert.equal(p.hasCanonical, true);
+  assert.deepEqual(p.contactKinds, ["phone"]);
+  assert.equal(p.imgTotal, 1);
+  assert.equal(p.imgMissingAlt, 0);
+});
+
+test("characters that change length when lower-cased can't shift the parser or forge results", () => {
+  const shift = "İ".repeat(40);
+  const p = parsePage(`<html><head><title>${shift} Vrai titre</title></head><body>${shift}<script>var x='<h1>faux</h1>';</script><style>h1{}</style><h1>Vrai</h1><!-- x --></body></html>`);
+  assert.equal(p.h1Count, 1);
+  assert.equal(p.title, `${shift} Vrai titre`);
+  const forged = parsePage(`<html><body>${shift}<style>.a{}</style><h1>Seul titre</h1><script>'<h1>a</h1><h1>b</h1><a href="tel:1">'</script></body></html>`);
+  assert.equal(forged.h1Count, 1);
+  assert.deepEqual(forged.contactKinds, []);
+});
+
+test("a custom element whose name starts like script or style isn't removed with the rest of the page", () => {
+  // No closing tag starts with </style or </script, so wrongly matching these would swallow the whole page.
+  for (const opener of ["<styled-box/>", "<script-loader/>", "<noscript-x/>"]) {
+    const p = parsePage(`<html><body>${opener}<h1>Titre</h1><a href="tel:1">x</a></body></html>`);
+    assert.equal(p.h1Count, 1, opener);
+    assert.deepEqual(p.contactKinds, ["phone"], opener);
+  }
+});
+
+test("attributes: bare alt and huge values are read correctly, and og tags set with name= count", () => {
+  assert.equal(parsePage('<img src="a.jpg" alt>').imgMissingAlt, 0);
+  assert.equal(parsePage('<img src="a.jpg" title="no alt here">').imgMissingAlt, 1, "a word inside another value isn't the attribute");
+  const huge = parsePage(`<img src="data:image/png;base64,${"A".repeat(50_000)}"><h1>x</h1>`);
+  assert.equal(huge.imgTotal, 1, "an inline image is still counted");
+  assert.equal(huge.imgMissingAlt, 1);
+  assert.equal(huge.h1Count, 1);
+  assert.deepEqual(parsePage('<meta name="og:title" content="x">').ogTags, ["og:title"]);
+});
+
+test("transient or refused checks are unknown, never a failure of the site", () => {
+  const unknown = evidence(page(GOOD), { sitemap: { state: "unknown", url: "https://site.ma/sitemap.xml" } });
+  assert.equal(status(unknown, "E_SITEMAP"), "unknown");
+  assert.equal(unknown.find((e) => e.id === "E_SITEMAP")?.observed, "Could not check");
+  assert.equal(status(evidence(page(GOOD), { robotsFound: null }), "E_ROBOTS"), "unknown");
+  for (const code of [403, 429, 500, 503]) {
+    const refused = evidence(page(GOOD), { httpProbe: page("", { status: code, finalUrl: "http://site.ma/" }) });
+    assert.equal(status(refused, "E_HTTP_REDIRECT"), "unknown", String(code));
+  }
+  const toHttp = evidence(page(GOOD), { httpProbe: page("", { status: 301, finalUrl: "http://site.ma/", headers: { location: "http://site.ma/x" } }) });
+  assert.equal(status(toHttp, "E_HTTP_REDIRECT"), "fail", "a real redirect that stays on http is a real failure");
+  assert.equal(toHttp.find((e) => e.id === "E_HTTP_REDIRECT")?.observed, "HTTP 301");
+});
+
+test("HSTS only counts over HTTPS, and the visitor's path and query stay out of the evidence", () => {
+  const plain = evidence(page(GOOD, { finalUrl: "http://site.ma/?email=sara@x.ma", headers: {} }));
+  assert.equal(status(plain, "E_HSTS"), "unknown");
+  const https = plain.find((e) => e.id === "E_HTTPS")!;
+  assert.equal(https.status, "fail");
+  assert.equal(https.observed, "http://site.ma");
+});
+
+/* ───────────────── The audit, with a fake network ───────────────── */
+
+const fakeNet = (routes: Record<string, () => SafeResponse>): SafeFetch => async (url) => {
+  const route = routes[new URL(url).pathname] ?? routes[url];
+  if (!route) return page("nope", { status: 404, finalUrl: url });
+  const res = route();
+  return { ...res, finalUrl: url };
+};
+const failing = (code: ConstructorParameters<typeof SafeFetchError>[0]) => (): SafeResponse => { throw new SafeFetchError(code); };
+const SITE = "https://site.ma/";
+const sitemapOf = async (fetcher: SafeFetch) => {
+  const { evidence: list } = await auditWebsite(SITE, { fetcher });
+  return list.find((e) => e.id === "E_SITEMAP")!;
+};
+const baseRoutes = { "/robots.txt": () => page("User-agent: *\nDisallow:"), "/": () => page(GOOD) };
+
+test("sitemap: a timeout, refusal or server error is unknown; a 404 or an HTML page is missing", async () => {
+  for (const code of ["TIMEOUT", "NETWORK_ERROR", "DNS_FAILED", "TLS_ERROR", "BLOCKED_ADDRESS"] as const) {
+    assert.equal((await sitemapOf(fakeNet({ ...baseRoutes, "/sitemap.xml": failing(code) }))).status, "unknown", code);
+  }
+  for (const code of [403, 429, 500, 503]) {
+    assert.equal((await sitemapOf(fakeNet({ ...baseRoutes, "/sitemap.xml": () => page("", { status: code }) }))).status, "unknown", String(code));
+  }
+  for (const code of [404, 410]) {
+    assert.equal((await sitemapOf(fakeNet({ ...baseRoutes, "/sitemap.xml": () => page("", { status: code }) }))).status, "fail", String(code));
+  }
+  assert.equal((await sitemapOf(fakeNet({ ...baseRoutes, "/sitemap.xml": failing("BAD_CONTENT_TYPE") }))).status, "fail");
+  assert.equal((await sitemapOf(fakeNet({ ...baseRoutes, "/sitemap.xml": () => page("<urlset/>") }))).status, "pass");
+});
+
+test("sitemap: the address declared in robots.txt counts, and the usual one is the backup", async () => {
+  const declaring = "User-agent: *\nDisallow:\nSITEMAP: https://site.ma/maps/index.xml\nSitemap: https://site.ma/other.xml";
+  assert.deepEqual(robotsSitemaps(declaring), ["https://site.ma/maps/index.xml", "https://site.ma/other.xml"]);
+  const robots = { "/robots.txt": () => page(declaring), "/": () => page(GOOD) };
+
+  const declared = await sitemapOf(fakeNet({ ...robots, "/maps/index.xml": () => page("<sitemapindex/>") }));
+  assert.equal(declared.status, "pass");
+  assert.equal(declared.sourceUrl, "https://site.ma/maps/index.xml");
+
+  assert.equal((await sitemapOf(fakeNet({ ...robots, "/sitemap.xml": () => page("<urlset/>") }))).status, "pass", "a stale line doesn't hide the usual one");
+  assert.equal((await sitemapOf(fakeNet(robots))).status, "fail", "neither address exists");
+  assert.equal((await sitemapOf(fakeNet({ ...robots, "/maps/index.xml": failing("TIMEOUT") }))).status, "unknown");
+  assert.equal(
+    (await sitemapOf(fakeNet({ "/robots.txt": () => page("Sitemap: http://169.254.169.254/x.xml"), "/": () => page(GOOD), "http://169.254.169.254/x.xml": failing("INVALID_URL") }))).status,
+    "unknown",
+    "a declared address the fetcher refuses doesn't stop the audit",
+  );
+});
+
+test("robots.txt: only 404 and 410 mean absent", async () => {
+  const robotsOf = async (status_: number) => {
+    const { evidence: list } = await auditWebsite(SITE, { fetcher: fakeNet({ "/robots.txt": () => page("", { status: status_ }), "/": () => page(GOOD), "/sitemap.xml": () => page("") }) });
+    return status(list, "E_ROBOTS");
+  };
+  assert.equal(await robotsOf(404), "fail");
+  assert.equal(await robotsOf(410), "fail");
+  assert.equal(await robotsOf(403), "unknown");
+  assert.equal(await robotsOf(429), "unknown");
 });
 
 test("robots.txt: named group wins, longest rule wins, wildcards, comments", () => {

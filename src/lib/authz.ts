@@ -3,7 +3,7 @@ import { getSession, type SessionUser } from "@/lib/auth";
 import { normalizeRole } from "@/lib/roles";
 
 /**
- * Central authorization for API routes. Three tiers:
+ * Central authorization for API routes. Three tiers, plus owner-or-admin for work either may do:
  *   team  — any active team member with a valid session (getSession re-checks the database)
  *   admin — a team member whose CURRENT database role is "admin"
  *   owner — the User row named by OWNER_USER_ID, verified in the database (see isOwner)
@@ -32,9 +32,19 @@ export async function requireAdmin(): Promise<Guard> {
   return isAdmin(session) ? { session } : deny(403, "Admin only");
 }
 
+export async function sessionIsOwner(session: SessionUser): Promise<boolean> {
+  const { isOwner } = await import("@/lib/account-security"); // loaded only where owner checks run
+  return isOwner(session);
+}
+
 export async function requireOwner(): Promise<Guard> {
   const session = await getSession();
   if (!session) return deny(401, "Unauthorized");
-  const { isOwner } = await import("@/lib/account-security"); // loaded only where owner checks run
-  return (await isOwner(session)) ? { session } : deny(403, "Only the account owner can do this");
+  return (await sessionIsOwner(session)) ? { session } : deny(403, "Only the account owner can do this");
+}
+
+export async function requireOwnerOrAdmin(): Promise<Guard> {
+  const session = await getSession();
+  if (!session) return deny(401, "Unauthorized");
+  return isAdmin(session) || (await sessionIsOwner(session)) ? { session } : deny(403, "Only the owner or an admin can do this");
 }

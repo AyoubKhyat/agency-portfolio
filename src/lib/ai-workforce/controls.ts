@@ -68,7 +68,7 @@ export async function usageNow(now = new Date()) {
   return { runsInWindow, monthSpentMicros: (month._sum.costMicros ?? 0) + (month._sum.reservedMicros ?? 0) };
 }
 
-export type DenyReason = "KILL_SWITCH_ENV" | "KILL_SWITCH" | "DAILY_CAP" | "LEAD_RECENT_RUN";
+export type DenyReason = "KILL_SWITCH_ENV" | "KILL_SWITCH" | "DAILY_CAP" | "LEAD_RECENT_RUN" | "RETRY_NOT_ALLOWED";
 export type AiWithheld = "AI_DISABLED" | "NO_API_KEY" | "BUDGET_EXHAUSTED";
 
 export type Reservation =
@@ -83,12 +83,15 @@ type ReserveInput = {
   startedById: string;
   startedByName: string;
   aiKeyPresent: boolean;
+  /** The owner's retry of this enquiry's latest run. The route checks that the caller is the owner. */
+  retryOfRunId?: string | null;
   now?: Date;
 };
 
 /**
  * Starts a run, or records why it was refused. Every attempt leaves a row. Refused rows are DENIED and
- * don't use up the daily cap; anything that started counts, whatever its outcome.
+ * don't use up the daily cap; anything that started counts, whatever its outcome. A retry only lifts the
+ * one-run-per-enquiry rule: the kill switch, the daily cap and the budget all apply to it as usual.
  */
 export async function reserveRun(input: ReserveInput): Promise<Reservation> {
   const now = input.now ?? new Date();
@@ -117,8 +120,14 @@ export async function reserveRun(input: ReserveInput): Promise<Reservation> {
     const runsInWindow = await tx.aiRun.count({ where: { ...COUNTED, createdAt: { gte: windowStart } } });
     if (runsInWindow >= Math.min(control.dailyRunCap, HARD_DAILY_RUN_CAP)) return deny("DAILY_CAP");
 
-    const leadRuns = await tx.aiRun.count({ where: { ...COUNTED, leadId: input.leadId, createdAt: { gte: windowStart } } });
-    if (leadRuns > 0) return deny("LEAD_RECENT_RUN");
+    if (input.retryOfRunId) {
+      // Checked under the lock, so two retries of one failure can't both start.
+      const latest = await tx.aiRun.findFirst({ where: { ...COUNTED, leadId: input.leadId }, orderBy: { createdAt: "desc" }, select: { id: true, status: true } });
+      if (latest?.id !== input.retryOfRunId || latest.status !== "FAILED") return deny("RETRY_NOT_ALLOWED");
+    } else {
+      const leadRuns = await tx.aiRun.count({ where: { ...COUNTED, leadId: input.leadId, createdAt: { gte: windowStart } } });
+      if (leadRuns > 0) return deny("LEAD_RECENT_RUN");
+    }
 
     const month = await tx.aiRun.aggregate({
       where: { createdAt: { gte: monthStart(now) } },

@@ -42,22 +42,38 @@ function decodeEntities(s: string): string {
     .replace(/&quot;/gi, '"').replace(/&#0?39;|&apos;/gi, "'").replace(/&nbsp;/gi, " ");
 }
 
+/**
+ * Lower-cases A-Z only. toLowerCase can change a string's length ("İ" becomes two characters), which would
+ * shift every position found in the copy away from the original text.
+ */
+const asciiLower = (s: string) => s.replace(/[A-Z]+/g, (m) => m.toLowerCase());
+
+const TAG_NAME_END = /[\s/>]/;
+
 /** Removes a whole element kind by scanning, not by regex, so a crafted page can't cause backtracking. */
 function stripElement(html: string, tag: string): string {
-  const lower = html.toLowerCase();
+  const lower = asciiLower(html);
   const open = `<${tag}`;
   const close = `</${tag}`;
   let out = "";
   let at = 0;
+  let from = 0;
   for (;;) {
-    const start = lower.indexOf(open, at);
+    const start = lower.indexOf(open, from);
     if (start < 0) return out + html.slice(at);
+    // <styled-box> is not <style>.
+    const next = lower[start + open.length];
+    if (next !== undefined && !TAG_NAME_END.test(next)) {
+      from = start + open.length;
+      continue;
+    }
     out += html.slice(at, start);
     const end = lower.indexOf(close, start);
     if (end < 0) return out;
     const gt = lower.indexOf(">", end);
     if (gt < 0) return out;
     at = gt + 1;
+    from = at;
   }
 }
 
@@ -88,8 +104,50 @@ function stripTags(html: string): string {
   }
 }
 
-const TAG = /<([a-z][a-z0-9-]{0,30})\b([^<>]{0,4000})>/gi;
-const ATTR = /([a-z_:][a-z0-9_:.-]{0,60})\s*=\s*(?:"([^"]{0,4000})"|'([^']{0,4000})'|([^\s"'>]{1,4000}))/gi;
+const TAG_NAME = /[a-z][a-z0-9-]{0,30}/iy;
+const ATTR = /([a-z_:][a-z0-9_:.-]{0,60})(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+)))?/gi;
+
+/**
+ * Each opening tag and its raw attributes. A ">" inside a quoted value doesn't end the tag. Every scan that
+ * finds no end moves past what it read, so the whole page is read about once, whatever it contains.
+ */
+function* openingTags(html: string): Generator<{ name: string; attrs: string }> {
+  let at = 0;
+  for (;;) {
+    const start = html.indexOf("<", at);
+    if (start < 0) return;
+    TAG_NAME.lastIndex = start + 1;
+    const name = TAG_NAME.exec(html)?.[0];
+    at = start + 1;
+    if (!name) continue;
+    const attrsStart = start + 1 + name.length;
+    let i = attrsStart;
+    let afterEquals = false;
+    for (;;) {
+      const c = html[i];
+      if (c === undefined) return; // unclosed: a browser ignores it too
+      if (c === ">") {
+        yield { name, attrs: html.slice(attrsStart, i) };
+        at = i + 1;
+        break;
+      }
+      if (c === "<") {
+        at = i;
+        break;
+      }
+      if (afterEquals && (c === '"' || c === "'")) {
+        const close = html.indexOf(c, i + 1);
+        if (close < 0) return;
+        i = close + 1;
+        afterEquals = false;
+        continue;
+      }
+      if (c === "=") afterEquals = true;
+      else if (!/\s/.test(c)) afterEquals = false;
+      i++;
+    }
+  }
+}
 
 function attrsOf(raw: string): Record<string, string> {
   const out: Record<string, string> = {};
@@ -129,33 +187,34 @@ export function parsePage(html: string): ParsedPage {
   const titleStart = noScript.search(/<title\b/i);
   if (titleStart >= 0) {
     const gt = noScript.indexOf(">", titleStart);
-    const end = gt >= 0 ? noScript.toLowerCase().indexOf("</title", gt) : -1;
+    const end = gt >= 0 ? asciiLower(noScript).indexOf("</title", gt) : -1;
     if (end > gt) page.title = sanitizeObserved(decodeEntities(noScript.slice(gt + 1, end)));
   }
 
-  for (const m of noScript.matchAll(TAG)) {
-    const tag = m[1].toLowerCase();
+  for (const { name: rawName, attrs } of openingTags(noScript)) {
+    const tag = rawName.toLowerCase();
     if (tag === "html") {
-      page.lang = sanitizeObserved(attrsOf(m[2]).lang ?? "", 20);
+      page.lang = sanitizeObserved(attrsOf(attrs).lang ?? "", 20);
     } else if (tag === "meta") {
-      const a = attrsOf(m[2]);
+      const a = attrsOf(attrs);
       const name = (a.name ?? "").toLowerCase();
       const property = (a.property ?? "").toLowerCase();
       if (name === "description" && a.content) page.description = sanitizeObserved(a.content);
       if (name === "viewport" && /width\s*=\s*device-width/i.test(a.content ?? "")) page.hasViewport = true;
-      if (property.startsWith("og:") && a.content) page.ogTags.push(property);
+      const socialTag = property.startsWith("og:") ? property : name.startsWith("og:") ? name : "";
+      if (socialTag && a.content) page.ogTags.push(socialTag);
     } else if (tag === "link") {
-      const a = attrsOf(m[2]);
+      const a = attrsOf(attrs);
       if ((a.rel ?? "").toLowerCase().split(/\s+/).includes("canonical") && a.href) page.hasCanonical = true;
     } else if (tag === "h1") {
       page.h1Count++;
     } else if (tag === "img") {
       page.imgTotal++;
-      if (!("alt" in attrsOf(m[2]))) page.imgMissingAlt++;
+      if (!("alt" in attrsOf(attrs))) page.imgMissingAlt++;
     } else if (tag === "form") {
       contact.add("form");
     } else if (tag === "a") {
-      const href = (attrsOf(m[2]).href ?? "").toLowerCase();
+      const href = (attrsOf(attrs).href ?? "").toLowerCase();
       if (href.startsWith("tel:")) contact.add("phone");
       if (href.startsWith("mailto:")) contact.add("email");
       if (href.includes("wa.me/") || href.includes("api.whatsapp.com")) contact.add("whatsapp");
@@ -171,6 +230,16 @@ export function parsePage(html: string): ParsedPage {
 /* ───────────────── robots.txt ───────────────── */
 
 type RobotsRule = { allow: boolean; path: string };
+
+/** The sitemap addresses robots.txt declares. These lines apply to the whole file, whatever group they sit in. */
+export function robotsSitemaps(robots: string): string[] {
+  const found: string[] = [];
+  for (const rawLine of robots.split(/\r?\n/).slice(0, 5000)) {
+    const m = /^\s*sitemap\s*:\s*(\S+)/i.exec(rawLine);
+    if (m) found.push(m[1]);
+  }
+  return found;
+}
 
 /** RFC 9309 matching: the group naming this agent, otherwise "*"; the longest matching rule wins, Allow on a tie. */
 export function robotsAllows(robots: string, path: string, agentToken = "ibda3auditbot"): boolean {
@@ -234,11 +303,11 @@ export type AuditInputs = {
   page: SafeResponse;
   /** Plain-http request to the same host, without following redirects. Null when it failed. */
   httpProbe: SafeResponse | null;
-  /** True when /robots.txt answered 2xx as text. */
+  /** True when /robots.txt answered 2xx as text, false when it is definitely absent, null when we can't tell. */
   robotsFound: boolean | null;
   robotsUrl: string;
-  sitemap: SafeResponse | null;
-  sitemapUrl: string;
+  /** "unknown" means the check itself failed, for example a timeout: that says nothing about the site. */
+  sitemap: { state: "found" | "missing" | "unknown"; url: string };
   fetchedAt: string;
 };
 
@@ -257,18 +326,24 @@ export function buildEvidence(input: AuditInputs): Evidence[] {
   const out: Evidence[] = [];
   const ok = page.status >= 200 && page.status < 300;
   add(out, "E_REACHABLE", "Page responds", ok ? "pass" : "fail", `HTTP ${page.status}`);
-  add(out, "E_HTTPS", "Final address uses HTTPS", source.startsWith("https://") ? "pass" : "fail", source);
+  const isHttps = source.startsWith("https://");
+  // Only the scheme and host: the path and query came from a visitor and prove nothing here.
+  add(out, "E_HTTPS", "Final address uses HTTPS", isHttps ? "pass" : "fail", new URL(source).origin);
   if (input.httpProbe) {
+    const { status, finalUrl } = input.httpProbe;
     const location = input.httpProbe.headers.location ?? "";
-    const upgrades = input.httpProbe.status >= 300 && input.httpProbe.status < 400 && location.startsWith("https://");
-    add(out, "E_HTTP_REDIRECT", "Plain http redirects to https", upgrades ? "pass" : "fail", `HTTP ${input.httpProbe.status}${location ? " to https" : ""}`, input.httpProbe.finalUrl);
+    const upgrades = status >= 300 && status < 400 && /^https:\/\//i.test(location);
+    // An error answer shows the probe was refused or the server had a problem, not that the redirect is missing.
+    const result: EvidenceStatus = upgrades ? "pass" : status >= 400 ? "unknown" : "fail";
+    add(out, "E_HTTP_REDIRECT", "Plain http redirects to https", result, `HTTP ${status}${upgrades ? " to https" : ""}`, finalUrl);
   } else {
     add(out, "E_HTTP_REDIRECT", "Plain http redirects to https", "unknown", "Plain http did not answer");
   }
   add(out, "E_RESPONSE_TIME", "Response time, one sample from our server", page.ms <= SLOW_RESPONSE_MS ? "pass" : "fail", `${page.ms} ms`);
   add(out, "E_PAGE_SIZE", "HTML size", page.truncated ? "fail" : "pass", page.truncated ? `Over ${Math.round(page.bytes / 1000)} KB` : `${Math.round(page.bytes / 1000)} KB`);
   const hsts = !!page.headers["strict-transport-security"];
-  add(out, "E_HSTS", "HSTS header", hsts ? "pass" : "fail", hsts ? "Present" : "Not sent");
+  if (isHttps) add(out, "E_HSTS", "HSTS header", hsts ? "pass" : "fail", hsts ? "Present" : "Not sent");
+  else add(out, "E_HSTS", "HSTS header", "unknown", "Only applies over HTTPS");
 
   if (!ok) return out; // an error page says nothing about the site's content
 
@@ -290,8 +365,9 @@ export function buildEvidence(input: AuditInputs): Evidence[] {
 
   if (input.robotsFound === null) add(out, "E_ROBOTS", "robots.txt", "unknown", "Could not check", input.robotsUrl);
   else add(out, "E_ROBOTS", "robots.txt", input.robotsFound ? "pass" : "fail", input.robotsFound ? "Found" : "Not found", input.robotsUrl);
-  const sitemapOk = !!input.sitemap && input.sitemap.status >= 200 && input.sitemap.status < 300;
-  add(out, "E_SITEMAP", "sitemap.xml at the usual address", sitemapOk ? "pass" : "fail", sitemapOk ? "Found" : "Not found", input.sitemapUrl);
+  const { state, url } = input.sitemap;
+  if (state === "unknown") add(out, "E_SITEMAP", "Sitemap", "unknown", "Could not check", url);
+  else add(out, "E_SITEMAP", "Sitemap", state === "found" ? "pass" : "fail", state === "found" ? "Found" : "Not found", url);
   return out;
 }
 

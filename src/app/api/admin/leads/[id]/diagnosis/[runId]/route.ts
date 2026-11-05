@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireTeam } from "@/lib/authz";
+import { requireOwnerOrAdmin } from "@/lib/authz";
 import { hasPrisma } from "@/lib/prisma";
 import { applyRunAction } from "@/lib/ai-workforce/inbound-diagnosis";
 
@@ -12,14 +12,14 @@ const schema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("save"), ...text }),
   z.object({ action: z.literal("approve"), ...text, channel: z.enum(["EMAIL", "WHATSAPP"]) }),
   z.object({ action: z.literal("discard") }),
-  z.object({ action: z.literal("confirm_sent") }),
+  z.object({ action: z.literal("confirm_sent"), approvedAt: z.string().datetime() }),
 ]);
 
 const STATUS = { not_found: 404, wrong_state: 409, quality: 422, no_phone: 422 } as const;
 
 /** Save, approve, discard, or record that a person sent the approved text. Nothing here sends anything. */
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string; runId: string }> }) {
-  const auth = await requireTeam();
+  const auth = await requireOwnerOrAdmin();
   if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 

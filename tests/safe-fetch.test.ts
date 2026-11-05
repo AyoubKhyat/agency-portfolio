@@ -9,7 +9,7 @@ import { gzipSync } from "node:zlib";
 import type { AddressInfo } from "node:net";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import {
-  createSafeFetcher, isPublicAddress, safeFetch, SafeFetchError, MAX_REDIRECTS, type SafeFetcherConfig,
+  createSafeFetcher, isPublicAddress, safeFetch, SafeFetchError, MAX_REDIRECTS, MAX_REDIRECT_URL_CHARS, SSRF_CODES, type SafeFetcherConfig,
 } from "../src/lib/website-audit/safe-fetch";
 
 const code = async (p: Promise<unknown>) => {
@@ -39,6 +39,11 @@ before(async () => {
       case "/to-private": res.writeHead(302, { location: "http://internal.site.example/" }); return res.end();
       case "/to-file": res.writeHead(302, { location: "file:///etc/passwd" }); return res.end();
       case "/to-port": res.writeHead(302, { location: `http://site.example:22/` }); return res.end();
+      case "/to-long": res.writeHead(302, { location: `/ok?token=${"a".repeat(600)}` }); return res.end();
+      case "/to-too-long": res.writeHead(302, { location: `/ok?token=${"a".repeat(MAX_REDIRECT_URL_CHARS)}` }); return res.end();
+      case "/to-private-long": res.writeHead(302, { location: `http://internal.site.example/?token=${"a".repeat(600)}` }); return res.end();
+      case "/gz-sitemap": res.writeHead(200, { "content-type": "application/gzip" }); return res.end(gzipSync("<urlset/>"));
+      case "/xml-sitemap": res.writeHead(200, { "content-type": "application/xml; charset=utf-8" }); return res.end("<urlset/>");
       case "/pdf": res.writeHead(200, { "content-type": "application/pdf" }); return res.end("%PDF");
       case "/none": res.writeHead(200); return res.end("x");
       case "/huge": res.writeHead(200, { "content-type": "text/html" }); return res.end("a".repeat(5_000_000));
@@ -145,6 +150,26 @@ test("redirects are followed by hand, each hop checked, with a limit", async () 
   assert.equal(held.headers.location, "/ok");
 });
 
+test("a long redirect is followed, and one too long is unreadable rather than a safety alarm", async () => {
+  // These query strings would hit the 300-character limit on typed addresses, but they aren't typed by anyone.
+  const long = await allow()(site("/to-long"), { kind: "html" }).catch((e) => e);
+  assert.equal(long.code, undefined, "followed");
+  assert.equal(long.status, 404, "this test site only serves /ok without a query");
+  const tooLong = await code(allow()(site("/to-too-long"), { kind: "html" }));
+  assert.equal(tooLong, "REDIRECT_TOO_LONG");
+  assert.ok(!SSRF_CODES.includes(tooLong as never), "not reported as blocked for safety");
+  assert.equal(await code(allow()(site("/to-private-long"), { kind: "html" })), "BLOCKED_ADDRESS", "every hop is still checked, however long");
+});
+
+test("sitemaps can be compressed files, but an HTML page is not one", async () => {
+  const f = allow();
+  assert.equal((await f(site("/gz-sitemap"), { kind: "sitemap" })).status, 200);
+  assert.equal((await f(site("/xml-sitemap"), { kind: "sitemap" })).status, 200);
+  assert.equal(await code(f(site("/ok"), { kind: "sitemap" })), "BAD_CONTENT_TYPE");
+  assert.equal(await code(f(site("/pdf"), { kind: "sitemap" })), "BAD_CONTENT_TYPE");
+  assert.equal(await code(f(site("/gz-sitemap"), { kind: "text" })), "BAD_CONTENT_TYPE", "other reads stay strict");
+});
+
 test("only the expected content types are read", async () => {
   const f = allow();
   assert.equal(await code(f(site("/pdf"), { kind: "html" })), "BAD_CONTENT_TYPE");
@@ -164,6 +189,11 @@ test("size is capped, after decompression, and reading stops there", async () =>
   const zipped = await f(site("/gzip"), { kind: "html" });
   assert.equal(zipped.body, "<title>Zipped</title>");
   assert.equal(zipped.truncated, false);
+});
+
+test("stopping at the size limit stops the decompressor too", () => {
+  const src = readFileSync(new URL("../src/lib/website-audit/safe-fetch.ts", import.meta.url), "utf8");
+  assert.match(src, /if \(stream !== res\) stream\.destroy\(\);/);
 });
 
 test("time is capped, including a response that starts and never finishes", async () => {

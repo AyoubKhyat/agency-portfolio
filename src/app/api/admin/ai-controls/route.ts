@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireOwner } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { prisma, hasPrisma } from "@/lib/prisma";
-import { hasAnthropic } from "@/lib/anthropic";
+import { hasWorkforceKey } from "@/lib/ai-workforce/client";
 import {
   AI_MODEL, HARD_DAILY_RUN_CAP, HARD_MONTHLY_BUDGET_MICROS, readControls, usageNow, workforceEnvEnabled,
 } from "@/lib/ai-workforce/controls";
@@ -23,7 +23,7 @@ export async function GET() {
   const [controls, usage] = await Promise.all([readControls(), usageNow()]);
   return NextResponse.json({
     ...controls, ...usage, model: AI_MODEL,
-    envEnabled: workforceEnvEnabled(), keyPresent: hasAnthropic(),
+    envEnabled: workforceEnvEnabled(), keyPresent: hasWorkforceKey(),
     hardDailyRunCap: HARD_DAILY_RUN_CAP, hardMonthlyBudgetMicros: HARD_MONTHLY_BUDGET_MICROS,
   });
 }

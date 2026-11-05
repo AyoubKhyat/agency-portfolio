@@ -1,8 +1,8 @@
 /**
- * Shared Website Auditor: one public page, robots.txt and sitemap.xml, read through safeFetch.
+ * Shared Website Auditor: one public page, robots.txt and the sitemap, read through safeFetch.
  * Never throws for anything the site does, and respects robots.txt before reading the page.
  */
-import { buildEvidence, fitLabelFor, gapScore, robotsAllows, type Evidence } from "./checks";
+import { buildEvidence, fitLabelFor, gapScore, robotsAllows, robotsSitemaps, type AuditInputs, type Evidence } from "./checks";
 import { safeFetch as defaultFetch, SafeFetchError, SSRF_CODES, TOTAL_BUDGET_MS, type SafeFetch, type SafeResponse } from "./safe-fetch";
 
 export type { Evidence } from "./checks";
@@ -28,6 +28,8 @@ export type AuditResult = {
 
 const codeOf = (err: unknown) => (err instanceof SafeFetchError ? err.code : "NETWORK_ERROR");
 const isSsrf = (err: unknown) => err instanceof SafeFetchError && SSRF_CODES.includes(err.code);
+/** The answers that really mean "this file isn't there". Others, such as 403 or 429, leave it unknown. */
+const GONE = [404, 410];
 
 export async function auditWebsite(targetUrl: string, opts: { fetcher?: SafeFetch; now?: () => Date } = {}): Promise<AuditResult> {
   const fetcher = opts.fetcher ?? defaultFetch;
@@ -51,7 +53,7 @@ export async function auditWebsite(targetUrl: string, opts: { fetcher?: SafeFetc
   let robotsFound: boolean | null = null;
   try {
     robots = await fetcher(robotsUrl, { kind: "text", deadlineAt });
-    robotsFound = robots.status >= 200 && robots.status < 300;
+    robotsFound = robots.status >= 200 && robots.status < 300 ? true : GONE.includes(robots.status) ? false : null;
     if (robots.status >= 500) {
       return finish({ ...base, outcome: "ROBOTS_UNREACHABLE", code: `HTTP_${robots.status}`, evidence: [note("E_ROBOTS", "robots.txt", `HTTP ${robots.status}: page not read`, robotsUrl)] });
     }
@@ -81,15 +83,33 @@ export async function auditWebsite(targetUrl: string, opts: { fetcher?: SafeFetc
       return null;
     }
   };
+  /** The address robots.txt declares, then the usual one. Only a clear "not there" from all of them counts as missing. */
+  const checkSitemap = async (): Promise<AuditInputs["sitemap"]> => {
+    const declared = robots && robotsFound ? robotsSitemaps(robots.body)[0] : undefined;
+    const candidates = declared && declared !== sitemapUrl ? [declared, sitemapUrl] : [sitemapUrl];
+    let unsure = false;
+    for (const url of candidates) {
+      try {
+        const res = await fetcher(url, { kind: "sitemap", deadlineAt });
+        if (res.status >= 200 && res.status < 300) return { state: "found", url: res.finalUrl };
+        if (!GONE.includes(res.status)) unsure = true;
+      } catch (err) {
+        // An HTML page answering 200, common on single-page apps, is not a sitemap. Anything else proves nothing.
+        if (codeOf(err) !== "BAD_CONTENT_TYPE") unsure = true;
+      }
+    }
+    return { state: unsure ? "unknown" : "missing", url: candidates[0] };
+  };
+
   const httpUrl = new URL(page.finalUrl);
   httpUrl.protocol = "http:";
   httpUrl.port = target.port;
   const [httpProbe, sitemap] = await Promise.all([
     optional(httpUrl.href, "html", false),
-    optional(sitemapUrl, "text", true),
+    checkSitemap(),
   ]);
 
-  const evidence = buildEvidence({ page, httpProbe, robotsFound, robotsUrl, sitemap, sitemapUrl, fetchedAt });
+  const evidence = buildEvidence({ page, httpProbe, robotsFound, robotsUrl, sitemap, fetchedAt });
   const score = gapScore(evidence);
   const ok = page.status >= 200 && page.status < 300;
   return finish({

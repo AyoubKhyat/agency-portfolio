@@ -22,10 +22,12 @@ export const MAX_REDIRECTS = 3;
 export const HOP_TIMEOUT_MS = 6_000;
 export const TOTAL_BUDGET_MS = 15_000;
 export const MAX_BODY_BYTES = 1_500_000;
+/** Sites may redirect to addresses far longer than a visitor could type, and that alone is harmless. */
+export const MAX_REDIRECT_URL_CHARS = 2000;
 export const AUDIT_USER_AGENT = "Ibda3AuditBot/1.0 (+https://www.ibda3digital.com)";
 
 export type SafeFetchCode =
-  | "INVALID_URL" | "BLOCKED_HOST" | "BLOCKED_PORT" | "BLOCKED_ADDRESS" | "BLOCKED_REDIRECT"
+  | "INVALID_URL" | "BLOCKED_HOST" | "BLOCKED_PORT" | "BLOCKED_ADDRESS" | "BLOCKED_REDIRECT" | "REDIRECT_TOO_LONG"
   | "DNS_FAILED" | "TOO_MANY_REDIRECTS" | "TIMEOUT" | "BAD_CONTENT_TYPE" | "TLS_ERROR" | "NETWORK_ERROR";
 
 /** Refused for safety, as opposed to the site simply being unavailable. */
@@ -38,7 +40,7 @@ export class SafeFetchError extends Error {
   }
 }
 
-export type ContentKind = "html" | "text";
+export type ContentKind = "html" | "text" | "sitemap";
 
 export type SafeResponse = {
   requestedUrl: string;
@@ -102,6 +104,14 @@ export type SafeFetcherConfig = {
 const ACCEPTED: Record<ContentKind, RegExp> = {
   html: /^(text\/html|application\/xhtml\+xml)\b/i,
   text: /^(text\/plain|text\/xml|application\/xml)\b/i,
+  // Sitemaps may be compressed files or feeds. Only their existence is used, never their content.
+  sitemap: /^(text\/plain|text\/xml|application\/xml|application\/(?:x-)?gzip|application\/octet-stream|application\/rss\+xml|application\/atom\+xml)(?:\s*;|\s*$)/i,
+};
+
+const ACCEPT: Record<ContentKind, string> = {
+  html: "text/html,application/xhtml+xml",
+  text: "text/plain,text/xml,application/xml",
+  sitemap: "application/xml,text/xml,text/plain,application/gzip,application/x-gzip,*/*;q=0.1",
 };
 
 function decoderFor(contentType: string): TextDecoder {
@@ -130,8 +140,8 @@ export function createSafeFetcher(overrides: Partial<SafeFetcherConfig> = {}): S
     ...overrides,
   };
 
-  function validate(raw: string): URL {
-    const normalized = normalizeSiteUrl(raw);
+  function validate(raw: string, maxChars?: number): URL {
+    const normalized = normalizeSiteUrl(raw, maxChars);
     if (!normalized) throw new SafeFetchError("INVALID_URL");
     const url = new URL(normalized);
     url.hash = "";
@@ -170,7 +180,7 @@ export function createSafeFetcher(overrides: Partial<SafeFetcherConfig> = {}): S
         lookup: checkedLookup,
         headers: {
           "User-Agent": AUDIT_USER_AGENT,
-          Accept: kind === "html" ? "text/html,application/xhtml+xml" : "text/plain,text/xml,application/xml",
+          Accept: ACCEPT[kind],
           "Accept-Encoding": "gzip, deflate, br",
           Connection: "close",
         },
@@ -219,6 +229,7 @@ export function createSafeFetcher(overrides: Partial<SafeFetcherConfig> = {}): S
         let bytes = 0;
         const done = (truncated: boolean) => finish(() => {
           const text = decoderFor(contentType).decode(Buffer.concat(chunks));
+          if (stream !== res) stream.destroy(); // stops the decompressor, not just the download
           res.destroy();
           req.destroy();
           resolve({ status, headers, body: text, bytes, truncated });
@@ -267,8 +278,10 @@ export function createSafeFetcher(overrides: Partial<SafeFetcherConfig> = {}): S
       } catch {
         throw new SafeFetchError("BLOCKED_REDIRECT");
       }
+      // Too long isn't a safety matter, so it is reported as the site being unreadable.
+      if (next.href.length > MAX_REDIRECT_URL_CHARS) throw new SafeFetchError("REDIRECT_TOO_LONG");
       try {
-        url = validate(next.href);
+        url = validate(next.href, MAX_REDIRECT_URL_CHARS);
       } catch (err) {
         // A redirect aimed at somewhere we refuse is itself the finding: say so.
         if (err instanceof SafeFetchError) throw new SafeFetchError("BLOCKED_REDIRECT", err.code);
