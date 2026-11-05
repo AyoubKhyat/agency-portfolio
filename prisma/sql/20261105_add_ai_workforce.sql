@@ -20,6 +20,9 @@
 
 BEGIN;
 
+-- Give up instead of queueing lead writes behind this migration. On timeout nothing is created; just re-run.
+SET LOCAL lock_timeout = '5s';
+
 -- CreateTable
 CREATE TABLE "ai_runs" (
     "id" TEXT NOT NULL,

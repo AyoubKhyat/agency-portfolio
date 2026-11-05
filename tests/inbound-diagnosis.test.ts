@@ -10,7 +10,8 @@ import { buildSendLink, MAX_LINK_CHARS, whatsappDigits } from "../src/lib/ai-wor
 import { AI_MODEL, HARD_DAILY_RUN_CAP, HARD_MONTHLY_BUDGET_MICROS, MAX_OUTPUT_TOKENS, MAX_INPUT_TOKENS, RESERVATION_MICROS, costMicros, monthStart } from "../src/lib/ai-workforce/controls";
 import { MAIN_NAV } from "../src/lib/admin-nav";
 
-const read = (rel: string) => readFileSync(new URL(`../${rel}`, import.meta.url), "utf8");
+// Normalised, because a Windows checkout has CRLF and these tests look at lines.
+const read = (rel: string) => readFileSync(new URL(`../${rel}`, import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
 const ev = (id: string, status: Evidence["status"], observed = "x"): Evidence => ({ id, check: id, status, observed, sourceUrl: "https://riad.ma/", fetchedAt: "2026-11-04T00:00:00.000Z" });
 const evidence = [ev("E_TITLE", "fail"), ev("E_H1", "unknown"), ev("E_HTTPS", "pass")];
@@ -190,6 +191,8 @@ test("the migration is one transaction, and says what it locks", () => {
   assert.ok(sql.indexOf('INSERT INTO "ai_controls"') < sql.indexOf("COMMIT;"));
   assert.match(sql, /SHARE ROW EXCLUSIVE lock on "leads"/);
   assert.doesNotMatch(sql, /No existing table, column or row is changed/);
+  // Must be the first statement inside the transaction: SET LOCAL does nothing outside one, and it has to cover the FK.
+  assert.equal(statements[1], "SET LOCAL lock_timeout = '5s';");
 });
 
 /* ───────────────── The API key is this workflow's own ───────────────── */
