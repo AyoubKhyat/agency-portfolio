@@ -182,6 +182,8 @@ test("a visitor's odd name gets the neutral greeting, and the draft stays usable
   const saved = await row(runId);
   assert.match(saved.draftBody, /^Bonjour,\n/);
   assert.doesNotMatch(saved.draftBody, /evil/);
+  const approved = await mod.applyRunAction(lead.id, runId, { action: "approve", subject: saved.draftSubject, body: saved.draftBody, channel: "EMAIL" }, actor);
+  assert.deepEqual(approved, { ok: true, status: "APPROVED" }, "approvable without typing that name");
 });
 
 test("the older key can't start paid drafting, and the AI Workforce key can", { skip }, async () => {

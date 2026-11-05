@@ -17,6 +17,7 @@ import { logAudit } from "@/lib/audit";
 import { DIAGNOSIS_SUBJECT, parseDiagnosisMessage } from "@/lib/diagnosis";
 import { detectDuplicate } from "@/lib/discovery/duplicates";
 import { analyzeMessage, hasBlockingError } from "@/lib/message-quality";
+import { firstNameFrom, requiredDraftName } from "@/lib/ai-workforce/greeting";
 import { auditWebsite, type AuditResult, type Evidence } from "@/lib/website-audit";
 import type { SafeFetch } from "@/lib/website-audit/safe-fetch";
 import { getWorkforceClient, hasWorkforceKey } from "./client";
@@ -45,11 +46,11 @@ const GREETING: Record<Language, [named: string, neutral: string]> = {
   ar: ["مرحباً {name}،", "مرحباً،"],
 };
 
-/** The name is typed by a visitor, so anything but a plain first name gets the neutral greeting. */
+/** The name is typed by a visitor, so anything but a reliable first name gets the neutral greeting. */
 export function greetingFor(language: Language, fullName: string): string {
-  const first = fullName.trim().split(/\s+/)[0] ?? "";
+  const first = firstNameFrom(fullName);
   const [named, neutral] = GREETING[language];
-  return /^[\p{L}\p{M}][\p{L}\p{M}'’-]{0,39}$/u.test(first) ? named.replace("{name}", first) : neutral;
+  return first ? named.replace("{name}", first) : neutral;
 }
 export const SIGN_OFF: Record<Language, string> = {
   fr: "L'équipe Ibda3 Digital",
@@ -438,7 +439,7 @@ export async function applyRunAction(leadId: string, runId: string, input: RunAc
   }
 
   if (input.action === "approve") {
-    const warnings = analyzeMessage(input.body, { name: lead.fullName });
+    const warnings = analyzeMessage(input.body, { name: requiredDraftName(lead.fullName) });
     if (hasBlockingError(warnings)) return { ok: false, code: "quality", detail: warnings.filter((w) => w.severity === "error").map((w) => w.label) };
     if (input.channel === "WHATSAPP" && !whatsappDigits(lead.phone)) return { ok: false, code: "no_phone" };
     const { count } = await prisma.aiRun.updateMany({

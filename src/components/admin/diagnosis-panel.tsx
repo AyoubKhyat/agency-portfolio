@@ -6,6 +6,7 @@ import { FormButton, FormCard, Field, Input, Textarea, Select } from "@/componen
 import { SendConfirm } from "@/components/admin/send-confirm";
 import { buildSendLink, whatsappDigits, type DiagnosisChannel } from "@/lib/ai-workforce/send-link";
 import { analyzeMessage } from "@/lib/message-quality";
+import { requiredDraftName } from "@/lib/ai-workforce/greeting";
 
 type Evidence = { id: string; check: string; status: "pass" | "fail" | "unknown"; observed: string; sourceUrl: string };
 type Finding = { title: string; explanation: string; recommendation: string; evidenceIds: string[] };
@@ -142,7 +143,7 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
   const canRetry = isOwner && capLeft && run?.status === "FAILED";
   const editable = canAct && run && ["AUDIT_ONLY", "DRAFT_READY"].includes(run.status);
   const approved = canAct && run?.status === "APPROVED";
-  const warnings = editable && body ? analyzeMessage(body, { name: fullName }) : [];
+  const warnings = editable && body ? analyzeMessage(body, { name: requiredDraftName(fullName) }) : [];
   const sendLink = approved && run?.channel ? buildSendLink(run.channel, { email, phone }, run.approvedSubject ?? "", run.approvedBody ?? "") : null;
   const channelLabel = run?.channel === "WHATSAPP" ? "WhatsApp" : "Email";
   const failing = run?.evidence.filter((e) => e.status === "fail").length ?? 0;
