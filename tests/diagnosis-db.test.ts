@@ -16,7 +16,7 @@ import assert from "node:assert/strict";
 import http from "node:http";
 import { readFileSync } from "node:fs";
 import type { AddressInfo } from "node:net";
-import Anthropic from "@anthropic-ai/sdk"; // a static import, so these are the same error classes the library sees
+import { WorkforceApiError, WorkforceConnectionError } from "../src/lib/ai-workforce/client";
 
 const URL_ = process.env.DIAGNOSIS_TEST_DATABASE_URL ?? "";
 const hostOf = (u: string) => { try { return new URL(u).hostname; } catch { return ""; } };
@@ -95,7 +95,7 @@ const on = { enabled: true, aiEnabled: true, dailyRunCap: 10, monthlyBudgetMicro
 beforeEach(async () => {
   if (!isolated) return;
   delete process.env.ANTHROPIC_API_KEY; // nothing here may ever reach the real API
-  delete process.env.AI_WORKFORCE_ANTHROPIC_API_KEY;
+  delete process.env.AI_WORKFORCE_GROQ_API_KEY;
   process.env.AI_WORKFORCE_ENABLED = "1";
   robotsBody = "User-agent: *\nDisallow:";
   await client.aiRun.deleteMany({});
@@ -126,7 +126,7 @@ const fakeAi = async (args: { system: string; user: string }) => {
       findings: [{ title: "Pas de description", explanation: "Aucune description.", recommendation: "En ajouter une.", evidenceIds: ["E_DESCRIPTION"] }],
       draft: { subject: "Votre site riad-atlas.ma", body: "Sur riad-atlas.ma, la page n'a pas de description." },
     },
-    stopReason: "end_turn", model: "claude-sonnet-5-5", inputTokens: 1000, outputTokens: 500,
+    stopReason: "end_turn", model: "openai/gpt-oss-120b", inputTokens: 1000, outputTokens: 500,
   };
 };
 const run = (leadId: string, deps: Record<string, unknown> = {}) =>
@@ -151,10 +151,10 @@ test("a full run: evidence from the local site, a validated draft, costs logged,
   assert.match(saved.draftBody, /^Bonjour Sara,\n\nSur riad-atlas\.ma/, "code adds the greeting");
   assert.match(saved.draftBody, /vérification automatique/, "the limits of the check are always stated");
   assert.match(saved.draftBody, /L'équipe Ibda3 Digital$/);
-  assert.equal(saved.model, "claude-sonnet-5-5");
+  assert.equal(saved.model, "openai/gpt-oss-120b");
   assert.equal(saved.promptVersion, "inbound-diagnosis-v2");
   assert.equal(saved.inputTokens, 1000);
-  assert.equal(saved.costMicros, 1000 * 2 + 500 * 10);
+  assert.equal(saved.costMicros, controls.costMicros(1000, 500));
   assert.equal(saved.reservedMicros, 0);
   assert.ok(saved.durationMs >= 0);
   assert.equal(saved.startedById, "u-team");
@@ -197,7 +197,7 @@ test("the older key can't start paid drafting, and the AI Workforce key can", { 
   assert.equal((await (await aiControls.GET()).json()).keyPresent, false);
 
   delete process.env.ANTHROPIC_API_KEY;
-  process.env.AI_WORKFORCE_ANTHROPIC_API_KEY = "workforce-key";
+  process.env.AI_WORKFORCE_GROQ_API_KEY = "workforce-key";
   assert.equal(finished(await noDep((await newLead()).id)).status, "DRAFT_READY");
   assert.equal(aiCalls.length, 1, "the fake AI, never the real one");
   assert.equal((await (await aiControls.GET()).json()).keyPresent, true);
@@ -468,24 +468,24 @@ test("a bad AI answer is thrown away, charged, and never becomes a draft", { ski
     ["AI_TRUNCATED", { raw: null, stopReason: "max_tokens" }],
   ];
   for (const [errorCode, answer] of cases) {
-    const r = finished(await run((await newLead()).id, { generate: async () => ({ model: "claude-sonnet-5-5", inputTokens: 100, outputTokens: 50, ...answer }) }));
+    const r = finished(await run((await newLead()).id, { generate: async () => ({ model: "openai/gpt-oss-120b", inputTokens: 100, outputTokens: 50, ...answer }) }));
     const saved = await row(r.runId);
     assert.equal(saved.status, "FAILED");
     assert.equal(saved.errorCode, errorCode);
     assert.equal(saved.draftBody, null);
     assert.equal(saved.findings, null);
-    assert.equal(saved.costMicros, 100 * 2 + 50 * 10);
+    assert.equal(saved.costMicros, controls.costMicros(100, 50));
     assert.equal(saved.reservedMicros, 0);
     assert.ok(saved.evidence.length > 0, "the evidence is still useful to a person");
   }
 });
 
 test("AI failures settle the budget correctly: an API error frees it, a lost connection keeps it", { skip }, async () => {
-  const apiError = finished(await run((await newLead()).id, { generate: async () => { throw new Anthropic.InternalServerError(500, {}, "x", new Headers()); } }));
+  const apiError = finished(await run((await newLead()).id, { generate: async () => { throw new WorkforceApiError(500, null, null); } }));
   assert.equal((await row(apiError.runId)).errorCode, "AI_ERROR");
   assert.equal((await row(apiError.runId)).costMicros, 0);
 
-  const lost = finished(await run((await newLead()).id, { generate: async () => { throw new Anthropic.APIConnectionTimeoutError(); } }));
+  const lost = finished(await run((await newLead()).id, { generate: async () => { throw new WorkforceConnectionError(); } }));
   assert.equal((await row(lost.runId)).errorCode, "AI_CONNECTION");
   assert.equal((await row(lost.runId)).costMicros, controls.RESERVATION_MICROS);
 });
@@ -608,7 +608,7 @@ test("the owner can switch off at once and lower caps, but not raise them past t
   assert.equal((await aiControls.PATCH(req({ dailyRunCap: 3 }))).status, 200);
   const status = await (await aiControls.GET()).json();
   assert.equal(status.dailyRunCap, 3);
-  assert.equal(status.model, "claude-sonnet-5-5");
+  assert.equal(status.model, "openai/gpt-oss-120b");
   assert.equal(status.keyPresent, false);
 });
 

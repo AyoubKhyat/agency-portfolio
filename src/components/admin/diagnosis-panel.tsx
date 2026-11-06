@@ -56,6 +56,8 @@ const WHY: Record<string, string> = {
   AI_TRUNCATED: "The AI's answer was cut off, so it was thrown away. Use the evidence below.",
   AI_ERROR: "The AI request failed, so there is no draft. Use the evidence below.",
   AI_CONNECTION: "The AI request didn't finish, so there is no draft. Use the evidence below.",
+  AI_RATE_LIMITED: "The AI service's usage limit was reached, so there is no draft. Use the evidence below, or try again later.",
+  AI_MODEL_UNAVAILABLE: "The AI model isn't available right now, so there is no draft. Use the evidence below.",
   INTERNAL: "Something went wrong during this run. Nothing was sent.",
   STALE: "This run never finished. Nothing was sent.",
 };

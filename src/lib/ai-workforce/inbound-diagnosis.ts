@@ -11,7 +11,6 @@
  * The visitor's name, contact details and free-text problem never reach the model. Code adds the greeting
  * afterwards. Only facts taken from the site are sent, and the site's domain is among them.
  */
-import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
 import { DIAGNOSIS_SUBJECT, parseDiagnosisMessage } from "@/lib/diagnosis";
@@ -20,8 +19,8 @@ import { analyzeMessage, hasBlockingError } from "@/lib/message-quality";
 import { firstNameFrom, requiredDraftName } from "@/lib/ai-workforce/greeting";
 import { auditWebsite, type AuditResult, type Evidence } from "@/lib/website-audit";
 import type { SafeFetch } from "@/lib/website-audit/safe-fetch";
-import { getWorkforceClient, hasWorkforceKey } from "./client";
-import { AI_MODEL, MAX_OUTPUT_TOKENS, MAX_PROMPT_CHARS, costMicros, readControls, reserveRun, workforceEnvEnabled } from "./controls";
+import { WorkforceApiError, WorkforceConnectionError, createChatCompletion, hasWorkforceKey } from "./client";
+import { AI_MODEL, MAX_INPUT_TOKENS, MAX_OUTPUT_TOKENS, MAX_PROMPT_CHARS, costMicros, readControls, reserveRun, workforceEnvEnabled } from "./controls";
 import { whatsappDigits, type DiagnosisChannel } from "./send-link";
 
 export const AGENT = "INBOUND_DIAGNOSIS";
@@ -233,39 +232,53 @@ export type GenerateResult = {
 };
 export type GenerateFn = (args: { system: string; user: string }) => Promise<GenerateResult>;
 
+/** Groq's finish reasons, in the terms the run checks. Anything else still has to pass validateOutput. */
+const STOP_REASONS: Record<string, string> = { length: "max_tokens", content_filter: "refusal" };
+
 /** One call: no retries, no fallback model, and no way to read the network or call tools. */
-export const generateWithClaude: GenerateFn = async ({ system, user }) => {
-  const response = await getWorkforceClient().messages.create(
+export const generateDraft: GenerateFn = async ({ system, user }) => {
+  const response = await createChatCompletion(
     {
       model: AI_MODEL,
-      max_tokens: MAX_OUTPUT_TOKENS,
-      output_config: { effort: "medium", format: { type: "json_schema", schema: OUTPUT_SCHEMA } },
-      system,
-      messages: [{ role: "user", content: user }],
+      max_completion_tokens: MAX_OUTPUT_TOKENS,
+      reasoning_effort: "low",
+      include_reasoning: false,
+      response_format: { type: "json_schema", json_schema: { name: "inbound_diagnosis", strict: true, schema: OUTPUT_SCHEMA } },
+      messages: [{ role: "system", content: system }, { role: "user", content: user }],
     },
-    { timeout: AI_TIMEOUT_MS, maxRetries: 0 },
+    AI_TIMEOUT_MS,
   );
-  const text = response.content.find((b) => b.type === "text");
+  const choice = response.choices?.[0];
   let raw: unknown = null;
-  if (text && text.type === "text") {
-    try {
-      raw = JSON.parse(text.text);
-    } catch {
-      raw = null;
-    }
+  try {
+    raw = JSON.parse(choice?.message?.content ?? "");
+  } catch {
+    raw = null;
   }
+  const finish = choice?.finish_reason ?? null;
   return {
     raw,
-    stopReason: response.stop_reason,
-    model: response.model,
-    inputTokens: response.usage.input_tokens + (response.usage.cache_read_input_tokens ?? 0) + (response.usage.cache_creation_input_tokens ?? 0),
-    outputTokens: response.usage.output_tokens,
+    stopReason: finish ? STOP_REASONS[finish] ?? finish : null,
+    model: response.model ?? AI_MODEL,
+    // If usage is missing, count the most this call could have used.
+    inputTokens: response.usage?.prompt_tokens ?? MAX_INPUT_TOKENS,
+    outputTokens: response.usage?.completion_tokens ?? MAX_OUTPUT_TOKENS,
   };
 };
 
-/** A failure where the request may still have been processed and billed: keep the money reserved. */
-function mayHaveBeenBilled(err: unknown): boolean {
-  return err instanceof Anthropic.APIConnectionError;
+/**
+ * How a failed call is recorded. Only a lost connection keeps the reservation, because that request may still
+ * have been processed. A rate limit or model error is never retried here: a person decides what happens next.
+ */
+export function classifyAiFailure(err: unknown): { errorCode: string; errorDetail: string | null; mayHaveBeenBilled: boolean } {
+  if (err instanceof WorkforceConnectionError) return { errorCode: "AI_CONNECTION", errorDetail: null, mayHaveBeenBilled: true };
+  if (!(err instanceof WorkforceApiError)) return { errorCode: "AI_ERROR", errorDetail: null, mayHaveBeenBilled: false };
+  const detail = [`status ${err.status}`, err.code, err.retryAfterSeconds ? `retry after ${err.retryAfterSeconds}s` : null].filter(Boolean).join(", ");
+  // Groq also uses 413 when one request alone is over the tokens-per-minute limit.
+  const errorCode = err.status === 429 || err.status === 413 ? "AI_RATE_LIMITED"
+    : err.status === 404 || err.code?.includes("model") ? "AI_MODEL_UNAVAILABLE"
+    : "AI_ERROR";
+  return { errorCode, errorDetail: detail, mayHaveBeenBilled: false };
 }
 
 /* ───────────────── The run ───────────────── */
@@ -356,18 +369,17 @@ export async function runInboundDiagnosis(leadId: string, actor: Actor, retryOfR
     const user = buildUserPrompt({ evidence: audit.evidence });
     if (system.length + user.length > MAX_PROMPT_CHARS) return await auditOnly("PROMPT_TOO_LARGE");
 
-    const generate = deps.generate ?? generateWithClaude;
+    const generate = deps.generate ?? generateDraft;
     const common = { ...auditFields(audit), ...duplicateFields, model: AI_MODEL, promptVersion: PROMPT_VERSION, draftLanguage: parsed.locale };
 
     let result: GenerateResult;
     try {
       result = await generate({ system, user });
     } catch (err) {
-      const billed = mayHaveBeenBilled(err);
+      const failure = classifyAiFailure(err);
       return await finish("FAILED", {
-        ...common, reservedMicros: 0, costMicros: billed ? reservation.reservedMicros : 0,
-        errorCode: billed ? "AI_CONNECTION" : "AI_ERROR",
-        errorDetail: err instanceof Anthropic.APIError ? `status ${err.status ?? "unknown"}` : null,
+        ...common, reservedMicros: 0, costMicros: failure.mayHaveBeenBilled ? reservation.reservedMicros : 0,
+        errorCode: failure.errorCode, errorDetail: failure.errorDetail,
       });
     }
 

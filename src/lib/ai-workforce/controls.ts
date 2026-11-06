@@ -6,16 +6,20 @@
  */
 import { prisma } from "@/lib/prisma";
 
-export const AI_MODEL = "claude-sonnet-5-5";
-/** First-party rates at the time of writing, in millionths of a dollar per token ($2 and $10 per million). */
-export const MICROS_PER_TOKEN = { input: 2, output: 10 } as const;
+/** A Groq production model with strict JSON schema support. Check it's on the account's free plan limits page. */
+export const AI_MODEL = "openai/gpt-oss-120b";
+/**
+ * Groq's list prices in millionths of a dollar per million tokens ($0.15 and $0.60). The free tier isn't charged,
+ * but runs are still counted at these prices, so the caps keep working if the account ever leaves it.
+ */
+export const MICROS_PER_MILLION_TOKENS = { input: 150_000, output: 600_000 } as const;
 export const MAX_OUTPUT_TOKENS = 4000;
 /** Prompts are refused above this, which keeps input cost predictable. */
 export const MAX_PROMPT_CHARS = 16_000;
 /** Allows for prompts that tokenise poorly, such as Arabic: never more than about 2 characters per token here. */
 export const MAX_INPUT_TOKENS = 8000;
 /** The most one AI call can cost. Held against the month's budget until the real usage is known. */
-export const RESERVATION_MICROS = MAX_INPUT_TOKENS * MICROS_PER_TOKEN.input + MAX_OUTPUT_TOKENS * MICROS_PER_TOKEN.output;
+export const RESERVATION_MICROS = costMicros(MAX_INPUT_TOKENS, MAX_OUTPUT_TOKENS);
 
 /** Hard ceilings. The owner can lower these in Settings but not raise them. */
 export const HARD_DAILY_RUN_CAP = 10;
@@ -28,7 +32,7 @@ export const STALE_RUN_MS = 5 * 60 * 1000;
 const BUDGET_LOCK = 7302;
 
 export function costMicros(inputTokens: number, outputTokens: number): number {
-  return inputTokens * MICROS_PER_TOKEN.input + outputTokens * MICROS_PER_TOKEN.output;
+  return Math.ceil((inputTokens * MICROS_PER_MILLION_TOKENS.input + outputTokens * MICROS_PER_MILLION_TOKENS.output) / 1_000_000);
 }
 
 export function monthStart(now: Date): Date {

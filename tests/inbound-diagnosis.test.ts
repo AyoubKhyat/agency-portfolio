@@ -1,6 +1,6 @@
 /**
  * The evidence rules, the prompt's handling of untrusted text, and static guarantees: no sending
- * capability, no fallback, Sonnet only, five-section menu untouched. No database, network or AI.
+ * capability, no fallback, one approved model, five-section menu untouched. No database, network or AI.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -179,7 +179,8 @@ test("the run can't outlast the route: the audit and AI limits leave a margin in
   const route = read("src/app/api/admin/leads/[id]/diagnosis/route.ts");
   const maxDurationMs = Number(/export const maxDuration = (\d+);/.exec(route)?.[1]) * 1000;
   assert.ok(maxDurationMs - (TOTAL_BUDGET_MS + mod.AI_TIMEOUT_MS) >= 10_000, "at least 10 seconds for the database and a cold start");
-  assert.match(read("src/lib/ai-workforce/inbound-diagnosis.ts"), /timeout: AI_TIMEOUT_MS, maxRetries: 0/);
+  assert.match(read("src/lib/ai-workforce/inbound-diagnosis.ts"), /AI_TIMEOUT_MS,\s*\);/);
+  assert.match(read("src/lib/ai-workforce/client.ts"), /signal: AbortSignal\.timeout\(timeoutMs\)/);
 });
 
 test("the migration is one transaction, and says what it locks", () => {
@@ -197,7 +198,7 @@ test("the migration is one transaction, and says what it locks", () => {
 
 /* ───────────────── The API key is this workflow's own ───────────────── */
 
-const ENV_KEYS = ["ANTHROPIC_API_KEY", "AI_WORKFORCE_ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL", "OPENAI_API_KEY", "GEMINI_API_KEY", "AI_PROVIDER"];
+const ENV_KEYS = ["ANTHROPIC_API_KEY", "AI_WORKFORCE_GROQ_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL", "GROQ_API_KEY", "GROQ_BASE_URL", "OPENAI_API_KEY", "GEMINI_API_KEY", "AI_PROVIDER"];
 async function withEnv(values: Record<string, string>, fn: () => Promise<void> | void) {
   const saved = ENV_KEYS.map((k) => [k, process.env[k]] as const);
   for (const k of ENV_KEYS) delete process.env[k];
@@ -213,7 +214,7 @@ test("adding the AI Workforce key activates nothing else", async () => {
   const { hasAnthropic, getAnthropic, MissingApiKeyError } = await import("../src/lib/anthropic");
   const { getAiProvider, _resetAiProviderForTests } = await import("../src/lib/ai");
   const { hasWorkforceKey } = await import("../src/lib/ai-workforce/client");
-  await withEnv({ AI_WORKFORCE_ANTHROPIC_API_KEY: "workforce-key" }, () => {
+  await withEnv({ AI_WORKFORCE_GROQ_API_KEY: "workforce-key" }, () => {
     assert.equal(hasWorkforceKey(), true);
     assert.equal(hasAnthropic(), false);
     assert.throws(() => getAnthropic(), MissingApiKeyError);
@@ -229,12 +230,12 @@ test("adding the AI Workforce key activates nothing else", async () => {
 });
 
 test("the older key doesn't activate AI Workforce", async () => {
-  const { hasWorkforceKey, getWorkforceClient } = await import("../src/lib/ai-workforce/client");
-  await withEnv({ ANTHROPIC_API_KEY: "older-key" }, () => {
+  const { hasWorkforceKey, createChatCompletion } = await import("../src/lib/ai-workforce/client");
+  await withEnv({ ANTHROPIC_API_KEY: "older-key", GROQ_API_KEY: "other-key" }, async () => {
     assert.equal(hasWorkforceKey(), false);
-    assert.throws(() => getWorkforceClient(), /AI_WORKFORCE_ANTHROPIC_API_KEY/);
+    await assert.rejects(() => createChatCompletion({}, 1000), /AI_WORKFORCE_GROQ_API_KEY/);
   });
-  await withEnv({ AI_WORKFORCE_ANTHROPIC_API_KEY: "   " }, () => assert.equal(hasWorkforceKey(), false));
+  await withEnv({ AI_WORKFORCE_GROQ_API_KEY: "   " }, () => assert.equal(hasWorkforceKey(), false));
 });
 
 test("the key is read in one place, by no older feature, and this workflow never reads the older one", () => {
@@ -243,7 +244,7 @@ test("the key is read in one place, by no older feature, and this workflow never
     return statSync(p).isDirectory() ? (n === "generated" ? [] : walk(p)) : /\.tsx?$/.test(n) ? [p] : [];
   });
   const root = new URL("../src", import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1");
-  const readers = walk(root).filter((f) => /process\.env\.AI_WORKFORCE_ANTHROPIC_API_KEY/.test(readFileSync(f, "utf8")));
+  const readers = walk(root).filter((f) => /process\.env\.AI_WORKFORCE_GROQ_API_KEY/.test(readFileSync(f, "utf8")));
   assert.deepEqual(readers.map((f) => f.slice(root.length + 1)), ["lib/ai-workforce/client.ts"]);
   for (const rel of ["src/lib/ai-workforce/client.ts", "src/lib/ai-workforce/inbound-diagnosis.ts", "src/lib/ai-workforce/controls.ts", "src/app/api/admin/ai-controls/route.ts", "src/app/api/admin/leads/[id]/diagnosis/route.ts"]) {
     const code = read(rel).replace(/^\s*(?:\/\*\*?|\*|\/\/).*$/gm, "");
@@ -253,65 +254,113 @@ test("the key is read in one place, by no older feature, and this workflow never
 
 test("the real call uses only its own key and endpoint, with the approved shape, and no retry on failure", async () => {
   const realFetch = globalThis.fetch;
-  const calls: { url: string; key: string | null; auth: string | null; version: string | null; body: Record<string, unknown> }[] = [];
+  const calls: { url: string; auth: string | null; redirect?: string; body: Record<string, unknown> }[] = [];
   const answer = { findings: [], draft: { subject: "s", body: "b" } };
-  let reply = () => new Response(JSON.stringify({
-    id: "msg_test", type: "message", role: "assistant", model: "claude-sonnet-5-5", stop_reason: "end_turn", stop_sequence: null,
-    content: [{ type: "text", text: JSON.stringify(answer) }],
-    usage: { input_tokens: 100, output_tokens: 50, cache_read_input_tokens: 10, cache_creation_input_tokens: 5 },
-  }), { status: 200, headers: { "content-type": "application/json" } });
-  // No network: the SDK is handed this fake in place of fetch.
+  const json = (body: unknown, status = 200, headers: Record<string, string> = {}) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", ...headers } });
+  let reply = (): Response => json({
+    model: AI_MODEL,
+    choices: [{ finish_reason: "stop", message: { role: "assistant", content: JSON.stringify(answer) } }],
+    usage: { prompt_tokens: 100, completion_tokens: 50 },
+  });
+  // No network: this fake stands in for fetch.
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-    const headers = new Headers(init?.headers);
-    calls.push({ url: String(input), key: headers.get("x-api-key"), auth: headers.get("authorization"), version: headers.get("anthropic-version"), body: JSON.parse(String(init?.body)) });
+    calls.push({ url: String(input), auth: new Headers(init?.headers).get("authorization"), redirect: init?.redirect, body: JSON.parse(String(init?.body)) });
     return reply();
   }) as typeof fetch;
+  const call = () => mod.generateDraft({ system: "sys", user: "usr" });
   try {
-    await withEnv({ AI_WORKFORCE_ANTHROPIC_API_KEY: "workforce-key", ANTHROPIC_API_KEY: "older-key", ANTHROPIC_AUTH_TOKEN: "older-token", ANTHROPIC_BASE_URL: "http://evil.invalid" }, async () => {
-      const result = await mod.generateWithClaude({ system: "sys", user: "usr" });
+    await withEnv({ AI_WORKFORCE_GROQ_API_KEY: "workforce-key", GROQ_API_KEY: "other-key", ANTHROPIC_API_KEY: "older-key", GROQ_BASE_URL: "http://evil.invalid" }, async () => {
+      const result = await call();
       assert.deepEqual(result.raw, answer);
-      assert.equal(result.inputTokens, 115, "cached tokens are counted");
+      assert.equal(result.inputTokens, 100);
       assert.equal(result.outputTokens, 50);
       assert.equal(calls.length, 1);
-      const [call] = calls;
-      assert.equal(call.url, "https://api.anthropic.com/v1/messages");
-      assert.equal(call.key, "workforce-key");
-      assert.equal(call.auth, null);
-      assert.equal(call.body.model, "claude-sonnet-5-5");
-      assert.equal(call.body.max_tokens, MAX_OUTPUT_TOKENS);
-      assert.equal(call.body.system, "sys");
-      assert.deepEqual(call.body.messages, [{ role: "user", content: "usr" }]);
-      assert.equal((call.body.output_config as { effort: string }).effort, "medium");
-      assert.equal(call.body.tools, undefined);
+      const [sent] = calls;
+      assert.equal(sent.url, "https://api.groq.com/openai/v1/chat/completions");
+      assert.equal(sent.auth, "Bearer workforce-key");
+      assert.equal(sent.redirect, "error", "the key never follows a redirect");
+      assert.equal(sent.body.model, "openai/gpt-oss-120b");
+      assert.equal(sent.body.max_completion_tokens, MAX_OUTPUT_TOKENS);
+      assert.deepEqual(sent.body.messages, [{ role: "system", content: "sys" }, { role: "user", content: "usr" }]);
+      const format = sent.body.response_format as { type: string; json_schema: { strict: boolean; schema: unknown } };
+      assert.equal(format.type, "json_schema");
+      assert.equal(format.json_schema.strict, true);
+      assert.deepEqual(format.json_schema.schema, mod.OUTPUT_SCHEMA);
+      assert.equal(sent.body.tools, undefined);
+
+      // Cut off or filtered answers reach the run's existing checks.
+      reply = () => json({ choices: [{ finish_reason: "length", message: { content: "{\"find" } }], usage: { prompt_tokens: 1, completion_tokens: 2 } });
+      const cut = await call();
+      assert.equal(cut.stopReason, "max_tokens");
+      assert.equal(cut.raw, null);
+      reply = () => json({ choices: [{ finish_reason: "content_filter", message: { content: null } }] });
+      const filtered = await call();
+      assert.equal(filtered.stopReason, "refusal");
+      assert.equal(filtered.inputTokens, MAX_INPUT_TOKENS, "missing usage counts as the most the call could use");
+      assert.equal(filtered.outputTokens, MAX_OUTPUT_TOKENS);
+
+      for (const [status, code, headers, errorCode, detail] of [
+        [429, "rate_limit_exceeded", { "retry-after": "12" }, "AI_RATE_LIMITED", "status 429, rate_limit_exceeded, retry after 12s"],
+        [413, "request_too_large", {}, "AI_RATE_LIMITED", "status 413, request_too_large"],
+        [404, "model_not_found", {}, "AI_MODEL_UNAVAILABLE", "status 404, model_not_found"],
+        [400, "model_decommissioned", {}, "AI_MODEL_UNAVAILABLE", "status 400, model_decommissioned"],
+        [401, "invalid_api_key", {}, "AI_ERROR", "status 401, invalid_api_key"],
+        [503, "Not A Safe Code!", {}, "AI_ERROR", "status 503"],
+      ] as const) {
+        calls.length = 0;
+        reply = () => json({ error: { code, message: "secret text from the provider" } }, status, headers);
+        const err = await call().then(() => assert.fail("should have thrown"), (e: unknown) => e);
+        assert.equal(calls.length, 1, "a failed call is never retried");
+        const failure = mod.classifyAiFailure(err);
+        assert.deepEqual(failure, { errorCode, errorDetail: detail, mayHaveBeenBilled: false });
+      }
 
       calls.length = 0;
-      reply = () => new Response(JSON.stringify({ type: "error", error: { type: "overloaded_error", message: "x" } }), { status: 529, headers: { "content-type": "application/json" } });
-      await assert.rejects(() => mod.generateWithClaude({ system: "s", user: "u" }));
-      assert.equal(calls.length, 1, "a failed call is never retried");
+      globalThis.fetch = (async () => { calls.push({ url: "", auth: null, body: {} }); throw new TypeError("network"); }) as typeof fetch;
+      const lost = await call().then(() => assert.fail("should have thrown"), (e: unknown) => e);
+      assert.equal(calls.length, 1);
+      assert.deepEqual(mod.classifyAiFailure(lost), { errorCode: "AI_CONNECTION", errorDetail: null, mayHaveBeenBilled: true });
     });
   } finally {
     globalThis.fetch = realFetch;
   }
 });
 
+test("the output schema meets Groq's strict mode rules", () => {
+  const visit = (node: Record<string, unknown>) => {
+    if (node.type === "object") {
+      assert.equal(node.additionalProperties, false);
+      const properties = node.properties as Record<string, Record<string, unknown>>;
+      assert.deepEqual([...(node.required as string[])].sort(), Object.keys(properties).sort());
+      Object.values(properties).forEach(visit);
+    }
+    if (node.type === "array") visit(node.items as Record<string, unknown>);
+  };
+  visit(mod.OUTPUT_SCHEMA as unknown as Record<string, unknown>);
+});
+
 test("model and budget constants are what was approved", () => {
-  assert.equal(AI_MODEL, "claude-sonnet-5-5");
+  assert.equal(AI_MODEL, "openai/gpt-oss-120b");
   assert.equal(HARD_DAILY_RUN_CAP, 10);
   assert.equal(HARD_MONTHLY_BUDGET_MICROS, 5_000_000);
-  assert.equal(costMicros(1_000_000, 0), 2_000_000, "$2 per million input tokens");
-  assert.equal(costMicros(0, 1_000_000), 10_000_000, "$10 per million output tokens");
+  assert.equal(costMicros(1_000_000, 0), 150_000, "$0.15 per million input tokens");
+  assert.equal(costMicros(0, 1_000_000), 600_000, "$0.60 per million output tokens");
+  assert.equal(costMicros(1, 1), 1, "always a whole number, rounded up");
   assert.equal(RESERVATION_MICROS, costMicros(MAX_INPUT_TOKENS, MAX_OUTPUT_TOKENS));
+  assert.ok(RESERVATION_MICROS > 0, "the caps still count free-tier runs");
   assert.ok(RESERVATION_MICROS < 100_000, "a run can never cost more than 10 cents");
   assert.equal(monthStart(new Date("2026-11-30T23:00:00Z")).toISOString(), "2026-11-01T00:00:00.000Z");
 });
 
-test("the AI call has no fallback, retries, tools or expensive model", () => {
+test("the AI call has no fallback, retries, tools or other model", () => {
   const src = read("src/lib/ai-workforce/inbound-diagnosis.ts");
-  const call = src.slice(src.indexOf("export const generateWithClaude"), src.indexOf("function mayHaveBeenBilled"));
+  const call = src.slice(src.indexOf("export const generateDraft"), src.indexOf("export function classifyAiFailure"));
   assert.match(call, /model: AI_MODEL/);
-  assert.match(call, /maxRetries: 0/);
-  assert.doesNotMatch(call, /fallbacks|betas|tools|web_search|web_fetch/);
-  assert.doesNotMatch(src, /getAiProvider|MockAiProvider|@\/lib\/ai"|opus|fable/i, "never the provider layer that falls back to sample text");
+  assert.doesNotMatch(call, /fallback_|retries|tools|web_search|browser_search|compound/);
+  const client = read("src/lib/ai-workforce/client.ts");
+  assert.equal(client.match(/\bfetch\(/g)?.length, 1, "one request, with no loop around it");
+  assert.doesNotMatch(client, /\b(?:for|while)\s*\(|GROQ_BASE_URL|process\.env\.(?!AI_WORKFORCE_GROQ_API_KEY)/);
+  assert.doesNotMatch(src, /getAiProvider|MockAiProvider|@\/lib\/ai"|@anthropic-ai|opus|fable/i, "never the provider layer that falls back to sample text");
   assert.doesNotMatch(read("src/lib/ai-workforce/controls.ts"), /opus|fable/i);
 });
 

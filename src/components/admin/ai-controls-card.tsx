@@ -68,7 +68,7 @@ export function AiControlsCard() {
       </dl>
 
       {!c.envEnabled && <p className="text-xs text-amber-700 mt-4">AI_WORKFORCE_ENABLED isn&apos;t set on this deployment, so everything stays off whatever these switches say.</p>}
-      {c.envEnabled && !c.keyPresent && <p className="text-xs text-amber-700 mt-4">AI_WORKFORCE_ANTHROPIC_API_KEY isn&apos;t set on this deployment, so runs give the automatic checks only.</p>}
+      {c.envEnabled && !c.keyPresent && <p className="text-xs text-amber-700 mt-4">AI_WORKFORCE_GROQ_API_KEY isn&apos;t set on this deployment, so runs give the automatic checks only.</p>}
     </GlassCard>
   );
 }
