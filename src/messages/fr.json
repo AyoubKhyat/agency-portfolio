@@ -720,7 +720,7 @@
     "meta_desc": "Comment Ibda3 Digital utilise les informations collectées sur ce site.",
     "kicker": "Confidentialité",
     "title": "Politique de confidentialité",
-    "updated": "Dernière mise à jour : 17 octobre 2026",
+    "updated": "Dernière mise à jour : 9 novembre 2026",
     "draft": "Projet en attente de validation par le propriétaire et un conseil juridique. Cette page n'est pas encore définitive.",
     "draft_badge": "Projet",
     "intro": "Nous respectons votre vie privée. Voici, simplement, ce que nous collectons et pourquoi.",
@@ -737,7 +737,8 @@
         "h": "Informations collectées",
         "items": [
           "Ce que vous nous envoyez via le formulaire de contact : nom, e-mail, téléphone (facultatif), service souhaité et message. Ces informations nous parviennent par e-mail et sont conservées dans notre outil interne de suivi des demandes.",
-          "Des informations techniques de base (adresse IP, type de navigateur, pages consultées), nécessaires pour faire fonctionner et protéger le site."
+          "Des informations techniques de base (adresse IP, type de navigateur, pages consultées), nécessaires pour faire fonctionner et protéger le site.",
+          "Si vous demandez un diagnostic gratuit de votre site : l'adresse du site et les constats techniques relevés automatiquement sur l'une de ses pages publiques."
         ]
       },
       {
@@ -745,7 +746,8 @@
         "items": [
           "Répondre à vos demandes et échanger sur votre projet.",
           "Faire fonctionner le site et le protéger contre les abus.",
-          "Mesurer la fréquentation, uniquement si vous l'avez accepté."
+          "Mesurer la fréquentation, uniquement si vous l'avez accepté.",
+          "Préparer notre réponse à une demande de diagnostic. Un outil vérifie automatiquement une page de votre site, puis un service d'intelligence artificielle, Groq, Inc. (États-Unis), peut nous aider à rédiger un premier brouillon à partir de ces seuls constats techniques. Votre nom, vos coordonnées et votre message ne lui sont pas transmis. Un membre de l'équipe relit et valide chaque réponse avant tout envoi : aucune décision n'est prise automatiquement."
         ]
       },
       {
@@ -756,6 +758,15 @@
           "La mesure d'audience (Google Analytics) est facultative : elle ne démarre qu'après un clic sur « Accepter ». Vous pouvez changer d'avis à tout moment ci-dessous.",
           "Des prestataires techniques nous aident à héberger le site, à acheminer les messages, à conserver les demandes de façon sécurisée et à afficher les polices de caractères. Certains peuvent traiter des informations en dehors du Maroc.",
           "Les liens WhatsApp ouvrent un service externe, soumis à ses propres règles."
+        ]
+      },
+      {
+        "h": "Durée de conservation",
+        "p": [
+          "Vos demandes et leurs notes sont conservées dans notre outil de suivi tant qu'elles sont utiles à notre échange, ou jusqu'à ce que vous en demandiez la suppression.",
+          "Le contenu d'un diagnostic (adresse du site, constats, brouillons) est effacé après 90 jours. Si une réponse vous a été envoyée, son texte est conservé au plus 12 mois dans le dossier du diagnostic ; une copie figure aussi dans l'historique de votre demande, conservée avec celle-ci.",
+          "Nous gardons des informations d'utilisation sans contenu : date, statut, volume traité et coût de chaque analyse. Une fois votre demande supprimée, elles ne vous sont plus rattachées.",
+          "Si vous demandez la suppression de vos informations, nous effaçons votre demande, ses notes et le contenu des diagnostics associés. Les copies déjà reçues par e-mail ou WhatsApp et les sauvegardes techniques ne sont pas modifiées immédiatement : elles disparaissent selon leurs propres délais."
         ]
       },
       {
@@ -777,7 +788,8 @@
     "url_label": "Adresse de votre site",
     "url_placeholder": "votresite.ma",
     "start": "Diagnostic gratuit",
-    "note": "Votre site est examiné par notre équipe, avec l'aide d'outils d'analyse\u00a0— rien n'y est modifié.",
+    "note": "Votre site est examiné par notre équipe, avec l'aide d'outils d'analyse automatisés, dont l'intelligence artificielle\u00a0— rien n'y est modifié.",
+    "privacy_notice": "Pour préparer notre réponse, une page de votre site est analysée automatiquement et un service d'IA (Groq, États-Unis) peut aider à rédiger le brouillon, sans recevoir vos coordonnées. Chaque réponse est relue par notre équipe avant envoi. <link>Politique de confidentialité</link>",
     "step": "Étape {n} sur 2",
     "details_title": "Comment vous recontacter ?",
     "site_label": "Site à examiner",

@@ -20,6 +20,7 @@ import {
   type DiagnosisValues as Values,
 } from "@/lib/diagnosis";
 import { trackEvent } from "@/lib/analytics";
+import { Link } from "@/i18n/navigation";
 import s from "./home.module.css";
 
 // Ids are prefixed: the homepage has other forms' worth of common names (email, phone…).
@@ -253,6 +254,8 @@ export default function DiagnosisForm({ waUrl }: { waUrl: string }) {
             </div>
           </div>
 
+          {/* Shown before contact details are sent: what happens to the request, and where the policy is. */}
+          <p className={s.dgNote}>{t.rich("privacy_notice", { link: (chunks) => <Link href="/privacy">{chunks}</Link> })}</p>
           <div className={s.dgActions}>
             <button type="submit" className={`${s.pill} ${s.pillGrad} ${s.dgGo}`} disabled={status === "sending"} aria-busy={status === "sending"}>
               {status === "sending" ? (

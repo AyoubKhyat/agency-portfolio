@@ -7,6 +7,7 @@ import { SendConfirm } from "@/components/admin/send-confirm";
 import { buildSendLink, whatsappDigits, type DiagnosisChannel } from "@/lib/ai-workforce/send-link";
 import { analyzeMessage } from "@/lib/message-quality";
 import { requiredDraftName } from "@/lib/ai-workforce/greeting";
+import { CONTENT_RETENTION_DAYS } from "@/lib/ai-workforce/retention-policy";
 
 type Evidence = { id: string; check: string; status: "pass" | "fail" | "unknown"; observed: string; sourceUrl: string };
 type Finding = { title: string; explanation: string; recommendation: string; evidenceIds: string[] };
@@ -180,9 +181,16 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
 
         {run && (
           <>
-            <p className="text-[13px] text-[#475569] break-all">
-              Checked <span className="font-medium text-[#0F172A]">{run.finalUrl ?? run.targetUrl}</span> for {run.startedByName}
-            </p>
+            {run.targetUrl === "" ? (
+              // Cleared by the retention policy (src/lib/ai-workforce/retention.ts): only usage and cost remain.
+              <p className="text-[13px] text-[#64748B]">
+                This run&apos;s content was cleared after {CONTENT_RETENTION_DAYS} days. Only its status, usage and cost are kept. Started by {run.startedByName}.
+              </p>
+            ) : (
+              <p className="text-[13px] text-[#475569] break-all">
+                Checked <span className="font-medium text-[#0F172A]">{run.finalUrl ?? run.targetUrl}</span> for {run.startedByName}
+              </p>
+            )}
             {run.status === "BLOCKED" && (
               <p role="alert" className="flex gap-2 text-[13px] text-red-700"><AlertTriangle className="w-4 h-4 shrink-0" /> This address was refused for safety and wasn&apos;t read ({run.errorCode}).</p>
             )}
@@ -316,6 +324,9 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
 
             {run.status === "SENT" && <p className="text-[13px] font-medium text-emerald-700">Sent by {run.sentConfirmedByName}, and added to the notes below.</p>}
             {run.status === "DISCARDED" && <p className="text-[13px] text-[#64748B]">This draft was discarded.</p>}
+            {run.status === "EXPIRED" && (
+              <p className="text-[13px] text-[#64748B]">This run expired before it was sent, so it can no longer be edited, approved or sent. Run a new check if you still need one.</p>
+            )}
           </>
         )}
       </div>

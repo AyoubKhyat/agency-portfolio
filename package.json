@@ -9,7 +9,9 @@
     "seed": "tsx prisma/seed.ts",
     "test": "node --import tsx --experimental-test-module-mocks --test \"tests/*.test.ts\"",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "ai:redact": "tsx scripts/redact-ai-runs.ts",
+    "lead:erase": "tsx scripts/erase-lead.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.0",

@@ -720,7 +720,7 @@
     "meta_desc": "How Ibda3 Digital uses the information collected on this website.",
     "kicker": "Privacy",
     "title": "Privacy Policy",
-    "updated": "Last updated: 17 October 2026",
+    "updated": "Last updated: 9 November 2026",
     "draft": "Draft awaiting approval by the owner and a legal adviser. This page is not final yet.",
     "draft_badge": "Draft",
     "intro": "We respect your privacy. Here is, in plain words, what we collect and why.",
@@ -737,7 +737,8 @@
         "h": "Information we collect",
         "items": [
           "What you send us through the contact form: name, email, phone (optional), service needed and message. It reaches us by email and is kept in our internal enquiry-tracking tool.",
-          "Basic technical information (IP address, browser type, pages visited) needed to run and protect the website."
+          "Basic technical information (IP address, browser type, pages visited) needed to run and protect the website.",
+          "If you ask for a free website diagnosis: the site's address and the technical findings collected automatically from one of its public pages."
         ]
       },
       {
@@ -745,7 +746,8 @@
         "items": [
           "To reply to your enquiries and discuss your project.",
           "To run the website and protect it against abuse.",
-          "To measure traffic, only if you have agreed to it."
+          "To measure traffic, only if you have agreed to it.",
+          "To prepare our reply to a diagnosis request. A tool checks one page of your site automatically, then an artificial intelligence service, Groq, Inc. (USA), may help us write a first draft from those technical findings only. Your name, contact details and message are not sent to it. A team member reviews and approves every reply before anything is sent: no decision is made automatically."
         ]
       },
       {
@@ -756,6 +758,15 @@
           "Audience measurement (Google Analytics) is optional: it only starts after you click “Accept”. You can change your mind at any time below.",
           "Technical service providers help us host the website, deliver messages, keep enquiries securely and display fonts. Some of them may process information outside Morocco.",
           "WhatsApp links open an external service with its own rules."
+        ]
+      },
+      {
+        "h": "How long we keep information",
+        "p": [
+          "Your enquiries and their notes are kept in our tracking tool for as long as they are useful to our exchange, or until you ask us to delete them.",
+          "The content of a diagnosis (site address, findings, drafts) is deleted after 90 days. If a reply was sent to you, its text is kept for up to 12 months in the diagnosis record; a copy is also in your enquiry's history, which is kept with the enquiry.",
+          "We keep usage information with no content: the date, status, volume processed and cost of each analysis. Once your enquiry is deleted, it is no longer linked to you.",
+          "If you ask us to delete your information, we delete your enquiry, its notes and the content of its diagnoses. Copies already received by email or WhatsApp, and technical backups, are not changed straight away: they disappear on their own schedules."
         ]
       },
       {
@@ -777,7 +788,8 @@
     "url_label": "Your website address",
     "url_placeholder": "yourwebsite.com",
     "start": "Free diagnosis",
-    "note": "Our team reviews your site, with help from analysis tools\u00a0— nothing on it is changed.",
+    "note": "Our team reviews your site, with help from automated analysis tools including artificial intelligence\u00a0— nothing on it is changed.",
+    "privacy_notice": "To prepare our reply, one page of your site is analysed automatically and an AI service (Groq, USA) may help write the draft, without receiving your contact details. Every reply is reviewed by our team before it is sent. <link>Privacy policy</link>",
     "step": "Step {n} of 2",
     "details_title": "How can we reach you?",
     "site_label": "Site to review",
