@@ -645,7 +645,10 @@ test("approve, then confirm: exact text stored, one note, status moves once, a r
   assert.equal((await client.lead.findUnique({ where: { id: lead.id } })).status, "CONTACTED");
   const notes = await client.leadNote.findMany({ where: { leadId: lead.id } });
   assert.equal(notes.length, 1);
-  assert.match(notes[0].content, /Texte relu par une personne/);
+  // The note records the delivery only: the wording stays in the run, where retention can clear it.
+  assert.equal(notes[0].content, "Diagnosis reply sent by Team One via email. The wording is in the diagnosis record.");
+  assert.doesNotMatch(notes[0].content, /Texte relu par une personne/);
+  assert.ok(!notes[0].content.includes(edited.subject), "no subject in the note");
 
   const repeat = await patch(lead.id, runId, { action: "confirm_sent", approvedAt });
   assert.equal(repeat.status, 200);
@@ -690,9 +693,13 @@ test("a stale tab can't record text that wasn't sent: confirming names the appro
   assert.equal((await patch(lead.id, runId, { action: "confirm_sent", approvedAt: newVersion })).status, 200);
   const notes = await client.leadNote.findMany({ where: { leadId: lead.id } });
   assert.equal(notes.length, 1);
-  assert.match(notes[0].content, /autre texte approuvé/);
-  assert.match(notes[0].content, /via WhatsApp/);
-  assert.doesNotMatch(notes[0].content, /première personne/);
+  // The sent version is the one recorded on the run; the note only records the delivery.
+  const sent = await row(runId);
+  assert.equal(sent.status, "SENT");
+  assert.match(sent.approvedBody, /autre texte approuvé/);
+  assert.doesNotMatch(sent.approvedBody, /première personne/);
+  assert.match(notes[0].content, /via WhatsApp\. The wording is in the diagnosis record\.$/);
+  assert.doesNotMatch(notes[0].content, /autre texte approuvé|première personne/);
 
   assert.equal((await patch(lead.id, runId, { action: "confirm_sent", approvedAt: oldVersion })).status, 409, "the old version wasn't the one sent");
   assert.equal((await (await patch(lead.id, runId, { action: "confirm_sent", approvedAt: newVersion })).json()).duplicate, true);

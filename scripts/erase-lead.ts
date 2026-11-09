@@ -1,6 +1,7 @@
 /**
  * Erases one enquiry on request (src/lib/ai-workforce/retention.ts): clears and unlinks its AI runs, deletes
- * the lead and its notes, and writes an ERASE_LEAD audit entry holding only IDs and counts. All or nothing.
+ * the lead, its notes and the notifications pointing at it, and writes an ERASE_LEAD audit entry holding
+ * only IDs and counts. All or nothing.
  * Run rows stay, without content, so spend caps keep counting them.
  *
  * Owner only: OWNER_USER_ID must name an active user whose email is the one passed with --owner.
@@ -50,7 +51,7 @@ async function main() {
 
     const plan = await planLeadErasure(prisma, leadId);
     if (!plan.found) die(`no lead with id ${leadId}.`);
-    console.log(`Lead ${leadId}: ${plan.runs} AI run(s) to clear and unlink, ${plan.notes} note(s) to delete.`);
+    console.log(`Lead ${leadId}: ${plan.runs} AI run(s) to clear and unlink, ${plan.notes} note(s) and ${plan.notifications} notification(s) to delete.`);
     if (plan.runsInFlight > 0) die("an AI run for this lead is still in progress. Wait 5 minutes and try again.");
 
     if (!apply) {
@@ -59,7 +60,7 @@ async function main() {
     }
     const result = await eraseLead(prisma, leadId, owner.owner);
     if (!result.ok) die(result.code === "not_found" ? "the lead was already removed." : "an AI run for this lead started meanwhile. Try again in 5 minutes.");
-    console.log(`Erased: lead deleted, ${result.notesDeleted} note(s) deleted, ${result.runsCleared} AI run(s) cleared and unlinked.`);
+    console.log(`Erased: lead deleted, ${result.notesDeleted} note(s) and ${result.notificationsDeleted} notification(s) deleted, ${result.runsCleared} AI run(s) cleared and unlinked.`);
   } finally {
     await prisma.$disconnect();
   }

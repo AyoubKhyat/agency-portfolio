@@ -186,6 +186,8 @@
 .dgErr { margin: 8px 0 0; min-height: 1px; color: var(--err); font-size: 13.5px; font-weight: 500; }
 .dgErr:empty { margin: 0; }
 .dgNote { margin: 12px 0 0; color: var(--muted); font-size: 14px; max-width: 52ch; }
+.dgNote a { color: var(--ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.dgNote a:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .dgTitle { margin: 6px 0 0; font: 800 clamp(1.5rem, 2.1vw, 2rem)/1.1 var(--display); letter-spacing: -0.02em; outline: none; }
 .root[dir="rtl"] .dgTitle { font-weight: 700; letter-spacing: 0; line-height: 1.5; }
 .dgSite { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 12px 0 0; font-weight: 600; font-size: 15px; }

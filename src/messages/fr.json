@@ -764,7 +764,7 @@
         "h": "Durée de conservation",
         "p": [
           "Vos demandes et leurs notes sont conservées dans notre outil de suivi tant qu'elles sont utiles à notre échange, ou jusqu'à ce que vous en demandiez la suppression.",
-          "Le contenu d'un diagnostic (adresse du site, constats, brouillons) est effacé après 90 jours. Si une réponse vous a été envoyée, son texte est conservé au plus 12 mois dans le dossier du diagnostic ; une copie figure aussi dans l'historique de votre demande, conservée avec celle-ci.",
+          "Le contenu d'un diagnostic (adresse du site, constats, brouillons) est effacé après 90 jours. Si une réponse vous a été envoyée, son texte est conservé au plus 12 mois dans le dossier du diagnostic. L'historique de votre demande indique seulement qu'une réponse a été envoyée, par qui et par quel canal.",
           "Nous gardons des informations d'utilisation sans contenu : date, statut, volume traité et coût de chaque analyse. Une fois votre demande supprimée, elles ne vous sont plus rattachées.",
           "Si vous demandez la suppression de vos informations, nous effaçons votre demande, ses notes et le contenu des diagnostics associés. Les copies déjà reçues par e-mail ou WhatsApp et les sauvegardes techniques ne sont pas modifiées immédiatement : elles disparaissent selon leurs propres délais."
         ]

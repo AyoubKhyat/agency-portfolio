@@ -57,7 +57,7 @@ after(async () => {
 
 beforeEach(async () => {
   if (!isolated) return;
-  await client.$executeRawUnsafe(`TRUNCATE ai_runs, lead_notes, leads, audit_logs, users RESTART IDENTITY CASCADE`);
+  await client.$executeRawUnsafe(`TRUNCATE ai_runs, lead_notes, leads, audit_logs, users, notifications RESTART IDENTITY CASCADE`);
 });
 
 const PERSONAL = {
@@ -207,6 +207,21 @@ test("the retention pass doesn't change spend or the daily count", { skip }, asy
 test("erasing a lead clears and unlinks its runs, deletes it and its notes, and keeps spend counted", { skip }, async () => {
   await lead();
   await lead("lead-other");
+  await lead("lead-10");
+  const notify = (link: string | null, body = "Samira Example — formulaire de contact du site") =>
+    client.notification.create({ data: { userId: "admin-1", type: "NEW_LEAD", title: "Nouvelle demande : Diagnostic gratuit", body, link } });
+  // This lead's notifications: the exact link, and with a query string or a fragment.
+  await notify("/admin/leads/lead-1");
+  await notify("/admin/leads/lead-1?tab=notes", "Team One mentioned you in a note on Samira Example");
+  await notify("/admin/leads/lead-1#notes");
+  // Look-alikes and unrelated ones must survive: another lead, an id that starts the same, a sub-path, no link.
+  const survivors = await Promise.all([
+    notify("/admin/leads/lead-other", "Other Person — formulaire de contact du site"),
+    notify("/admin/leads/lead-10", "Ten Person — formulaire de contact du site"),
+    notify("/admin/leads/lead-1/archive", "not a lead page link"),
+    notify(null, "general announcement"),
+    notify("/admin/prospects/lead-1", "a prospect page"),
+  ]);
   await client.leadNote.create({ data: { leadId: "lead-1", content: "Diagnosis reply sent by Team One via email:\n\nBonjour Samira" } });
   await client.auditLog.create({ data: { userId: actor.userId, userName: actor.fullName, action: "AI_DIAGNOSIS_RUN", entity: "lead", entityId: "lead-1", details: JSON.stringify({ runId: "r", status: "DRAFT_READY" }) } });
   const draft = await run({ leadId: "lead-1", status: "DRAFT_READY", costMicros: 222, createdAt: ago(60 * 60 * 1000) });
@@ -217,9 +232,9 @@ test("erasing a lead clears and unlinks its runs, deletes it and its notes, and 
   const usage = await controls.usageNow(NOW);
 
   const plan = await retention.planLeadErasure(client, "lead-1", NOW);
-  assert.deepEqual(plan, { found: true, runs: 3, notes: 1, runsInFlight: 0 });
+  assert.deepEqual(plan, { found: true, runs: 3, notes: 1, notifications: 3, runsInFlight: 0 });
   const res = await retention.eraseLead(client, "lead-1", owner, NOW);
-  assert.deepEqual(res, { ok: true, runsCleared: 3, notesDeleted: 1 });
+  assert.deepEqual(res, { ok: true, runsCleared: 3, notesDeleted: 1, notificationsDeleted: 3 });
 
   assert.equal(await client.lead.findUnique({ where: { id: "lead-1" } }), null);
   assert.equal(await client.leadNote.count({ where: { leadId: "lead-1" } }), 0);
@@ -243,7 +258,11 @@ test("erasing a lead clears and unlinks its runs, deletes it and its notes, and 
   const erase = audits.find((a: any) => a.action === "ERASE_LEAD");
   assert.equal(erase.userId, OWNER_ID);
   assert.equal(erase.entityId, "lead-1");
-  assert.deepEqual(JSON.parse(erase.details), { aiRunsCleared: 3, notesDeleted: 1 });
+  assert.deepEqual(JSON.parse(erase.details), { aiRunsCleared: 3, notesDeleted: 1, notificationsDeleted: 3 });
+
+  const left = await client.notification.findMany({ orderBy: { createdAt: "asc" } });
+  assert.deepEqual(left.map((n: any) => n.id).sort(), survivors.map((n: any) => n.id).sort(), "only this lead's notifications are deleted");
+  assert.ok(!left.some((n: any) => (n.body ?? "").includes("Samira")), "no notification keeps the erased lead's name");
   for (const leak of ["Samira", "samira@example.ma", "riad-example", "+212600000000"]) {
     assert.ok(!JSON.stringify(audits).includes(leak), `audit must not hold ${leak}`);
   }
@@ -269,7 +288,7 @@ test("erasing twice is safe, and an unknown lead changes nothing", { skip }, asy
   await run({ leadId: "lead-1", createdAt: ago(DAY) });
   assert.equal((await retention.eraseLead(client, "lead-1", owner, NOW)).ok, true);
   assert.deepEqual(await retention.eraseLead(client, "lead-1", owner, NOW), { ok: false, code: "not_found" });
-  assert.deepEqual(await retention.planLeadErasure(client, "lead-1", NOW), { found: false, runs: 0, notes: 0, runsInFlight: 0 });
+  assert.deepEqual(await retention.planLeadErasure(client, "lead-1", NOW), { found: false, runs: 0, notes: 0, notifications: 0, runsInFlight: 0 });
   assert.equal(await client.auditLog.count({ where: { action: "ERASE_LEAD" } }), 1);
 });
 

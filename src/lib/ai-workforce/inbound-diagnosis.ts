@@ -486,10 +486,11 @@ export async function applyRunAction(leadId: string, runId: string, input: RunAc
       data: { status: "SENT", sentConfirmedById: actor.userId, sentConfirmedByName: actor.fullName, sentConfirmedAt: new Date() },
     });
     if (count === 0) return null;
-    // Read after the update, so the note holds the version that was just confirmed.
-    const confirmed = await tx.aiRun.findUniqueOrThrow({ where: { id: runId }, select: { channel: true, approvedBody: true } });
+    const confirmed = await tx.aiRun.findUniqueOrThrow({ where: { id: runId }, select: { channel: true } });
+    // Only the delivery event. The wording stays in the run, where the retention policy clears it after 12
+    // months; a copy in the notes would outlive that (src/lib/ai-workforce/retention.ts).
     await tx.leadNote.create({
-      data: { leadId, content: `Diagnosis reply sent by ${actor.fullName} via ${confirmed.channel === "WHATSAPP" ? "WhatsApp" : "email"}:\n\n${confirmed.approvedBody ?? ""}` },
+      data: { leadId, content: `Diagnosis reply sent by ${actor.fullName} via ${confirmed.channel === "WHATSAPP" ? "WhatsApp" : "email"}. The wording is in the diagnosis record.` },
     });
     // Only a new enquiry moves forward: a later status is never pulled back.
     await tx.lead.updateMany({ where: { id: leadId, status: "NEW" }, data: { status: "CONTACTED" } });

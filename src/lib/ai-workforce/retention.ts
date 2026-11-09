@@ -13,7 +13,8 @@
  *    become EXPIRED, which every action refuses and which still counts towards the caps.
  *  - The approved wording of a SENT run is kept for SENT_WORDING_RETENTION_MONTHS, then cleared.
  *  - Erasing an enquiry clears all content and wording from its runs, unlinks them and deletes the lead
- *    (its notes go with it), in one transaction, with an audit entry that holds only IDs and counts.
+ *    (its notes go with it) and the notifications that point at it, which hold the lead's name and note
+ *    excerpts, in one transaction, with an audit entry that holds only IDs and counts.
  *
  * Everything here is idempotent: a second pass finds nothing left to change.
  * Nothing in the app calls this module. Only the owner-run scripts in scripts/ do.
@@ -128,25 +129,37 @@ export async function verifyOwner(db: Pick<PrismaClient, "user">, email: string,
   return { ok: true, owner: { userId: user.id, fullName: user.fullName } };
 }
 
-export type ErasurePlan = { found: boolean; runs: number; notes: number; runsInFlight: number };
+export type ErasurePlan = { found: boolean; runs: number; notes: number; notifications: number; runsInFlight: number };
 
-export async function planLeadErasure(db: Pick<PrismaClient, "lead" | "aiRun" | "leadNote">, leadId: string, now = new Date()): Promise<ErasurePlan> {
+/**
+ * Notifications about a lead link to its admin page: new-lead alerts (with the lead's name) and @mentions
+ * in its notes (with the name and an excerpt). Matches that exact link, or it followed by ? or #, and never
+ * another lead whose id merely starts with this one.
+ */
+export function leadNotificationWhere(leadId: string): Prisma.NotificationWhereInput {
+  const link = `/admin/leads/${leadId}`;
+  return { OR: [{ link }, { link: { startsWith: `${link}?` } }, { link: { startsWith: `${link}#` } }] };
+}
+
+export async function planLeadErasure(db: Pick<PrismaClient, "lead" | "aiRun" | "leadNote" | "notification">, leadId: string, now = new Date()): Promise<ErasurePlan> {
   const lead = await db.lead.findUnique({ where: { id: leadId }, select: { id: true } });
-  if (!lead) return { found: false, runs: 0, notes: 0, runsInFlight: 0 };
-  const [runs, notes, runsInFlight] = await Promise.all([
+  if (!lead) return { found: false, runs: 0, notes: 0, notifications: 0, runsInFlight: 0 };
+  const [runs, notes, notifications, runsInFlight] = await Promise.all([
     db.aiRun.count({ where: { leadId } }),
     db.leadNote.count({ where: { leadId } }),
+    db.notification.count({ where: leadNotificationWhere(leadId) }),
     db.aiRun.count({ where: { leadId, status: "RUNNING", createdAt: { gte: new Date(now.getTime() - STALE_RUN_MS) } } }),
   ]);
-  return { found: true, runs, notes, runsInFlight };
+  return { found: true, runs, notes, notifications, runsInFlight };
 }
 
 export type ErasureResult =
-  | { ok: true; runsCleared: number; notesDeleted: number }
+  | { ok: true; runsCleared: number; notesDeleted: number; notificationsDeleted: number }
   | { ok: false; code: "not_found" | "run_in_progress" };
 
 /**
- * Erases an enquiry: clears and unlinks its runs, then deletes the lead and its notes, all or nothing.
+ * Erases an enquiry: clears and unlinks its runs, then deletes the lead, its notes and the notifications
+ * pointing at it, all or nothing.
  * Spend stays counted because the run rows, their cost and their status (EXPIRED still counts) remain.
  * Refused while a run for this lead may still be writing its result, which would put content back.
  */
@@ -159,14 +172,15 @@ export async function eraseLead(db: PrismaClient, leadId: string, owner: Owner, 
 
     await tx.aiRun.updateMany({ where: { leadId, status: { in: [...ACTIONABLE_STATUSES] } }, data: { status: EXPIRED } });
     const cleared = await tx.aiRun.updateMany({ where: { leadId }, data: { ...CLEARED_CONTENT, ...CLEARED_WORDING, leadId: null } });
+    const notifications = await tx.notification.deleteMany({ where: leadNotificationWhere(leadId) });
     await tx.lead.delete({ where: { id: leadId } });
     await tx.auditLog.create({
       data: {
         userId: owner.userId, userName: owner.fullName, action: "ERASE_LEAD", entity: "lead", entityId: leadId,
-        details: JSON.stringify({ aiRunsCleared: cleared.count, notesDeleted: plan.notes }),
+        details: JSON.stringify({ aiRunsCleared: cleared.count, notesDeleted: plan.notes, notificationsDeleted: notifications.count }),
       },
     });
-    return { ok: true, runsCleared: cleared.count, notesDeleted: plan.notes } as const;
+    return { ok: true, runsCleared: cleared.count, notesDeleted: plan.notes, notificationsDeleted: notifications.count } as const;
   }, { maxWait: 10_000, timeout: 15_000 });
 }
 

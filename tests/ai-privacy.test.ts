@@ -153,3 +153,14 @@ test("the admin panel doesn't pull the database layer into the browser", () => {
   assert.match(panel, /run\.status === "EXPIRED"/);
   assert.match(panel, /run\.targetUrl === ""/);
 });
+
+test("sent wording isn't copied into lead notes, and the policy doesn't claim a lasting copy", () => {
+  const src = read("src/lib/ai-workforce/inbound-diagnosis.ts");
+  const note = /tx\.leadNote\.create\(\{[\s\S]*?\}\);/.exec(src)?.[0] ?? "";
+  assert.ok(note, "the delivery note is still recorded");
+  assert.doesNotMatch(note, /approved(Body|Subject)|draft(Body|Subject)/, "the note must not hold the wording");
+  for (const l of ["fr", "en", "ar"] as const) {
+    const retention = JSON.stringify(messages[l].Privacy.sections[4]);
+    assert.doesNotMatch(retention, /copie figure|a copy is also|توجد نسخة/, `${l}: no indefinite copy`);
+  }
+});
