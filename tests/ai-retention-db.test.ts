@@ -57,7 +57,7 @@ after(async () => {
 
 beforeEach(async () => {
   if (!isolated) return;
-  await client.$executeRawUnsafe(`TRUNCATE ai_runs, lead_notes, leads, audit_logs, users, notifications RESTART IDENTITY CASCADE`);
+  await client.$executeRawUnsafe(`TRUNCATE ai_runs, lead_notes, leads, audit_logs, users, notifications, prospects, clients, chat_messages, chat_channels RESTART IDENTITY CASCADE`);
 });
 
 const PERSONAL = {
@@ -306,4 +306,57 @@ test("only the active owner, by OWNER_USER_ID and matching email, may erase", { 
 
   await client.user.update({ where: { id: OWNER_ID }, data: { isActive: false } });
   assert.equal((await retention.verifyOwner(client, "owner@ibda3.test", OWNER_ID)).ok, false, "an inactive owner can't erase");
+});
+
+/* ───────── Possible copies ───────── */
+
+test("possible copies are found by email, phone or domain, reported by id only, and never deleted", { skip }, async () => {
+  await lead();
+  await run({ leadId: "lead-1", targetUrl: "https://riad-example.ma", finalUrl: "https://www.riad-example.ma/fr", createdAt: ago(DAY) });
+  const prospect = (id: string, data: Record<string, unknown>) =>
+    client.prospect.create({ data: { id, name: "P", phone: "", whatsappLink: "", sector: "riad", ...data } });
+  await prospect("p-email", { email: "SAMIRA@Example.ma" });
+  await prospect("p-phone", { phone: "06 00 00 00 00" });
+  await prospect("p-wa", { whatsappLink: "https://wa.me/212600000000" });
+  await prospect("p-domain", { website: "riad-example.ma" });
+  await prospect("p-all", { email: "samira@example.ma", phone: "+212600000000", website: "http://www.riad-example.ma/contact" });
+  await prospect("p-other", { email: "other@example.ma", phone: "0611111111", website: "https://other-riad.ma" });
+  await prospect("p-subdomain", { website: "https://shop.riad-example.ma" });
+  await client.client.create({ data: { id: "c-email", companyName: "C", email: "samira@example.ma" } });
+  await client.client.create({ data: { id: "c-wa", companyName: "C", whatsapp: "+212 600-000-000" } });
+  await client.client.create({ data: { id: "c-other", companyName: "C", email: "x@y.ma", website: "https://elsewhere.ma" } });
+  await client.channel.create({ data: { id: "ch-1", name: "General", slug: "general" } });
+  await client.chatMessage.create({ data: { id: "m-hit", channelId: "ch-1", authorId: "u", authorName: "Team One", content: "Call SAMIRA@example.ma tomorrow" } });
+  await client.chatMessage.create({ data: { id: "m-miss", channelId: "ch-1", authorId: "u", authorName: "Team One", content: "Call Samira tomorrow" } });
+
+  const copies = await retention.findPossibleCopies(client, "lead-1");
+  assert.ok(copies);
+  const byId = Object.fromEntries(copies.prospects.map((p) => [p.id, p.matchedBy]));
+  assert.deepEqual(byId, {
+    "p-email": ["email"], "p-phone": ["phone"], "p-wa": ["phone"], "p-domain": ["domain"], "p-all": ["email", "phone", "domain"],
+  }, "other prospects and other subdomains are not flagged");
+  assert.deepEqual(copies.clients.map((c) => [c.id, c.matchedBy]).sort(), [["c-email", ["email"]], ["c-wa", ["phone"]]]);
+  assert.deepEqual(copies.chatMessages, [{ id: "m-hit", channelId: "ch-1" }]);
+  assert.equal(copies.domainSkipped, false);
+  for (const leak of ["Samira", "samira", "riad-example", "600000000", "tomorrow"]) {
+    assert.ok(!JSON.stringify(copies).includes(leak), `the report must not contain ${leak}`);
+  }
+
+  const plan = await retention.planLeadErasure(client, "lead-1", NOW);
+  assert.equal(plan.found, true);
+  assert.equal((await retention.eraseLead(client, "lead-1", owner, NOW)).ok, true);
+  assert.equal(await client.prospect.count(), 7, "erasure never deletes possible copies");
+  assert.equal(await client.client.count(), 3);
+  assert.equal(await client.chatMessage.count(), 2);
+  assert.equal(await retention.findPossibleCopies(client, "lead-1"), null, "nothing to report once the lead is gone");
+});
+
+test("a lead whose site is on a shared host skips the domain check instead of flagging everyone", { skip }, async () => {
+  await client.lead.create({ data: { id: "lead-ig", fullName: "Insta Shop", email: "not-an-email", phone: null, subject: "Diagnostic gratuit",
+    message: "Demande de diagnostic gratuit du site.\nSite : https://www.instagram.com/insta.shop\nLangue : FR\nProblème décrit : x" } });
+  await client.prospect.create({ data: { id: "p-ig", name: "P", phone: "", whatsappLink: "", sector: "s", website: "https://instagram.com/someone.else" } });
+  await client.channel.create({ data: { id: "ch-1", name: "General", slug: "general" } });
+  await client.chatMessage.create({ data: { channelId: "ch-1", authorId: "u", authorName: "T", content: "not-an-email" } });
+  const copies = await retention.findPossibleCopies(client, "lead-ig");
+  assert.deepEqual(copies, { prospects: [], clients: [], chatMessages: [], domainSkipped: true }, "no invalid email search, no shared-host match");
 });

@@ -164,3 +164,40 @@ test("sent wording isn't copied into lead notes, and the policy doesn't claim a 
     assert.doesNotMatch(retention, /copie figure|a copy is also|توجد نسخة/, `${l}: no indefinite copy`);
   }
 });
+
+test("possible-copy matching normalises domains and phones the way duplicate detection does", async () => {
+  const { hostKey, phoneKey, SHARED_HOSTS } = await import("../src/lib/ai-workforce/retention");
+  assert.equal(hostKey("https://www.Riad-Example.ma/fr?x=1"), "riad-example.ma");
+  assert.equal(hostKey("riad-example.ma"), "riad-example.ma");
+  assert.equal(hostKey(""), null);
+  assert.equal(hostKey("not a url"), null);
+  assert.equal(hostKey("localhost"), null, "no bare hosts");
+  assert.equal(phoneKey("+212 6 00-00-00-00"), "600000000");
+  assert.equal(phoneKey("0600000000"), "600000000");
+  assert.equal(phoneKey("https://wa.me/212600000000"), "600000000");
+  assert.equal(phoneKey("12345"), null);
+  for (const h of ["instagram.com", "facebook.com", "wa.me", "linktr.ee"]) assert.ok(SHARED_HOSTS.has(h));
+});
+
+test("the erasure paragraph covers separately stored records and exports without promising automatic deletion", () => {
+  const words = {
+    fr: [/fiches enregistrées séparément/, /au cas par cas/, /fichiers exportés/, /sauvegardes/],
+    en: [/records stored separately/, /case by case/, /Exported files/, /backups/],
+    ar: [/السجلات الأخرى المحفوظة بشكل منفصل/, /حالةً بحالة/, /ملفات التصدير/, /النسخ الاحتياطية/],
+  } as const;
+  for (const l of ["fr", "en", "ar"] as const) {
+    const erasure = (messages[l].Privacy.sections[4] as Section).p?.[3] ?? "";
+    for (const w of words[l]) assert.match(erasure, w, `${l}: missing ${w}`);
+    assert.doesNotMatch(erasure, /automatiquement|automatically|تلقائي|آلياً/, `${l}: must not promise automatic deletion`);
+  }
+});
+
+test("the erasure script reports possible copies before erasing and never deletes them", () => {
+  const src = read("scripts/erase-lead.ts");
+  const report = src.indexOf("findPossibleCopies(prisma, leadId)");
+  assert.ok(report > 0 && report < src.indexOf("if (!apply)"), "the report runs in the dry run, before any erasure");
+  assert.doesNotMatch(src, /prospect\.delete|client\.delete|chatMessage\.delete/);
+  const lib = read("src/lib/ai-workforce/retention.ts");
+  const fn = lib.slice(lib.indexOf("export async function findPossibleCopies"), lib.indexOf("/* ───────────────── Script safety"));
+  assert.doesNotMatch(fn, /\.(delete|deleteMany|update|updateMany|create|upsert)\(/, "findPossibleCopies is read-only");
+});

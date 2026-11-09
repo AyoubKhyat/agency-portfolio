@@ -22,6 +22,7 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { STALE_RUN_MS } from "./controls";
 import { CONTENT_RETENTION_DAYS, SENT_WORDING_RETENTION_MONTHS } from "./retention-policy";
+import { parseDiagnosisMessage } from "../diagnosis";
 
 export { CONTENT_RETENTION_DAYS, SENT_WORDING_RETENTION_MONTHS };
 export const EXPIRED = "EXPIRED";
@@ -182,6 +183,101 @@ export async function eraseLead(db: PrismaClient, leadId: string, owner: Owner, 
     });
     return { ok: true, runsCleared: cleared.count, notesDeleted: plan.notes, notificationsDeleted: notifications.count } as const;
   }, { maxWait: 10_000, timeout: 15_000 });
+}
+
+/* ───────────────── Possible copies (report only) ───────────────── */
+
+/**
+ * Hosts shared by many unrelated sites. A lead whose "site" is a page on one of these can't be matched by
+ * domain without flagging every prospect that also uses it, so the domain check is skipped for them.
+ */
+export const SHARED_HOSTS = new Set([
+  "facebook.com", "m.facebook.com", "fb.com", "instagram.com", "wa.me", "whatsapp.com", "api.whatsapp.com",
+  "linktr.ee", "tiktok.com", "youtube.com", "google.com", "maps.google.com", "goo.gl", "maps.app.goo.gl",
+  "sites.google.com", "linkedin.com", "x.com", "twitter.com",
+]);
+
+/** Hostname without "www.", lowercased. Same rule as duplicate detection. */
+export function hostKey(url: string | null | undefined): string | null {
+  const raw = url?.trim();
+  if (!raw) return null;
+  try {
+    const host = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`).hostname.toLowerCase().replace(/^www\./, "");
+    return host.includes(".") ? host : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The last 9 digits, so +212 6…, 06… and wa.me/2126… all compare equal. Same rule as duplicate detection. */
+export function phoneKey(s: string | null | undefined): string | null {
+  const d = (s ?? "").replace(/\D/g, "");
+  return d.length >= 8 ? d.slice(-9) : null;
+}
+
+const emailKey = (s: string | null | undefined) => {
+  const e = (s ?? "").trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) ? e : null;
+};
+
+export type MatchedBy = "email" | "phone" | "domain";
+export type PossibleCopies = {
+  prospects: { id: string; matchedBy: MatchedBy[] }[];
+  clients: { id: string; matchedBy: MatchedBy[] }[];
+  chatMessages: { id: string; channelId: string }[];
+  /** True when the lead's site is on a shared host, so no domain match was attempted. */
+  domainSkipped: boolean;
+};
+
+/**
+ * Records stored separately that may be the same person: prospects and clients with the lead's email, phone
+ * or website domain, and chat messages containing its email. Nothing is linked to the lead, so erasure can't
+ * reach them by itself; the owner reviews each one. Returns identifiers and match kinds only, never values.
+ * Read-only: it never changes or deletes anything. Call it before the lead is erased.
+ */
+export async function findPossibleCopies(
+  db: Pick<PrismaClient, "lead" | "aiRun" | "prospect" | "client" | "chatMessage">,
+  leadId: string,
+): Promise<PossibleCopies | null> {
+  const lead = await db.lead.findUnique({ where: { id: leadId }, select: { email: true, phone: true, message: true } });
+  if (!lead) return null;
+  const runs = await db.aiRun.findMany({ where: { leadId }, select: { targetUrl: true, finalUrl: true } });
+
+  const email = emailKey(lead.email);
+  const phone = phoneKey(lead.phone);
+  const allHosts = new Set(
+    [parseDiagnosisMessage(lead.message)?.siteUrl, ...runs.flatMap((r) => [r.targetUrl, r.finalUrl])]
+      .map(hostKey).filter((h): h is string => h !== null),
+  );
+  const hosts = new Set([...allHosts].filter((h) => !SHARED_HOSTS.has(h)));
+
+  const match = (r: { email: string; website: string; phones: string[] }): MatchedBy[] => {
+    const by: MatchedBy[] = [];
+    if (email && emailKey(r.email) === email) by.push("email");
+    if (phone && r.phones.some((p) => phoneKey(p) === phone)) by.push("phone");
+    const h = hostKey(r.website);
+    if (h && hosts.has(h)) by.push("domain");
+    return by;
+  };
+
+  const [prospects, clients, chatMessages] = await Promise.all([
+    db.prospect.findMany({ select: { id: true, email: true, phone: true, whatsappLink: true, website: true } }),
+    db.client.findMany({ select: { id: true, email: true, phone: true, whatsapp: true, website: true } }),
+    email
+      ? db.chatMessage.findMany({ where: { content: { contains: email, mode: "insensitive" } }, select: { id: true, channelId: true }, orderBy: { createdAt: "asc" } })
+      : Promise.resolve([]),
+  ]);
+
+  return {
+    prospects: prospects
+      .map((p) => ({ id: p.id, matchedBy: match({ email: p.email, website: p.website, phones: [p.phone, p.whatsappLink] }) }))
+      .filter((p) => p.matchedBy.length > 0),
+    clients: clients
+      .map((c) => ({ id: c.id, matchedBy: match({ email: c.email, website: c.website, phones: [c.phone, c.whatsapp] }) }))
+      .filter((c) => c.matchedBy.length > 0),
+    chatMessages,
+    domainSkipped: allHosts.size > 0 && hosts.size === 0,
+  };
 }
 
 /* ───────────────── Script safety ───────────────── */

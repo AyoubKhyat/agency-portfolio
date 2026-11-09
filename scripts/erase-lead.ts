@@ -10,11 +10,13 @@
  *     npx tsx scripts/erase-lead.ts --lead <leadId> --owner <owner email> [--apply] [--allow-remote-host=<host>]
  *
  * It never reads DATABASE_URL, and it refuses any non-local host unless that exact host is passed.
- * Erasure can't be undone. Copies elsewhere (the EmailJS email, mailboxes, WhatsApp, backups) are not reached.
+ * It also lists, by ID only, prospects, clients and chat messages stored separately that may be the same
+ * person (same email, phone or website domain), for the owner to review by hand. It never deletes those.
+ * Erasure can't be undone. Copies elsewhere (the EmailJS email, mailboxes, WhatsApp, exports, backups) are not reached.
  */
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { checkMaintenanceDb, eraseLead, planLeadErasure, verifyOwner } from "../src/lib/ai-workforce/retention";
+import { checkMaintenanceDb, eraseLead, findPossibleCopies, planLeadErasure, verifyOwner } from "../src/lib/ai-workforce/retention";
 
 function die(msg: string): never {
   console.error(`ERROR: ${msg}`);
@@ -53,6 +55,19 @@ async function main() {
     if (!plan.found) die(`no lead with id ${leadId}.`);
     console.log(`Lead ${leadId}: ${plan.runs} AI run(s) to clear and unlink, ${plan.notes} note(s) and ${plan.notifications} notification(s) to delete.`);
     if (plan.runsInFlight > 0) die("an AI run for this lead is still in progress. Wait 5 minutes and try again.");
+
+    // Report only: these records aren't linked to the lead and are never deleted by this script.
+    const copies = await findPossibleCopies(prisma, leadId);
+    if (copies) {
+      const list = (rows: { id: string; matchedBy: string[] }[]) => rows.map((r) => `${r.id} (${r.matchedBy.join(", ")})`).join(", ");
+      console.log("Possible copies stored separately, for manual review (not deleted):");
+      console.log(`  prospects: ${copies.prospects.length}${copies.prospects.length ? `  ${list(copies.prospects)}` : ""}`);
+      console.log(`  clients: ${copies.clients.length}${copies.clients.length ? `  ${list(copies.clients)}` : ""}`);
+      console.log(`  chat messages containing the lead's email: ${copies.chatMessages.length}${copies.chatMessages.length ? `  ${copies.chatMessages.map((m) => `${m.id} in channel ${m.channelId}`).join(", ")}` : ""}`);
+      if (copies.domainSkipped) console.log("  website domain not checked: the lead's site is on a shared host.");
+      console.log("Owner review: open each record listed above and delete or correct it only if it is the same person.");
+      console.log("Exports and backups aren't reached by this script: delete or replace any downloaded backup files separately.");
+    }
 
     if (!apply) {
       console.log("Dry run: nothing was written. Re-run with --apply to erase.");

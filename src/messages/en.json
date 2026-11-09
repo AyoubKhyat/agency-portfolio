@@ -766,7 +766,7 @@
           "Your enquiries and their notes are kept in our tracking tool for as long as they are useful to our exchange, or until you ask us to delete them.",
           "The content of a diagnosis (site address, findings, drafts) is deleted after 90 days. If a reply was sent to you, its text is kept for up to 12 months in the diagnosis record. Your enquiry's history only notes that a reply was sent, by whom and through which channel.",
           "We keep usage information with no content: the date, status, volume processed and cost of each analysis. Once your enquiry is deleted, it is no longer linked to you.",
-          "If you ask us to delete your information, we delete your enquiry, its notes and the content of its diagnoses. Copies already received by email or WhatsApp, and technical backups, are not changed straight away: they disappear on their own schedules."
+          "If you ask us to delete your information, we delete your enquiry, its notes and the content of its diagnoses. We also look for other records stored separately with the same email, phone number or website, and review them case by case. Exported files, backups and messages already received by email or WhatsApp are not changed by this deletion: they are handled separately, on their own schedules."
         ]
       },
       {

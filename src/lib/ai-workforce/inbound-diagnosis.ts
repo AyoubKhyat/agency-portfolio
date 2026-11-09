@@ -299,6 +299,20 @@ export type RunStartResult =
   | { kind: "denied"; reason: string; runId: string }
   | { kind: "finished"; runId: string; status: string };
 
+const SAFE_ERROR_NAME = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;
+const SAFE_ERROR_CODE = /^[A-Z][A-Z0-9_]{0,31}$/;
+
+/**
+ * What a failed run may write to the server logs: the error's type and code, never its message. A Prisma
+ * validation error's message repeats the values being saved (the draft with the visitor's name, evidence,
+ * URLs), and logs are outside the retention and erasure rules. Anything not matching a plain shape is dropped.
+ */
+export function safeErrorSummary(err: unknown): string {
+  const name = err instanceof Error && SAFE_ERROR_NAME.test(err.name) ? err.name : err instanceof Error ? "Error" : typeof err;
+  const code = (err as { code?: unknown } | null)?.code;
+  return typeof code === "string" && SAFE_ERROR_CODE.test(code) ? `${name} ${code}` : name;
+}
+
 async function saveRun(id: string, data: Record<string, unknown>) {
   await prisma.aiRun.update({ where: { id }, data });
 }
@@ -401,7 +415,7 @@ export async function runInboundDiagnosis(leadId: string, actor: Actor, retryOfR
       draftSubject: checked.value.subject, draftBody: body,
     });
   } catch (err) {
-    console.error("[ai-workforce] run failed:", err instanceof Error ? err.message : err);
+    console.error("[ai-workforce] run failed:", runId, safeErrorSummary(err));
     // Money stays reserved here: the failure could have come after a paid call.
     await saveRun(runId, { status: "FAILED", errorCode: "INTERNAL", durationMs: Date.now() - started }).catch(() => {});
     return { kind: "finished", runId, status: "FAILED" };
