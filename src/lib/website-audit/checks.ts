@@ -227,6 +227,18 @@ export function parsePage(html: string): ParsedPage {
   return page;
 }
 
+/** Every link address on the page, read the same way as parsePage: comments, scripts and styles don't count. */
+export function anchorHrefs(html: string): string[] {
+  const visible = stripElement(stripElement(stripElement(stripComments(html), "script"), "style"), "noscript");
+  const out: string[] = [];
+  for (const { name, attrs } of openingTags(visible)) {
+    if (name.toLowerCase() !== "a") continue;
+    const href = (attrsOf(attrs).href ?? "").trim();
+    if (href) out.push(href);
+  }
+  return out;
+}
+
 /* ───────────────── robots.txt ───────────────── */
 
 type RobotsRule = { allow: boolean; path: string };

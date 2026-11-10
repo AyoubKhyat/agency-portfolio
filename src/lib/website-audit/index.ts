@@ -32,7 +32,11 @@ const isSsrf = (err: unknown) => err instanceof SafeFetchError && SSRF_CODES.inc
 /** The answers that really mean "this file isn't there". Others, such as 403 or 429, leave it unknown. */
 const GONE = [404, 410];
 
-export async function auditWebsite(targetUrl: string, opts: { fetcher?: SafeFetch; now?: () => Date } = {}): Promise<AuditResult> {
+export async function auditWebsite(
+  targetUrl: string,
+  /** onPage sees the page that was read, only once it is the site's real page. It sends no extra request. */
+  opts: { fetcher?: SafeFetch; now?: () => Date; onPage?: (page: SafeResponse, fetchedAt: string) => void } = {},
+): Promise<AuditResult> {
   const fetcher = opts.fetcher ?? defaultFetch;
   const started = Date.now();
   const deadlineAt = started + TOTAL_BUDGET_MS;
@@ -82,6 +86,7 @@ export async function auditWebsite(targetUrl: string, opts: { fetcher?: SafeFetc
   if (notPage) {
     return finish({ ...base, finalUrl: page.finalUrl, outcome: "UNVERIFIED", code: notPage.code, evidence: [note("E_REACHABLE", "Page responds", notPage.observed, page.finalUrl)] });
   }
+  opts.onPage?.(page, fetchedAt);
 
   const optional = async (url: string, kind: "html" | "text", followRedirects: boolean) => {
     try {
