@@ -26,7 +26,11 @@ function when(iso: string) {
 
 /** Not a clickable link: the address came from someone else's site. */
 function Source({ url, fetchedAt }: { url: string; fetchedAt: string }) {
-  return <p className={`${small} break-all mt-1`}>Source: {url} · read {when(fetchedAt)}</p>;
+  return (
+    <p className={`${small} mt-1`}>
+      Source: <span className="break-all">{url}</span> · <span className="whitespace-nowrap">read {when(fetchedAt)}</span>
+    </p>
+  );
 }
 
 function HumanStatus({ label, value }: { label: string; value: string }) {
@@ -135,7 +139,7 @@ export default function QualifyPage() {
             <p className="text-[14px] text-[var(--os-text)] break-all">{result.finalUrl ?? result.targetUrl}</p>
             <p className="text-[13px] text-[var(--os-text-muted)] mt-1">{OUTCOME_TEXT[result.outcome]}</p>
             <p className={`${small} mt-2`}>
-              {result.problems.length} problems · {result.unknown.length} couldn&apos;t check · {result.passed} fine
+              {result.problems.length} {result.problems.length === 1 ? "problem" : "problems"} ·{result.unknown.length} couldn&apos;t check · {result.passed} fine
               {result.gapScore !== null && <> · gap score {result.gapScore} ({result.fitLabel})</>}
               {" "}· {Math.round(result.durationMs / 100) / 10}s
             </p>

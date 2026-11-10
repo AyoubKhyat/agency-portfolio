@@ -172,3 +172,12 @@ test("read-only and admin-only: no AI, no writes, no import, no message", () => 
   assert.match(page, /Only a person can mark a contact VERIFIED/);
   assert.doesNotMatch(page, /href=\{c\.link\}|href=\{p\.sourceUrl\}|href=\{c\.sourceUrl\}/, "addresses from someone else's site are shown, not linked");
 });
+
+test("page polish: singular problem, unbroken read time, top-bar title", () => {
+  const page = read("src/app/admin/qualify/page.tsx");
+  const layout = read("src/app/admin/layout.tsx");
+  assert.match(page, /=== 1 \? "problem" : "problems"/, "'1 problem', not '1 problems'");
+  assert.match(page, /whitespace-nowrap">read \{when\(fetchedAt\)\}/, "the read time never splits mid-word");
+  assert.doesNotMatch(page, /break-all mt-1`\}>Source:/, "only the address may break anywhere");
+  assert.match(layout, /qualify: "Check a website"/, "the top bar matches the menu label");
+});
