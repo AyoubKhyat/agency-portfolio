@@ -152,7 +152,7 @@ test("a full run: evidence from the local site, a validated draft, costs logged,
   assert.match(saved.draftBody, /vérification automatique/, "the limits of the check are always stated");
   assert.match(saved.draftBody, /L'équipe Ibda3 Digital$/);
   assert.equal(saved.model, "openai/gpt-oss-120b");
-  assert.equal(saved.promptVersion, "inbound-diagnosis-v2");
+  assert.equal(saved.promptVersion, "inbound-diagnosis-v3");
   assert.equal(saved.inputTokens, 1000);
   assert.equal(saved.costMicros, controls.costMicros(1000, 500));
   assert.equal(saved.reservedMicros, 0);

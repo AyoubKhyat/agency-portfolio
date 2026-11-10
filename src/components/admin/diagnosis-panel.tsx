@@ -52,6 +52,7 @@ const WHY: Record<string, string> = {
   BOT_CHALLENGE: "A bot check answered instead of this site, so its page wasn't checked and no draft was written. Check it by hand.",
   NO_PAGE_CONTENT: "This site answered without any page content, so nothing could be checked and no draft was written. Check it by hand.",
   INSUFFICIENT_EVIDENCE: "Too little of this page could be read to judge it, so no draft was written. Check it by hand.",
+  UNSAFE_EVIDENCE: "A check returned something unexpected, so nothing was sent to the AI and no draft was written. Use the evidence below.",
   AI_VALIDATION: "The AI's answer failed the evidence checks, so it was thrown away. Use the evidence below.",
   AI_REFUSED: "The AI declined this request, so there is no draft. Use the evidence below.",
   AI_TRUNCATED: "The AI's answer was cut off, so it was thrown away. Use the evidence below.",

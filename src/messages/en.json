@@ -720,7 +720,7 @@
     "meta_desc": "How Ibda3 Digital uses the information collected on this website.",
     "kicker": "Privacy",
     "title": "Privacy Policy",
-    "updated": "Last updated: 9 November 2026",
+    "updated": "Last updated: 10 November 2026",
     "draft": "Draft awaiting approval by the owner and a legal adviser. This page is not final yet.",
     "draft_badge": "Draft",
     "intro": "We respect your privacy. Here is, in plain words, what we collect and why.",
@@ -747,7 +747,7 @@
           "To reply to your enquiries and discuss your project.",
           "To run the website and protect it against abuse.",
           "To measure traffic, only if you have agreed to it.",
-          "To prepare our reply to a diagnosis request. A tool checks one page of your site automatically, then an artificial intelligence service, Groq, Inc. (USA), may help us write a first draft from those technical findings only. Your name, contact details and message are not sent to it. A team member reviews and approves every reply before anything is sent: no decision is made automatically."
+          "To prepare our reply to a diagnosis request. A tool checks one page of your site automatically, then an artificial intelligence service, Groq, Inc. (USA), may help us write a first draft. It receives only technical results, as codes, numbers and present/absent indicators (for example response time, page size or whether a title exists). Your site's address, the text of your pages, your name, your contact details and your message are not sent to it. A team member reviews and approves every reply before anything is sent: no decision is made automatically."
         ]
       },
       {
@@ -789,7 +789,7 @@
     "url_placeholder": "yourwebsite.com",
     "start": "Free diagnosis",
     "note": "Our team reviews your site, with help from automated analysis tools including artificial intelligence\u00a0— nothing on it is changed.",
-    "privacy_notice": "To prepare our reply, one page of your site is analysed automatically and an AI service (Groq, USA) may help write the draft, without receiving your contact details. Every reply is reviewed by our team before it is sent. <link>Privacy policy</link>",
+    "privacy_notice": "To prepare our reply, one page of your site is analysed automatically and an AI service (Groq, USA) may help write the draft from technical results only, without receiving your site's address or content, or your contact details. Every reply is reviewed by our team before it is sent. <link>Privacy policy</link>",
     "step": "Step {n} of 2",
     "details_title": "How can we reach you?",
     "site_label": "Site to review",

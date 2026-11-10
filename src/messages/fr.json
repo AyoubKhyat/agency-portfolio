@@ -720,7 +720,7 @@
     "meta_desc": "Comment Ibda3 Digital utilise les informations collectées sur ce site.",
     "kicker": "Confidentialité",
     "title": "Politique de confidentialité",
-    "updated": "Dernière mise à jour : 9 novembre 2026",
+    "updated": "Dernière mise à jour : 10 novembre 2026",
     "draft": "Projet en attente de validation par le propriétaire et un conseil juridique. Cette page n'est pas encore définitive.",
     "draft_badge": "Projet",
     "intro": "Nous respectons votre vie privée. Voici, simplement, ce que nous collectons et pourquoi.",
@@ -747,7 +747,7 @@
           "Répondre à vos demandes et échanger sur votre projet.",
           "Faire fonctionner le site et le protéger contre les abus.",
           "Mesurer la fréquentation, uniquement si vous l'avez accepté.",
-          "Préparer notre réponse à une demande de diagnostic. Un outil vérifie automatiquement une page de votre site, puis un service d'intelligence artificielle, Groq, Inc. (États-Unis), peut nous aider à rédiger un premier brouillon à partir de ces seuls constats techniques. Votre nom, vos coordonnées et votre message ne lui sont pas transmis. Un membre de l'équipe relit et valide chaque réponse avant tout envoi : aucune décision n'est prise automatiquement."
+          "Préparer notre réponse à une demande de diagnostic. Un outil vérifie automatiquement une page de votre site, puis un service d'intelligence artificielle, Groq, Inc. (États-Unis), peut nous aider à rédiger un premier brouillon. Il ne reçoit que des résultats techniques sous forme de codes, de nombres et d'indications « présent / absent » (par exemple le temps de réponse, la taille de la page ou la présence d'un titre). L'adresse de votre site, le texte de vos pages, votre nom, vos coordonnées et votre message ne lui sont pas transmis. Un membre de l'équipe relit et valide chaque réponse avant tout envoi : aucune décision n'est prise automatiquement."
         ]
       },
       {
@@ -789,7 +789,7 @@
     "url_placeholder": "votresite.ma",
     "start": "Diagnostic gratuit",
     "note": "Votre site est examiné par notre équipe, avec l'aide d'outils d'analyse automatisés, dont l'intelligence artificielle\u00a0— rien n'y est modifié.",
-    "privacy_notice": "Pour préparer notre réponse, une page de votre site est analysée automatiquement et un service d'IA (Groq, États-Unis) peut aider à rédiger le brouillon, sans recevoir vos coordonnées. Chaque réponse est relue par notre équipe avant envoi. <link>Politique de confidentialité</link>",
+    "privacy_notice": "Pour préparer notre réponse, une page de votre site est analysée automatiquement et un service d'IA (Groq, États-Unis) peut aider à rédiger le brouillon à partir de résultats techniques uniquement, sans recevoir l'adresse ni le contenu de votre site, ni vos coordonnées. Chaque réponse est relue par notre équipe avant envoi. <link>Politique de confidentialité</link>",
     "step": "Étape {n} sur 2",
     "details_title": "Comment vous recontacter ?",
     "site_label": "Site à examiner",
