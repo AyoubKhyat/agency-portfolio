@@ -1,20 +1,23 @@
 /**
- * P6C batch discovery: up to 30 Marrakech businesses in one sector from OpenStreetMap, the ones not already in
- * the CRM checked with the safe website check (robots.txt, SSRF rules), and the top 5 ranked by problems a
- * customer would notice. Reads only: nothing is saved, no AI, no paid API. Importing is a separate, manual step.
+ * P6C batch discovery: Marrakech businesses in one sector from the private OpenStreetMap list (see
+ * osm-dataset.ts), the ones not already in the CRM checked with the safe website check (robots.txt, SSRF rules),
+ * and the top 5 ranked by problems a customer would notice. Reads only: nothing is saved, no AI, no paid API,
+ * no live Overpass call. Importing is a separate, manual step.
  *
- * Work is split into small requests so each stays well inside Vercel's limit: one search (one Overpass query),
- * then audits of at most AUDIT_CHUNK sites per request.
+ * Each search continues from a cursor, so repeated searches move through the list instead of returning the same
+ * businesses. Work is split into small requests: one search, then audits of at most AUDIT_CHUNK sites each.
  *
  * Contacts are never verified here. A WhatsApp number comes only from an explicit link (an OSM contact:whatsapp
  * tag or a wa.me link on the site), never from a phone number, and is always UNVERIFIED.
  */
-import { OsmProvider, SECTORS, type DiscoveryCandidate } from "@/lib/discovery-providers";
+import { SECTORS } from "@/lib/discovery-providers";
+import { DatasetMissingError, loadDataset, toCandidate, type OsmDataset } from "@/lib/osm-dataset";
 import { classify, siteKey, type ExistingProspectLite } from "@/lib/discovery-duplicates";
 import { normalizeSiteUrl } from "@/lib/diagnosis";
 import { qualifyWebsite, type ProblemEvidence, type ProspectRow, type QualificationResult } from "@/lib/prospect-qualification";
 import { FINDINGS } from "@/lib/prospect-outreach-draft";
 import { explicitWhatsAppLink } from "@/lib/contact-check";
+import type { DiscoveryCandidate } from "@/lib/discovery-providers";
 import type { SafeFetch } from "@/lib/website-audit/safe-fetch";
 
 export const BATCH_CITY = "MARRAKECH";
@@ -27,10 +30,14 @@ export type BatchCandidate = DiscoveryCandidate & { website: string };
 export type SearchSummary = {
   sector: string;
   searchedAt: string;
-  /** Businesses OpenStreetMap returned (up to MAX_SEARCH looked at). */
+  /** Businesses from the list looked at by this search (at most MAX_SEARCH). */
   found: number;
-  skipped: { noWebsite: number; inCrm: number; possibleDuplicate: number; sameSiteInBatch: number; overLimit: number };
+  skipped: { noWebsite: number; inCrm: number; possibleDuplicate: number; sameSiteInBatch: number };
   candidates: BatchCandidate[];
+  /** Where this search sat in the sector's list. Pass `nextCursor` to the next search; null = the end was reached. */
+  progress: { from: number; to: number; total: number; nextCursor: number | null };
+  /** How fresh the list is. */
+  dataset: { osmDataUntil: string | null; generatedAt: string } | null;
   /** A source that failed. The results are then partial or empty, never made up. */
   sourceError: string | null;
 };
@@ -38,7 +45,7 @@ export type SearchSummary = {
 type CrmRow = ExistingProspectLite & ProspectRow;
 
 export type SearchDeps = {
-  search?: (sector: string) => Promise<DiscoveryCandidate[]>;
+  dataset?: () => Promise<OsmDataset>;
   loadCrm?: () => Promise<CrmRow[]>;
 };
 
@@ -55,24 +62,38 @@ async function loadCrmFromDb(): Promise<CrmRow[]> {
 
 export class UnknownSectorError extends Error {}
 
-/** One Overpass query, then everything with no website or already in the CRM is left out before any site is read. */
-export async function searchBatch(sector: string, deps: SearchDeps = {}): Promise<SearchSummary> {
+/** The sector's businesses from the list, in its fixed order. */
+export function sectorEntries(data: OsmDataset, sector: string) {
+  return data.entries.filter((e) => e.sectors.includes(sector));
+}
+
+/**
+ * Looks at the next businesses of the sector from `cursor` on and stops at MAX_AUDIT sites to check (or MAX_SEARCH
+ * looked at). Anything already in the CRM is left out before any site is read. nextCursor picks up right after the
+ * last business looked at, so nothing is skipped and nothing repeats until the list is started again.
+ */
+export async function searchBatch(sector: string, cursor = 0, deps: SearchDeps = {}): Promise<SearchSummary> {
   if (!SECTORS.some((s) => s.key === sector)) throw new UnknownSectorError(sector);
   const summary: SearchSummary = {
     sector, searchedAt: new Date().toISOString(), found: 0,
-    skipped: { noWebsite: 0, inCrm: 0, possibleDuplicate: 0, sameSiteInBatch: 0, overLimit: 0 },
-    candidates: [], sourceError: null,
+    skipped: { noWebsite: 0, inCrm: 0, possibleDuplicate: 0, sameSiteInBatch: 0 },
+    candidates: [], progress: { from: cursor, to: cursor, total: 0, nextCursor: null }, dataset: null, sourceError: null,
   };
 
-  let found: DiscoveryCandidate[];
+  let data: OsmDataset;
   try {
-    found = await (deps.search ?? ((s) => new OsmProvider().search({ city: BATCH_CITY, sector: s, neighborhood: null, keyword: null })))(sector);
-  } catch {
-    summary.sourceError = "OpenStreetMap didn't answer (busy or rate-limited). Try again in a minute.";
+    data = await (deps.dataset ?? loadDataset)();
+  } catch (err) {
+    summary.sourceError = err instanceof DatasetMissingError
+      ? "The Marrakech business list isn't installed on this server (npm run osm:marrakech). Nothing was searched."
+      : "The Marrakech business list couldn't be read. Nothing was searched.";
     return summary;
   }
-  found = found.filter((c) => c.source === "OSM").slice(0, MAX_SEARCH);
-  summary.found = found.length;
+  summary.dataset = { osmDataUntil: data.osmDataUntil, generatedAt: data.generatedAt };
+  const list = sectorEntries(data, sector);
+  const start = Math.min(Math.max(0, Math.floor(cursor)), list.length);
+  summary.progress = { from: start, to: start, total: list.length, nextCursor: start < list.length ? start : null };
+  if (start >= list.length) return summary;
 
   let crm: CrmRow[];
   try {
@@ -83,7 +104,10 @@ export async function searchBatch(sector: string, deps: SearchDeps = {}): Promis
   }
 
   const seenSites = new Set<string>();
-  for (const c of found) {
+  let i = start;
+  for (; i < list.length && summary.found < MAX_SEARCH && summary.candidates.length < MAX_AUDIT; i++) {
+    const c = toCandidate(list[i], sector);
+    summary.found++;
     const website = normalizeSiteUrl(c.website ?? "");
     const key = website ? siteKey(website) : null;
     if (!website || !key) { summary.skipped.noWebsite++; continue; }
@@ -92,9 +116,9 @@ export async function searchBatch(sector: string, deps: SearchDeps = {}): Promis
     const { status } = classify({ ...c, website }, crm);
     if (status === "EXISTS") { summary.skipped.inCrm++; continue; }
     if (status === "POSSIBLE") { summary.skipped.possibleDuplicate++; continue; }
-    if (summary.candidates.length >= MAX_AUDIT) { summary.skipped.overLimit++; continue; }
     summary.candidates.push({ ...c, website });
   }
+  summary.progress = { from: start, to: i, total: list.length, nextCursor: i < list.length ? i : null };
   return summary;
 }
 

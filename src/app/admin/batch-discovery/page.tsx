@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, Search, ExternalLink } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { SECTORS } from "@/lib/discovery-providers";
@@ -66,12 +66,16 @@ function ResultCard({ a, rank }: { a: AuditedCandidate; rank: number }) {
       </ul>
       {a.otherProblems.length > 0 && <p className={`${small} mt-1`}>Also {a.otherProblems.length} minor technical {a.otherProblems.length === 1 ? "issue" : "issues"} ({a.otherProblems.map((p) => p.check).join(", ")}).</p>}
 
-      <p className="text-[12px] font-medium text-[var(--os-text)] mt-3">WhatsApp · <span className="text-amber-700">UNVERIFIED</span></p>
-      <p className={small}>{a.whatsapp.link ? `${a.whatsapp.link} · ` : ""}{CONFIDENCE[a.whatsapp.confidence]}</p>
+      <p className="text-[12px] font-medium text-[var(--os-text)] mt-3">Contacts · <span className="text-amber-700">UNVERIFIED</span>, none checked yet</p>
+      <p className={small}>WhatsApp: {a.whatsapp.link ? `${a.whatsapp.link} · ` : ""}{CONFIDENCE[a.whatsapp.confidence]}</p>
       {a.whatsapp.sources.map((s) => (
-        <p key={`${s.kind}${s.url}${s.link}`} className={`${small} break-all`}>{s.kind === "OSM_TAG" ? "OpenStreetMap tag" : "Linked on the website"}: {s.link} · {s.url}</p>
+        <p key={`${s.kind}${s.url}${s.link}`} className={`${small} break-all`}>
+          {s.kind === "OSM_TAG" ? "Tagged on OpenStreetMap" : "Found on the website"} · not checked: {s.link} · {s.url}
+        </p>
       ))}
+      {c.instagram && <p className={`${small} break-all`}>Instagram · tagged on OpenStreetMap · not checked: {c.instagram}</p>}
       {c.phone && <p className={small}>Phone (not checked for WhatsApp): {c.phone}</p>}
+      <p className={`${small} italic`}>A contact becomes Verified only when a person opens it on the prospect page and confirms it is this business.</p>
 
       <div className="flex flex-wrap items-center gap-3 mt-3">
         {c.mapsUrl && (
@@ -89,8 +93,21 @@ function ResultCard({ a, rank }: { a: AuditedCandidate; rank: number }) {
   );
 }
 
+type Info = { installed: boolean; osmDataUntil?: string | null; generatedAt?: string; withWebsite?: Record<string, number> };
+
+/** Where each sector's list was left, per viewer and per version of the list. A convenience only. */
+const cursorKey = (info: Info | null) => `batch-discovery-cursors:${info?.generatedAt ?? "none"}`;
+function readCursors(info: Info | null): Record<string, number | null> {
+  try { return JSON.parse(localStorage.getItem(cursorKey(info)) ?? "{}") ?? {}; } catch { return {}; }
+}
+function saveCursors(info: Info | null, c: Record<string, number | null>) {
+  try { localStorage.setItem(cursorKey(info), JSON.stringify(c)); } catch { /* private window: the list starts again next visit */ }
+}
+
 export default function BatchDiscoveryPage() {
   const [sector, setSector] = useState(SECTORS[0].key);
+  const [info, setInfo] = useState<Info | null>(null);
+  const [cursors, setCursors] = useState<Record<string, number | null>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [summary, setSummary] = useState<SearchSummary | null>(null);
   const [audited, setAudited] = useState<AuditedCandidate[]>([]);
@@ -104,13 +121,30 @@ export default function BatchDiscoveryPage() {
     return data;
   }
 
+  useEffect(() => {
+    post({ action: "info" }).then((i: Info) => { setInfo(i); setCursors(readCursors(i)); }).catch(() => setInfo(null));
+  }, []);
+
+  const cursor = cursors[sector];
+  const finished = cursor === null;
+
+  function startAgain() {
+    const next = { ...cursors, [sector]: 0 };
+    setCursors(next); saveCursors(info, next); setSummary(null); setAudited([]);
+  }
+
   async function run(e: React.FormEvent) {
     e.preventDefault();
+    if (finished) return;
     setError(null); setSummary(null); setAudited([]); setFailedChunks(0);
     try {
-      setBusy("Searching OpenStreetMap…");
-      const s: SearchSummary = await post({ action: "search", sector });
+      setBusy("Reading the Marrakech list…");
+      const s: SearchSummary = await post({ action: "search", sector, cursor: cursor ?? 0 });
       setSummary(s);
+      if (!s.sourceError) {
+        const next = { ...cursors, [sector]: s.progress.nextCursor };
+        setCursors(next); saveCursors(info, next);
+      }
       // Small steps, one after another: each request checks at most three sites.
       for (let i = 0; i < s.candidates.length; i += AUDIT_CHUNK) {
         const chunk: BatchCandidate[] = s.candidates.slice(i, i + AUDIT_CHUNK);
@@ -135,17 +169,32 @@ export default function BatchDiscoveryPage() {
 
   return (
     <div className="max-w-3xl">
-      <PageHeader title="Find businesses" subtitle="Marrakech businesses from OpenStreetMap, not yet in the CRM, ranked by website problems a customer would notice. Nothing is saved until you import one." />
+      <PageHeader title="Find businesses" subtitle="Marrakech businesses from a private OpenStreetMap list, not yet in the CRM, ranked by website problems a customer would notice. Each search continues where the last one stopped. Nothing is saved until you import one." />
+
+      {info && !info.installed && <p className="text-[13px] text-amber-700 mb-3">The Marrakech business list isn&apos;t installed on this server, so searches return nothing.</p>}
+      {info?.installed && (
+        <p className={`${small} mb-3`}>List built {when(info.generatedAt ?? "")} from OpenStreetMap data up to {info.osmDataUntil ? when(info.osmDataUntil) : "an unknown date"}.</p>
+      )}
 
       <form onSubmit={run} className={`${card} flex flex-col sm:flex-row gap-2 mb-4`}>
         <select value={sector} onChange={(e) => setSector(e.target.value)} aria-label="Sector"
           className="flex-1 rounded-lg border border-[var(--os-border)] bg-[var(--os-bg)] px-3 py-2 text-[14px] text-[var(--os-text)]">
-          {SECTORS.map((s) => <option key={s.key} value={s.key}>{s.label} ({s.category})</option>)}
+          {SECTORS.map((s) => (
+            <option key={s.key} value={s.key}>
+              {s.label} ({s.category}){info?.withWebsite ? ` · ${info.withWebsite[s.key] ?? 0} with a website` : ""}
+            </option>
+          ))}
         </select>
-        <button type="submit" disabled={!!busy} className="px-4 py-2 rounded-lg bg-[var(--os-purple)] text-white text-[13px] font-medium inline-flex items-center justify-center gap-2 disabled:opacity-60">
-          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} Find in Marrakech
+        <button type="submit" disabled={!!busy || finished} className="px-4 py-2 rounded-lg bg-[var(--os-purple)] text-white text-[13px] font-medium inline-flex items-center justify-center gap-2 disabled:opacity-60">
+          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} {cursor ? "Find the next ones" : "Find in Marrakech"}
         </button>
       </form>
+      {(cursor || finished) && !busy && (
+        <p className={`${small} mb-3`}>
+          {finished ? "You have been through every business in this sector's list. " : `Continuing from business ${(cursor ?? 0) + 1} of this sector's list. `}
+          <button type="button" onClick={startAgain} className="underline text-[var(--os-purple)]">Start again from the first</button>
+        </p>
+      )}
 
       {busy && <p className={`${small} mb-3`}>{busy}</p>}
       {error && <p className="text-[13px] text-red-600 mb-3">{error}</p>}
@@ -154,10 +203,11 @@ export default function BatchDiscoveryPage() {
         <div className={`${card} mb-4`}>
           {summary.sourceError && <p className="text-[13px] text-amber-700 mb-2">{summary.sourceError}</p>}
           <p className="text-[13px] text-[var(--os-text)]">
-            {summary.found} found · {summary.skipped.noWebsite} without a website · {summary.skipped.inCrm} already in the CRM
+            {summary.progress.total > 0 && `Businesses ${summary.progress.from + 1}–${summary.progress.to} of ${summary.progress.total} · `}
+            {summary.found} looked at · {summary.skipped.inCrm} already in the CRM
             {summary.skipped.possibleDuplicate > 0 && ` · ${summary.skipped.possibleDuplicate} possible duplicates`}
             {summary.skipped.sameSiteInBatch > 0 && ` · ${summary.skipped.sameSiteInBatch} sharing a website`}
-            {summary.skipped.overLimit > 0 && ` · ${summary.skipped.overLimit} over the limit of 10`}
+            {summary.skipped.noWebsite > 0 && ` · ${summary.skipped.noWebsite} without a usable website`}
             {" "}· {summary.candidates.length} websites to check
           </p>
           {audited.length > 0 && (
@@ -180,6 +230,7 @@ export default function BatchDiscoveryPage() {
 
       <p className={`${small} mb-8`}>
         Business data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline">OpenStreetMap contributors</a>, available under the Open Database Licence.
+        The list is a private extract of the Geofabrik Morocco file; no live OpenStreetMap service is called.
         Websites are read with the safe website check, which follows each site&apos;s robots.txt. Contacts are never verified here.
       </p>
     </div>

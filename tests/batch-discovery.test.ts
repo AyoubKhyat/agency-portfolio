@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import type { SafeFetch, SafeResponse } from "../src/lib/website-audit/safe-fetch";
 import type { DiscoveryCandidate } from "../src/lib/discovery-providers";
 import type { AuditedCandidate, BatchCandidate } from "../src/lib/batch-discovery";
+import type { OsmDataset, OsmEntry } from "../src/lib/osm-dataset";
 
 const read = (rel: string) => readFileSync(new URL(`../${rel}`, import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
@@ -27,32 +28,69 @@ const crmRow = (over: Record<string, string>) => ({
   whatsappStatus: "UNVERIFIED", instagramStatus: "UNVERIFIED", ...over,
 });
 
-test("search: at most 30 looked at; no website, CRM matches, possible duplicates and repeats left out; at most 10 to check", async () => {
-  const found = [
-    osm(1, { website: null }),
-    osm(2, { website: "https://www.in-crm.ma/fr" }),
-    osm(3, { phone: "+212612345678" }),
-    osm(4, { name: "Riad Jardin Majorelle", website: "https://jardin.ma" }),
-    osm(5, { website: "https://riad6.ma" }), osm(6), // same site twice in the batch
-    ...Array.from({ length: 29 }, (_, i) => osm(100 + i)),
-  ];
-  const crm = [crmRow({ id: "a", name: "Old", website: "https://in-crm.ma" }), crmRow({ id: "b", name: "Phone", phone: "0612345678" }), crmRow({ id: "d", name: "Jardin Majorelle Spa", sector: "RIADS" })];
-  const s = await mod.searchBatch("RIADS", { search: async () => found, loadCrm: async () => crm });
-  assert.equal(s.found, 30);
-  assert.equal(s.candidates.length, 10);
-  assert.deepEqual(s.skipped, { noWebsite: 1, inCrm: 2, possibleDuplicate: 1, sameSiteInBatch: 1, overLimit: 15 });
-  assert.equal(s.sourceError, null);
-  assert.ok(s.candidates.every((c) => /^https:\/\//.test(c.website)));
+const entry = (i: number, over: Partial<OsmEntry> = {}): OsmEntry => ({ id: `node/${i}`, name: `Riad ${i}`, sectors: ["RIADS"], website: `https://riad${i}.ma`, ...over });
+const dataset = (entries: OsmEntry[]): OsmDataset => ({
+  version: 1, city: "Marrakech", source: "test", licence: "test", boundary: { wikidata: "Q101625", relation: 1, name: "Marrakesh" },
+  osmDataUntil: "2026-11-09T21:22:17Z", generatedAt: "2026-11-11T10:00:00Z", sectors: {}, sharedWebsites: 0, entries,
 });
 
-test("search: a failing source gives an honest partial (empty) result; unknown sectors are refused", async () => {
-  const osmDown = await mod.searchBatch("RIADS", { search: async () => { throw new Error("429"); }, loadCrm: async () => [] });
-  assert.match(osmDown.sourceError ?? "", /OpenStreetMap/);
-  assert.equal(osmDown.candidates.length, 0);
-  const crmDown = await mod.searchBatch("RIADS", { search: async () => [osm(1)], loadCrm: async () => { throw new Error("db"); } });
+test("search: CRM matches, possible duplicates and repeats left out; at most 10 to check; other sectors ignored", async () => {
+  const list = [
+    entry(1, { website: "" }),
+    entry(2, { website: "https://www.in-crm.ma/fr" }),
+    entry(4, { name: "Riad Jardin Majorelle", website: "https://jardin.ma" }),
+    entry(5, { website: "https://riad6.ma" }), entry(6), // same site twice in the batch
+    entry(7, { sectors: ["HOTELS"] }),
+    ...Array.from({ length: 29 }, (_, i) => entry(100 + i)),
+  ];
+  const crm = [crmRow({ id: "a", name: "Old", website: "https://in-crm.ma" }), crmRow({ id: "d", name: "Jardin Majorelle Spa", sector: "RIADS" })];
+  const s = await mod.searchBatch("RIADS", 0, { dataset: async () => dataset(list), loadCrm: async () => crm });
+  assert.equal(s.candidates.length, 10);
+  assert.deepEqual(s.skipped, { noWebsite: 1, inCrm: 1, possibleDuplicate: 1, sameSiteInBatch: 1 });
+  assert.equal(s.found, 14, "stops as soon as 10 sites to check are found");
+  assert.deepEqual(s.progress, { from: 0, to: 14, total: 34, nextCursor: 14 });
+  assert.equal(s.sourceError, null);
+  assert.ok(s.candidates.every((c) => /^https:\/\//.test(c.website) && c.sector === "RIADS" && c.phone === null && c.email === null));
+  assert.ok(s.candidates.every((c) => c.mapsUrl === `https://www.openstreetmap.org/${c.sourceId}`));
+});
+
+test("search: repeated searches move through the list, never the same businesses, until the end", async () => {
+  const data = dataset(Array.from({ length: 25 }, (_, i) => entry(i + 1)));
+  const deps = { dataset: async () => data, loadCrm: async () => [] };
+  const seen: string[] = [];
+  let cursor: number | null = 0;
+  let rounds = 0;
+  while (cursor !== null) {
+    const s = await mod.searchBatch("RIADS", cursor, deps);
+    seen.push(...s.candidates.map((c) => c.sourceId));
+    cursor = s.progress.nextCursor;
+    rounds++;
+  }
+  assert.equal(rounds, 3);
+  assert.equal(new Set(seen).size, 25, "every business once, none twice");
+  assert.equal(seen.length, 25);
+  const past = await mod.searchBatch("RIADS", 999, deps);
+  assert.deepEqual([past.candidates.length, past.progress.nextCursor], [0, null]);
+  // Mostly in the CRM already: 30 looked at at most per search, then the next search carries on.
+  const crowded = dataset(Array.from({ length: 40 }, (_, i) => entry(i + 1)));
+  const inCrm = crowded.entries.slice(0, 35).map((e, i) => crmRow({ id: `c${i}`, name: `X${i}`, website: e.website }));
+  const first = await mod.searchBatch("RIADS", 0, { dataset: async () => crowded, loadCrm: async () => inCrm });
+  assert.deepEqual([first.found, first.candidates.length, first.progress.nextCursor], [30, 0, 30]);
+  const second = await mod.searchBatch("RIADS", 30, { dataset: async () => crowded, loadCrm: async () => inCrm });
+  assert.deepEqual(second.candidates.map((c) => c.sourceId), ["node/36", "node/37", "node/38", "node/39", "node/40"]);
+  assert.equal(second.progress.nextCursor, null);
+});
+
+test("search: a missing list or CRM gives an honest empty result; unknown sectors are refused", async () => {
+  const { DatasetMissingError } = await import("../src/lib/osm-dataset");
+  const missing = await mod.searchBatch("RIADS", 0, { dataset: async () => { throw new DatasetMissingError("x"); }, loadCrm: async () => [] });
+  assert.match(missing.sourceError ?? "", /isn't installed/);
+  assert.equal(missing.candidates.length, 0);
+  const crmDown = await mod.searchBatch("RIADS", 0, { dataset: async () => dataset([entry(1)]), loadCrm: async () => { throw new Error("db"); } });
   assert.match(crmDown.sourceError ?? "", /CRM/);
   assert.equal(crmDown.candidates.length, 0, "nothing is checked when duplicates can't be ruled out");
-  await assert.rejects(mod.searchBatch("NOPE", { search: async () => [], loadCrm: async () => [] }), mod.UnknownSectorError);
+  assert.equal(crmDown.progress.nextCursor, 0, "the cursor does not move when nothing was looked at");
+  await assert.rejects(mod.searchBatch("NOPE", 0, { dataset: async () => dataset([]), loadCrm: async () => [] }), mod.UnknownSectorError);
 });
 
 test("WhatsApp confidence: explicit links only, never a phone; always UNVERIFIED", () => {
@@ -131,8 +169,12 @@ test("no AI, no paid API, no writes, no messages; owner/admin only; bounded step
   for (const src of [lib, route, pageSrc, read("src/lib/batch-rank.ts")]) {
     assert.doesNotMatch(src, /\.(create|createMany|update|updateMany|upsert|delete|deleteMany)\(|\$executeRaw|\$transaction/, "no database writes");
     assert.doesNotMatch(src, /anthropic|groq|openai|gemini|@\/lib\/ai\b|getAiProvider|GooglePlaces|getDiscoveryProvider|wa\.me\/\$\{/i, "no AI, no Google, no link built from a phone");
+    assert.doesNotMatch(src, /OsmProvider|callOverpass|overpass-api|\/interpreter/i, "no live OpenStreetMap call");
   }
-  assert.match(lib, /new OsmProvider\(\)/);
+  assert.match(lib, /loadDataset/);
+  assert.match(pageSrc, /Found on the website/);
+  assert.match(pageSrc, /Verified only when a person opens it/);
+  assert.match(pageSrc, /nextCursor/);
   assert.match(route, /requireOwnerOrAdmin\(\)/);
   assert.match(route, /export const maxDuration = 60/);
   assert.match(route, /candidates: z\.array\(candidate\)\.min\(1\)\.max\(AUDIT_CHUNK\)/);

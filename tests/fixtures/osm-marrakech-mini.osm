@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Invented test data in OSM XML form (no real businesses). Boundary square ≈ central Marrakech. -->
+<osm version="0.6" generator="fixture">
+  <node id="1" lat="31.60" lon="-8.05" version="1"/>
+  <node id="2" lat="31.60" lon="-7.95" version="1"/>
+  <node id="3" lat="31.68" lon="-7.95" version="1"/>
+  <node id="4" lat="31.68" lon="-8.05" version="1"/>
+  <way id="10" version="1"><nd ref="1"/><nd ref="2"/><nd ref="3"/><nd ref="4"/><nd ref="1"/></way>
+  <relation id="20" version="1">
+    <member type="way" ref="10" role="outer"/>
+    <tag k="type" v="boundary"/><tag k="boundary" v="administrative"/><tag k="admin_level" v="8"/>
+    <tag k="name" v="Fixture Marrakesh"/><tag k="wikidata" v="Q101625"/>
+  </relation>
+  <node id="101" lat="31.63" lon="-7.99" version="1">
+    <tag k="tourism" v="guest_house"/><tag k="name" v="Riad Fixture"/><tag k="website" v="riad-fixture.example"/>
+    <tag k="contact:whatsapp" v="+212 612 345 678"/><tag k="phone" v="+212 524 000 000"/><tag k="email" v="owner@riad-fixture.example"/>
+    <tag k="opening_hours" v="24/7"/><tag k="addr:street" v="Derb Fixture"/>
+  </node>
+  <node id="102" lat="31.64" lon="-7.99" version="1"><tag k="tourism" v="hotel"/><tag k="name" v="Hotel No Site"/></node>
+  <node id="103" lat="31.64" lon="-7.50" version="1"><tag k="amenity" v="restaurant"/><tag k="name" v="Outside Restaurant"/><tag k="website" v="https://outside.example"/></node>
+  <node id="104" lat="31.65" lon="-7.99" version="1"><tag k="amenity" v="cafe"/><tag k="website" v="https://unnamed.example"/></node>
+  <node id="105" lat="31.65" lon="-8.00" version="1"><tag k="amenity" v="restaurant"/><tag k="name" v="Riad Fixture Restaurant"/><tag k="website" v="https://www.riad-fixture.example/restaurant"/></node>
+  <node id="106" lat="31.66" lon="-8.01" version="1"><tag k="shop" v="hairdresser"/><tag k="name" v="Barber Fixture"/><tag k="website" v="http://barber.example"/><tag k="phone" v="0612345679"/></node>
+  <node id="107" lat="31.66" lon="-8.02" version="1"><tag k="tourism" v="hotel"/><tag k="name" v="Hotel Atlas Fixture"/><tag k="website" v="https://atlas.example"/></node>
+  <node id="111" lat="31.61" lon="-8.03" version="1"/>
+  <node id="112" lat="31.61" lon="-8.02" version="1"/>
+  <node id="113" lat="31.62" lon="-8.02" version="1"/>
+  <way id="201" version="1"><nd ref="111"/><nd ref="112"/><nd ref="113"/><nd ref="111"/>
+    <tag k="tourism" v="hotel"/><tag k="name" v="Riad Way Fixture"/><tag k="website" v="https://riad-way.example"/><tag k="contact:instagram" v="https://www.instagram.com/riadwayfixture"/>
+  </way>
+</osm>

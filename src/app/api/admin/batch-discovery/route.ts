@@ -4,13 +4,14 @@ import { requireOwnerOrAdmin } from "@/lib/authz";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { SITE_URL_MAX } from "@/lib/diagnosis";
 import { AUDIT_CHUNK, UnknownSectorError, auditChunk, searchBatch } from "@/lib/batch-discovery";
+import { DatasetMissingError, loadDataset } from "@/lib/osm-dataset";
 
-/** Each step is short: one Overpass query, or at most AUDIT_CHUNK site checks side by side. */
+/** Each step is short: one read of the local list plus the CRM, or at most AUDIT_CHUNK site checks side by side. */
 export const maxDuration = 60;
 
-/** Overpass asks for moderate use: a few searches a minute, for one user and for the whole app. */
-const searchPerUser = createRateLimiter({ max: 3, windowMs: 60_000 });
-const searchGlobal = createRateLimiter({ max: 6, windowMs: 60_000 });
+/** Each search reads the CRM; a few a minute is plenty, for one user and for the whole app. */
+const searchPerUser = createRateLimiter({ max: 6, windowMs: 60_000 });
+const searchGlobal = createRateLimiter({ max: 12, windowMs: 60_000 });
 /** Ten sites take four audit steps; allow a retry or two. */
 const auditPerUser = createRateLimiter({ max: 8, windowMs: 60_000 });
 
@@ -34,7 +35,8 @@ const candidate = z.object({
 }).strict();
 
 const schema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("search"), sector: z.string().min(1).max(60) }).strict(),
+  z.object({ action: z.literal("info") }).strict(),
+  z.object({ action: z.literal("search"), sector: z.string().min(1).max(60), cursor: z.number().int().min(0).max(1_000_000).default(0) }).strict(),
   z.object({ action: z.literal("audit"), candidates: z.array(candidate).min(1).max(AUDIT_CHUNK) }).strict(),
 ]);
 
@@ -50,11 +52,22 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
   try {
+    if (parsed.data.action === "info") {
+      // How many businesses with a website each sector has, and how fresh the list is. No business data.
+      try {
+        const d = await loadDataset();
+        const withWebsite = Object.fromEntries(Object.entries(d.sectors).map(([k, v]) => [k, v.withWebsite]));
+        return NextResponse.json({ installed: true, osmDataUntil: d.osmDataUntil, generatedAt: d.generatedAt, withWebsite });
+      } catch (err) {
+        if (err instanceof DatasetMissingError) return NextResponse.json({ installed: false });
+        throw err;
+      }
+    }
     if (parsed.data.action === "search") {
       if (!searchPerUser.check(auth.session.userId).allowed || !searchGlobal.check("all").allowed) {
-        return NextResponse.json({ error: "OpenStreetMap is used sparingly. Wait a minute before searching again." }, { status: 429 });
+        return NextResponse.json({ error: "Too many searches. Wait a minute before searching again." }, { status: 429 });
       }
-      return NextResponse.json(await searchBatch(parsed.data.sector));
+      return NextResponse.json(await searchBatch(parsed.data.sector, parsed.data.cursor));
     }
     if (!auditPerUser.check(auth.session.userId).allowed) {
       return NextResponse.json({ error: "Too many checks. Wait a minute." }, { status: 429 });

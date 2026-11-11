@@ -59,3 +59,7 @@ team-credentials.html
 
 # Internal QA records, kept outside the public repository
 /qa/
+
+# private OSM extracts (public repo): build with npm run osm:marrakech
+/data/osm/
+*.osm.pbf
