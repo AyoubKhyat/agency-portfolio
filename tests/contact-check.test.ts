@@ -61,3 +61,15 @@ test("no automated probe of Instagram or WhatsApp", () => {
     assert.doesNotMatch(read(f), /\bfetch\(|safeFetch|auditWebsite|prisma/, f);
   }
 });
+
+test("no shortcut marks a contact VERIFIED: every place uses the open-then-check row", () => {
+  for (const f of ["src/components/admin/prospect-drawer.tsx", "src/app/admin/prospecting/[id]/page.tsx"]) {
+    const src = read(f);
+    assert.doesNotMatch(src, /setChannelStatus\("(whatsappStatus|instagramStatus)", "VERIFIED"\)/, `${f}: no one-click confirm`);
+    assert.doesNotMatch(src, /(whatsappStatus|instagramStatus): "VERIFIED"/, `${f}: no hard-coded VERIFIED`);
+    assert.match(src, /<ContactCheck channel="WHATSAPP"/, f);
+    assert.match(src, /<ContactCheck channel="INSTAGRAM"/, f);
+    assert.match(src, /\.\.\.CONTACT_CHECK_LABELS/, `${f}: checks read clearly in the history`);
+  }
+  assert.match(read("src/components/admin/prospect-drawer.tsx"), /onClick=\{goToContactChecks\}/, "the header icons only lead to the check");
+});

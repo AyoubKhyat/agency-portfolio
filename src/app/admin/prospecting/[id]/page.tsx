@@ -8,7 +8,7 @@ import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import AvatarChip from "@/components/AvatarChip";
 import { PlaybookPanel } from "./PlaybookPanel";
 import { ContactCheck } from "@/components/admin/contact-check";
-import { lastContactCheck, type ContactCheckStatus } from "@/lib/contact-check";
+import { CONTACT_CHECK_LABELS, lastContactCheck, type ContactCheckStatus } from "@/lib/contact-check";
 
 const STATUSES = ["A_ENVOYER", "ENVOYE", "REPONDU", "PAS_DE_WHATSAPP", "CONVERTI"];
 const STATUS_LABELS: Record<string, string> = { A_ENVOYER: "To Send", ENVOYE: "Sent", REPONDU: "Replied", PAS_DE_WHATSAPP: "No WhatsApp", CONVERTI: "Converted" };
@@ -25,8 +25,7 @@ const ACTION_LABELS: Record<string, string> = {
   FOLLOW_UP: "sent follow-up", MARKED_REPLIED: "marked as replied", MARKED_NO_WHATSAPP: "marked no WhatsApp",
   STATUS_ENVOYE: "changed status to Sent", STATUS_REPONDU: "marked as replied", STATUS_CONVERTI: "converted to lead",
   NOTE_ADDED: "added a note", UPDATED: "updated details",
-  CONFIRMED_WHATSAPP: "opened WhatsApp: matches the business", UNAVAILABLE_WHATSAPP: "opened WhatsApp: not usable", UNCONFIRMED_WHATSAPP: "cleared the WhatsApp check",
-  CONFIRMED_INSTAGRAM: "opened Instagram: matches the business", UNAVAILABLE_INSTAGRAM: "opened Instagram: not usable", UNCONFIRMED_INSTAGRAM: "cleared the Instagram check",
+  ...CONTACT_CHECK_LABELS,
 };
 
 type Note = { id: string; content: string; createdAt: string };
@@ -173,7 +172,7 @@ export default function ProspectDetailPage() {
         <div className="mt-5">
           <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">Contact checks</p>
           <div className="grid gap-2">
-            <ContactCheck channel="WHATSAPP" value={prospect.whatsappLink} status={prospect.whatsappStatus}
+            <ContactCheck channel="WHATSAPP" value={prospect.whatsappLink} phone={prospect.phone} status={prospect.whatsappStatus}
               lastCheck={lastContactCheck(prospect.activities, "WHATSAPP")} onSet={(s) => handleContactCheck("whatsappStatus", s)} />
             <ContactCheck channel="INSTAGRAM" value={prospect.instagram} status={prospect.instagramStatus}
               lastCheck={lastContactCheck(prospect.activities, "INSTAGRAM")} onSet={(s) => handleContactCheck("instagramStatus", s)} />

@@ -16,9 +16,11 @@ const BADGE: Record<ContactCheckStatus, string> = {
  * One contact, checked by a person: open it, then say what you saw. Nothing is checked automatically.
  * `value` is the stored WhatsApp link or Instagram handle; a phone number alone is never turned into a link.
  */
-export function ContactCheck({ channel, value, status, lastCheck, onSet }: {
+export function ContactCheck({ channel, value, phone = "", status, lastCheck, onSet }: {
   channel: ContactChannel;
   value: string;
+  /** WhatsApp only: the saved phone, shown (never linked) when no WhatsApp link is saved. */
+  phone?: string;
   status: string;
   lastCheck: LastCheck;
   onSet: (next: ContactCheckStatus) => Promise<void>;
@@ -39,20 +41,20 @@ export function ContactCheck({ channel, value, status, lastCheck, onSet }: {
       <div className="flex flex-wrap items-center gap-2">
         <Icon className="w-4 h-4 text-gray-500" />
         <span className="text-[13px] font-medium text-gray-800">{label}</span>
-        <span className="text-[13px] text-gray-500 break-all">{value || "—"}</span>
+        <span className="text-[13px] text-gray-500 break-all">{value || phone || "—"}</span>
         <span className={`text-[11px] px-2 py-0.5 rounded-full border ${BADGE[current]}`}>{current} · {CHECK_TEXT[current]}</span>
       </div>
       <p className="text-[11px] text-gray-400 mt-1">
         {lastCheck ? `Last checked by ${lastCheck.userName}, ${new Date(lastCheck.at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}` : current === "UNVERIFIED" ? "No one has checked it yet." : "Who set this isn't in the recent activity (older change or a bulk cleanup)."}
       </p>
-      {value && (
+      {(value || phone) && (
         <div className="flex flex-wrap items-center gap-2 mt-2">
           {open ? (
             <a href={open} target="_blank" rel="noopener noreferrer nofollow" className="text-[12px] font-medium text-violet-600 hover:underline">
               Open link ↗
             </a>
           ) : (
-            <span className="text-[12px] text-gray-400">No link to open</span>
+            <span className="text-[12px] text-gray-400">{value ? "No link to open" : "No WhatsApp link saved: look the number up in WhatsApp yourself"}</span>
           )}
           <button type="button" disabled={saving || current === "VERIFIED"} onClick={() => set("VERIFIED")}
             className="px-2.5 py-1 rounded-lg border border-emerald-200 text-[12px] text-emerald-700 hover:bg-emerald-50 disabled:opacity-40">

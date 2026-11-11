@@ -33,6 +33,8 @@ import { MentionTextarea, HighlightedMentions } from "@/components/admin/mention
 import { ScheduleMeetingModal } from "@/components/admin/schedule-meeting-modal";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ContactCheck } from "@/components/admin/contact-check";
+import { CONTACT_CHECK_LABELS, lastContactCheck, type ContactCheckStatus } from "@/lib/contact-check";
 import { PROSPECT_SEGMENTS, SEGMENT_LABELS, SEGMENT_HINTS, SEGMENT_TOKENS, calcRelationshipStrength, type ProspectSegment } from "@/lib/prospect-segments";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -73,6 +75,7 @@ const ACTION_LABELS: Record<string, string> = {
   UPDATED: "updated details",
   BACKFILL_OWNERSHIP: "was attributed to",
   MEETING_BOOKED: "booked a meeting",
+  ...CONTACT_CHECK_LABELS,
   PROPOSAL_SENT: "sent a proposal",
   PROPOSAL_ACCEPTED: "proposal accepted",
 };
@@ -382,12 +385,11 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
     }
   }
 
-  // Manual contact verification. WhatsApp/Instagram can't be auto-verified
-  // (no scraping, no paid API), so the human confirms once, then the button
-  // appears. Toggling back to UNVERIFIED hides it again.
+  // A person's contact check, set only from the "Contact checks" rows after opening the link
+  // (no scraping, no paid API). The activity log records who and when.
   async function setChannelStatus(
     channel: "whatsappStatus" | "instagramStatus",
-    value: "VERIFIED" | "UNVERIFIED",
+    value: ContactCheckStatus,
   ) {
     if (!prospect) return;
     const res = await fetch(`/api/admin/prospecting/${prospect.id}`, {
@@ -399,7 +401,15 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
       const updated = await res.json();
       setProspect(updated);
       emitUpdate(updated);
+    } else {
+      alert("The check wasn't saved. Try again.");
     }
+  }
+
+  /** The header icons never confirm a contact: they take you to its check. */
+  function goToContactChecks() {
+    setSections((prev) => ({ ...prev, overview: true }));
+    setTimeout(() => document.getElementById("drawer-contact-checks")?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
   }
 
   async function handleAddNote(e: React.FormEvent) {
@@ -606,11 +616,12 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                       >
                         <FaWhatsapp className="w-4 h-4" />
                       </a>
-                    ) : prospect.phone ? (
+                    ) : prospect.phone || prospect.whatsappLink ? (
                       <button
-                        onClick={() => setChannelStatus("whatsappStatus", "VERIFIED")}
+                        onClick={goToContactChecks}
                         className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#F1F5F9] text-[#94A3B8] border border-dashed border-[#CBD5E1] hover:bg-green-50 hover:text-green-600 hover:border-green-300 transition-colors"
-                        title="Confirm WhatsApp — not verified. Click only after you've checked this number is on WhatsApp."
+                        title={`WhatsApp ${prospect.whatsappStatus === "UNAVAILABLE" ? "not usable" : "not checked"}. Go to Contact checks.`}
+                        aria-label="Go to the WhatsApp contact check"
                       >
                         <FaWhatsapp className="w-4 h-4" />
                       </button>
@@ -629,9 +640,10 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                         </a>
                       ) : (
                         <button
-                          onClick={() => setChannelStatus("instagramStatus", "VERIFIED")}
+                          onClick={goToContactChecks}
                           className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#F1F5F9] text-[#94A3B8] border border-dashed border-[#CBD5E1] hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300 transition-colors"
-                          title={`Confirm Instagram — not verified. Click only after you've checked @${prospect.instagram.replace(/^@/, "")} exists.`}
+                          title={`Instagram @${prospect.instagram.replace(/^@/, "")} ${prospect.instagramStatus === "UNAVAILABLE" ? "not usable" : "not checked"}. Go to Contact checks.`}
+                          aria-label="Go to the Instagram contact check"
                         >
                           <FaInstagram className="w-4 h-4" />
                         </button>
@@ -744,52 +756,13 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                             <p className="text-[11px] text-[#94A3B8] uppercase tracking-wider mb-0.5">Phone</p>
                             <p className="text-[13px] text-[#0F172A]">{prospect.phone || <span className="text-[#94A3B8]">--</span>}</p>
                           </div>
-                          <div>
-                            <p className="text-[11px] text-[#94A3B8] uppercase tracking-wider mb-0.5">WhatsApp</p>
-                            {prospect.whatsappStatus === "VERIFIED" && prospect.whatsappLink ? (
-                              <a
-                                href={prospect.whatsappLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[13px] text-green-600 hover:text-green-700 transition-colors truncate block"
-                              >
-                                Open link
-                              </a>
-                            ) : prospect.phone ? (
-                              <button
-                                onClick={() => setChannelStatus("whatsappStatus", "VERIFIED")}
-                                className="text-[13px] text-[#94A3B8] hover:text-green-600 underline decoration-dashed underline-offset-2 transition-colors"
-                              >
-                                Confirm WhatsApp
-                              </button>
-                            ) : (
-                              <span className="text-[13px] text-[#94A3B8]">--</span>
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-[11px] text-[#94A3B8] uppercase tracking-wider mb-0.5">Instagram</p>
-                            {prospect.instagram ? (
-                              prospect.instagramStatus === "VERIFIED" ? (
-                                <a
-                                  href={`https://instagram.com/${prospect.instagram.replace(/^@/, "")}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[13px] text-purple-600 hover:text-purple-700 transition-colors"
-                                >
-                                  @{prospect.instagram.replace(/^@/, "")}
-                                </a>
-                              ) : (
-                                <button
-                                  onClick={() => setChannelStatus("instagramStatus", "VERIFIED")}
-                                  className="text-[13px] text-[#94A3B8] hover:text-purple-600 underline decoration-dashed underline-offset-2 transition-colors"
-                                  title={`Confirm @${prospect.instagram.replace(/^@/, "")} exists before showing the link`}
-                                >
-                                  Confirm @{prospect.instagram.replace(/^@/, "")}
-                                </button>
-                              )
-                            ) : (
-                              <span className="text-[13px] text-[#94A3B8]">--</span>
-                            )}
+                          {/* A person opens each contact, then records what they saw. */}
+                          <div id="drawer-contact-checks" className="col-span-2 grid gap-2">
+                            <p className="text-[11px] text-[#94A3B8] uppercase tracking-wider">Contact checks</p>
+                            <ContactCheck channel="WHATSAPP" value={prospect.whatsappLink} phone={prospect.phone} status={prospect.whatsappStatus}
+                              lastCheck={lastContactCheck(prospect.activities ?? [], "WHATSAPP")} onSet={(s) => setChannelStatus("whatsappStatus", s)} />
+                            <ContactCheck channel="INSTAGRAM" value={prospect.instagram} status={prospect.instagramStatus}
+                              lastCheck={lastContactCheck(prospect.activities ?? [], "INSTAGRAM")} onSet={(s) => setChannelStatus("instagramStatus", s)} />
                           </div>
                           <div>
                             <p className="text-[11px] text-[#94A3B8] uppercase tracking-wider mb-0.5">Website</p>

@@ -27,6 +27,12 @@ export const CHECK_TEXT: Record<ContactCheckStatus, string> = {
   UNVERIFIED: "Not checked yet",
 };
 
+/** How each check reads in a prospect's activity history. */
+export const CONTACT_CHECK_LABELS: Record<string, string> = {
+  CONFIRMED_WHATSAPP: "opened WhatsApp: matches the business", UNAVAILABLE_WHATSAPP: "opened WhatsApp: not usable", UNCONFIRMED_WHATSAPP: "cleared the WhatsApp check",
+  CONFIRMED_INSTAGRAM: "opened Instagram: matches the business", UNAVAILABLE_INSTAGRAM: "opened Instagram: not usable", UNCONFIRMED_INSTAGRAM: "cleared the Instagram check",
+};
+
 /** The activity row that records a person's check: the audit record of who, what and when. */
 export function contactCheckActivity(channel: ContactChannel, previous: string | null | undefined, next: ContactCheckStatus) {
   return {
