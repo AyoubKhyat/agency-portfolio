@@ -98,8 +98,9 @@ export async function POST(req: Request) {
     );
   }
 
-  const digits = result.phone.replace(/\D/g, "");
-  const whatsappLink = digits ? `https://wa.me/${digits}` : "";
+  // A phone number is not a WhatsApp. This pipeline has no explicit WhatsApp link (its whatsappUrl is also
+  // built from the phone), so none is saved: the phone stays a phone, and a person adds and checks WhatsApp.
+  const whatsappLink = "";
   const qualityLabel = qualityLabelFromScore(result.opportunityScore);
   const segment = isProspectSegment(result.suggestedSegment) ? result.suggestedSegment : "LEGACY_COLD";
 
