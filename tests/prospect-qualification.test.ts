@@ -168,9 +168,10 @@ test("read-only and admin-only: no AI, no writes, no import, no message", () => 
   assert.match(route, /requireOwnerOrAdmin\(\)/);
   assert.match(route, /export async function POST/);
   assert.doesNotMatch(route, /export async function (GET|PUT|PATCH|DELETE)/);
-  assert.match(page, /FOUND_ON_SITE · not verified/);
+  assert.match(page, /FOUND_ON_SITE · not opened/);
   assert.match(page, /Only a person can mark a contact VERIFIED/);
   assert.doesNotMatch(page, /href=\{c\.link\}|href=\{p\.sourceUrl\}|href=\{c\.sourceUrl\}/, "addresses from someone else's site are shown, not linked");
+  assert.match(page, /contactOpenUrl\(/, "the only opened link is one rebuilt on wa.me or instagram.com");
 });
 
 test("page polish: singular problem, unbroken read time, top-bar title", () => {

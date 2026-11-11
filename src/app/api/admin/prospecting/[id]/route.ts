@@ -5,6 +5,7 @@ import { getProspectById, updateProspectStatus, updateProspect, deleteProspect, 
 import { resolveStatusChange } from "@/lib/prospect-status-guard";
 import { sendAlreadyLogged } from "@/lib/record-send";
 import { QUEUE_ACTIVITY_TYPES } from "@/lib/next-action";
+import { contactCheckActivity } from "@/lib/contact-check";
 import { z } from "zod";
 
 export async function GET(
@@ -88,14 +89,14 @@ export async function PATCH(
     }
   }
 
+  // A person's check of a contact. The activity row is the record of who checked, what they saw and when.
   if (parsed.data.whatsappStatus !== undefined) {
     await updateProspect(id, { whatsappStatus: parsed.data.whatsappStatus });
     await logProspectActivity({
       prospectId: id,
       userId: session.userId,
       userName: session.fullName,
-      actionType: parsed.data.whatsappStatus === "VERIFIED" ? "CONFIRMED_WHATSAPP" : "UNCONFIRMED_WHATSAPP",
-      details: `WhatsApp marked ${parsed.data.whatsappStatus}`,
+      ...contactCheckActivity("WHATSAPP", current.whatsappStatus, parsed.data.whatsappStatus),
     });
   }
 
@@ -105,8 +106,7 @@ export async function PATCH(
       prospectId: id,
       userId: session.userId,
       userName: session.fullName,
-      actionType: parsed.data.instagramStatus === "VERIFIED" ? "CONFIRMED_INSTAGRAM" : "UNCONFIRMED_INSTAGRAM",
-      details: `Instagram marked ${parsed.data.instagramStatus}`,
+      ...contactCheckActivity("INSTAGRAM", current.instagramStatus, parsed.data.instagramStatus),
     });
   }
 

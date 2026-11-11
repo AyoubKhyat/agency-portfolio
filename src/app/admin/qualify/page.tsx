@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Loader2, Search, AlertTriangle, HelpCircle, CheckCircle2, ExternalLink, Users } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import type { QualificationResult, FoundContact, ProspectMatch } from "@/lib/prospect-qualification";
+import { contactOpenUrl } from "@/lib/contact-check";
 
 const OUTCOME_TEXT: Record<QualificationResult["outcome"], string> = {
   COMPLETE: "Page read. The results below are from the page.",
@@ -43,17 +44,24 @@ function HumanStatus({ label, value }: { label: string; value: string }) {
 }
 
 function ContactRow({ c }: { c: FoundContact }) {
+  // Only our rebuilt wa.me / instagram.com address, never the site's raw link.
+  const open = c.link ? contactOpenUrl(c.channel, c.channel === "INSTAGRAM" ? c.value : c.link) : null;
   return (
     <li className="rounded-lg border border-[var(--os-border)] p-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[13px] font-medium text-[var(--os-text)]">{c.channel === "WHATSAPP" ? "WhatsApp" : "Instagram"}</span>
         <span className="text-[13px] text-[var(--os-text-muted)] break-all">{c.value || c.note}</span>
-        <span className="text-[11px] px-2 py-0.5 rounded-full border border-amber-300 text-amber-700" title="The site links to it. No one has confirmed it yet.">
-          FOUND_ON_SITE · not verified
+        <span className="text-[11px] px-2 py-0.5 rounded-full border border-amber-300 text-amber-700" title="The site links to it. No one has opened it yet; it may no longer exist.">
+          FOUND_ON_SITE · not opened
         </span>
       </div>
       {c.value && c.note && <p className={small}>{c.note}</p>}
       {c.link && <p className={`${small} break-all mt-1`}>Link: {c.link}</p>}
+      {open && (
+        <a href={open} target="_blank" rel="noopener noreferrer nofollow" className="text-[12px] font-medium text-[var(--os-purple)] hover:underline inline-flex items-center gap-1 mt-1">
+          Open link <ExternalLink className="w-3 h-3" />
+        </a>
+      )}
       <Source url={c.sourceUrl} fetchedAt={c.fetchedAt} />
     </li>
   );
