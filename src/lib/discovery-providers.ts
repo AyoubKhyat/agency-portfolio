@@ -154,6 +154,8 @@ export function normalizePhoneMA(raw: string | null | undefined): string | null 
   if (!raw) return null;
   let digits = raw.replace(/[^\d+]/g, "");
   if (digits.startsWith("00")) digits = "+" + digits.slice(2);
+  // Already international without the "+" (e.g. a wa.me/212… tag): don't add a second 212.
+  if (/^212\d{9}$/.test(digits)) digits = "+" + digits;
   if (digits.startsWith("0")) digits = "+212" + digits.slice(1);
   if (!digits.startsWith("+")) digits = "+212" + digits;
   return digits;

@@ -67,7 +67,7 @@ export async function POST(req: Request) {
 
   // Pull existing prospects scoped to this sector (broader than the search to catch cross-sector dups)
   const existing = await prisma.prospect.findMany({
-    select: { id: true, name: true, phone: true, instagram: true, whatsappLink: true, neighborhood: true, sector: true },
+    select: { id: true, name: true, phone: true, instagram: true, whatsappLink: true, neighborhood: true, sector: true, website: true, email: true },
   });
 
   const items: SearchResultItem[] = candidates.map((c) => {

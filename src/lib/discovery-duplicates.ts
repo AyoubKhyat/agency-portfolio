@@ -18,6 +18,9 @@ export type ExistingProspectLite = {
   whatsappLink: string;
   neighborhood: string;
   sector: string;
+  /** Optional so older callers still type-check; the import route always loads them. */
+  website?: string | null;
+  email?: string | null;
 };
 
 function normalize(s: string): string {
@@ -35,15 +38,36 @@ function phoneDigits(s: string | null | undefined): string | null {
   return d.length >= 8 ? d.slice(-9) : null; // last 9 digits — fine for MA numbers
 }
 
-function hostOf(url: string | null | undefined): string | null {
-  if (!url) return null;
+/** Sites many businesses share: there the first path segment is the business (facebook.com/riad-x). */
+const SHARED_HOSTS = new Set([
+  "facebook.com", "m.facebook.com", "fb.com", "instagram.com", "linktr.ee", "wa.me", "api.whatsapp.com",
+  "google.com", "maps.google.com", "goo.gl", "sites.google.com", "youtube.com", "tiktok.com", "linkedin.com",
+  "tripadvisor.com", "tripadvisor.fr", "booking.com", "airbnb.com",
+]);
+
+/**
+ * The business's own site: a normalized domain (no www, lower case). On a shared platform, the domain and the
+ * first path segment, so two different Facebook pages never count as one business. Null when there's no site.
+ */
+export function siteKey(url: string | null | undefined): string | null {
+  const raw = (url ?? "").trim();
+  if (!raw) return null;
   try {
-    const u = new URL(url.startsWith("http") ? url : `https://${url}`);
-    return u.hostname.replace(/^www\./, "");
+    const u = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    const host = u.hostname.toLowerCase().replace(/^www\./, "").replace(/\.$/, "");
+    if (!host.includes(".")) return null;
+    if (!SHARED_HOSTS.has(host)) return host;
+    const first = u.pathname.split("/").filter(Boolean)[0]?.toLowerCase();
+    return first ? `${host}/${first}` : null;
   } catch {
     return null;
   }
 }
+
+const emailKey = (s: string | null | undefined) => {
+  const e = (s ?? "").trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) ? e : null;
+};
 
 function instagramHandle(s: string | null | undefined): string | null {
   if (!s) return null;
@@ -57,7 +81,8 @@ export function classify(
 ): { status: DuplicateStatus; matchedId: string | null; reason: string | null } {
   const candPhone = phoneDigits(candidate.phone);
   const candIg = instagramHandle(candidate.instagram);
-  const candHost = hostOf(candidate.website);
+  const candSite = siteKey(candidate.website);
+  const candEmail = emailKey(candidate.email);
   const candName = normalize(candidate.name);
 
   for (const p of existing) {
@@ -75,6 +100,16 @@ export function classify(
         return { status: "EXISTS", matchedId: p.id, reason: "Same Instagram handle" };
       }
     }
+    // Strong signal: the same website (normalized domain)
+    if (candSite && siteKey(p.website) === candSite) {
+      return { status: "EXISTS", matchedId: p.id, reason: "Same website domain" };
+    }
+
+    // Strong signal: the same email address
+    if (candEmail && emailKey(p.email) === candEmail) {
+      return { status: "EXISTS", matchedId: p.id, reason: "Same email address" };
+    }
+
     // Strong signal: exact business name match
     if (candName && normalize(p.name) === candName) {
       return { status: "EXISTS", matchedId: p.id, reason: "Same business name" };
@@ -92,11 +127,6 @@ export function classify(
         return { status: "POSSIBLE", matchedId: p.id, reason: `Similar name + same sector` };
       }
     }
-  }
-
-  // Website host match (mid signal)
-  if (candHost) {
-    // we don't have website field on Prospect — skip
   }
 
   return { status: "NEW", matchedId: null, reason: null };

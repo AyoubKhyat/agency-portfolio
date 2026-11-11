@@ -71,6 +71,27 @@ export function checksClearedByEdit(current: ContactFields, next: Omit<ContactFi
   return out;
 }
 
+/**
+ * An explicit WhatsApp link, as a clean https://wa.me/<international digits>, or "" when the value isn't one.
+ * Only https wa.me/<number> or api.whatsapp.com/send?phone=<number>; a bare phone number is never turned into one.
+ */
+export function explicitWhatsAppLink(raw: string | null | undefined): string {
+  let url: URL;
+  try {
+    url = new URL((raw ?? "").trim());
+  } catch {
+    return "";
+  }
+  if (url.protocol !== "https:" || url.username || url.password) return "";
+  const host = url.hostname.toLowerCase().replace(/^www\./, "");
+  let number = "";
+  if (host === "wa.me") number = url.pathname.replace(/^\/+|\/+$/g, "");
+  else if (host === "api.whatsapp.com" && /^\/send\/?$/.test(url.pathname)) number = url.searchParams.get("phone") ?? "";
+  else return "";
+  number = number.replace(/^\+/, "");
+  return /^[1-9]\d{7,14}$/.test(number) ? `https://wa.me/${number}` : "";
+}
+
 /** The address a person should open to check. Only links we can rebuild on the real hosts; never a number from a phone field. */
 export function contactOpenUrl(channel: ContactChannel, value: string): string | null {
   if (channel === "INSTAGRAM") {

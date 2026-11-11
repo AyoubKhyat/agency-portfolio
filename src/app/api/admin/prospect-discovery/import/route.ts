@@ -7,6 +7,7 @@ import { computeQualityLabel } from "@/lib/prospect-quality";
 import { classify } from "@/lib/discovery-duplicates";
 import { CITIES, SECTORS, type DiscoveryCandidate } from "@/lib/discovery-providers";
 import { repairInstagram } from "@/lib/discovery/validate";
+import { explicitWhatsAppLink } from "@/lib/contact-check";
 
 const candidateSchema = z.object({
   sourceId: z.string(),
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
 
   // Re-check duplicates server-side. NEVER trust the client to bypass dup-check.
   const existing = await prisma.prospect.findMany({
-    select: { id: true, name: true, phone: true, instagram: true, whatsappLink: true, neighborhood: true, sector: true },
+    select: { id: true, name: true, phone: true, instagram: true, whatsappLink: true, neighborhood: true, sector: true, website: true, email: true },
   });
 
   const created: { id: string; name: string }[] = [];
@@ -92,7 +93,8 @@ export async function POST(req: Request) {
     // whatsapp link from the source counts, and even that is UNVERIFIED until
     // manually confirmed. No source-provided link → empty (button hidden).
     const phone = cand.phone || "";
-    const whatsappLink = cand.whatsapp || "";
+    // Only an explicit https wa.me / api.whatsapp.com link with a number; anything else is dropped.
+    const whatsappLink = explicitWhatsAppLink(cand.whatsapp);
     const website = cand.website || "";
     const email = cand.email || "";
     // Normalize to a bare handle so a later "Confirm Instagram" yields a valid
@@ -137,6 +139,9 @@ export async function POST(req: Request) {
         website,
         email,
         qualityLabel,
+        // Nobody has opened these yet: a person checks them on the prospect page.
+        whatsappStatus: "UNVERIFIED",
+        instagramStatus: "UNVERIFIED",
         status: "A_ENVOYER",
         priority: website ? 3 : (instagram ? 1 : 2),
         score: score.score,
@@ -163,6 +168,8 @@ export async function POST(req: Request) {
       whatsappLink,
       neighborhood: cand.neighborhood || "",
       sector: sectorLabel,
+      website,
+      email,
     });
   }
 
