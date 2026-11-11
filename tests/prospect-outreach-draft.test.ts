@@ -108,6 +108,9 @@ test("refused before any website is read: contacted, no VERIFIED channel, unveri
     [{ whatsappStatus: "UNAVAILABLE", instagram: "riad.atlas", instagramStatus: "UNAVAILABLE" }, "NO_VERIFIED_CHANNEL"],
     [{}, "NO_VERIFIED_CHANNEL", { channel: "INSTAGRAM" }],
     [{ website: "" }, "NO_WEBSITE"],
+    // A WhatsApp check on a bare phone number: nobody opened a saved link, so it can't be drafted to.
+    [{ whatsappLink: "" }, "NO_VERIFIED_CHANNEL"],
+    [{ whatsappLink: "https://evil.example/wa.me/212625461645" }, "NO_VERIFIED_CHANNEL"],
   ];
   for (const [over, code, extra] of cases) {
     const requested: string[] = [];

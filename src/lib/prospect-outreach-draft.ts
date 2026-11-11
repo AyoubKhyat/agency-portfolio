@@ -13,6 +13,7 @@ import { isContacted, latestSendAt } from "@/lib/prospect-stages";
 import { whatsappUrl, instagramUrl, type SendChannel } from "@/lib/next-action";
 import { analyzeMessage, type Warning } from "@/lib/message-quality";
 import { repairInstagram } from "@/lib/discovery/validate";
+import { contactOpenUrl } from "@/lib/contact-check";
 
 export type DraftLanguage = "fr" | "en" | "ar";
 export const MAX_FINDINGS = 2;
@@ -142,11 +143,14 @@ export type DraftProspect = ProspectRow & {
 
 export type Blocker = { code: "NO_WEBSITE" | "ALREADY_CONTACTED" | "NO_VERIFIED_CHANNEL" | "POSSIBLE_DUPLICATE" | "CRM_NOT_CHECKED" | "SITE_NOT_READ" | "NO_EVIDENCED_FINDING"; message: string };
 
-/** Channels a person marked VERIFIED that also have an address to open. */
+/**
+ * Channels a person marked VERIFIED after opening the saved address in the contact check. A WhatsApp check
+ * without a saved link was done on a bare phone number nobody opened here, so it doesn't count.
+ */
 export function verifiedChannels(p: Pick<DraftProspect, "whatsappStatus" | "instagramStatus" | "whatsappLink" | "phone" | "instagram">): SendChannel[] {
   const out: SendChannel[] = [];
-  if (p.whatsappStatus === "VERIFIED" && whatsappUrl(p)) out.push("WHATSAPP");
-  if (p.instagramStatus === "VERIFIED" && instagramUrl(p.instagram)) out.push("INSTAGRAM");
+  if (p.whatsappStatus === "VERIFIED" && contactOpenUrl("WHATSAPP", p.whatsappLink) && whatsappUrl(p)) out.push("WHATSAPP");
+  if (p.instagramStatus === "VERIFIED" && contactOpenUrl("INSTAGRAM", p.instagram) && instagramUrl(p.instagram)) out.push("INSTAGRAM");
   return out;
 }
 
@@ -225,7 +229,7 @@ export async function draftForProspect(
   const channels = verifiedChannels(p);
   const channel = input.channel ?? channels[0];
   if (!channel || !channels.includes(channel)) {
-    blockers.push({ code: "NO_VERIFIED_CHANNEL", message: "No WhatsApp or Instagram contact marked VERIFIED. Open and check one first." });
+    blockers.push({ code: "NO_VERIFIED_CHANNEL", message: "No WhatsApp or Instagram contact marked VERIFIED from its saved link. Save the link, open it in Contact checks and check it first." });
   }
   if (blockers.length) return { ok: false, blockers };
 

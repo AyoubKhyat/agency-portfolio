@@ -54,6 +54,23 @@ export function lastContactCheck(activities: ActivityLike[], channel: ContactCha
   return latest ? { userName: latest.userName, at: new Date(latest.createdAt).toISOString(), status: latest.newStatus ?? null } : null;
 }
 
+type ContactFields = { phone?: string | null; whatsappLink?: string | null; instagram?: string | null; whatsappStatus?: string | null; instagramStatus?: string | null };
+const digits = (v: string | null | undefined) => (v ?? "").replace(/\D/g, "");
+const handle = (v: string | null | undefined) => (v ?? "").trim().replace(/^@/, "").toLowerCase();
+
+/**
+ * A check belongs to the number or account a person opened. When an edit changes it, the check no longer
+ * applies: these channels go back to UNVERIFIED. Fields left out of the edit (undefined) keep their value.
+ */
+export function checksClearedByEdit(current: ContactFields, next: Omit<ContactFields, "whatsappStatus" | "instagramStatus">): ContactChannel[] {
+  const out: ContactChannel[] = [];
+  const waChanged = (next.phone !== undefined && digits(next.phone) !== digits(current.phone))
+    || (next.whatsappLink !== undefined && digits(next.whatsappLink) !== digits(current.whatsappLink));
+  if (waChanged && (current.whatsappStatus ?? "UNVERIFIED") !== "UNVERIFIED") out.push("WHATSAPP");
+  if (next.instagram !== undefined && handle(next.instagram) !== handle(current.instagram) && (current.instagramStatus ?? "UNVERIFIED") !== "UNVERIFIED") out.push("INSTAGRAM");
+  return out;
+}
+
 /** The address a person should open to check. Only links we can rebuild on the real hosts; never a number from a phone field. */
 export function contactOpenUrl(channel: ContactChannel, value: string): string | null {
   if (channel === "INSTAGRAM") {

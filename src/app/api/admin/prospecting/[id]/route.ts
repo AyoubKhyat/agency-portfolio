@@ -5,7 +5,7 @@ import { getProspectById, updateProspectStatus, updateProspect, deleteProspect, 
 import { resolveStatusChange } from "@/lib/prospect-status-guard";
 import { sendAlreadyLogged } from "@/lib/record-send";
 import { QUEUE_ACTIVITY_TYPES } from "@/lib/next-action";
-import { contactCheckActivity } from "@/lib/contact-check";
+import { checksClearedByEdit, contactCheckActivity } from "@/lib/contact-check";
 import { z } from "zod";
 
 export async function GET(
@@ -231,7 +231,22 @@ export async function PUT(
   const data: Record<string, unknown> = { ...parsed.data };
   if (parsed.data.whatsappLink === undefined) delete data.whatsappLink;
 
+  // A contact check belongs to the number or account a person opened: changing it clears the check.
+  const current = await getProspectById(id);
+  const cleared = current ? checksClearedByEdit(current, { phone: parsed.data.phone, whatsappLink: parsed.data.whatsappLink, instagram: parsed.data.instagram }) : [];
+  if (cleared.includes("WHATSAPP")) data.whatsappStatus = "UNVERIFIED";
+  if (cleared.includes("INSTAGRAM")) data.instagramStatus = "UNVERIFIED";
+
   const prospect = await updateProspect(id, data);
+
+  for (const channel of cleared) {
+    const previous = channel === "WHATSAPP" ? current?.whatsappStatus : current?.instagramStatus;
+    const entry = contactCheckActivity(channel, previous, "UNVERIFIED");
+    await logProspectActivity({
+      prospectId: id, userId: session.userId, userName: session.fullName,
+      ...entry, details: `${entry.details}: the ${channel === "WHATSAPP" ? "number" : "account"} was edited`,
+    });
+  }
 
   await logProspectActivity({
     prospectId: id,

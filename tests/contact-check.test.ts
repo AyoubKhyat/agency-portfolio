@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { contactCheckActivity, contactOpenUrl, lastContactCheck } from "../src/lib/contact-check";
+import { checksClearedByEdit, contactCheckActivity, contactOpenUrl, lastContactCheck } from "../src/lib/contact-check";
 import { hasVerifiedChannel } from "../src/lib/prospect-stages";
 
 const read = (rel: string) => readFileSync(new URL(`../${rel}`, import.meta.url), "utf8").replace(/\r\n/g, "\n");
@@ -72,4 +72,16 @@ test("no shortcut marks a contact VERIFIED: every place uses the open-then-check
     assert.match(src, /\.\.\.CONTACT_CHECK_LABELS/, `${f}: checks read clearly in the history`);
   }
   assert.match(read("src/components/admin/prospect-drawer.tsx"), /onClick=\{goToContactChecks\}/, "the header icons only lead to the check");
+});
+
+test("editing a checked number or account clears its check; formatting and untouched fields don't", () => {
+  const cur = { phone: "0625461645", whatsappLink: "https://wa.me/212625461645", instagram: "@Riad.Atlas", whatsappStatus: "VERIFIED", instagramStatus: "UNAVAILABLE" };
+  assert.deepEqual(checksClearedByEdit(cur, { phone: "06 11 11 99 99" }), ["WHATSAPP"]);
+  assert.deepEqual(checksClearedByEdit(cur, { whatsappLink: "https://wa.me/212611119999" }), ["WHATSAPP"]);
+  assert.deepEqual(checksClearedByEdit(cur, { instagram: "other.account" }), ["INSTAGRAM"]);
+  assert.deepEqual(checksClearedByEdit(cur, { phone: "06 25 46 16 45", whatsappLink: undefined, instagram: "riad.atlas" }), [], "same number, same handle");
+  assert.deepEqual(checksClearedByEdit({ ...cur, whatsappStatus: "UNVERIFIED" }, { phone: "0611119999" }), [], "nothing to clear");
+  const route = read("src/app/api/admin/prospecting/[id]/route.ts");
+  assert.match(route, /checksClearedByEdit\(current, \{ phone: parsed\.data\.phone, whatsappLink: parsed\.data\.whatsappLink, instagram: parsed\.data\.instagram \}\)/);
+  assert.match(route, /data\.whatsappStatus = "UNVERIFIED"/);
 });
