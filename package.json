@@ -8,6 +8,7 @@
     "db:diff": "prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script",
     "seed": "tsx prisma/seed.ts",
     "osm:marrakech": "tsx scripts/osm/build-marrakech-dataset.ts",
+    "osm:upload": "tsx scripts/osm/upload-marrakech-dataset.ts",
     "test": "node --import tsx --experimental-test-module-mocks --test \"tests/*.test.ts\"",
     "start": "next start",
     "lint": "eslint",

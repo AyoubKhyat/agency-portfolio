@@ -41,14 +41,18 @@ test("search: CRM matches, possible duplicates and repeats left out; at most 10 
     entry(4, { name: "Riad Jardin Majorelle", website: "https://jardin.ma" }),
     entry(5, { website: "https://riad6.ma" }), entry(6), // same site twice in the batch
     entry(7, { sectors: ["HOTELS"] }),
+    entry(8, { website: "https://www.facebook.com/riad8" }), entry(9, { website: "https://www.booking.com/hotel/ma/riad9.html" }),
     ...Array.from({ length: 29 }, (_, i) => entry(100 + i)),
   ];
   const crm = [crmRow({ id: "a", name: "Old", website: "https://in-crm.ma" }), crmRow({ id: "d", name: "Jardin Majorelle Spa", sector: "RIADS" })];
   const s = await mod.searchBatch("RIADS", 0, { dataset: async () => dataset(list), loadCrm: async () => crm });
   assert.equal(s.candidates.length, 10);
-  assert.deepEqual(s.skipped, { noWebsite: 1, inCrm: 1, possibleDuplicate: 1, sameSiteInBatch: 1 });
-  assert.equal(s.found, 14, "stops as soon as 10 sites to check are found");
-  assert.deepEqual(s.progress, { from: 0, to: 14, total: 34, nextCursor: 14 });
+  assert.deepEqual(s.skipped, { noWebsite: 1, platformOnly: 2, inCrm: 1, possibleDuplicate: 1, sameSiteInBatch: 1 });
+  assert.equal(s.found, 16, "stops as soon as 10 sites to check are found");
+  assert.deepEqual(s.progress, { from: 0, to: 16, total: 36, nextCursor: 16 });
+  assert.ok(!s.candidates.some((c) => /facebook|booking/.test(c.website)), "a Facebook or Booking page is not audited");
+  assert.equal(mod.platformPage("https://m.facebook.com/x"), true);
+  assert.equal(mod.platformPage("https://riad-facebook.ma"), false);
   assert.equal(s.sourceError, null);
   assert.ok(s.candidates.every((c) => /^https:\/\//.test(c.website) && c.sector === "RIADS" && c.phone === null && c.email === null));
   assert.ok(s.candidates.every((c) => c.mapsUrl === `https://www.openstreetmap.org/${c.sourceId}`));

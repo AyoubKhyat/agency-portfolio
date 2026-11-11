@@ -32,7 +32,8 @@ export type SearchSummary = {
   searchedAt: string;
   /** Businesses from the list looked at by this search (at most MAX_SEARCH). */
   found: number;
-  skipped: { noWebsite: number; inCrm: number; possibleDuplicate: number; sameSiteInBatch: number };
+  /** platformOnly: the "website" is only a Facebook, Instagram, Booking or similar page, so there's no own site to check. */
+  skipped: { noWebsite: number; platformOnly: number; inCrm: number; possibleDuplicate: number; sameSiteInBatch: number };
   candidates: BatchCandidate[];
   /** Where this search sat in the sector's list. Pass `nextCursor` to the next search; null = the end was reached. */
   progress: { from: number; to: number; total: number; nextCursor: number | null };
@@ -62,6 +63,15 @@ async function loadCrmFromDb(): Promise<CrmRow[]> {
 
 export class UnknownSectorError extends Error {}
 
+/**
+ * A page on someone else's platform rather than the business's own site: auditing it would say nothing about
+ * the business (and Facebook, Instagram and Booking mostly ask robots not to read them).
+ */
+const PLATFORMS = /^(?:[a-z0-9-]+\.)*(?:facebook\.com|fb\.com|instagram\.com|linktr\.ee|wa\.me|whatsapp\.com|sites\.google\.com|booking\.com|airbnb\.[a-z.]+|tripadvisor\.[a-z.]+|tiktok\.com|youtube\.com|linkedin\.com)$/i;
+export function platformPage(url: string): boolean {
+  try { return PLATFORMS.test(new URL(url).hostname); } catch { return false; }
+}
+
 /** The sector's businesses from the list, in its fixed order. */
 export function sectorEntries(data: OsmDataset, sector: string) {
   return data.entries.filter((e) => e.sectors.includes(sector));
@@ -76,7 +86,7 @@ export async function searchBatch(sector: string, cursor = 0, deps: SearchDeps =
   if (!SECTORS.some((s) => s.key === sector)) throw new UnknownSectorError(sector);
   const summary: SearchSummary = {
     sector, searchedAt: new Date().toISOString(), found: 0,
-    skipped: { noWebsite: 0, inCrm: 0, possibleDuplicate: 0, sameSiteInBatch: 0 },
+    skipped: { noWebsite: 0, platformOnly: 0, inCrm: 0, possibleDuplicate: 0, sameSiteInBatch: 0 },
     candidates: [], progress: { from: cursor, to: cursor, total: 0, nextCursor: null }, dataset: null, sourceError: null,
   };
 
@@ -85,7 +95,7 @@ export async function searchBatch(sector: string, cursor = 0, deps: SearchDeps =
     data = await (deps.dataset ?? loadDataset)();
   } catch (err) {
     summary.sourceError = err instanceof DatasetMissingError
-      ? "The Marrakech business list isn't installed on this server (npm run osm:marrakech). Nothing was searched."
+      ? "The Marrakech business list isn't installed on this server. Nothing was searched."
       : "The Marrakech business list couldn't be read. Nothing was searched.";
     return summary;
   }
@@ -111,6 +121,7 @@ export async function searchBatch(sector: string, cursor = 0, deps: SearchDeps =
     const website = normalizeSiteUrl(c.website ?? "");
     const key = website ? siteKey(website) : null;
     if (!website || !key) { summary.skipped.noWebsite++; continue; }
+    if (platformPage(website)) { summary.skipped.platformOnly++; continue; } // kept in the list, just not audited
     if (seenSites.has(key)) { summary.skipped.sameSiteInBatch++; continue; }
     seenSites.add(key);
     const { status } = classify({ ...c, website }, crm);

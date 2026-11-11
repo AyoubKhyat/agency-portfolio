@@ -6,7 +6,8 @@
  * the mapper tagged explicitly (WhatsApp, Instagram, Facebook). No phone numbers or e-mail addresses.
  * Only businesses with a usable website are kept, and one entry per website.
  *
- * The file lives outside Git (data/osm/, ignored) because the repository is public.
+ * It lives outside Git (data/osm/ is ignored, the repository is public): in a private Vercel Blob store in
+ * production, or the local file for development. See "Loading" below.
  * Data © OpenStreetMap contributors, ODbL 1.0.
  */
 import { SECTORS, CITIES, normalizePhoneMA, type DiscoveryCandidate } from "@/lib/discovery-providers";
@@ -125,23 +126,103 @@ export function toCandidate(e: OsmEntry, sector: string): DiscoveryCandidate {
   };
 }
 
+/* ───────────────── Loading (server only) ─────────────────
+ * Where the list comes from:
+ *   - OSM_BLOB_READ_WRITE_TOKEN set → the private Vercel Blob store, pathname BLOB_PATHNAME (server-side only;
+ *     the token and the blob URL never reach the browser, and a private blob URL is useless without the token).
+ *   - otherwise, off Vercel (local dev, smoke tests) → data/osm/marrakech-businesses.json.
+ *   - otherwise → not installed. Never made-up data.
+ * Upload: scripts/osm/upload-marrakech-dataset.ts (manual, dry run unless --apply).
+ */
+export const BLOB_PATHNAME = "osm/marrakech-businesses.json";
+export const BLOB_TOKEN_ENV = "OSM_BLOB_READ_WRITE_TOKEN";
+/** Re-read at most hourly per server instance, so a fresh upload shows up without a redeploy. */
+export const CACHE_MS = 60 * 60_000;
+const MAX_BYTES = 2_000_000;
+
+/** The list isn't configured or hasn't been uploaded. */
 export class DatasetMissingError extends Error {}
+/** The list exists but couldn't be read or isn't valid. */
+export class DatasetUnavailableError extends Error {}
 
-let cached: Promise<OsmDataset> | null = null;
+export type DatasetSource = "blob" | "local" | "none";
 
-/** Reads the list once per server instance. Missing or malformed → DatasetMissingError, never made-up data. */
-export function loadDataset(): Promise<OsmDataset> {
-  cached ??= (async () => {
-    const [{ readFile }, path] = await Promise.all([import("node:fs/promises"), import("node:path")]);
-    let data: OsmDataset;
-    try {
-      // A static path, so the build traces only this file (see DATASET_FILE).
-      data = JSON.parse(await readFile(path.join(process.cwd(), "data", "osm", "marrakech-businesses.json"), "utf8"));
-    } catch {
-      throw new DatasetMissingError(DATASET_FILE);
-    }
-    if (data?.version !== 1 || !Array.isArray(data.entries)) throw new DatasetMissingError(DATASET_FILE);
-    return data;
-  })().catch((err) => { cached = null; throw err; });
-  return cached;
+export function datasetSource(env: Record<string, string | undefined> = process.env): DatasetSource {
+  if (env[BLOB_TOKEN_ENV]) return "blob";
+  if (!env.VERCEL) return "local";
+  return "none";
 }
+
+const ENTRY_ID = /^(node|way)\/\d{1,15}$/;
+const optLink = (v: unknown) => v === undefined || (typeof v === "string" && /^https:\/\//.test(v) && v.length <= 300);
+
+/** Checks the shape before anything uses it: a broken or tampered file is refused, not half-used. */
+export function parseDataset(text: string): OsmDataset {
+  if (text.length > MAX_BYTES) throw new DatasetUnavailableError("too large");
+  let d: OsmDataset;
+  try { d = JSON.parse(text); } catch { throw new DatasetUnavailableError("not JSON"); }
+  const ok = d?.version === 1 && Array.isArray(d.entries) && typeof d.generatedAt === "string" && d.entries.every((e) =>
+    typeof e?.id === "string" && ENTRY_ID.test(e.id) && typeof e.name === "string" && e.name.length > 0 && e.name.length <= 200
+    && Array.isArray(e.sectors) && e.sectors.every((x) => typeof x === "string") && typeof e.website === "string" && e.website.length <= 2048
+    && (e.whatsapp === undefined || explicitWhatsAppLink(e.whatsapp) === e.whatsapp) && optLink(e.instagram) && optLink(e.facebook));
+  if (!ok) throw new DatasetUnavailableError("unexpected shape");
+  return d;
+}
+
+export type LoaderDeps = {
+  env?: Record<string, string | undefined>;
+  /** The blob's text, or null when it doesn't exist. */
+  getBlob?: (pathname: string, token: string) => Promise<string | null>;
+  /** The local file's text, or null when it doesn't exist. */
+  readLocal?: () => Promise<string | null>;
+  now?: () => number;
+};
+
+async function getPrivateBlob(pathname: string, token: string): Promise<string | null> {
+  const { get, BlobNotFoundError } = await import("@vercel/blob");
+  try {
+    const r = await get(pathname, { access: "private", token });
+    if (!r) return null;
+    if (r.statusCode !== 200 || !r.stream) throw new DatasetUnavailableError(`status ${r.statusCode}`);
+    return await new Response(r.stream).text();
+  } catch (err) {
+    if (err instanceof BlobNotFoundError) return null;
+    if (err instanceof DatasetUnavailableError) throw err;
+    throw new DatasetUnavailableError(err instanceof Error ? err.name : "blob error"); // never the token or URL
+  }
+}
+
+async function readLocalFile(): Promise<string | null> {
+  const [{ readFile }, path] = await Promise.all([import("node:fs/promises"), import("node:path")]);
+  try {
+    // A static path, so the build traces only this file (see DATASET_FILE).
+    return await readFile(path.join(process.cwd(), "data", "osm", "marrakech-businesses.json"), "utf8");
+  } catch {
+    return null;
+  }
+}
+
+/** A loader with its own cache. Failures are never cached, so the next search tries again. */
+export function createDatasetLoader(deps: LoaderDeps = {}): () => Promise<OsmDataset> {
+  let cache: { data: OsmDataset; at: number } | null = null;
+  let inFlight: Promise<OsmDataset> | null = null;
+  const now = deps.now ?? Date.now;
+  return () => {
+    if (cache && now() - cache.at < CACHE_MS) return Promise.resolve(cache.data);
+    inFlight ??= (async () => {
+      const env = deps.env ?? process.env;
+      const source = datasetSource(env);
+      if (source === "none") throw new DatasetMissingError("not configured");
+      const text = source === "blob"
+        ? await (deps.getBlob ?? getPrivateBlob)(BLOB_PATHNAME, env[BLOB_TOKEN_ENV]!)
+        : await (deps.readLocal ?? readLocalFile)();
+      if (text === null) throw new DatasetMissingError(source === "blob" ? "not uploaded" : DATASET_FILE);
+      const data = parseDataset(text);
+      cache = { data, at: now() };
+      return data;
+    })().finally(() => { inFlight = null; });
+    return inFlight;
+  };
+}
+
+export const loadDataset = createDatasetLoader();

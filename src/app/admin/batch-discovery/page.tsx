@@ -93,7 +93,7 @@ function ResultCard({ a, rank }: { a: AuditedCandidate; rank: number }) {
   );
 }
 
-type Info = { installed: boolean; osmDataUntil?: string | null; generatedAt?: string; withWebsite?: Record<string, number> };
+type Info = { installed: boolean; unreadable?: boolean; osmDataUntil?: string | null; generatedAt?: string; withWebsite?: Record<string, number> };
 
 /** Where each sector's list was left, per viewer and per version of the list. A convenience only. */
 const cursorKey = (info: Info | null) => `batch-discovery-cursors:${info?.generatedAt ?? "none"}`;
@@ -171,7 +171,11 @@ export default function BatchDiscoveryPage() {
     <div className="max-w-3xl">
       <PageHeader title="Find businesses" subtitle="Marrakech businesses from a private OpenStreetMap list, not yet in the CRM, ranked by website problems a customer would notice. Each search continues where the last one stopped. Nothing is saved until you import one." />
 
-      {info && !info.installed && <p className="text-[13px] text-amber-700 mb-3">The Marrakech business list isn&apos;t installed on this server, so searches return nothing.</p>}
+      {info && !info.installed && (
+        <p className="text-[13px] text-amber-700 mb-3">
+          {info.unreadable ? "The Marrakech business list couldn't be read" : "The Marrakech business list isn't installed on this server"}, so searches return nothing.
+        </p>
+      )}
       {info?.installed && (
         <p className={`${small} mb-3`}>List built {when(info.generatedAt ?? "")} from OpenStreetMap data up to {info.osmDataUntil ? when(info.osmDataUntil) : "an unknown date"}.</p>
       )}
@@ -208,6 +212,7 @@ export default function BatchDiscoveryPage() {
             {summary.skipped.possibleDuplicate > 0 && ` · ${summary.skipped.possibleDuplicate} possible duplicates`}
             {summary.skipped.sameSiteInBatch > 0 && ` · ${summary.skipped.sameSiteInBatch} sharing a website`}
             {summary.skipped.noWebsite > 0 && ` · ${summary.skipped.noWebsite} without a usable website`}
+            {summary.skipped.platformOnly > 0 && ` · ${summary.skipped.platformOnly} with only a Facebook, Instagram or booking page`}
             {" "}· {summary.candidates.length} websites to check
           </p>
           {audited.length > 0 && (

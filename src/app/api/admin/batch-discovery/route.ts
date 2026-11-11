@@ -4,7 +4,7 @@ import { requireOwnerOrAdmin } from "@/lib/authz";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { SITE_URL_MAX } from "@/lib/diagnosis";
 import { AUDIT_CHUNK, UnknownSectorError, auditChunk, searchBatch } from "@/lib/batch-discovery";
-import { DatasetMissingError, loadDataset } from "@/lib/osm-dataset";
+import { DatasetMissingError, DatasetUnavailableError, loadDataset } from "@/lib/osm-dataset";
 
 /** Each step is short: one read of the local list plus the CRM, or at most AUDIT_CHUNK site checks side by side. */
 export const maxDuration = 60;
@@ -60,6 +60,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ installed: true, osmDataUntil: d.osmDataUntil, generatedAt: d.generatedAt, withWebsite });
       } catch (err) {
         if (err instanceof DatasetMissingError) return NextResponse.json({ installed: false });
+        if (err instanceof DatasetUnavailableError) return NextResponse.json({ installed: false, unreadable: true });
         throw err;
       }
     }

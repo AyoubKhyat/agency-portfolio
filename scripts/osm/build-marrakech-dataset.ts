@@ -8,7 +8,7 @@
  *
  * Needs uv (https://docs.astral.sh/uv/) for the pinned pyosmium + shapely used by scripts/osm/extract.py.
  * --raw <file> skips step 2's extraction and builds from an extract already made (used for fixtures).
- * Output: data/osm/marrakech-businesses.json (ignored by Git; the repository is public).
+ * Output: data/osm/marrakech-businesses.json (ignored by Git; the repository is public). Upload: npm run osm:upload.
  * Data © OpenStreetMap contributors, ODbL 1.0: keep the attribution wherever the data is shown.
  */
 import { spawnSync } from "node:child_process";
