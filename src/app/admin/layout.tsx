@@ -151,7 +151,7 @@ const VISIBLE_BOTTOM_NAV: typeof BOTTOM_NAV = SIMPLE_NAV
 
 const PAGE_TITLES: Record<string, string> = {
   prospecting: "Prospects", discovery: "Find New", projects: "Website Portfolio", overview: "Full Dashboard",
-  leads: "Website Enquiries", inbox: "Reply Inbox", qualify: "Check a website",
+  leads: "Website Enquiries", inbox: "Reply Inbox", qualify: "Check a website", "batch-discovery": "Find businesses",
 };
 
 function getPageTitle(pathname: string): string {

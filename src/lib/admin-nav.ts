@@ -87,6 +87,7 @@ export const MORE_GROUPS: readonly { label: string; links: readonly NavLink[] }[
     links: [
       ...(LEADS_QUEUE ? [{ href: "/admin/discovery", label: "Find new" }] : []),
       { href: "/admin/qualify", label: "Check a website" },
+      { href: "/admin/batch-discovery", label: "Find businesses" },
       { href: "/admin/outreach", label: "Outreach" },
       { href: "/admin/sales-playbook", label: "Sales Playbook" },
     ],

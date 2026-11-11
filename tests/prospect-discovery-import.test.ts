@@ -64,7 +64,7 @@ mock.module("@/lib/prisma", {
     prisma: {
       prospect: {
         findMany: async () => db.prospects.map((p) => ({ ...p })),
-        create: async ({ data }: { data: Row }) => { const row = { ...data, id: `new${db.created.length}` }; db.created.push(row); return { id: row.id, name: row.name }; },
+        create: async ({ data }: { data: Row }) => { const row: Row = { ...data, id: `new${db.created.length}` }; db.created.push(row); return { id: row.id, name: row["name"] }; },
       },
       discoverySweep: { updateMany: async () => ({ count: 0 }) },
     },
