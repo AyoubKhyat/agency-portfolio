@@ -8,6 +8,7 @@ import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import AvatarChip from "@/components/AvatarChip";
 import { PlaybookPanel } from "./PlaybookPanel";
 import { ContactCheck } from "@/components/admin/contact-check";
+import { OutreachDraftPanel } from "@/components/admin/outreach-draft-panel";
 import { CONTACT_CHECK_LABELS, lastContactCheck, type ContactCheckStatus } from "@/lib/contact-check";
 
 const STATUSES = ["A_ENVOYER", "ENVOYE", "REPONDU", "PAS_DE_WHATSAPP", "CONVERTI"];
@@ -179,6 +180,8 @@ export default function ProspectDetailPage() {
           </div>
         </div>
       </div>
+
+      <OutreachDraftPanel prospect={prospect} onRecorded={refreshData} />
 
       {/* Owner + Contact info cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
