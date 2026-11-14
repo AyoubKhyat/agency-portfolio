@@ -7,6 +7,7 @@ import {
   Calendar, MessageSquare, X, ArrowRight, Loader2,
   LayoutDashboard, BarChart3, Settings, Activity, Layers,
   FileSignature, Crown, BellRing, Sun, Sparkles, FileText, CalendarDays,
+  Radar, ShieldCheck, Send, Flame, Repeat, Inbox, Handshake, Receipt, Banknote, LayoutGrid,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/admin/badge";
@@ -64,21 +65,34 @@ type QuickAction = {
 };
 
 const QUICK_ACTIONS: QuickAction[] = [
+  // Client acquisition — same order and names as the sidebar
   { id: "qa-today",     label: "Today",             sublabel: "What to do right now",    href: "/admin",                icon: Sun },
-  { id: "qa-prospects", label: "Leads",             sublabel: "Everyone you are talking to", href: "/admin/prospecting", icon: Target },
-  { id: "qa-discovery", label: "Find new",          sublabel: "Discover new prospects",  href: "/admin/discovery",      icon: Sparkles },
+  { id: "qa-find",      label: "Find",              sublabel: "Find businesses (Marrakech list)", href: "/admin/batch-discovery", icon: Radar },
+  { id: "qa-discovery", label: "Find · AI search",  sublabel: "Describe an ideal client", href: "/admin/discovery",     icon: Sparkles },
+  { id: "qa-qualify",   label: "Qualify",           sublabel: "Check a website before contact", href: "/admin/qualify", icon: ShieldCheck },
+  { id: "qa-contact",   label: "Contact",           sublabel: "Next people to contact",  href: "/admin/lead-queue",     icon: Send },
+  { id: "qa-outreach",  label: "Contact · Outreach", sublabel: "Outreach queue and templates", href: "/admin/outreach",  icon: Flame },
+  { id: "qa-followup",  label: "Follow up",         sublabel: "Follow-ups due",          href: "/admin/lead-queue?view=followUps", icon: Repeat },
+  { id: "qa-replies",   label: "Follow up · Replies", sublabel: "Reply inbox",           href: "/admin/inbox",          icon: Inbox },
+  { id: "qa-close",     label: "Close",             sublabel: "Prospects in talks",      href: "/admin/prospecting?status=MEETING,PROPOSAL_SENT,NEGOTIATION", icon: Handshake },
+  { id: "qa-meetings",  label: "Close · Meetings",  sublabel: "Calendar & meetings",     href: "/admin/meetings",       icon: Calendar },
+  { id: "qa-contracts", label: "Close · Contracts", sublabel: "Contract management",     href: "/admin/contracts",      icon: FileSignature },
+  { id: "qa-prospects", label: "All prospects",     sublabel: "Everyone you are talking to", href: "/admin/prospecting", icon: Target },
+  // Business
   { id: "qa-clients",   label: "Clients",           sublabel: "Client management",       href: "/admin/clients",        icon: Building2 },
+  { id: "qa-pipeline",  label: "Projects",          sublabel: "Client projects",         href: "/admin/pipeline",       icon: Layers },
+  { id: "qa-invoices",  label: "Invoices",          sublabel: "Billing",                 href: "/admin/invoices",       icon: Receipt },
+  { id: "qa-revenue",   label: "Revenue",           sublabel: "Money in",                href: "/admin/revenue",        icon: Banknote },
+  // More
+  { id: "qa-more",      label: "More tools",        sublabel: "Every other tool",        href: "/admin/more",           icon: LayoutGrid },
+  { id: "qa-leads",     label: "Website Enquiries", sublabel: "Contact-form leads",      href: "/admin/leads",          icon: Users },
+  { id: "qa-tasks",     label: "Tasks",             sublabel: "Task board",              href: "/admin/tasks",          icon: CheckSquare },
   { id: "qa-projects",  label: "Website Portfolio", sublabel: "Projects on the public site", href: "/admin/projects",   icon: FolderKanban },
-  { id: "qa-leads",     label: "Enquiries",         sublabel: "Contact-form leads",      href: "/admin/leads",          icon: Users },
-  { id: "qa-dashboard", label: "Full Dashboard",    sublabel: "All metrics (previous dashboard)", href: "/admin/overview", icon: LayoutDashboard },
-  { id: "qa-cmd",       label: "Command Center",   sublabel: "Overview & quick stats",  href: "/admin/command-center", icon: Crown },
   { id: "qa-documents", label: "Documents",         sublabel: "Uploaded PDFs",           href: "/admin/documents",      icon: FileText },
   { id: "qa-content",   label: "Content Planner",   sublabel: "Instagram 30-day plan",   href: "/admin/content",        icon: CalendarDays },
-  { id: "qa-tasks",     label: "Tasks",             sublabel: "Task board",              href: "/admin/tasks",          icon: CheckSquare },
-  { id: "qa-meetings",  label: "Meetings",          sublabel: "Calendar & meetings",     href: "/admin/meetings",       icon: Calendar },
   { id: "qa-chat",      label: "Chat",              sublabel: "Team chat",               href: "/admin/chat",           icon: MessageSquare },
-  { id: "qa-pipeline",  label: "Projects",          sublabel: "Client projects",          href: "/admin/pipeline",       icon: Layers },
-  { id: "qa-contracts", label: "Contracts",         sublabel: "Contract management",     href: "/admin/contracts",      icon: FileSignature },
+  { id: "qa-dashboard", label: "Full Dashboard",    sublabel: "All metrics (previous dashboard)", href: "/admin/overview", icon: LayoutDashboard },
+  { id: "qa-cmd",       label: "Command Center",    sublabel: "Overview & quick stats",  href: "/admin/command-center", icon: Crown },
   { id: "qa-analytics", label: "Analytics",         sublabel: "Reports & stats",         href: "/admin/analytics",      icon: BarChart3 },
   { id: "qa-activity",  label: "Activity Feed",     sublabel: "Recent activity",         href: "/admin/activity",       icon: Activity },
   { id: "qa-notifs",    label: "Notifications",     sublabel: "View all notifications",  href: "/admin/notifications",  icon: BellRing },

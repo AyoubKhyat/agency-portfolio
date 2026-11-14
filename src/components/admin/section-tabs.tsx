@@ -5,10 +5,10 @@ import { activeTab, sectionForPath } from "@/lib/admin-nav";
 import { cn } from "@/lib/utils";
 
 /** Tabs for the current section. Renders nothing on pages that have no tab. */
-export function SectionTabs({ pathname }: { pathname: string }) {
-  const current = activeTab(pathname);
+export function SectionTabs({ pathname, search = "" }: { pathname: string; search?: string }) {
+  const current = activeTab(pathname, search);
   if (!current) return null;
-  const section = sectionForPath(pathname);
+  const section = sectionForPath(pathname, search);
 
   return (
     <nav aria-label={section.label} className="flex gap-1 mb-5 overflow-x-auto scrollbar-none border-b border-[var(--os-border)]">

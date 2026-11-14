@@ -389,8 +389,11 @@ test("routes pass no test overrides, and every handler checks the session and ro
   }
 });
 
-test("the menu is still the five sections, and no new page was added", () => {
-  assert.deepEqual(MAIN_NAV.map((s) => s.label), ["Today", "Leads", "Clients", "Money", "More"]);
+test("the menu is still the acquisition / business / more menu, and no new page was added", () => {
+  assert.deepEqual(MAIN_NAV.map((s) => s.label), [
+    "Today", "Find", "Qualify", "Contact", "Follow Up", "Close", "All Prospects",
+    "Clients", "Projects", "Invoices", "Revenue", "More tools", "Settings",
+  ]);
   assert.doesNotMatch(read("src/lib/admin-nav.ts"), /diagnosis|ai-/i);
   assert.match(read("src/app/admin/leads/[id]/page.tsx"), /lead\.subject === DIAGNOSIS_SUBJECT && \(/, "the panel only shows on diagnosis enquiries");
 });

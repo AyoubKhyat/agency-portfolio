@@ -1,8 +1,8 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Target, Building2, FolderKanban,
@@ -10,10 +10,11 @@ import {
   Activity, UsersRound, Bell, Search, Layers, Shield, CheckSquare, BellRing,
   Calendar, FileSignature, Crown, MessageSquare, Moon, Sun, Gauge, Receipt, PenLine,
   Webhook, BookOpen, Compass, Flame, Inbox, Banknote, Sparkles, FileText, CalendarDays, LayoutGrid,
+  Radar, ShieldCheck, Send, Repeat, Handshake,
 } from "lucide-react";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { SectionTabs } from "@/components/admin/section-tabs";
-import { MAIN_NAV, activeTab, sectionForPath, type SectionKey } from "@/lib/admin-nav";
+import { MAIN_NAV, NAV_GROUP_LABELS, activeTab, sectionForPath, type SectionKey } from "@/lib/admin-nav";
 import { cn } from "@/lib/utils";
 
 // Five-section navigation (see src/lib/admin-nav.ts).
@@ -133,15 +134,27 @@ const OTHER_TOOLS_SECTION: NavSection = {
 };
 
 const SECTION_ICONS: Record<SectionKey, NavItem["icon"]> = {
-  today: Sun, leads: Target, clients: Building2, money: Banknote, more: LayoutGrid,
+  today: Sun, find: Radar, qualify: ShieldCheck, contact: Send, followUp: Repeat, close: Handshake,
+  prospects: Target, clients: Building2, projects: Layers, invoices: Receipt, revenue: Banknote,
+  more: LayoutGrid, settings: Settings,
 };
-const SIMPLE_ITEMS: NavItem[] = MAIN_NAV.map((s) => ({
-  href: s.href, label: s.label, icon: SECTION_ICONS[s.key],
-  ...(s.key === "leads" ? { badgeKey: "leads" as const } : {}),
+const toItem = (s: (typeof MAIN_NAV)[number]): NavItem => ({ href: s.href, label: s.label, icon: SECTION_ICONS[s.key] });
+const PHONE_ITEMS: NavItem[] = MAIN_NAV.filter((s) => s.phone).map(toItem);
+const SIMPLE_SECTIONS: NavSection[] = (["acquisition", "business", "more"] as const).map((group) => ({
+  label: NAV_GROUP_LABELS[group],
+  secondary: group !== "acquisition",
+  items: MAIN_NAV.filter((s) => s.group === group).map(toItem),
 }));
 
+/** Keeps the layout told about the query string, so Contact / Follow Up / Close light up correctly. */
+function SearchSync({ onChange }: { onChange: (search: string) => void }) {
+  const search = useSearchParams().toString();
+  useEffect(() => { onChange(search); }, [search, onChange]);
+  return null;
+}
+
 const VISIBLE_SECTIONS: NavSection[] = SIMPLE_NAV
-  ? [{ label: "", items: SIMPLE_ITEMS }]
+  ? SIMPLE_SECTIONS
   : FOCUS_MODE
   ? [...SECTIONS, SECONDARY_SECTION, OTHER_TOOLS_SECTION]
   : [...SECTIONS, SECONDARY_SECTION, ...HIDDEN_SECTIONS];
@@ -171,8 +184,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [osDark, setOsDark] = useState(false);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [badges, setBadges] = useState({ leads: 0, prospects: 0, activities: 0, team: 0, tasks: 0, notifications: 0, meetings: 0, contracts: 0, chat: 0 });
+  const [search, setSearch] = useState("");
   const isLogin = pathname === "/admin/login";
-  const tab = activeTab(pathname);
+  const tab = activeTab(pathname, search);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -266,7 +280,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   function isActive(href: string) {
-    if (SIMPLE_NAV) return sectionForPath(pathname).href === href;
+    if (SIMPLE_NAV) return sectionForPath(pathname, search).href === href;
     if (href === "/admin") return pathname === "/admin";
     return pathname.startsWith(href);
   }
@@ -456,7 +470,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#8B00FF] to-[#C026D3] flex items-center justify-center shadow-sm shadow-purple-500/20">
               <span className="text-white text-[9px] font-bold">I</span>
             </div>
-            <span className="text-sm font-bold text-[var(--os-text)]">{SIMPLE_NAV && tab ? sectionForPath(pathname).label : getPageTitle(pathname)}</span>
+            <span className="text-sm font-bold text-[var(--os-text)]">{SIMPLE_NAV && tab ? sectionForPath(pathname, search).label : getPageTitle(pathname)}</span>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -519,7 +533,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main content */}
       <main className={cn("flex-1 overflow-y-auto overflow-x-hidden pt-14 lg:pt-0 relative z-[1]", SIMPLE_NAV && "pb-16 lg:pb-0")}>
         <div className={cn("p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto", SIMPLE_NAV && tab?.hideTitleOnPhone && pathname === tab.href && "max-lg:[&_h1]:sr-only")}>
-          {SIMPLE_NAV && <SectionTabs pathname={pathname} />}
+          <Suspense fallback={null}><SearchSync onChange={setSearch} /></Suspense>
+          {SIMPLE_NAV && <SectionTabs pathname={pathname} search={search} />}
           <AnimatePresence mode="wait">
             <motion.div key={pathname} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
               {children}
@@ -528,14 +543,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </main>
 
-      {/* Phone bottom bar: the same five sections, one tap away */}
+      {/* Phone bottom bar: the daily steps one tap away; the rest are in the menu */}
       {SIMPLE_NAV && (
         <nav
           aria-label="Main"
           className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex border-t border-[var(--os-border)] pb-[env(safe-area-inset-bottom)]"
           style={{ backgroundColor: "var(--os-surface)" }}
         >
-          {SIMPLE_ITEMS.map((item) => {
+          {PHONE_ITEMS.map((item) => {
             const active = isActive(item.href);
             return (
               <Link

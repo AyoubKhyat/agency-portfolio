@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, ChevronRight, Compass, EyeOff, RefreshCw, Search, Users } from "lucide-react";
@@ -114,6 +114,16 @@ function NotListed({ notes }: { notes: LeadQueue["notes"] }) {
   );
 }
 
+/** Reports the URL's `view` to the page whenever it changes (a menu click keeps the page mounted). */
+function ViewFromUrl({ onView }: { onView: (view: string | null) => void }) {
+  const view = useSearchParams().get("view");
+  useEffect(() => {
+    const t = window.setTimeout(() => onView(view), 0);
+    return () => window.clearTimeout(t);
+  }, [view, onView]);
+  return null;
+}
+
 export default function LeadQueuePage() {
   const router = useRouter();
   const [queue, setQueue] = useState<LeadQueue | null>(null);
@@ -140,11 +150,14 @@ export default function LeadQueuePage() {
     }
   }, [router]);
 
+  // The menu links Contact (no view) and Follow Up (?view=followUps) to this same page, so the
+  // filter follows the URL on every visit, not only the first one.
+  const onView = useCallback((view: string | null) => {
+    setFilter(view === "replies" || view === "enquiries" || view === "verify" || view === "followUps" || view === "ready" ? view : "all");
+    setPickedKey(null);
+  }, []);
+
   useEffect(() => {
-    const view = new URLSearchParams(window.location.search).get("view");
-    const pick = window.setTimeout(() => {
-      if (view === "replies" || view === "enquiries" || view === "verify" || view === "followUps" || view === "ready") setFilter(view);
-    }, 0);
     fetch("/api/admin/lead-queue")
       .then(async (res) => {
         if (res.status === 401) { router.push("/admin/login"); return; }
@@ -152,7 +165,6 @@ export default function LeadQueuePage() {
         setQueue(await res.json());
       })
       .catch(() => setFailed(true));
-    return () => window.clearTimeout(pick);
   }, [router]);
 
   useEffect(() => {
@@ -242,6 +254,7 @@ export default function LeadQueuePage() {
 
   return (
     <div>
+      <Suspense fallback={null}><ViewFromUrl onView={onView} /></Suspense>
       <header className="flex items-end justify-between gap-3 mb-5">
         <div className="min-w-0">
           {queue && <p className="text-[13px] text-[var(--os-text-muted)]">{dateLabel(queue.today)}</p>}
