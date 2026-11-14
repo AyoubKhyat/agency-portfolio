@@ -11,6 +11,7 @@
 import { anchorHrefs, notARealPage, robotsAllows } from "@/lib/website-audit/checks";
 import { safeFetch, type SafeFetch, type SafeResponse } from "@/lib/website-audit/safe-fetch";
 import { extractContactLinks } from "@/lib/prospect-qualification";
+import { identitySignals, type IdentitySignals } from "@/lib/lead-identity";
 
 export const MAX_EXTRA_PAGES = 2;
 /** Per site: robots.txt + home + extra pages all have to fit in this. */
@@ -27,7 +28,8 @@ export type SiteContact = {
   sourceUrl: string;
 };
 
-export type SiteContacts = { contacts: SiteContact[]; pagesRead: string[] };
+/** signals: identity signals of the home page read here (null when it wasn't read), for lead-identity.ts. */
+export type SiteContacts = { contacts: SiteContact[]; pagesRead: string[]; signals: IdentitySignals | null };
 
 /** Contact/About page paths in the languages Marrakech sites use (FR, EN, AR transliterations, ES). */
 const PAGE_HINT = /(^|[/_-])(contact|contacts|contactez|contactez-nous|nous-contacter|contact-us|contacto|about|about-us|a-propos|apropos|qui-sommes-nous|notre-histoire)([/_.-]|$)/i;
@@ -92,7 +94,7 @@ export async function discoverSiteContacts(siteUrl: string, deps: { fetcher?: Sa
   const fetcher = deps.fetcher ?? safeFetch;
   const now = deps.now ?? (() => Date.now());
   const deadlineAt = now() + SITE_BUDGET_MS;
-  const result: SiteContacts = { contacts: [], pagesRead: [] };
+  const result: SiteContacts = { contacts: [], pagesRead: [], signals: null };
   let origin: string;
   try { origin = new URL(siteUrl).origin; } catch { return result; }
 
@@ -116,6 +118,7 @@ export async function discoverSiteContacts(siteUrl: string, deps: { fetcher?: Sa
   try { home = await fetcher(siteUrl, { kind: "html", deadlineAt }); } catch { return result; }
   if (!usable(home)) return result;
   result.pagesRead.push(home.finalUrl);
+  result.signals = identitySignals(home.body, home.finalUrl);
   add(fromPage(home));
 
   for (const url of contactPageLinks(home.body, home.finalUrl)) {

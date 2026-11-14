@@ -28,6 +28,7 @@ import {
 import type { SafeFetch } from "@/lib/website-audit/safe-fetch";
 import { contactRank, discoverSiteContacts, type SiteContact } from "@/lib/lead-contacts";
 import { issueCopy } from "@/lib/lead-issue-copy";
+import { assessIdentity, type Identity } from "@/lib/lead-identity";
 
 export const AGENT = "DAILY_AGENT";
 export const AGENT_CITY = "MARRAKECH";
@@ -97,7 +98,12 @@ export type DailyLead = {
   contacts: LeadContact[];
   whatsappConfidence: "HIGH" | "MEDIUM" | "CONFLICT" | "NONE";
   checkedAt: string;
+  /** Website leads: does the site look like this business's own? MISMATCH leads are never saved. */
+  identity?: Omit<Identity, "status"> & { status: "MATCH" | "UNVERIFIED" };
 };
+
+/** A site that presents itself as another business: held back for a person to look at, nothing attached to it. */
+export type IdentityReview = { osmId: string; osmUrl: string; name: string; sector: string; website: string; siteName: string | null; reason: string };
 
 export type RunStats = {
   sectors: string[];
@@ -108,6 +114,7 @@ export type RunStats = {
   /** Own-site pages read for contacts, and leads candidates that turned out to be in the CRM through them. */
   contactPagesRead?: number;
   inCrmByContact?: number;
+  identityReview?: IdentityReview[];
   sectorErrors: string[];
   stoppedEarly: boolean;
 };
@@ -217,7 +224,7 @@ export function whatsappConfidenceOf(contacts: LeadContact[]): DailyLead["whatsa
 export const customerIssues = (findings: readonly { id: string; sentence: string; observed: string }[]) =>
   findings.filter((f) => issueCopy(f).group === "CUSTOMER").length;
 
-type Ranked = { audited: AuditedCandidate; contacts: LeadContact[] };
+type Ranked = { audited: AuditedCandidate; contacts: LeadContact[]; identity?: DailyLead["identity"] };
 
 /**
  * Problems first, contactability only between comparable leads: leads with customer-facing problems before
@@ -236,12 +243,13 @@ export function rankWebsiteLeads<T extends Ranked>(items: T[]): T[] {
   });
 }
 
-function websiteLead({ audited: a, contacts }: Ranked): DailyLead {
+function websiteLead({ audited: a, contacts, identity }: Ranked): DailyLead {
   return {
     kind: "WEBSITE", osmId: a.candidate.sourceId, osmUrl: a.candidate.mapsUrl ?? `https://www.openstreetmap.org/${a.candidate.sourceId}`,
     name: a.candidate.name, sector: a.candidate.sector, website: a.candidate.website, finalUrl: a.finalUrl, outcome: a.outcome,
     findings: a.findings.map((f) => ({ id: f.id, sentence: f.sentence, observed: f.observed, sourceUrl: f.sourceUrl, fetchedAt: f.fetchedAt })),
     score: a.score, contacts, whatsappConfidence: whatsappConfidenceOf(contacts), checkedAt: a.auditedAt,
+    ...(identity ? { identity } : {}),
   };
 }
 
@@ -375,14 +383,24 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
     const ranked: Ranked[] = [];
     stats.contactPagesRead = 0;
     stats.inCrmByContact = 0;
+    stats.identityReview = [];
     for (let i = 0; i < pool.length; i += AUDIT_CHUNK) {
       const chunk = pool.slice(i, i + AUDIT_CHUNK);
       const late = clock() - started > CONTACT_DEADLINE_MS;
       const found = await Promise.all(chunk.map((a) => (late || !a.finalUrl
-        ? Promise.resolve({ contacts: [], pagesRead: [] })
+        ? Promise.resolve({ contacts: [], pagesRead: [], signals: null })
         : discoverSiteContacts(a.finalUrl, { fetcher: deps.fetcher }))));
       chunk.forEach((a, j) => {
         stats.contactPagesRead! += found[j].pagesRead.length;
+        // Identity first: a site that is clearly another business's gets none of its problems or contacts.
+        const identity = assessIdentity(a.candidate.name, found[j].signals);
+        if (identity.status === "MISMATCH") {
+          stats.identityReview!.push({
+            osmId: a.candidate.sourceId, osmUrl: a.candidate.mapsUrl ?? `https://www.openstreetmap.org/${a.candidate.sourceId}`,
+            name: a.candidate.name, sector: a.candidate.sector, website: a.finalUrl ?? a.candidate.website, siteName: identity.siteName, reason: identity.reason,
+          });
+          return;
+        }
         const contacts = mergeContacts(a, found[j].contacts);
         // Newly found contacts can reveal a business already in the CRM: then it isn't a lead.
         const wa = contacts.find((c) => c.channel === "WHATSAPP" && digitsOf(c.link));
@@ -390,7 +408,7 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
         const email = contacts.find((c) => c.channel === "EMAIL")?.value ?? null;
         const status = classify({ ...a.candidate, phone: wa ? `+${digitsOf(wa.link)}` : null, instagram: ig?.link ?? a.candidate.instagram, email }, crm).status;
         if (status !== "NEW") { stats.inCrmByContact!++; return; }
-        ranked.push({ audited: a, contacts });
+        ranked.push({ audited: a, contacts, identity: { status: identity.status, siteName: identity.siteName, reason: identity.reason } });
       });
     }
     const withSite = rankWebsiteLeads(ranked).slice(0, MAX_LEADS - noSite.length).map(websiteLead);

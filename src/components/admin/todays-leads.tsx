@@ -18,6 +18,28 @@ const pagePath = (url: string) => { try { const u = new URL(url); return (u.host
 const time = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Africa/Casablanca" });
 const host = (url: string) => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; } };
 
+/** Sites that present themselves as a different business: nothing is attached to them, a person decides. */
+function IdentityReviewList({ view }: { view: View }) {
+  const items = view.run?.stats?.identityReview ?? [];
+  if (items.length === 0) return null;
+  return (
+    <div className="mt-3 rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--os-text-muted)]">Held for manual review · website may belong to another business</p>
+      <ul className="mt-2 space-y-2">
+        {items.map((r) => (
+          <li key={r.osmId} className="text-[12.5px] text-[var(--os-text)] break-words">
+            <span className="font-semibold">{r.name}</span> <span className="text-[var(--os-text-muted)]">({sectorLabel(r.sector)})</span>: {r.reason}{" "}
+            <a href={r.website} target="_blank" rel="noopener noreferrer" className="text-[var(--os-purple)] underline">{host(r.website)}</a>
+            {" · "}
+            <a href={r.osmUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--os-purple)] underline">OSM listing</a>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-[11px] text-[var(--os-text-muted)]">Not ranked, and no website problems or contacts were attached. If the OSM listing points to the wrong site, it can be corrected on OpenStreetMap.</p>
+    </div>
+  );
+}
+
 function StatsLine({ view }: { view: View }) {
   const s = view.run?.stats;
   if (!s) return null;
@@ -96,6 +118,9 @@ function LeadCard({ lead, state, onImport }: { lead: TodayLead; state: ImportSta
         </span>
       </div>
 
+      {lead.kind === "WEBSITE" && lead.identity?.status === "UNVERIFIED" && (
+        <p className="mt-2 text-[12px] text-amber-700 dark:text-amber-300">Website identity unverified: {lead.identity.reason} Check the site is theirs before using its problems or contacts.</p>
+      )}
       {lead.kind === "WEBSITE" ? (
         <IssueList findings={lead.findings} open={open} />
       ) : (
@@ -252,6 +277,7 @@ export function TodaysLeads() {
         <p className="text-[14px] text-[var(--os-text)]">No business met the bar today.</p>
         <p className="text-[12px] text-[var(--os-text-muted)] mt-1">A lead needs a website read completely with a problem a customer would notice, or no website in OpenStreetMap but an explicit WhatsApp or Instagram tag. Nothing was padded.</p>
         <StatsLine view={view} />
+        <IdentityReviewList view={view} />
       </div>
     );
   } else {
@@ -261,6 +287,7 @@ export function TodaysLeads() {
           {view.leads.map((l) => <LeadCard key={l.resultId} lead={l} state={imports[l.resultId] ?? {}} onImport={() => void importLead(l)} />)}
         </ul>
         <StatsLine view={view} />
+        <IdentityReviewList view={view} />
       </>
     );
   }

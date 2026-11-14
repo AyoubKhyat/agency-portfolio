@@ -74,7 +74,7 @@ test("discovery: robots.txt, home, then the contact page; explicit WhatsApp/Inst
 
 test("discovery stops safely: robots 5xx, home disallowed, a page leaving the site, limits", async () => {
   const down = site({ "/robots.txt": 503, "/": html('<a href="https://wa.me/212612345678">x</a>') });
-  assert.deepEqual(await lc.discoverSiteContacts("https://riad.ma/", { fetcher: down.fetcher }), { contacts: [], pagesRead: [] });
+  assert.deepEqual(await lc.discoverSiteContacts("https://riad.ma/", { fetcher: down.fetcher }), { contacts: [], pagesRead: [], signals: null });
   assert.deepEqual(down.hits, ["https://riad.ma/robots.txt"]);
 
   const closed = site({ "/robots.txt": "User-agent: *\nDisallow: /", "/": html("") });
