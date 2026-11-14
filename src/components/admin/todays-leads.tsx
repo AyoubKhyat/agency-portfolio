@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronDown, ExternalLink, Loader2, MapPin, RefreshCw, Sparkles } from "lucide-react";
 import { SECTORS } from "@/lib/discovery-providers";
 import { cn } from "@/lib/utils";
+import { groupIssues, issueCopy } from "@/lib/lead-issue-copy";
 import type { TodayLead, TodayLeadsView } from "@/lib/daily-leads-store";
 
 type View = TodayLeadsView & { canRun: boolean };
@@ -32,6 +33,48 @@ function StatsLine({ view }: { view: View }) {
   );
 }
 
+/** Customer-facing issues as titled rows; minor technical/SEO ones as compact chips (full rows once opened). */
+function IssueList({ findings, open }: { findings: TodayLead["findings"]; open: boolean }) {
+  const { customer, technical } = groupIssues(findings);
+  const shown = open ? customer : customer.slice(0, 2);
+  const hidden = customer.length - shown.length;
+  const row = (x: (typeof customer)[number], tone: "customer" | "technical") => (
+    <li key={x.finding.id} className="flex gap-2.5">
+      <span aria-hidden className={cn("mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full", tone === "customer" ? "bg-amber-500" : "bg-[var(--os-text-muted)]")} />
+      <div className="min-w-0">
+        <p className="text-[13px] font-semibold text-[var(--os-text)] leading-snug">{x.copy.title}</p>
+        {x.copy.explanation && <p className="text-[12.5px] text-[var(--os-text-muted)] leading-relaxed">{x.copy.explanation}</p>}
+        {x.copy.impact && <p className="text-[12px] text-[var(--os-text-muted)] leading-relaxed"><span className="font-medium">Possible impact:</span> {x.copy.impact}</p>}
+      </div>
+    </li>
+  );
+  return (
+    <div className="mt-3 space-y-3">
+      {customer.length > 0 && (
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300 mb-1.5">What a customer would notice</p>
+          <ul className="space-y-2">{shown.map((x) => row(x, "customer"))}</ul>
+          {hidden > 0 && <p className="mt-1 text-[12px] text-[var(--os-text-muted)]">+{hidden} more in Review evidence</p>}
+        </div>
+      )}
+      {technical.length > 0 && (
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--os-text-muted)] mb-1.5">Minor technical / SEO</p>
+          {open ? (
+            <ul className="space-y-2">{technical.map((x) => row(x, "technical"))}</ul>
+          ) : (
+            <ul className="flex flex-wrap gap-1.5">
+              {technical.map((x) => (
+                <li key={x.finding.id} className="text-[12px] rounded-lg border border-[var(--os-border)] px-2 py-0.5 text-[var(--os-text-muted)]">{x.copy.title}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LeadCard({ lead, state, onImport }: { lead: TodayLead; state: ImportState; onImport: () => void }) {
   const [open, setOpen] = useState(false);
   const prospectId = lead.importedProspectId ?? state.prospectId;
@@ -52,11 +95,7 @@ function LeadCard({ lead, state, onImport }: { lead: TodayLead; state: ImportSta
       </div>
 
       {lead.kind === "WEBSITE" ? (
-        <ul className="mt-3 space-y-1">
-          {lead.findings.slice(0, open ? undefined : 2).map((f) => (
-            <li key={f.id} className="text-[13px] text-[var(--os-text)] leading-relaxed">• {f.sentence}</li>
-          ))}
-        </ul>
+        <IssueList findings={lead.findings} open={open} />
       ) : (
         <p className="mt-3 text-[13px] text-[var(--os-text)] leading-relaxed">
           The OpenStreetMap listing has no website, only the contact link{lead.contacts.length === 1 ? "" : "s"} below. That doesn&apos;t prove the business has no site: check before you mention it.
@@ -78,9 +117,9 @@ function LeadCard({ lead, state, onImport }: { lead: TodayLead; state: ImportSta
         <div className="mt-3 rounded-xl bg-[var(--os-hover)] p-3 space-y-2">
           <p className="text-[11px] uppercase tracking-wide text-[var(--os-text-muted)]">What was seen, and where</p>
           {lead.findings.map((f) => (
-            <div key={f.id} className="text-[12px] text-[var(--os-text)]">
-              <span className="font-medium">{f.sentence}</span>
-              <span className="text-[var(--os-text-muted)]"> — {f.observed} · <a href={f.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">{host(f.sourceUrl)}</a></span>
+            <div key={f.id} className="text-[12px] text-[var(--os-text)] break-words">
+              <span className="font-semibold">{issueCopy(f).title}:</span> {f.sentence}
+              <span className="text-[var(--os-text-muted)]"> — observed: {f.observed} · <a href={f.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">{host(f.sourceUrl)}</a></span>
             </div>
           ))}
           <p className="text-[11px] text-[var(--os-text-muted)]">Checked {time(lead.checkedAt)} (Casablanca)</p>
