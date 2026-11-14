@@ -4,7 +4,8 @@
  *
  * Each entry holds only what discovery needs: the OSM id, a name, its sectors, its website and any contact link
  * the mapper tagged explicitly (WhatsApp, Instagram, Facebook). No phone numbers or e-mail addresses.
- * Only businesses with a usable website are kept, and one entry per website.
+ * Kept: businesses with a usable website (one entry per website), and businesses with no website but an explicit
+ * WhatsApp or Instagram tag (website ""), which only the Daily Lead Agent uses.
  *
  * It lives outside Git (data/osm/ is ignored, the repository is public): in a private Vercel Blob store in
  * production, or the local file for development. See "Loading" below.
@@ -93,15 +94,25 @@ export function buildDataset(raw: RawExtract, generatedAt = new Date().toISOStri
 
     const website = normalizeSiteUrl(t["website"] || t["contact:website"] || "");
     const key = website ? siteKey(website) : null;
-    if (!website || !key) continue;
+    const whatsapp = taggedWhatsApp(t["contact:whatsapp"] || t["whatsapp"]);
+    const instagram = httpsOnly(t["contact:instagram"] || t["instagram"]);
+    const facebook = httpsOnly(t["contact:facebook"]);
+    if (!website || !key) {
+      // No website in OSM: kept only with an explicit WhatsApp or Instagram tag (the Daily Lead Agent's
+      // "no website listed" leads). Website "" — P6C still counts and skips these as "no website".
+      if (!whatsapp && !instagram) continue;
+      const entry: OsmEntry = { id: `${el.type}/${el.id}`, name, sectors, website: "" };
+      if (whatsapp) entry.whatsapp = whatsapp;
+      if (instagram) entry.instagram = instagram;
+      if (facebook) entry.facebook = facebook;
+      entries.push(entry);
+      continue;
+    }
     if (bySite.has(key)) { sharedWebsites++; continue; }
     bySite.add(key);
     for (const s of sectors) stats[s].withWebsite++;
 
     const entry: OsmEntry = { id: `${el.type}/${el.id}`, name, sectors, website };
-    const whatsapp = taggedWhatsApp(t["contact:whatsapp"] || t["whatsapp"]);
-    const instagram = httpsOnly(t["contact:instagram"] || t["instagram"]);
-    const facebook = httpsOnly(t["contact:facebook"]);
     if (whatsapp) entry.whatsapp = whatsapp;
     if (instagram) entry.instagram = instagram;
     if (facebook) entry.facebook = facebook;
