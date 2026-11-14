@@ -282,7 +282,12 @@ export default function LeadQueuePage() {
             <FilterTabs
               size="md"
               active={filter}
-              onChange={(v) => { setFilter(v as Filter); setPickedKey(null); }}
+              onChange={(v) => {
+                // Keep ?view= in step so the menu shows Contact or Follow Up for the filter picked here.
+                router.replace(v === "all" ? "/admin/lead-queue" : `/admin/lead-queue?view=${v}`, { scroll: false });
+                setFilter(v as Filter);
+                setPickedKey(null);
+              }}
               items={[
                 { value: "all", label: "All", count: left.length },
                 { value: "replies", label: "Replies", count: count("replies") },

@@ -68,6 +68,8 @@ test("query filters are ones the target page already reads", () => {
   }
   // The queue follows the URL on every visit, so Contact → Follow Up changes the view without a reload.
   assert.match(queue, /useSearchParams\(\)\.get\("view"\)/);
+  // ...and a filter picked on the page writes ?view= back, so the menu stays on the right entry.
+  assert.match(queue, /router\.replace\(v === "all" \? "\/admin\/lead-queue" : `\/admin\/lead-queue\?view=\$\{v\}`, \{ scroll: false \}\)/);
 });
 
 test("no tool is listed twice", () => {
