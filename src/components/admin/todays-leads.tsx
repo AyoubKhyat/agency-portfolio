@@ -12,7 +12,9 @@ type View = TodayLeadsView & { canRun: boolean };
 type ImportState = { busy?: boolean; prospectId?: string; skipped?: string; error?: string };
 
 const sectorLabel = (key: string) => SECTORS.find((s) => s.key === key)?.label ?? key;
-const CHANNEL: Record<string, string> = { WHATSAPP: "WhatsApp", INSTAGRAM: "Instagram", FACEBOOK: "Facebook" };
+const CHANNEL: Record<string, string> = { WHATSAPP: "WhatsApp", INSTAGRAM: "Instagram", EMAIL: "Email", FACEBOOK: "Facebook" };
+/** "site.ma/contact": where a contact link was found, short enough for a phone. */
+const pagePath = (url: string) => { try { const u = new URL(url); return (u.hostname.replace(/^www\./, "") + u.pathname).replace(/\/$/, ""); } catch { return url; } };
 const time = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Africa/Casablanca" });
 const host = (url: string) => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; } };
 
@@ -106,11 +108,17 @@ function LeadCard({ lead, state, onImport }: { lead: TodayLead; state: ImportSta
         {site && <a href={site} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[var(--os-purple)] hover:underline"><ExternalLink className="w-3 h-3" /> {host(site)}</a>}
         <a href={lead.osmUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[var(--os-purple)] hover:underline"><MapPin className="w-3 h-3" /> OpenStreetMap listing</a>
         {lead.contacts.map((c) => (
-          <a key={c.channel + c.link} href={c.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[var(--os-text-muted)] hover:text-[var(--os-text)]">
-            {CHANNEL[c.channel]} <span className="text-amber-700 dark:text-amber-300">(unverified, from {c.source === "OSM_TAG" ? "OSM tag" : "the website"})</span>
-          </a>
+          <span key={c.channel + c.link} className="inline-flex flex-wrap items-center gap-x-1 text-[var(--os-text-muted)] break-all">
+            <a href={c.link} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--os-text)]">
+              {CHANNEL[c.channel]}{c.value ? ` ${c.value}` : ""}
+            </a>
+            <span className="text-amber-700 dark:text-amber-300">
+              (unverified, {c.source === "OSM_TAG" ? "from the OSM tag" : <>found on <a href={c.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">{pagePath(c.sourceUrl)}</a></>})
+            </span>
+          </span>
         ))}
-        {lead.contacts.length === 0 && <span className="text-[var(--os-text-muted)]">No WhatsApp or Instagram link found</span>}
+        {lead.whatsappConfidence === "CONFLICT" && <span className="text-red-600">Different WhatsApp numbers found: check which is current</span>}
+        {lead.contacts.length === 0 && <span className="text-[var(--os-text-muted)]">No WhatsApp, Instagram or email link found on the site</span>}
       </div>
 
       {open && lead.kind === "WEBSITE" && (

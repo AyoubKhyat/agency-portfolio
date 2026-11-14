@@ -8,8 +8,10 @@
  *   3. Uses P6C's search (private OSM list, CRM duplicates left out), skips anything an earlier day showed,
  *      and checks at most 12 websites with P6A's safe check, within a time limit.
  *   4. Keeps the businesses whose site was read completely and has at least one problem a customer would
- *      notice (P6C ranking), and up to 2 businesses with no website in the OSM list but an explicit
- *      WhatsApp or Instagram tag. A site that couldn't be read is never ranked as having problems.
+ *      notice, and up to 2 businesses with no website in the OSM list but an explicit WhatsApp or Instagram tag.
+ *      A site that couldn't be read is never ranked as having problems. For the best 8 readable sites, the
+ *      site's own Contact/About pages are read (robots.txt allowing) for explicit WhatsApp, Instagram and
+ *      mailto: links; contactability then breaks ties between comparable problems (lead-contacts.ts).
  *   5. Saves them as DiscoveryResult rows of that sweep.
  *
  * What it never does: write Prospect rows, verify or invent a contact (WhatsApp only from an explicit link,
@@ -21,9 +23,11 @@ import { classify, siteKey } from "@/lib/discovery-duplicates";
 import { explicitWhatsAppLink } from "@/lib/contact-check";
 import { toCandidate, type OsmDataset, type OsmEntry } from "@/lib/osm-dataset";
 import {
-  AUDIT_CHUNK, auditChunk, rankTop, searchBatch, sectorEntries, type AuditedCandidate, type BatchCandidate, type CrmRow,
+  AUDIT_CHUNK, auditChunk, searchBatch, sectorEntries, type AuditedCandidate, type BatchCandidate, type CrmRow,
 } from "@/lib/batch-discovery";
 import type { SafeFetch } from "@/lib/website-audit/safe-fetch";
+import { contactRank, discoverSiteContacts, type SiteContact } from "@/lib/lead-contacts";
+import { issueCopy } from "@/lib/lead-issue-copy";
 
 export const AGENT = "DAILY_AGENT";
 export const AGENT_CITY = "MARRAKECH";
@@ -31,6 +35,10 @@ export const SECTORS_PER_DAY = 3;
 export const MAX_SITE_CHECKS = 12;
 export const MAX_LEADS = 5;
 export const MAX_NO_WEBSITE = 2;
+/** Best-ranked readable sites whose own pages are read for contacts before the final pick. */
+export const CONTACT_POOL = 8;
+/** No contact lookup starts after this (the function limit is 300 s). */
+export const CONTACT_DEADLINE_MS = 240_000;
 /** No new site check starts after this; checks already running finish within their own timeouts. */
 export const CHECK_DEADLINE_MS = 180_000;
 /** A run still RUNNING after this is treated as crashed (the function limit is 300 s). */
@@ -62,7 +70,15 @@ export const EMPTY_STATE: AgentState = { v: 1, cursors: {} };
 export const NO_WEBSITE_SCAN = 500;
 
 export type LeadFinding = { id: string; sentence: string; observed: string; sourceUrl: string; fetchedAt: string };
-export type LeadContact = { channel: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK"; link: string; source: "OSM_TAG" | "WEBSITE"; sourceUrl: string };
+/** An explicit link and the exact page or OSM object it came from. Never verified by the agent. */
+export type LeadContact = {
+  channel: "WHATSAPP" | "INSTAGRAM" | "EMAIL" | "FACEBOOK";
+  link: string;
+  /** "+212 6…", "@handle" or the e-mail address, when the link shows it. */
+  value?: string;
+  source: "OSM_TAG" | "WEBSITE";
+  sourceUrl: string;
+};
 
 export type DailyLead = {
   kind: "WEBSITE" | "NO_WEBSITE";
@@ -89,6 +105,9 @@ export type RunStats = {
   outcomes: Record<string, number>;
   skipped: { noWebsite: number; platformOnly: number; inCrm: number; possibleDuplicate: number; sameSiteInBatch: number; shownBefore: number };
   noWebsiteWithContact: number;
+  /** Own-site pages read for contacts, and leads candidates that turned out to be in the CRM through them. */
+  contactPagesRead?: number;
+  inCrmByContact?: number;
   sectorErrors: string[];
   stoppedEarly: boolean;
 };
@@ -171,17 +190,58 @@ export function interleave<T>(lists: T[][], max: number): T[] {
   return out;
 }
 
-function websiteLead(a: AuditedCandidate): DailyLead {
-  const contacts: LeadContact[] = a.whatsapp.link
-    ? [{ channel: "WHATSAPP", link: a.whatsapp.link, source: a.whatsapp.sources[0].kind, sourceUrl: a.whatsapp.sources[0].url }]
-    : [];
-  if (a.candidate.instagram) contacts.push({ channel: "INSTAGRAM", link: a.candidate.instagram, source: "OSM_TAG", sourceUrl: a.candidate.mapsUrl ?? "" });
-  if (a.candidate.facebook) contacts.push({ channel: "FACEBOOK", link: a.candidate.facebook, source: "OSM_TAG", sourceUrl: a.candidate.mapsUrl ?? "" });
+const digitsOf = (link: string) => link.replace(/\D/g, "");
+
+/** OSM tags and P6C's home-page WhatsApp, then what the site's own pages link to; one entry per channel + link. */
+export function mergeContacts(a: AuditedCandidate, site: SiteContact[]): LeadContact[] {
+  const out: LeadContact[] = [];
+  const push = (c: LeadContact) => { if (c.link && !out.some((x) => x.channel === c.channel && x.link === c.link)) out.push(c); };
+  for (const src of a.whatsapp.sources) push({ channel: "WHATSAPP", link: src.link, source: src.kind, sourceUrl: src.url });
+  for (const c of site) push({ channel: c.channel, link: c.link, value: c.value || undefined, source: "WEBSITE", sourceUrl: c.sourceUrl });
+  if (a.candidate.instagram) push({ channel: "INSTAGRAM", link: a.candidate.instagram, source: "OSM_TAG", sourceUrl: a.candidate.mapsUrl ?? "" });
+  if (a.candidate.facebook) push({ channel: "FACEBOOK", link: a.candidate.facebook, source: "OSM_TAG", sourceUrl: a.candidate.mapsUrl ?? "" });
+  const order = { WHATSAPP: 0, INSTAGRAM: 1, EMAIL: 2, FACEBOOK: 3 } as const;
+  return out.sort((x, y) => order[x.channel] - order[y.channel]);
+}
+
+/** One number from OSM and the site: HIGH; one source: MEDIUM; different numbers: CONFLICT. Still unverified. */
+export function whatsappConfidenceOf(contacts: LeadContact[]): DailyLead["whatsappConfidence"] {
+  const wa = contacts.filter((c) => c.channel === "WHATSAPP" && digitsOf(c.link));
+  const numbers = new Set(wa.map((c) => digitsOf(c.link)));
+  if (numbers.size === 0) return "NONE";
+  if (numbers.size > 1) return "CONFLICT";
+  return wa.some((c) => c.source === "OSM_TAG") && wa.some((c) => c.source === "WEBSITE") ? "HIGH" : "MEDIUM";
+}
+
+/** Serious = at least one problem a customer would notice (HTTPS, phones, contact, speed), not only SEO details. */
+export const customerIssues = (findings: readonly { id: string; sentence: string; observed: string }[]) =>
+  findings.filter((f) => issueCopy(f).group === "CUSTOMER").length;
+
+type Ranked = { audited: AuditedCandidate; contacts: LeadContact[] };
+
+/**
+ * Problems first, contactability only between comparable leads: leads with customer-facing problems before
+ * SEO-only ones, more customer-facing problems first; then WhatsApp > Instagram > e-mail > none; then the
+ * check's own score. So a reachable site with only SEO details never outranks a serious problem.
+ */
+export function rankWebsiteLeads<T extends Ranked>(items: T[]): T[] {
+  const key = (x: Ranked) => {
+    const serious = customerIssues(x.audited.findings);
+    return [serious > 0 ? 1 : 0, serious, contactRank(x.contacts.map((c) => c.channel)), x.audited.score, x.audited.findings.length];
+  };
+  return [...items].sort((a, b) => {
+    const ka = key(a), kb = key(b);
+    for (let i = 0; i < ka.length; i++) if (ka[i] !== kb[i]) return kb[i] - ka[i];
+    return a.audited.candidate.name.localeCompare(b.audited.candidate.name);
+  });
+}
+
+function websiteLead({ audited: a, contacts }: Ranked): DailyLead {
   return {
     kind: "WEBSITE", osmId: a.candidate.sourceId, osmUrl: a.candidate.mapsUrl ?? `https://www.openstreetmap.org/${a.candidate.sourceId}`,
     name: a.candidate.name, sector: a.candidate.sector, website: a.candidate.website, finalUrl: a.finalUrl, outcome: a.outcome,
     findings: a.findings.map((f) => ({ id: f.id, sentence: f.sentence, observed: f.observed, sourceUrl: f.sourceUrl, fetchedAt: f.fetchedAt })),
-    score: a.score, contacts, whatsappConfidence: a.whatsapp.confidence, checkedAt: a.auditedAt,
+    score: a.score, contacts, whatsappConfidence: whatsappConfidenceOf(contacts), checkedAt: a.auditedAt,
   };
 }
 
@@ -307,7 +367,33 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
     // 5. Evidence first: read completely, not in the CRM, at least one customer-facing problem.
     const at = now().toISOString();
     const noSite = pickedNoSite.map((n) => noWebsiteLead(n.entry, n.sector, at));
-    const withSite = rankTop(audited).slice(0, MAX_LEADS - noSite.length).map(websiteLead);
+    // The best readable sites (P6C's rule and order) get their own Contact/About pages read for contacts.
+    // rankTop's rule (read completely, not in the CRM, a customer-facing problem) and order, but a wider pool.
+    const pool = audited.filter((a) => a.outcome === "COMPLETE" && !a.inCrm && a.findings.length > 0)
+      .sort((x, y) => y.score - x.score || y.findings.length - x.findings.length || x.candidate.name.localeCompare(y.candidate.name))
+      .slice(0, CONTACT_POOL);
+    const ranked: Ranked[] = [];
+    stats.contactPagesRead = 0;
+    stats.inCrmByContact = 0;
+    for (let i = 0; i < pool.length; i += AUDIT_CHUNK) {
+      const chunk = pool.slice(i, i + AUDIT_CHUNK);
+      const late = clock() - started > CONTACT_DEADLINE_MS;
+      const found = await Promise.all(chunk.map((a) => (late || !a.finalUrl
+        ? Promise.resolve({ contacts: [], pagesRead: [] })
+        : discoverSiteContacts(a.finalUrl, { fetcher: deps.fetcher }))));
+      chunk.forEach((a, j) => {
+        stats.contactPagesRead! += found[j].pagesRead.length;
+        const contacts = mergeContacts(a, found[j].contacts);
+        // Newly found contacts can reveal a business already in the CRM: then it isn't a lead.
+        const wa = contacts.find((c) => c.channel === "WHATSAPP" && digitsOf(c.link));
+        const ig = contacts.find((c) => c.channel === "INSTAGRAM");
+        const email = contacts.find((c) => c.channel === "EMAIL")?.value ?? null;
+        const status = classify({ ...a.candidate, phone: wa ? `+${digitsOf(wa.link)}` : null, instagram: ig?.link ?? a.candidate.instagram, email }, crm).status;
+        if (status !== "NEW") { stats.inCrmByContact!++; return; }
+        ranked.push({ audited: a, contacts });
+      });
+    }
+    const withSite = rankWebsiteLeads(ranked).slice(0, MAX_LEADS - noSite.length).map(websiteLead);
     const leads = [...withSite, ...noSite];
 
     await deps.store.finish(day, claim.startedAt, { status: "COMPLETED", state: { v: 1, cursors, noSiteCursors }, stats, leads }, now());

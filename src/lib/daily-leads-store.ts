@@ -110,8 +110,10 @@ export const prismaDailyStore: DailyStore = {
 function resultRow(sweepId: string, l: DailyLead) {
   const wa = l.contacts.find((c) => c.channel === "WHATSAPP")?.link ?? "";
   const ig = l.contacts.find((c) => c.channel === "INSTAGRAM")?.link ?? "";
+  const email = l.contacts.find((c) => c.channel === "EMAIL")?.value ?? "";
   return {
     sweepId, name: l.name, website: l.website, instagram: ig, instagramUrl: ig, whatsappUrl: wa,
+    email, emailStatus: email ? "UNVERIFIED" : "MISSING",
     city: "Marrakech", country: "Morocco", sector: l.sector, sourceUrl: l.osmUrl,
     opportunityScore: Math.min(100, Math.max(0, Math.round(l.score))),
     websiteStatus: l.outcome ?? "NOT_LISTED", websiteValid: l.outcome === "COMPLETE", sourceValid: true,
@@ -179,7 +181,8 @@ export async function getTodayLeads(day: string, now = new Date()): Promise<Toda
 export function importCandidate(l: DailyLead) {
   return {
     sourceId: l.osmId, source: "OSM" as const, name: l.name, sector: l.sector, city: "Marrakech", neighborhood: null,
-    phone: null, email: null, rating: null, reviewCount: null,
+    phone: null, rating: null, reviewCount: null,
+    email: l.contacts.find((c) => c.channel === "EMAIL")?.value ?? null,
     website: l.website || null,
     whatsapp: l.contacts.find((c) => c.channel === "WHATSAPP")?.link ?? null,
     instagram: l.contacts.find((c) => c.channel === "INSTAGRAM")?.link ?? null,
