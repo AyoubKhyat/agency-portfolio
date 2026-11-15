@@ -25,7 +25,7 @@ const DELEGATED: Record<string, { file: string; handlers: number }> = {
   "workspace/discovery/[id]/outreach/route.ts": { file: "src/lib/workspace/outreach.ts", handlers: 3 },
   "workspace/prospect/[id]/outreach/route.ts": { file: "src/lib/workspace/outreach.ts", handlers: 3 },
 };
-const GUARD = /\b(requireTeam|requireAdmin|requireOwner|getSession)\(/;
+const GUARD = /\b(requireTeam|requireAdmin|requireOwner|requireOwnerOrAdmin|getSession)\(/;
 
 test("every /api/admin route calls an auth guard, except login and logout", () => {
   const files = routeFiles(API);
