@@ -7,7 +7,9 @@ import { readFileSync } from "node:fs";
 import {
   CONFIRMED_SEND_SINCE, DISPLAY_GROUPS, VISIBLE_GROUPS, countByDisplayGroup, displayGroupOf, displayGroupWhere,
   getVisibleSendEvidence, groupStatuses, nextActionFor, replyStateOf,
+  CONFIRMED_SEND_WHERE, UNCONFIRMED_SEND_WHERE, describeProspect, visibleEvidenceWhere, withGroup,
 } from "../src/lib/prospect-groups";
+import { LEAD_QUEUE_PROSPECTS_SQL, PROSPECT_ROWS_BY_IDS_SQL } from "../src/lib/lead-queue-sql";
 import { STAGES } from "../src/lib/prospect-stages";
 import { classifyProspect, type ProspectRow } from "../src/lib/next-action";
 
@@ -195,4 +197,120 @@ test("every prospect gets exactly one non-empty action", () => {
       assert.ok(a.label.length > 0 && a.hint.length > 0, `${status} ${JSON.stringify(extra)}`);
     }
   }
+});
+
+// ─── Phase 2: filters, counts and list rows agree ────────────────────────
+
+/** A row as the Prisma filters see it. */
+type Mem = { status: string; sector?: string; sentAt?: string | null; messages: { replied: boolean; sentAt: string }[]; sendActivity?: boolean };
+
+/** Evaluates the subset of Prisma `where` the group and evidence filters use. Throws on anything else. */
+function matches(w: unknown, r: Mem): boolean {
+  if (w === undefined) return true;
+  const o = w as Record<string, unknown>;
+  return Object.entries(o).every(([k, v]) => {
+    const val = v as Record<string, unknown>;
+    switch (k) {
+      case "AND": return (v as unknown[]).every((x) => matches(x, r));
+      case "OR": return (v as unknown[]).some((x) => matches(x, r));
+      case "NOT": return !matches(v, r);
+      case "status":
+        if (typeof v === "string") return r.status === v;
+        if ("in" in val) return (val.in as string[]).includes(r.status);
+        if ("notIn" in val) return !(val.notIn as string[]).includes(r.status);
+        throw new Error("status op");
+      case "sector": return r.sector === v;
+      case "sentAt":
+        if (val.not === null) return !!r.sentAt;
+        throw new Error("sentAt op");
+      case "outreachMessages": {
+        const rel = (m: { replied: boolean; sentAt: string }, f: Record<string, unknown>) => Object.entries(f).every(([fk, fv]) => {
+          if (fk === "replied") return m.replied === fv;
+          if (fk === "sentAt") return new Date(m.sentAt) >= ((fv as { gte: Date }).gte);
+          throw new Error(`message field ${fk}`);
+        });
+        if ("some" in val) return r.messages.some((m) => rel(m, val.some as Record<string, unknown>));
+        if ("none" in val) return !r.messages.some((m) => rel(m, val.none as Record<string, unknown>));
+        throw new Error("relation op");
+      }
+      case "activities": {
+        const f = val.some as { actionType: { in: string[] } } | undefined;
+        if (f && Object.keys(f).length === 1 && f.actionType) return !!r.sendActivity;
+        throw new Error("activities op");
+      }
+      default: throw new Error(`unsupported where key ${k}`);
+    }
+  });
+}
+
+const ALL_STATUSES = [...STAGES.flatMap((s) => s.statuses), "SOMETHING_NEW"];
+const memRows: Mem[] = ALL_STATUSES.flatMap((status) => [
+  { status, messages: [] },
+  { status, messages: [{ replied: false, sentAt: "2026-09-01" }] },
+  { status, messages: [{ replied: true, sentAt: "2026-06-01" }] },
+]);
+
+test("each Prisma group filter selects exactly the rows displayGroupOf puts in that group", () => {
+  for (const r of memRows) {
+    const expected = displayGroupOf({ status: r.status, messageReplied: r.messages.some((m) => m.replied) });
+    const hits = DISPLAY_GROUPS.filter((g) => matches(displayGroupWhere(g.key), r)).map((g) => g.key);
+    assert.deepEqual(hits, [expected], `${r.status} replied=${r.messages.some((m) => m.replied)}`);
+  }
+});
+
+test("tab counts equal what each tab lists, and add up to the unfiltered total", () => {
+  const base = { sector: "Riad" };
+  const rows = memRows.map((r, i) => ({ ...r, sector: i % 2 ? "Riad" : "Spa" }));
+  const listed = (key: (typeof DISPLAY_GROUPS)[number]["key"]) => rows.filter((r) => matches(withGroup(base, key), r)).length;
+  const counted = Object.fromEntries(DISPLAY_GROUPS.map((g) => [g.key, rows.filter((r) => matches(withGroup(base, g.key), r)).length]));
+  for (const g of DISPLAY_GROUPS) assert.equal(counted[g.key], listed(g.key));
+  const total = rows.filter((r) => matches(base, r)).length;
+  assert.equal(Object.values(counted).reduce((a, b) => a + b, 0), total);
+});
+
+test("stricter evidence filters match the visible labels", () => {
+  const cases: Mem[] = [
+    { status: "ENVOYE", sentAt: "2026-07-01", messages: [{ replied: false, sentAt: "2026-09-01" }] },
+    { status: "ENVOYE", sentAt: "2026-07-01", messages: [{ replied: false, sentAt: "2026-07-15" }] },
+    { status: "ENVOYE", sentAt: null, messages: [], sendActivity: true },
+    { status: "ENVOYE", sentAt: null, messages: [] },
+    { status: "A_ENVOYER", sentAt: null, messages: [] },
+  ];
+  for (const r of cases) {
+    const last = r.messages.at(-1)?.sentAt ?? null;
+    const label = getVisibleSendEvidence({ status: r.status, sentAt: r.sentAt ?? null, lastMessageAt: last, lastSendAt: last ?? (r.sendActivity ? "2026-11-01" : null) });
+    assert.equal(matches(CONFIRMED_SEND_WHERE, r), label === "CONFIRMED", JSON.stringify(r));
+    assert.equal(matches(UNCONFIRMED_SEND_WHERE, r), label === "UNCONFIRMED", JSON.stringify(r));
+  }
+  assert.equal(visibleEvidenceWhere("confirmed"), CONFIRMED_SEND_WHERE);
+  assert.equal(visibleEvidenceWhere("recorded"), undefined); // older values keep their old filter
+});
+
+test("a list row's summary is its group, next action and reply state", () => {
+  const s = describeProspect(row({ status: "ENVOYE", hasSentAt: true, replyWasReset: true }), TODAY);
+  assert.deepEqual([s.group, s.nextAction.key, s.replyState], ["CONTACTED", "reply_review", "POSSIBLE_OLD"]);
+});
+
+test("the by-ids SQL is the queue's row SELECT, scoped and parameterised", () => {
+  const select = (sql: string) => sql.slice(sql.indexOf("SELECT\n"), sql.lastIndexOf("LEFT JOIN last_reply"));
+  assert.equal(select(PROSPECT_ROWS_BY_IDS_SQL), select(LEAD_QUEUE_PROSPECTS_SQL));
+  assert.match(PROSPECT_ROWS_BY_IDS_SQL, /WHERE p\.id = ANY\(\$1::text\[\]\)\s*$/);
+  assert.equal((PROSPECT_ROWS_BY_IDS_SQL.match(/prospect_id = ANY\(\$1::text\[\]\)/g) ?? []).length, 2);
+  assert.doesNotMatch(LEAD_QUEUE_PROSPECTS_SQL, /\$1/);
+  assert.doesNotMatch(PROSPECT_ROWS_BY_IDS_SQL, /\b(INSERT|UPDATE|DELETE)\b/);
+});
+
+test("the list and its tab counts share withGroup; counts drop only a status= filter", () => {
+  const src = read("src/lib/dal/prospects.ts");
+  assert.match(src, /const listWhere = groupKey \? withGroup\(where, groupKey\) : where;/);
+  assert.match(src, /count\(\{ where: withGroup\(countBase, g\.key\) \}\)/);
+  assert.match(src, /if \(statusFilter && !isDueFilter\) delete countBase\.status;/);
+});
+
+test("old links keep working: status= and due= still filter, group= is optional", () => {
+  const page = read("src/app/admin/prospecting/page.tsx");
+  assert.match(page, /statusFilter === "ALL" && dueFilter === "ALL" \? "NEW_LEADS" : null/);
+  assert.match(page, /if \(status === "ALL" && due === "ALL" && group\) qs\.set\("group", group\);/);
+  const nav = read("src/lib/admin-nav.ts");
+  assert.match(nav, /\/admin\/prospecting\?status=MEETING,PROPOSAL_SENT,NEGOTIATION/);
 });

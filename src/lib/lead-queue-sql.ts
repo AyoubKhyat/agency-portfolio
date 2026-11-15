@@ -21,7 +21,8 @@ const day = (column: string) =>
  * "did you actually send it?" step shipped. Older rows and SENT_* activities can
  * mean only that a button was clicked.
  */
-export const LEAD_QUEUE_PROSPECTS_SQL = `
+/** The row SELECT shared by the queue and the prospect list. Plain text, no interpolation of values. */
+const PROSPECT_ROW_SELECT = `
 WITH confirmed AS (
   SELECT DISTINCT ON (prospect_id) prospect_id, sent_at, channel
     FROM outreach_messages
@@ -66,7 +67,9 @@ SELECT
   EXISTS (SELECT 1 FROM proposals pr WHERE pr.prospect_id = p.id) AS "hasProposal"
 FROM prospects p
 LEFT JOIN confirmed c ON c.prospect_id = p.id
-LEFT JOIN last_reply r ON r.prospect_id = p.id
+LEFT JOIN last_reply r ON r.prospect_id = p.id`;
+
+export const LEAD_QUEUE_PROSPECTS_SQL = PROSPECT_ROW_SELECT + `
 WHERE p.status NOT IN ('CONVERTI','CLIENT','LOST','PERDU','REFUSE')
   AND (
     p.status IN ('REPONDU','A_ENVOYER')
@@ -75,6 +78,20 @@ WHERE p.status NOT IN ('CONVERTI','CLIENT','LOST','PERDU','REFUSE')
     OR r.prospect_id IS NOT NULL
     OR EXISTS (SELECT 1 FROM prospect_activities a WHERE a.prospect_id = p.id AND a.previous_status = 'REPONDU')
   )`;
+
+/**
+ * The same rows for a given list of prospect ids ($1, a text[]), any status.
+ * Used by the prospect list to show each row's next action with the queue's
+ * own rules. Read-only, parameterised.
+ */
+const CONFIRMED_CTE_WHERE = "WHERE sent_at >= timestamp '2026-08-20'\n";
+const REPLY_CTE_WHERE = "WHERE replied\n";
+const BY_IDS = " AND prospect_id = ANY($1::text[])\n";
+export const PROSPECT_ROWS_BY_IDS_SQL = PROSPECT_ROW_SELECT
+  // Narrow both CTEs to the page's ids (tests check both replacements happened).
+  .replace(CONFIRMED_CTE_WHERE, CONFIRMED_CTE_WHERE.trimEnd() + BY_IDS)
+  .replace(REPLY_CTE_WHERE, REPLY_CTE_WHERE.trimEnd() + BY_IDS) + `
+WHERE p.id = ANY($1::text[])`;
 
 /** Website enquiries still marked NEW. TEST enquiries are excluded by the status itself. */
 export const LEAD_QUEUE_ENQUIRIES_SQL = `

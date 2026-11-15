@@ -24,7 +24,7 @@
  *
  * Pure and DB-free so it can be regression-tested directly.
  */
-import { STAGES, getStage, isContacted, type StageKey } from "@/lib/prospect-stages";
+import { CONTACTED_WHERE, STAGES, getStage, isContacted, type StageKey } from "@/lib/prospect-stages";
 import { classifyProspect, isClosed, nextFollowUpStep, type ProspectRow, type QueueKind } from "@/lib/next-action";
 
 // ─── Display groups ──────────────────────────────────────────────────────
@@ -131,6 +131,14 @@ export function displayGroupWhere(key: DisplayGroupKey) {
   }
 }
 
+/**
+ * A list filter narrowed to one group. The list and its tab counts both go
+ * through this, so a tab's count is the number of rows that tab shows.
+ */
+export function withGroup<T extends object>(base: T, key: DisplayGroupKey): { AND: object[] } {
+  return { AND: [base, displayGroupWhere(key)] };
+}
+
 // ─── Evidence labels (stricter rule) ─────────────────────────────────────
 
 /** Only outreach messages from this day on count as a confirmed send. Same date as lead-queue-sql.ts. */
@@ -151,6 +159,18 @@ export function getVisibleSendEvidence(p: SendEvidenceInput): VisibleSendEvidenc
   if (p.lastMessageAt && new Date(p.lastMessageAt).getTime() >= CONFIRMED_SEND_SINCE.getTime()) return "CONFIRMED";
   const contacted = isContacted({ status: p.status, sentAt: p.sentAt, lastSendAt: p.lastSendAt ?? p.lastMessageAt ?? null });
   return contacted ? "UNCONFIRMED" : "NOT_CONTACTED";
+}
+
+/** A confirmed send: an outreach message on or after CONFIRMED_SEND_SINCE. */
+export const CONFIRMED_SEND_WHERE = { outreachMessages: { some: { sentAt: { gte: CONFIRMED_SEND_SINCE } } } };
+/** Marked as contacted by any signal, with no confirmed send. */
+export const UNCONFIRMED_SEND_WHERE = { AND: [CONTACTED_WHERE, { NOT: CONFIRMED_SEND_WHERE }] };
+
+/** `evidence` values for the stricter labels; undefined for anything else (older values keep their meaning). */
+export function visibleEvidenceWhere(param: string | null | undefined) {
+  if (param === "confirmed") return CONFIRMED_SEND_WHERE;
+  if (param === "unconfirmed") return UNCONFIRMED_SEND_WHERE;
+  return undefined;
 }
 
 export const VISIBLE_SEND_LABELS: Record<Exclude<VisibleSendEvidence, "NOT_CONTACTED">, { label: string; title: string }> = {
@@ -283,4 +303,13 @@ function queueAction(p: ProspectRow, kind: QueueKind): NextAction {
     case "enquiry":
       return { key: kind, label: "Answer the enquiry", hint: "A new website enquiry.", actionable: true };
   }
+}
+
+// ─── One list row ────────────────────────────────────────────────────────
+
+export type RowSummary = { group: DisplayGroupKey; nextAction: NextAction; replyState: ReplyState };
+
+/** Group, next action and reply state of one row, all from the queue's own row facts. */
+export function describeProspect(p: ProspectRow, today: string): RowSummary {
+  return { group: displayGroupOf(p), nextAction: nextActionFor(p, today), replyState: replyStateOf(p) };
 }
