@@ -209,22 +209,16 @@ async function withEnv(values: Record<string, string>, fn: () => Promise<void> |
 }
 
 test("adding the AI Workforce key activates nothing else", async () => {
-  const { hasAnthropic, getAnthropic, MissingApiKeyError } = await import("../src/lib/anthropic");
-  const { getAiProvider, _resetAiProviderForTests } = await import("../src/lib/ai");
+  const { getAiProvider } = await import("../src/lib/ai");
   const { hasWorkforceKey } = await import("../src/lib/ai-workforce/client");
   await withEnv({ AI_WORKFORCE_GROQ_API_KEY: "workforce-key" }, () => {
     assert.equal(hasWorkforceKey(), true);
-    assert.equal(hasAnthropic(), false);
-    assert.throws(() => getAnthropic(), MissingApiKeyError);
-    _resetAiProviderForTests();
     assert.equal(getAiProvider().name, "MOCK", "Find New stays on sample text");
   });
-  // The control: the older key is what switches those features on.
+  // No other key switches a real model on: the deterministic generator is the only provider.
   await withEnv({ ANTHROPIC_API_KEY: "older-key" }, () => {
-    _resetAiProviderForTests();
-    assert.equal(getAiProvider().name, "ANTHROPIC");
+    assert.equal(getAiProvider().name, "MOCK");
   });
-  _resetAiProviderForTests();
 });
 
 test("the older key doesn't activate AI Workforce", async () => {
