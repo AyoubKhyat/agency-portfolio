@@ -10,7 +10,7 @@ import {
   Activity, UsersRound, Bell, Search, Layers, Shield, CheckSquare, BellRing,
   Calendar, FileSignature, Crown, MessageSquare, Moon, Sun, Gauge, Receipt, PenLine,
   Webhook, BookOpen, Compass, Flame, Inbox, Banknote, Sparkles, FileText, CalendarDays, LayoutGrid,
-  Radar, ShieldCheck, Send, Repeat, Handshake,
+  Radar, Handshake,
 } from "lucide-react";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { SectionTabs } from "@/components/admin/section-tabs";
@@ -134,8 +134,7 @@ const OTHER_TOOLS_SECTION: NavSection = {
 };
 
 const SECTION_ICONS: Record<SectionKey, NavItem["icon"]> = {
-  today: Sun, find: Radar, qualify: ShieldCheck, contact: Send, followUp: Repeat, close: Handshake,
-  prospects: Target, clients: Building2, projects: Layers, invoices: Receipt, revenue: Banknote,
+  today: Sun, find: Radar, prospects: Target, close: Handshake, clients: Building2, projects: Layers, invoices: Receipt, revenue: Banknote,
   more: LayoutGrid, settings: Settings,
 };
 const toItem = (s: (typeof MAIN_NAV)[number]): NavItem => ({ href: s.href, label: s.label, icon: SECTION_ICONS[s.key] });
@@ -146,7 +145,7 @@ const SIMPLE_SECTIONS: NavSection[] = (["acquisition", "business", "more"] as co
   items: MAIN_NAV.filter((s) => s.group === group).map(toItem),
 }));
 
-/** Keeps the layout told about the query string, so Contact / Follow Up / Close light up correctly. */
+/** Keeps the layout told about the query string, so Prospects and Deals light up correctly. */
 function SearchSync({ onChange }: { onChange: (search: string) => void }) {
   const search = useSearchParams().toString();
   useEffect(() => { onChange(search); }, [search, onChange]);
@@ -165,6 +164,7 @@ const VISIBLE_BOTTOM_NAV: typeof BOTTOM_NAV = SIMPLE_NAV
 const PAGE_TITLES: Record<string, string> = {
   prospecting: "Prospects", discovery: "Find New", projects: "Website Portfolio", overview: "Full Dashboard",
   leads: "Website Enquiries", inbox: "Reply Inbox", qualify: "Check a website", "batch-discovery": "Find businesses",
+  "lead-queue": "Work through leads",
 };
 
 function getPageTitle(pathname: string): string {

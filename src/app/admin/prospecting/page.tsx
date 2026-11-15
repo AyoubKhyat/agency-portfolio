@@ -4,7 +4,7 @@ import { Fragment, Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Plus, Upload, Send, CheckCircle, PhoneOff, Pencil, Trash2, Phone, LayoutGrid, List, Target, Search, X, Zap, ArrowUpDown, ShieldCheck, ShieldAlert, FileQuestion, MoreHorizontal, ArrowRight, Archive, PlayCircle, MessageCircleQuestion, ExternalLink } from "lucide-react";
+import { Plus, Upload, Send, CheckCircle, PhoneOff, Pencil, Trash2, Phone, LayoutGrid, List, Target, Search, X, Zap, ArrowUpDown, ShieldCheck, ShieldAlert, FileQuestion, MoreHorizontal, ArrowRight, Archive, MessageCircleQuestion, ExternalLink } from "lucide-react";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { PageHeader } from "@/components/admin/page-header";
 import { FilterTabs } from "@/components/admin/filter-tabs";
@@ -737,9 +737,6 @@ function ProspectingContent() {
                 <LayoutGrid className="w-4 h-4" />
               </button>
             </div>
-            <Link href="/admin/lead-queue" title="Optional focus mode: one lead at a time" className="flex items-center gap-1.5 px-2.5 py-2 border border-[var(--os-border)] hover:border-[var(--os-border-hover)] rounded-lg text-xs sm:text-sm text-gray-600 hover:text-[#0F172A] transition-all">
-              <PlayCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Work through leads
-            </Link>
             <input ref={fileRef} type="file" accept=".csv" onChange={handleImport} className="hidden" />
             <Link href="/admin/prospecting/new" className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:opacity-90 text-white rounded-lg text-xs sm:text-sm font-medium transition-all shadow-md shadow-purple-500/20">
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> New

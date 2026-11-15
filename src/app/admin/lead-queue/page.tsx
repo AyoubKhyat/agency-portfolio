@@ -258,7 +258,8 @@ export default function LeadQueuePage() {
       <header className="flex items-end justify-between gap-3 mb-5">
         <div className="min-w-0">
           {queue && <p className="text-[13px] text-[var(--os-text-muted)]">{dateLabel(queue.today)}</p>}
-          <h1 className="text-[22px] sm:text-[28px] font-semibold tracking-tight text-[var(--os-text)]">Command Center</h1>
+          <h1 className="text-[22px] sm:text-[28px] font-semibold tracking-tight text-[var(--os-text)]">Work through leads</h1>
+          <p className="text-[12.5px] text-[var(--os-text-muted)]">One lead at a time. Optional: everything is also in the <Link href="/admin/prospecting" className="underline">prospect list</Link>.</p>
         </div>
         <Link href="/admin/discovery" aria-label="Find new leads" className={cn(FIND_NEW, "shrink-0 max-sm:px-3 max-sm:py-2 max-sm:text-[13px]")}>
           <Search className="w-4 h-4" /> <span>Find new<span className="max-sm:hidden"> leads</span></span>
