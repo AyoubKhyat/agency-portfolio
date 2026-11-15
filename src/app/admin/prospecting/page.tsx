@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Fragment, Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -17,9 +17,10 @@ import { browserToday, recordConfirmedSend, type NextFollowUp } from "@/lib/lead
 import type { SendChannel } from "@/lib/next-action";
 import { cn } from "@/lib/utils";
 import { PROSPECT_SEGMENTS, SEGMENT_LABELS, SEGMENT_TOKENS, type ProspectSegment } from "@/lib/prospect-segments";
-import { getStage, stageForStatusParam, getChannelState, CHANNEL_LABELS } from "@/lib/prospect-stages";
+import { stageForStatusParam, getChannelState, CHANNEL_LABELS } from "@/lib/prospect-stages";
 import {
-  VISIBLE_GROUPS, VISIBLE_SEND_LABELS, REPLY_LABELS, getDisplayGroupByKey,
+  VISIBLE_GROUPS, VISIBLE_SEND_LABELS, REPLY_LABELS, LEGACY_EVIDENCE_LABELS, getDisplayGroupByKey,
+  displayStageOf, isLegacyEvidenceParam, showsSendEvidence,
   type DisplayGroupKey, type RowSummary, type VisibleSendEvidence,
 } from "@/lib/prospect-groups";
 
@@ -246,9 +247,13 @@ function ScoreBadge({ prospect, factors }: { prospect: Prospect; factors?: strin
   );
 }
 
-/** Simple stage badge; the detailed stored status stays visible on hover. */
-function StageBadge({ status }: { status: string }) {
-  const stage = getStage(status);
+/**
+ * Simple stage badge; the detailed stored status stays visible on hover. A recorded
+ * reply shows "Replied" rather than a stage that contradicts it (display only).
+ */
+function StageBadge({ prospect }: { prospect: Prospect }) {
+  const status = prospect.status;
+  const stage = displayStageOf({ status, messageReplied: prospect.summary?.replyState === "CONFIRMED" });
   return (
     <span title={`Detailed status: ${STATUS_LABELS[status] ?? status}`}>
       <Badge variant={stage?.badge ?? "default"} size="sm" dot>{stage?.label ?? (STATUS_LABELS[status] ?? status)}</Badge>
@@ -307,7 +312,7 @@ function ReplyChip({ prospect }: { prospect: Prospect }) {
 
 /** The evidence badges, in one place for the three views. */
 function Chips({ prospect }: { prospect: Prospect }) {
-  return <><ChannelChip prospect={prospect} /><SendChip prospect={prospect} /><ReplyChip prospect={prospect} /></>;
+  return <><ChannelChip prospect={prospect} />{showsSendEvidence(prospect.summary?.group) && <SendChip prospect={prospect} />}<ReplyChip prospect={prospect} /></>;
 }
 
 function ProspectingContent() {
@@ -325,7 +330,9 @@ function ProspectingContent() {
   // Display group tab. Old status= / due= links keep their exact meaning and show no group;
   // a plain visit opens New Leads.
   const groupParam = getDisplayGroupByKey(searchParams.get("group"))?.key ?? null;
-  const groupFilter: DisplayGroupKey | null = groupParam ?? (statusFilter === "ALL" && dueFilter === "ALL" ? "NEW_LEADS" : null);
+  // An older evidence= value (recorded, legacy, none, unbacked) is a global filter, as before groups.
+  const legacyEvidence = isLegacyEvidenceParam(evidenceFilter);
+  const groupFilter: DisplayGroupKey | null = groupParam ?? (statusFilter === "ALL" && dueFilter === "ALL" && !legacyEvidence ? "NEW_LEADS" : null);
 
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [total, setTotal] = useState(0);
@@ -345,6 +352,7 @@ function ProspectingContent() {
   const [scoreFactors, setScoreFactors] = useState<Record<string, string[]>>({});
   const [groupCounts, setGroupCounts] = useState<Record<DisplayGroupKey, number> | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const reload = () => setReloadKey((k) => k + 1);
   const [kpis, setKpis] = useState<{ warmRelationships: number; agencyOpportunities: number; luxuryBrands: number; legacyCold: number; meetingsScheduled: number; proposalValue: number; pipelineValue: number; clientsWon: number; upcomingFollowups: number; overdueFollowups: number; currency: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -642,28 +650,36 @@ function ProspectingContent() {
     return <Link href={href} title={a.hint} className={primary}>{a.label} <ArrowRight className="w-3.5 h-3.5" /></Link>;
   }
 
-  /** Every other action, unchanged, folded behind one button. Opens inline so the table never clips it. */
-  function renderMenu(p: Prospect) {
+  /** The "more" toggle for every other action. Only one row's actions are open at a time. */
+  // `where` keeps ids unique: the phone cards and the table are both in the page (one is hidden by CSS).
+  function renderMenuButton(p: Prospect, where: "card" | "row") {
+    const open = openMenuId === p.id;
+    return (
+      <button type="button" title="More actions" aria-expanded={open} aria-controls={`actions-${where}-${p.id}`}
+        onClick={() => setOpenMenuId(open ? null : p.id)}
+        className={cn("inline-flex p-1.5 rounded-md transition-colors", open ? "bg-gray-100 text-[#0F172A]" : "text-[#64748B] hover:text-[#0F172A] hover:bg-gray-100")}>
+        <MoreHorizontal className="w-4 h-4" />
+      </button>
+    );
+  }
+
+  /** Every other action, unchanged. In the table they open in a full-width row below, so no column moves. */
+  function renderMenuItems(p: Prospect, where: "card" | "row") {
     const digits = p.phone?.replace(/\D/g, "") || "";
     const item = "flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors";
     return (
-      <details>
-        <summary title="More actions" className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex p-1.5 rounded-md text-[#64748B] hover:text-[#0F172A] hover:bg-gray-100">
-          <MoreHorizontal className="w-4 h-4" />
-        </summary>
-        <div className="flex flex-wrap justify-end gap-1 mt-1.5 max-w-[240px] ml-auto">
-          {digits && <button onClick={() => handleSendWA(p)} className={cn(item, "bg-emerald-50 text-emerald-600 hover:bg-emerald-100")}><FaWhatsapp className="w-3.5 h-3.5" /> WhatsApp</button>}
-          {p.instagram && <button onClick={() => handleSendIG(p)} className={cn(item, "bg-purple-50 text-purple-600 hover:bg-purple-100")}><FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "Instagram"}</button>}
-          {digits && <a href={`tel:${p.phone}`} className={cn(item, "bg-amber-50 text-amber-600 hover:bg-amber-100")} title={`Call ${p.phone}`}><Phone className="w-3.5 h-3.5" /> Call</a>}
-          {!digits && !p.instagram && <span className="text-[11px] text-red-500 px-2" title="No contact data — audit at /admin/data-audit">no contact</span>}
-          {canFollowUp(p) && <button onClick={() => handleFollowUp(p)} className={cn(item, "bg-amber-50 text-amber-600 hover:bg-amber-100")}><Send className="w-3 h-3" /> Follow up</button>}
-          {p.status !== "REPONDU" && p.status !== "CONVERTI" && <button onClick={() => handleMarkReplied(p)} className={cn(item, "text-emerald-600 hover:bg-emerald-50")}><CheckCircle className="w-3.5 h-3.5" /> Mark replied</button>}
-          {p.status !== "PAS_DE_WHATSAPP" && <button onClick={() => handleMarkNoWhatsApp(p)} className={cn(item, "text-red-500 hover:bg-red-50")}><PhoneOff className="w-3.5 h-3.5" /> No WhatsApp</button>}
-          <Link href={`/admin/prospecting/${p.id}`} className={cn(item, "text-[#475569] hover:bg-gray-100")}><ExternalLink className="w-3.5 h-3.5" /> Open</Link>
-          <Link href={`/admin/prospecting/${p.id}/edit`} className={cn(item, "text-[#475569] hover:bg-gray-100")}><Pencil className="w-3.5 h-3.5" /> Edit</Link>
-          <button onClick={() => handleDelete(p.id, p.name)} className={cn(item, "text-[#64748B] hover:text-red-600 hover:bg-red-50")}><Trash2 className="w-3.5 h-3.5" /> Delete</button>
-        </div>
-      </details>
+      <div id={`actions-${where}-${p.id}`} data-testid={`${where}-actions`} className="flex flex-wrap justify-end gap-1">
+        {digits && <button onClick={() => handleSendWA(p)} className={cn(item, "bg-emerald-50 text-emerald-600 hover:bg-emerald-100")}><FaWhatsapp className="w-3.5 h-3.5" /> WhatsApp</button>}
+        {p.instagram && <button onClick={() => handleSendIG(p)} className={cn(item, "bg-purple-50 text-purple-600 hover:bg-purple-100")}><FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "Instagram"}</button>}
+        {digits && <a href={`tel:${p.phone}`} className={cn(item, "bg-amber-50 text-amber-600 hover:bg-amber-100")} title={`Call ${p.phone}`}><Phone className="w-3.5 h-3.5" /> Call</a>}
+        {!digits && !p.instagram && <span className="text-[11px] text-red-500 px-2" title="No contact data — audit at /admin/data-audit">no contact</span>}
+        {canFollowUp(p) && <button onClick={() => handleFollowUp(p)} className={cn(item, "bg-amber-50 text-amber-600 hover:bg-amber-100")}><Send className="w-3 h-3" /> Follow up</button>}
+        {p.status !== "REPONDU" && p.status !== "CONVERTI" && <button onClick={() => handleMarkReplied(p)} className={cn(item, "text-emerald-600 hover:bg-emerald-50")}><CheckCircle className="w-3.5 h-3.5" /> Mark replied</button>}
+        {p.status !== "PAS_DE_WHATSAPP" && <button onClick={() => handleMarkNoWhatsApp(p)} className={cn(item, "text-red-500 hover:bg-red-50")}><PhoneOff className="w-3.5 h-3.5" /> No WhatsApp</button>}
+        <Link href={`/admin/prospecting/${p.id}`} className={cn(item, "text-[#475569] hover:bg-gray-100")}><ExternalLink className="w-3.5 h-3.5" /> Open</Link>
+        <Link href={`/admin/prospecting/${p.id}/edit`} className={cn(item, "text-[#475569] hover:bg-gray-100")}><Pencil className="w-3.5 h-3.5" /> Edit</Link>
+        <button onClick={() => handleDelete(p.id, p.name)} className={cn(item, "text-[#64748B] hover:text-red-600 hover:bg-red-50")}><Trash2 className="w-3.5 h-3.5" /> Delete</button>
+      </div>
     );
   }
 
@@ -674,7 +690,7 @@ function ProspectingContent() {
         {p.instagram && <span className="ml-1.5 text-[11px] text-[#64748B]">@{p.instagram.replace(/^@/, "")}</span>}
         <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-[#64748B]">
           <span>{[p.sector, p.neighborhood].filter(Boolean).join(" · ")}</span>
-          {p.score != null && <ScoreBadge prospect={p} factors={scoreFactors[p.id]} />}
+          {p.score != null && !!p.scoreLabel && <ScoreBadge prospect={p} factors={scoreFactors[p.id]} />}
         </div>
       </div>
     );
@@ -685,13 +701,14 @@ function ProspectingContent() {
       <>
         <div className="flex items-start justify-between gap-2 mb-2">
           {renderName(p)}
-          <StageBadge status={p.status} />
+          <StageBadge prospect={p} />
         </div>
         <div className="flex items-center gap-1.5 flex-wrap mb-3"><Chips prospect={p} /></div>
         <div className="flex items-start justify-between gap-2 pt-2.5 border-t border-[var(--os-border)]">
           <div className="pt-0.5">{renderNextAction(p)}</div>
-          {renderMenu(p)}
+          {renderMenuButton(p, "card")}
         </div>
+        {openMenuId === p.id && <div className="mt-2">{renderMenuItems(p, "card")}</div>}
       </>
     );
   }
@@ -749,19 +766,20 @@ function ProspectingContent() {
       </div>
 
       {/* Four groups (display only: stored statuses are unchanged). Counts follow every filter except a detailed status. */}
-      <div className="flex items-center gap-2 mb-1">
+      {/* Phones: a 2x2 grid, so all four tabs are visible without scrolling. Wider screens: one row. */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 mb-1" data-testid="group-tabs">
         <FilterTabs
           items={VISIBLE_GROUPS.map((g) => ({ value: g.key, label: g.label, count: groupCounts?.[g.key] }))}
           active={groupFilter ?? ""}
           onChange={(v) => showGroup(v as DisplayGroupKey)}
           size="md"
-          className="min-w-0"
+          className="grid grid-cols-2 overflow-visible pb-0 sm:flex sm:overflow-x-auto min-w-0 [&>button]:justify-center sm:[&>button]:justify-start"
         />
         <button
           type="button"
           onClick={() => showGroup("ARCHIVED")}
           title="Unreachable, closed, or an unknown status"
-          className={cn("ml-auto shrink-0 inline-flex items-center gap-1 text-[11.5px] hover:underline", groupFilter === "ARCHIVED" ? "text-[var(--os-purple)] font-semibold" : "text-[#94A3B8]")}
+          className={cn("self-end sm:ml-auto shrink-0 inline-flex items-center gap-1 text-[11.5px] hover:underline", groupFilter === "ARCHIVED" ? "text-[var(--os-purple)] font-semibold" : "text-[#94A3B8]")}
         >
           <Archive className="w-3.5 h-3.5" /> Archived{groupCounts ? ` (${groupCounts.ARCHIVED})` : ""}
         </button>
@@ -769,8 +787,15 @@ function ProspectingContent() {
       <p className="text-[11.5px] text-[#94A3B8] mb-3 min-h-[1em]">{activeGroup?.hint ?? ""}</p>
 
       {/* An old status= or due= link: shown as a removable filter, with its old meaning. */}
-      {(legacyStatusLabel || dueFilter === "today" || dueFilter === "overdue") && (
+      {(legacyStatusLabel || legacyEvidence || dueFilter === "today" || dueFilter === "overdue") && (
         <div className="mb-3 flex items-center gap-2 flex-wrap">
+          {legacyEvidence && (
+            <button type="button" onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, dueFilter, channelFilter, "ALL")}
+              title="An older outreach-record filter, across all prospects"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium border shadow-sm bg-[#0F172A] text-white border-[#0F172A]">
+              Outreach: {LEGACY_EVIDENCE_LABELS[evidenceFilter]} <X className="w-3.5 h-3.5 opacity-70" />
+            </button>
+          )}
           {legacyStatusLabel && (
             <button type="button" onClick={() => navigate("ALL", sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, dueFilter, channelFilter, evidenceFilter, null)}
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium border shadow-sm bg-[#0F172A] text-white border-[#0F172A]">
@@ -957,12 +982,19 @@ function ProspectingContent() {
               </thead>
               <tbody>
                 {displayedProspects.map((p) => (
-                  <tr key={p.id} className="border-b border-[var(--os-border)] hover:bg-gray-50 transition-colors align-top">
-                    <td className="px-4 py-3">{renderName(p)}</td>
-                    <td className="px-4 py-3"><div className="flex flex-col items-start gap-1"><StageBadge status={p.status} /><div className="flex flex-wrap gap-1"><Chips prospect={p} /></div></div></td>
-                    <td className="px-4 py-3">{renderNextAction(p)}</td>
-                    <td className="px-4 py-3 text-right">{renderMenu(p)}</td>
-                  </tr>
+                  <Fragment key={p.id}>
+                    <tr className={cn("hover:bg-gray-50 transition-colors align-top", openMenuId !== p.id && "border-b border-[var(--os-border)]")}>
+                      <td className="px-4 py-3">{renderName(p)}</td>
+                      <td className="px-4 py-3"><div className="flex flex-col items-start gap-1"><StageBadge prospect={p} /><div className="flex flex-wrap gap-1"><Chips prospect={p} /></div></div></td>
+                      <td className="px-4 py-3">{renderNextAction(p)}</td>
+                      <td className="px-4 py-3 text-right w-12">{renderMenuButton(p, "row")}</td>
+                    </tr>
+                    {openMenuId === p.id && (
+                      <tr className="border-b border-[var(--os-border)] bg-gray-50/60">
+                        <td colSpan={4} className="px-4 pb-3 pt-0">{renderMenuItems(p, "row")}</td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

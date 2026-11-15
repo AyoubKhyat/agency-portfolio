@@ -8,6 +8,7 @@ import {
   CONFIRMED_SEND_SINCE, DISPLAY_GROUPS, VISIBLE_GROUPS, countByDisplayGroup, displayGroupOf, displayGroupWhere,
   getVisibleSendEvidence, groupStatuses, nextActionFor, replyStateOf,
   CONFIRMED_SEND_WHERE, UNCONFIRMED_SEND_WHERE, describeProspect, visibleEvidenceWhere, withGroup,
+  displayStageOf, isLegacyEvidenceParam, showsSendEvidence, LEGACY_EVIDENCE_LABELS,
 } from "../src/lib/prospect-groups";
 import { LEAD_QUEUE_PROSPECTS_SQL, PROSPECT_ROWS_BY_IDS_SQL } from "../src/lib/lead-queue-sql";
 import { STAGES } from "../src/lib/prospect-stages";
@@ -309,8 +310,66 @@ test("the list and its tab counts share withGroup; counts drop only a status= fi
 
 test("old links keep working: status= and due= still filter, group= is optional", () => {
   const page = read("src/app/admin/prospecting/page.tsx");
-  assert.match(page, /statusFilter === "ALL" && dueFilter === "ALL" \? "NEW_LEADS" : null/);
+  assert.match(page, /statusFilter === "ALL" && dueFilter === "ALL" && !legacyEvidence \? "NEW_LEADS" : null/);
   assert.match(page, /if \(status === "ALL" && due === "ALL" && group\) qs\.set\("group", group\);/);
   const nav = read("src/lib/admin-nav.ts");
   assert.match(nav, /\/admin\/prospecting\?status=MEETING,PROPOSAL_SENT,NEGOTIATION/);
+});
+
+// ─── Phase 2 UI fixes (2026-11-15) ───────────────────────────────────────
+
+test("a recorded reply shows Replied, never a contradicting Waiting / To contact badge", () => {
+  assert.equal(displayStageOf({ status: "ENVOYE", messageReplied: true })?.label, "Replied");
+  assert.equal(displayStageOf({ status: "A_ENVOYER", messageReplied: true })?.label, "Replied");
+  assert.equal(displayStageOf({ status: "ENVOYE", messageReplied: false })?.label, "Waiting for reply");
+  // Badges that someone decided keep their own label.
+  assert.equal(displayStageOf({ status: "PAS_DE_WHATSAPP", messageReplied: true })?.label, "Unreachable");
+  assert.equal(displayStageOf({ status: "CLIENT", messageReplied: true })?.label, "Won");
+  assert.equal(displayStageOf({ status: "MEETING", messageReplied: true })?.label, "In talks");
+  assert.equal(displayStageOf({ status: "ODD", messageReplied: true }), null);
+});
+
+test("an archived Unreachable prospect with a reply is reviewed, never replied to", () => {
+  const p = row({ status: "PAS_DE_WHATSAPP", hasSentAt: true, messageReplied: true, lastSendDay: "2026-10-01", lastSendChannel: "INSTAGRAM", instagram: "x", instagramStatus: "VERIFIED" });
+  assert.equal(displayGroupOf(p), "ARCHIVED");
+  assert.equal(classifyProspect(p, TODAY), "reply"); // the lead queue's own rule is unchanged
+  const a = nextActionFor(p, TODAY);
+  assert.equal(a.key, "review_archived");
+  assert.equal(a.label, "Review archived prospect");
+  assert.doesNotMatch(a.label, /reply/i);
+  for (const st of ["PAS_DE_WHATSAPP"]) {
+    for (const extra of [{ messageReplied: true }, { status: st, replyReason: "INTERESTED", messageReplied: true }]) {
+      assert.doesNotMatch(nextActionFor(row({ status: st, ...extra }), TODAY).label, /^Reply/);
+    }
+  }
+});
+
+test("send-evidence badges are left out only for Clients", () => {
+  assert.equal(showsSendEvidence("CLIENTS"), false);
+  for (const g of ["NEW_LEADS", "CONTACTED", "CONVERSATIONS", "ARCHIVED", null, undefined] as const) assert.equal(showsSendEvidence(g), true);
+});
+
+test("older evidence= values are recognised as global legacy filters; the new ones are not", () => {
+  for (const v of ["recorded", "legacy", "none", "unbacked"]) assert.ok(isLegacyEvidenceParam(v) && LEGACY_EVIDENCE_LABELS[v], v);
+  for (const v of ["confirmed", "unconfirmed", "ALL", "", null, "toString"]) assert.equal(isLegacyEvidenceParam(v), false, String(v));
+});
+
+test("list page: legacy evidence links open with no group; normal visits and search stay in a tab", () => {
+  const page = read("src/app/admin/prospecting/page.tsx");
+  assert.match(page, /statusFilter === "ALL" && dueFilter === "ALL" && !legacyEvidence \? "NEW_LEADS" : null/);
+  assert.match(page, /Outreach: \{LEGACY_EVIDENCE_LABELS\[evidenceFilter\]\}/);
+  assert.match(page, /if \(groupFilter\) qs\.set\("group", groupFilter\);/); // search is sent with the open tab
+});
+
+test("list page: mobile tab grid, labelled score only, Clients without send badges, menu in its own row", () => {
+  const page = read("src/app/admin/prospecting/page.tsx");
+  assert.match(page, /className="grid grid-cols-2 [^"]*sm:flex/);
+  assert.match(page, /p\.score != null && !!p\.scoreLabel && <ScoreBadge/);
+  assert.match(page, /showsSendEvidence\(prospect\.summary\?\.group\) && <SendChip/);
+  assert.match(page, /<td colSpan=\{4\}[^>]*>\{renderMenuItems\(p, "row"\)\}<\/td>/);
+  assert.match(page, /id=\{`actions-\$\{where\}-\$\{p\.id\}`\}/); // card and table copies never share an id
+  assert.doesNotMatch(page, /<details>\s*<summary title="More actions"/);
+  // Send-confirm safeguards unchanged: four armed sends, nothing recorded on click.
+  assert.equal((page.match(/armSend\(\{ prospect: p/g) ?? []).length, 4);
+  assert.match(page, /<SendConfirm/);
 });

@@ -24,7 +24,7 @@
  *
  * Pure and DB-free so it can be regression-tested directly.
  */
-import { CONTACTED_WHERE, STAGES, getStage, isContacted, type StageKey } from "@/lib/prospect-stages";
+import { CONTACTED_WHERE, STAGES, getStage, getStageByKey, isContacted, type Stage, type StageKey } from "@/lib/prospect-stages";
 import { classifyProspect, isClosed, nextFollowUpStep, type ProspectRow, type QueueKind } from "@/lib/next-action";
 
 // ─── Display groups ──────────────────────────────────────────────────────
@@ -90,6 +90,22 @@ export function displayGroupOf(p: GroupInput): DisplayGroupKey {
   if (stage.key === "CLOSED" || stage.key === "UNREACHABLE") return "ARCHIVED";
   if (stage.key === "REPLIED" || stage.key === "IN_TALKS" || hasRecordedReply(p)) return "CONVERSATIONS";
   return stage.key === "TO_CONTACT" ? "NEW_LEADS" : "CONTACTED";
+}
+
+/**
+ * The stage badge a row shows. A recorded reply on a To contact / Waiting row shows
+ * "Replied" instead of a stage that contradicts it; the stored status is unchanged
+ * (callers keep it in the tooltip). Unreachable, Closed and Won keep their own badge.
+ */
+export function displayStageOf(p: GroupInput): Stage | null {
+  const stage = getStage(p.status);
+  if (stage && (stage.key === "TO_CONTACT" || stage.key === "WAITING") && hasRecordedReply(p)) return getStageByKey("REPLIED");
+  return stage;
+}
+
+/** Send-evidence badges add nothing for a client, so the Clients rows leave them out. */
+export function showsSendEvidence(group: DisplayGroupKey | null | undefined): boolean {
+  return group !== "CLIENTS";
 }
 
 /** Sum rows into group counts. */
@@ -173,6 +189,20 @@ export function visibleEvidenceWhere(param: string | null | undefined) {
   return undefined;
 }
 
+/**
+ * evidence= values from before the groups (older rule). A link carrying one of them
+ * is a global filter, as it was: it opens with no group tab, not inside New Leads.
+ */
+export const LEGACY_EVIDENCE_LABELS: Record<string, string> = {
+  recorded: "Send recorded (older rule)",
+  legacy: "Old send, unconfirmed",
+  none: "No send record",
+  unbacked: "No current send record",
+};
+export function isLegacyEvidenceParam(param: string | null | undefined): boolean {
+  return !!param && Object.prototype.hasOwnProperty.call(LEGACY_EVIDENCE_LABELS, param);
+}
+
 export const VISIBLE_SEND_LABELS: Record<Exclude<VisibleSendEvidence, "NOT_CONTACTED">, { label: string; title: string }> = {
   CONFIRMED: {
     label: "Message sent",
@@ -207,6 +237,7 @@ export const REPLY_LABELS: Record<Exclude<ReplyState, "NONE">, { label: string; 
 export type NextActionKey =
   | QueueKind
   | "check_status"
+  | "review_archived"
   | "client"
   | "in_talks"
   | "closed"
@@ -247,6 +278,11 @@ const STEP_LABEL = { followup1: "1st", followup2: "2nd", followup3: "3rd" } as c
 export function nextActionFor(p: ProspectRow, today: string): NextAction {
   if (!getStage(p.status)) {
     return { key: "check_status", label: "Check the status", hint: `Its status "${p.status}" isn't one the app knows, so no step is suggested.`, actionable: true };
+  }
+
+  // Unreachable is archived even with a recorded reply (approved 2026-11-15): never suggest replying.
+  if (p.status === "PAS_DE_WHATSAPP" && hasRecordedReply(p)) {
+    return { key: "review_archived", label: "Review archived prospect", hint: "Archived as unreachable, but a reply is recorded. Open it and decide whether to bring it back.", actionable: true };
   }
 
   const kind = classifyProspect(p, today);
