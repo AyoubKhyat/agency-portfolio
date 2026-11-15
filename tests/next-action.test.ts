@@ -401,7 +401,8 @@ test("the command center files are not swallowed by the gitignored leads/ rule",
   // named "leads" loses its styles and goes missing from the commit, with no error.
   const page = read("src/app/admin/lead-queue/page.tsx");
   assert.doesNotMatch(page, /@\/components\/admin\/leads\//);
-  assert.match(read(".gitignore"), /^leads\/$/m);
+  // The rule may be anchored to the repository root (/leads/) or not (leads/); either way it is still there.
+  assert.match(read(".gitignore"), /^\/?leads\/$/m);
 });
 
 test("queue decisions are logged only for the two known types, and only without a status change", () => {
