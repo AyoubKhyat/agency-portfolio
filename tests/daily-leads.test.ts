@@ -4,7 +4,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import type { SafeFetch, SafeResponse } from "../src/lib/website-audit/safe-fetch";
 import type { OsmDataset, OsmEntry } from "../src/lib/osm-dataset";
 import type { AgentState, DailyLead, DailyStore, RunOutcome } from "../src/lib/daily-leads";
@@ -294,9 +294,9 @@ test("cron secret: required, at least 16 characters, exact Bearer match", async 
   assert.equal(cronAuthorized("Bearer ", undefined), false, "no secret configured → nobody");
 });
 
-test("one Hobby-compatible daily cron at 06:00 UTC on the authenticated route", () => {
-  const v = JSON.parse(read("vercel.json"));
-  assert.deepEqual(v.crons, [{ path: "/api/cron/daily-leads", schedule: "0 6 * * *" }]);
+test("no cron is scheduled yet (added separately once CRON_SECRET and the dataset are set); the route stays authenticated", () => {
+  const scheduled = existsSync(new URL("../vercel.json", import.meta.url)) ? JSON.parse(read("vercel.json")).crons ?? [] : [];
+  assert.deepEqual(scheduled.filter((c: { path?: string }) => c.path === "/api/cron/daily-leads"), [], "the schedule ships in its own PR");
   const route = read("src/app/api/cron/daily-leads/route.ts");
   assert.match(route, /if \(!cronAuthorized\(req\.headers\.get\("authorization"\)\)\) return NextResponse\.json\(\{ error: "Unauthorized" \}, \{ status: 401 \}\)/);
   assert.match(route, /export const maxDuration = 300;/);

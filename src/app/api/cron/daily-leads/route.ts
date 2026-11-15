@@ -7,7 +7,7 @@ export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 /**
- * Vercel Cron, once a day (vercel.json). Only with `Authorization: Bearer $CRON_SECRET`; anything else is 401.
+ * For Vercel Cron (not scheduled yet: the vercel.json entry comes in its own PR). Only with `Authorization: Bearer $CRON_SECRET`; anything else is 401.
  * Safe to call twice: the day is claimed once, and a completed day is never run again.
  * The response carries counts only, never business data.
  */
