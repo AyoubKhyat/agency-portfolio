@@ -19,7 +19,7 @@ test("the extractor kept only businesses inside the boundary, with names, and no
   for (const k of ["phone", "email", "contact:phone", "contact:email", "opening_hours", "addr:street"]) assert.ok(!keys.has(k), k);
 });
 
-test("the app's own sector mapping, websites only, one entry per website, explicit links only", async () => {
+test("the app's own sector mapping, one entry per website, explicit links only", async () => {
   const { buildDataset, toCandidate, sectorTags } = await import("../src/lib/osm-dataset");
   const d = buildDataset(raw, "2026-11-11T00:00:00Z");
   assert.deepEqual(d.entries.map((e) => e.id), ["node/101", "node/106", "node/107", "way/201"], "stable order; no-website and shared-site entries left out");
@@ -37,6 +37,28 @@ test("the app's own sector mapping, websites only, one entry per website, explic
   const c = toCandidate(riad, "RIADS");
   assert.deepEqual([c.source, c.phone, c.email, c.mapsUrl], ["OSM", null, null, "https://www.openstreetmap.org/node/101"]);
   assert.ok(sectorTags().some((t) => t.key === "tourism" && t.value === "guest_house"));
+});
+
+test("no website: kept only with an explicit WhatsApp or Instagram tag, as website \"\"; never from a phone", async () => {
+  const { buildDataset } = await import("../src/lib/osm-dataset");
+  const extra: RawExtract = {
+    ...raw,
+    elements: [
+      ...raw.elements,
+      { type: "node", id: 301, tags: { tourism: "hotel", name: "Hotel WhatsApp Only", "contact:whatsapp": "+212 612 000 301" } },
+      { type: "node", id: 302, tags: { tourism: "hotel", name: "Hotel Instagram Only", "contact:instagram": "https://www.instagram.com/hotel302" } },
+      { type: "node", id: 303, tags: { tourism: "hotel", name: "Hotel Facebook Only", "contact:facebook": "https://www.facebook.com/hotel303" } },
+      { type: "node", id: 304, tags: { tourism: "hotel", name: "Hotel Phone Only", phone: "+212 612 000 304" } },
+    ],
+  };
+  const d = buildDataset(extra, "2026-11-11T00:00:00Z");
+  const byId = Object.fromEntries(d.entries.map((e) => [e.id, e]));
+  assert.deepEqual(byId["node/301"], { id: "node/301", name: "Hotel WhatsApp Only", sectors: ["HOTELS"], website: "", whatsapp: "https://wa.me/212612000301" });
+  assert.deepEqual(byId["node/302"], { id: "node/302", name: "Hotel Instagram Only", sectors: ["HOTELS"], website: "", instagram: "https://www.instagram.com/hotel302" });
+  assert.equal(byId["node/303"], undefined, "a Facebook page alone isn't enough");
+  assert.equal(byId["node/304"], undefined, "a phone tag never makes an entry");
+  assert.equal(byId["node/102"], undefined, "no website and no contact tag: still left out");
+  assert.deepEqual(d.sectors.HOTELS, { named: 7, withWebsite: 2 }, "the website counts P6C shows are unchanged");
 });
 
 test("a missing list is reported, never replaced by made-up data", async () => {

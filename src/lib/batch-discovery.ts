@@ -43,14 +43,14 @@ export type SearchSummary = {
   sourceError: string | null;
 };
 
-type CrmRow = ExistingProspectLite & ProspectRow;
+export type CrmRow = ExistingProspectLite & ProspectRow;
 
 export type SearchDeps = {
   dataset?: () => Promise<OsmDataset>;
   loadCrm?: () => Promise<CrmRow[]>;
 };
 
-async function loadCrmFromDb(): Promise<CrmRow[]> {
+export async function loadCrmFromDb(): Promise<CrmRow[]> {
   const { prisma } = await import("@/lib/prisma");
   return prisma.prospect.findMany({
     select: {

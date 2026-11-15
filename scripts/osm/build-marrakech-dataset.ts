@@ -54,7 +54,8 @@ try {
   mkdirSync(path.dirname(out), { recursive: true });
   writeFileSync(out, JSON.stringify(data));
   const withSite = Object.entries(data.sectors).filter(([, s]) => s.withWebsite > 0).sort((a, b) => b[1].withWebsite - a[1].withWebsite);
-  console.log(`${data.entries.length} businesses with a website (${data.sharedWebsites} left out for sharing a website) → ${out}`);
+  const contactOnly = data.entries.filter((e) => !e.website).length;
+  console.log(`${data.entries.length - contactOnly} businesses with a website (${data.sharedWebsites} left out for sharing a website), ${contactOnly} with only an explicit WhatsApp/Instagram tag → ${out}`);
   console.log(`OSM data until ${data.osmDataUntil ?? "unknown"} · boundary ${data.boundary.name ?? "?"} (${data.boundary.wikidata})`);
   for (const [k, s] of withSite) console.log(`  ${k.padEnd(18)} ${String(s.withWebsite).padStart(4)} of ${s.named}`);
 } finally {

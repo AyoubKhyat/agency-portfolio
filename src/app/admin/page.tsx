@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, Reply, CalendarClock, Inbox, Calendar, Send, ShieldCheck, ShieldAlert, FileQuestion, History } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
+import { TodaysLeads } from "@/components/admin/todays-leads";
 import { GlassCard } from "@/components/admin/glass-card";
 import { Badge } from "@/components/admin/badge";
 import { cn } from "@/lib/utils";
@@ -201,6 +202,9 @@ export default function TodayPage() {
           <ArrowRight className="w-3.5 h-3.5 text-[#94A3B8] ml-auto mt-1 shrink-0" />
         </Link>
       )}
+
+      {/* Prepared by the Daily Lead Agent: review and import by hand */}
+      <TodaysLeads />
 
       {/* 2. Ready to contact */}
       <h2 className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] mt-8 mb-3">Ready to contact</h2>
