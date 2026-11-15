@@ -9,6 +9,7 @@ import {
   getVisibleSendEvidence, groupStatuses, nextActionFor, replyStateOf,
   CONFIRMED_SEND_WHERE, UNCONFIRMED_SEND_WHERE, describeProspect, visibleEvidenceWhere, withGroup,
   displayStageOf, isLegacyEvidenceParam, showsSendEvidence, LEGACY_EVIDENCE_LABELS,
+  contactSummary, detailActionHref,
 } from "../src/lib/prospect-groups";
 import { LEAD_QUEUE_PROSPECTS_SQL, PROSPECT_ROWS_BY_IDS_SQL } from "../src/lib/lead-queue-sql";
 import { STAGES } from "../src/lib/prospect-stages";
@@ -372,4 +373,63 @@ test("list page: mobile tab grid, labelled score only, Clients without send badg
   // Send-confirm safeguards unchanged: four armed sends, nothing recorded on click.
   assert.equal((page.match(/armSend\(\{ prospect: p/g) ?? []).length, 4);
   assert.match(page, /<SendConfirm/);
+});
+
+// ─── Phase 3: prospect page ──────────────────────────────────────────────
+
+test("'Have we contacted them?' comes from evidence only", () => {
+  assert.deepEqual(contactSummary({ sendEvidence: "NOT_CONTACTED", replyState: "NONE" }), { contacted: "Not contacted yet.", reply: null });
+  assert.match(contactSummary({ sendEvidence: "CONFIRMED", replyState: "NONE", lastConfirmedSendDay: "2026-11-01" }).contacted, /^Yes\. .*1 Nov/);
+  assert.match(contactSummary({ sendEvidence: "UNCONFIRMED", replyState: "NONE" }).contacted, /nobody confirmed/);
+  assert.equal(contactSummary({ sendEvidence: "CONFIRMED", replyState: "CONFIRMED" }).reply, "They replied.");
+  assert.match(contactSummary({ sendEvidence: "UNCONFIRMED", replyState: "POSSIBLE_OLD" }).reply ?? "", /not confirmed/);
+  assert.equal(contactSummary({ sendEvidence: "UNCONFIRMED", replyState: "NONE", group: "CLIENTS" }).contacted, "Already a client.");
+  assert.equal(contactSummary({ sendEvidence: "NOT_CONTACTED", replyState: "NONE", group: "NEW_LEADS" }).contacted, "Not contacted yet.");
+  // A status alone never reads as "Yes".
+  assert.doesNotMatch(contactSummary({ sendEvidence: "UNCONFIRMED", replyState: "NONE" }).contacted, /^Yes/);
+});
+
+test("the page's main button only sends through flows that ask 'did you send it?'", () => {
+  assert.equal(detailActionHref("ready"), "#first-message"); // OutreachDraftPanel: open, then confirm
+  for (const k of ["follow_up_overdue", "follow_up_today", "follow_up_decision"] as const) assert.equal(detailActionHref(k), "/admin/lead-queue?view=followUps");
+  assert.equal(detailActionHref("reply"), "/admin/lead-queue?view=replies");
+  assert.equal(detailActionHref("reply_review"), "/admin/lead-queue?view=verify");
+  assert.equal(detailActionHref("confirm_channel"), "#contact");
+  assert.equal(detailActionHref("confirm_send"), "#conversation");
+  assert.equal(detailActionHref("review_archived"), "#advanced");
+  assert.equal(detailActionHref("check_status"), "#advanced");
+  for (const k of ["client", "closed", "wait_until", "wait_for_reply", "unreachable", "reply_negative", "follow_ups_stopped"] as const) assert.equal(detailActionHref(k), null);
+  // Every queue view used here is one the lead queue reads.
+  const q = read("src/app/admin/lead-queue/page.tsx");
+  for (const v of ["replies", "verify", "followUps"]) assert.match(q, new RegExp(`view === "${v}"`));
+});
+
+test("prospect page: overview first, then contact, first message, conversation, notes; advanced folded", () => {
+  const page = read("src/app/admin/prospecting/[id]/page.tsx");
+  const order = ['data-testid="overview"', 'id="contact"', 'id="first-message"', 'id="conversation"', 'id="notes"', 'id="advanced"'].map((m) => page.indexOf(m));
+  assert.ok(order.every((i) => i > 0), "a section is missing");
+  assert.deepEqual([...order].sort((a, b) => a - b), order, "sections out of order");
+  // The detailed status control lives only inside Advanced.
+  const adv = page.slice(page.indexOf('id="advanced"'));
+  assert.match(adv, /onChange=\{\(e\) => handleStatusChange\(e\.target\.value\)\}/);
+  assert.equal((page.match(/handleStatusChange\(e\.target\.value\)/g) ?? []).length, 1);
+  // Existing safeguards and tools are still on the page, unchanged.
+  for (const m of ["<OutreachDraftPanel prospect={prospect} onRecorded={refreshData} />", '<ContactCheck channel="WHATSAPP"', '<ContactCheck channel="INSTAGRAM"', "<PlaybookPanel", "handleConvertToLead", "handleOwnerChange", "/edit`}"]) {
+    assert.ok(page.includes(m), `missing ${m}`);
+  }
+  // Channels open only when confirmed by hand.
+  assert.match(page, /prospect\.whatsappStatus === "VERIFIED" && prospect\.whatsappLink &&/);
+  assert.match(page, /prospect\.instagram && prospect\.instagramStatus === "VERIFIED" &&/);
+  // No send or status is written from the overview.
+  const overview = page.slice(page.indexOf('data-testid="overview"'), page.indexOf('id="contact"'));
+  assert.doesNotMatch(overview, /fetch\(|method: "PATCH"|recordConfirmedSend/);
+});
+
+test("prospect GET adds read-only extras; the summary SQL is the queue's, by id", () => {
+  const route = read("src/app/api/admin/prospecting/[id]/route.ts");
+  assert.match(route, /getProspectSummary\(id, prospect\.status, prospect\.sentAt\)\.catch\(\(\) => null\)/);
+  const dal = read("src/lib/dal/prospects.ts");
+  const fn = dal.slice(dal.indexOf("export async function getProspectSummary"), dal.indexOf("export async function findDuplicateProspect"));
+  assert.match(fn, /PROSPECT_ROWS_BY_IDS_SQL, \[id\]/);
+  assert.doesNotMatch(fn, /\.(create|update|upsert|delete)\w*\(/);
 });

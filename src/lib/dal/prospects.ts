@@ -1,5 +1,5 @@
 import { bulkUpdateStatusWith, updateProspectStatusWith } from "../prospect-first-contact";
-import { statusWhere, channelWhere, evidenceWhere, sendRecordInclude, latestSendAt } from "../prospect-stages";
+import { statusWhere, channelWhere, evidenceWhere, sendRecordInclude, latestSendAt, SEND_ACTION_TYPES } from "../prospect-stages";
 import { db } from "./db";
 import { DISPLAY_GROUPS, describeProspect, getDisplayGroupByKey, getVisibleSendEvidence, visibleEvidenceWhere, withGroup, type DisplayGroupKey } from "../prospect-groups";
 import { LEAD_QUEUE_CLOCK_SQL, PROSPECT_ROWS_BY_IDS_SQL } from "../lead-queue-sql";
@@ -119,6 +119,27 @@ export async function getProspectById(id: string) {
       },
     },
   });
+}
+
+/**
+ * The prospect page's summary: display group, next action and reply state from the lead
+ * queue's own row facts, plus the stricter send evidence. Read-only.
+ */
+export async function getProspectSummary(id: string, status: string, sentAt: Date | null) {
+  const [clock, facts, lastMessage, lastSendActivity] = await Promise.all([
+    db().$queryRawUnsafe<{ today: string }[]>(LEAD_QUEUE_CLOCK_SQL),
+    db().$queryRawUnsafe<ProspectRow[]>(PROSPECT_ROWS_BY_IDS_SQL, [id]),
+    db().outreachMessage.findFirst({ where: { prospectId: id }, orderBy: { sentAt: "desc" }, select: { sentAt: true } }),
+    db().prospectActivity.findFirst({ where: { prospectId: id, actionType: { in: [...SEND_ACTION_TYPES] } }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+  ]);
+  const f = facts[0];
+  const today = clock[0]?.today;
+  const lastMessageAt = lastMessage?.sentAt ?? null;
+  return {
+    sendEvidence: getVisibleSendEvidence({ status, sentAt, lastSendAt: latestSendAt([lastMessageAt, lastSendActivity?.createdAt]), lastMessageAt }),
+    lastConfirmedSendDay: f?.lastSendDay ?? null,
+    summary: f && today ? describeProspect(f, today) : null,
+  };
 }
 
 export async function findDuplicateProspect(phone: string, instagram?: string) {

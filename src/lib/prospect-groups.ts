@@ -349,3 +349,47 @@ export type RowSummary = { group: DisplayGroupKey; nextAction: NextAction; reply
 export function describeProspect(p: ProspectRow, today: string): RowSummary {
   return { group: displayGroupOf(p), nextAction: nextActionFor(p, today), replyState: replyStateOf(p) };
 }
+
+// ─── Prospect page (Phase 3) ─────────────────────────────────────────────
+
+/**
+ * "Have we contacted them?" in two plain sentences, from evidence only: the stricter
+ * confirmed-send rule and the recorded / possible-old reply state. Nothing is guessed.
+ */
+export function contactSummary(p: { sendEvidence: VisibleSendEvidence; replyState: ReplyState; lastConfirmedSendDay?: string | null; group?: DisplayGroupKey | null }): { contacted: string; reply: string | null } {
+  // For a client the send record adds nothing (same rule as the list's badges).
+  const contacted = !showsSendEvidence(p.group)
+    ? "Already a client."
+    : p.sendEvidence === "CONFIRMED"
+      ? (p.lastConfirmedSendDay ? `Yes. Last message confirmed as sent on ${fmtDay(p.lastConfirmedSendDay)}.` : "Yes. A message was confirmed as sent.")
+      : p.sendEvidence === "UNCONFIRMED"
+        ? "Marked as contacted, but nobody confirmed a message was sent."
+        : "Not contacted yet.";
+  const reply =
+    p.replyState === "CONFIRMED" ? "They replied."
+    : p.replyState === "POSSIBLE_OLD" ? "Possible old reply, not confirmed. Check the conversation."
+    : null;
+  return { contacted, reply };
+}
+
+/**
+ * Where the prospect page's main button goes for each next action. Sends and follow-ups
+ * go through the flows that already ask "did you send it?": the first-message panel on
+ * this page, or the lead queue. Null when there is nothing to do.
+ */
+export function detailActionHref(key: NextActionKey): string | null {
+  switch (key) {
+    case "ready": return "#first-message";
+    case "confirm_channel": return "#contact";
+    case "reply": return "/admin/lead-queue?view=replies";
+    case "reply_review": return "/admin/lead-queue?view=verify";
+    case "follow_up_overdue":
+    case "follow_up_today":
+    case "follow_up_decision": return "/admin/lead-queue?view=followUps";
+    case "confirm_send": return "#conversation";
+    case "check_status":
+    case "review_archived": return "#advanced";
+    case "in_talks": return "#notes";
+    default: return null;
+  }
+}
