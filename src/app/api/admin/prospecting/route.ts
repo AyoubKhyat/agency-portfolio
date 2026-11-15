@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { getProspects, createProspect, logProspectActivity, findDuplicateProspect } from "@/lib/dal";
 import { z } from "zod";
 import { dispatchWebhook } from "@/lib/webhooks";
 
 export async function GET(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
 
   const url = new URL(req.url);
   const page = parseInt(url.searchParams.get("page") || "1");
@@ -39,8 +39,9 @@ const createSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
 
   const body = await req.json();
   const parsed = createSchema.safeParse(body);

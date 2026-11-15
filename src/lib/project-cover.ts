@@ -1,6 +1,7 @@
-import sharp from "sharp";
+import sharp, { type Metadata } from "sharp";
 import path from "path";
 import fs from "fs/promises";
+import { randomBytes } from "crypto";
 import { put } from "@vercel/blob";
 import {
   ACCEPTED_COVER_LABEL,
@@ -44,7 +45,7 @@ export function checkCoverFile(file: File): void {
 
 /** Sniff the real bytes, then resize/crop to 1280×800 WebP. */
 export async function convertCover(input: Buffer): Promise<Buffer> {
-  let meta: sharp.Metadata;
+  let meta: Metadata;
   try {
     meta = await sharp(input).metadata();
   } catch {
@@ -79,6 +80,26 @@ export async function convertCover(input: Buffer): Promise<Buffer> {
   }
 }
 
+/**
+ * Self-hosted storage: UPLOAD_DIR is a persistent folder (a volume) that the reverse proxy serves
+ * at UPLOAD_PUBLIC_PATH (default "/uploads"). The stored value is a root-relative path, so it
+ * renders with next/image and survives a change of domain.
+ */
+async function storeCoverOnDisk(webp: Buffer, baseName: string, uploadDir: string): Promise<string> {
+  const publicPath = (process.env.UPLOAD_PUBLIC_PATH || "/uploads").replace(/\/+$/, "");
+  // A fresh name per upload: replacing a cover never serves a stale cached copy.
+  const fileName = `${baseName}-${randomBytes(4).toString("hex")}.webp`;
+  const outDir = path.join(uploadDir, "projects");
+  try {
+    await fs.mkdir(outDir, { recursive: true });
+    await fs.writeFile(path.join(outDir, fileName), webp);
+  } catch (err) {
+    console.error("[upload] Disk write failed:", err instanceof Error ? err.message : err);
+    throw new CoverUploadError("The image could not be saved to storage. Please try again.", 502);
+  }
+  return `${publicPath}/projects/${fileName}`;
+}
+
 /** Blob is configured either by a read-write token or by OIDC + store id. */
 export function coverStorageConfigured(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
@@ -91,6 +112,9 @@ export function coverStorageConfigured(): boolean {
  * dev without one keeps the old behaviour of writing into public/projects/.
  */
 export async function storeCover(webp: Buffer, baseName: string): Promise<string> {
+  const uploadDir = process.env.UPLOAD_DIR;
+  if (uploadDir) return storeCoverOnDisk(webp, baseName, uploadDir);
+
   if (coverStorageConfigured()) {
     // The SDK retries 5xx responses up to 10 times with exponential backoff
     // (minutes in total) and only checks the abort signal between attempts,

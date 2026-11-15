@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { requireTeam } from "@/lib/authz";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
 
 const STATUSES = ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"] as const;
@@ -47,8 +47,8 @@ async function generateInvoiceNumber(): Promise<string> {
 }
 
 export async function GET(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ invoices: [], total: 0, pages: 1 });
 
   const { searchParams } = new URL(req.url);
@@ -79,8 +79,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 
   const body = await req.json();

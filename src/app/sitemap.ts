@@ -4,6 +4,9 @@ import { getAllPostSlugs } from "@/lib/blog";
 import { SITE_URL } from "@/lib/site";
 import { DETAIL_PAGE_IDS } from "@/lib/services-catalog";
 
+// Built from the database on each request: a static sitemap would freeze the project list at build time.
+export const dynamic = "force-dynamic";
+
 const BASE_URL = SITE_URL;
 const locales = ["fr", "en", "ar"];
 const pages = ["", "/services", "/portfolio", "/blog", "/about", "/contact"];

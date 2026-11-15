@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 
 /**
@@ -20,8 +20,8 @@ const SINCE_DAYS = 90;
 const RECENT_DAYS = 7;
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ predictions: [] });
 
   const sinceRecent = new Date(Date.now() - RECENT_DAYS * 86_400_000);

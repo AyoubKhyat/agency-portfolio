@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { isAdmin } from "@/lib/authz";
+import { isAdmin, requireTeam } from "@/lib/authz";
 import { getClientIp } from "@/lib/audit";
 import {
   approveTestimonial,
@@ -51,8 +50,8 @@ const invalid = (issues: { message: string; path: PropertyKey[] }[]) =>
   NextResponse.json({ error: issues.map((i) => `${i.path.join(".") || "body"}: ${i.message}`).join("; ") || "Invalid input" }, { status: 400 });
 
 export async function GET(_req: Request, { params }: Params) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
   const { id } = await params;
   const state = await getTestimonialState(id);
   if (!state) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -60,8 +59,9 @@ export async function GET(_req: Request, { params }: Params) {
 }
 
 export async function PUT(req: Request, { params }: Params) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
   const { id } = await params;
 
   const parsed = draftSchema.safeParse(await readBody(req));
@@ -87,8 +87,9 @@ export async function PUT(req: Request, { params }: Params) {
 }
 
 export async function POST(req: Request, { params }: Params) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
   if (!isAdmin(session)) {
     return NextResponse.json({ error: "Only admins can publish or hide testimonials." }, { status: 403 });
   }

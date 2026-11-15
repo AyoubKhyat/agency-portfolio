@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import {
   FOLLOW_UP_EXCLUDED_STATUSES,
@@ -23,8 +23,8 @@ import {
  */
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) {
     return NextResponse.json({
       buckets: { never_contacted: [], due_day_4: [], due_day_10: [], due_day_20: [] },

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { requireTeam } from "@/lib/authz";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
 import { prisma, hasPrisma } from "@/lib/prisma";
 
 const logSchema = z.object({
@@ -19,8 +19,8 @@ const logSchema = z.object({
 
 // GET — list recent sweeps for the dashboard.
 export async function GET(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ sweeps: [] });
 
   const { searchParams } = new URL(req.url);
@@ -34,8 +34,9 @@ export async function GET(req: Request) {
 
 // POST — log a completed (or failed) sweep query result.
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 
   const parsed = logSchema.safeParse(await req.json());

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireTeam } from "@/lib/authz";
 import { getUsers } from "@/lib/dal";
 import { isOwner, createTeamUser, MIN_PASSWORD_LENGTH } from "@/lib/account-security";
 import { logAudit, getClientIp } from "@/lib/audit";
 import { z } from "zod";
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
 
   const users = await getUsers();
   return NextResponse.json(users);
@@ -22,8 +22,9 @@ const createSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireTeam();
+  if (auth.response) return auth.response;
+  const { session } = auth;
   if (!(await isOwner(session))) {
     return NextResponse.json({ error: "Only the account owner can add team members" }, { status: 403 });
   }
