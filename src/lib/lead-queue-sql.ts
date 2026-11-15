@@ -63,6 +63,11 @@ SELECT
   EXISTS (SELECT 1 FROM prospect_activities a WHERE a.prospect_id = p.id
            AND a.action_type = 'NO_MORE_FOLLOW_UP'
            AND (c.sent_at IS NULL OR a.created_at >= c.sent_at)) AS "followUpStopped",
+  EXISTS (SELECT 1 FROM prospect_activities a WHERE a.prospect_id = p.id
+           AND a.action_type = 'REPLY_SNOOZED'
+           AND a.created_at >= COALESCE(GREATEST(r.replied_at,
+                 (SELECT max(b.created_at) FROM prospect_activities b WHERE b.prospect_id = p.id AND b.new_status = 'REPONDU')),
+               timestamp '-infinity')) AS "replySnoozed",
   EXISTS (SELECT 1 FROM meetings mt WHERE mt.prospect_id = p.id AND mt.status <> 'CANCELLED') AS "liveMeeting",
   EXISTS (SELECT 1 FROM proposals pr WHERE pr.prospect_id = p.id) AS "hasProposal"
 FROM prospects p

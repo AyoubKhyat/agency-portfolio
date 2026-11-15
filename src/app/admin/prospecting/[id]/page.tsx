@@ -27,6 +27,7 @@ const ACTION_LABELS: Record<string, string> = {
   FOLLOW_UP: "sent follow-up", MARKED_REPLIED: "marked as replied", MARKED_NO_WHATSAPP: "marked no WhatsApp",
   STATUS_ENVOYE: "changed status to Sent", STATUS_REPONDU: "marked as replied", STATUS_CONVERTI: "converted to lead",
   NOTE_ADDED: "added a note", UPDATED: "updated details",
+  REPLY_SNOOZED: "chose a date to come back to the reply", REPLY_REVIEWED: "checked a possible old reply", NO_MORE_FOLLOW_UP: "stopped follow-ups",
   ...CONTACT_CHECK_LABELS,
 };
 const REASON_LABELS: Record<string, string> = {

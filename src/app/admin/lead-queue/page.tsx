@@ -11,7 +11,7 @@ import { ProspectDrawer } from "@/components/admin/prospect-drawer";
 import { ScheduleMeetingModal } from "@/components/admin/schedule-meeting-modal";
 import { SendConfirm } from "@/components/admin/send-confirm";
 import { recordConfirmedSend, type NextFollowUp } from "@/lib/lead-actions";
-import { addDays, type LeadQueue, type QueueGroup, type QueueItem, type SendChannel } from "@/lib/next-action";
+import { REPLY_SNOOZED, addDays, type LeadQueue, type QueueGroup, type QueueItem, type SendChannel } from "@/lib/next-action";
 import { cn } from "@/lib/utils";
 
 type Filter = "all" | QueueGroup;
@@ -217,7 +217,8 @@ export default function LeadQueuePage() {
     if (action === "meeting") { setMeetingFor(item); return; }
 
     const prospect = `/api/admin/prospecting/${item.id}`;
-    const later = (days: number) => ({ followUpDate: addDays(queue!.today, days), actionType: "FOLLOW_UP" });
+    // On a reply, "later" is a recorded decision (REPLY_SNOOZED); otherwise unchanged.
+    const later = (days: number) => ({ followUpDate: addDays(queue!.today, days), actionType: item.kind === "reply" ? REPLY_SNOOZED : "FOLLOW_UP" });
     const steps: Partial<Record<CardAction, [string, unknown, string]>> = {
       later3: [prospect, later(3), "Back in 3 days"],
       later7: [prospect, later(7), "Back in 7 days"],
