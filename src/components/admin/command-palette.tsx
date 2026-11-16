@@ -80,14 +80,14 @@ const QUICK_ACTIONS: QuickAction[] = [
   { id: "qa-prospects", label: "All prospects",     sublabel: "Everyone you are talking to", href: "/admin/prospecting", icon: Target },
   // Business
   { id: "qa-clients",   label: "Clients",           sublabel: "Client management",       href: "/admin/clients",        icon: Building2 },
-  { id: "qa-pipeline",  label: "Projects",          sublabel: "Client projects",         href: "/admin/pipeline",       icon: Layers },
+  { id: "qa-pipeline",  label: "Client Projects",   sublabel: "Delivery pipeline",         href: "/admin/pipeline",       icon: Layers },
   { id: "qa-invoices",  label: "Invoices",          sublabel: "Billing",                 href: "/admin/invoices",       icon: Receipt },
   { id: "qa-revenue",   label: "Revenue",           sublabel: "Money in",                href: "/admin/revenue",        icon: Banknote },
   // More
   { id: "qa-more",      label: "More tools",        sublabel: "Every other tool",        href: "/admin/more",           icon: LayoutGrid },
   { id: "qa-leads",     label: "Website Enquiries", sublabel: "Contact-form leads",      href: "/admin/leads",          icon: Users },
   { id: "qa-tasks",     label: "Tasks",             sublabel: "Task board",              href: "/admin/tasks",          icon: CheckSquare },
-  { id: "qa-projects",  label: "Website Portfolio", sublabel: "Projects on the public site", href: "/admin/projects",   icon: FolderKanban },
+  { id: "qa-projects",  label: "Portfolio",         sublabel: "Projects on the public site", href: "/admin/projects",   icon: FolderKanban },
   { id: "qa-documents", label: "Documents",         sublabel: "Uploaded PDFs",           href: "/admin/documents",      icon: FileText },
   { id: "qa-content",   label: "Content Planner",   sublabel: "Instagram 30-day plan",   href: "/admin/content",        icon: CalendarDays },
   { id: "qa-chat",      label: "Chat",              sublabel: "Team chat",               href: "/admin/chat",           icon: MessageSquare },

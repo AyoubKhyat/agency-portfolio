@@ -162,7 +162,7 @@ const VISIBLE_BOTTOM_NAV: typeof BOTTOM_NAV = SIMPLE_NAV
   : FOCUS_MODE ? BOTTOM_NAV : [...BOTTOM_NAV, ...HIDDEN_BOTTOM_NAV];
 
 const PAGE_TITLES: Record<string, string> = {
-  prospecting: "Prospects", discovery: "Find New", projects: "Website Portfolio", overview: "Full Dashboard",
+  prospecting: "Prospects", discovery: "Find New", projects: "Portfolio", pipeline: "Client Projects", overview: "Full Dashboard",
   leads: "Website Enquiries", inbox: "Reply Inbox", qualify: "Check a website", "batch-discovery": "Find businesses",
   "lead-queue": "Work through leads",
 };

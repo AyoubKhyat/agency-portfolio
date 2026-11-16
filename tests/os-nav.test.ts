@@ -17,7 +17,7 @@ const allPaths = allLinks.map(hrefPath);
 test("the menu is Client acquisition, then Business, then More", () => {
   const byGroup = (g: string) => MAIN_NAV.filter((s) => s.group === g).map((s) => s.label);
   assert.deepEqual(byGroup("acquisition"), ["Today", "Find", "Prospects", "Deals"]);
-  assert.deepEqual(byGroup("business"), ["Clients", "Projects", "Invoices", "Revenue"]);
+  assert.deepEqual(byGroup("business"), ["Clients", "Client Projects", "Invoices", "Revenue"]);
   assert.deepEqual(byGroup("more"), ["More tools", "Settings"]);
   assert.equal(MAIN_NAV.length, 10);
 });
