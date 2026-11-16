@@ -219,7 +219,7 @@ const SOCIAL_HOSTS: Record<string, string> = {
 };
 /** Path starts that are share buttons, posts or app pages, not a profile. */
 const NOT_A_PROFILE: Record<string, RegExp> = {
-  facebook: /^(?:sharer|sharer\.php|share|share\.php|dialog|plugins|tr|login|login\.php|l\.php)$/,
+  facebook: /^(?:sharer|sharer\.php|share|share\.php|dialog|plugins|tr|login|login\.php|l\.php|hashtag|groups|events|watch|photo\.php|photo|story\.php|permalink\.php)$/,
   instagram: /^(?:p|reel|reels|explore|accounts|stories|share)$/,
   x: /^(?:intent|share|home|hashtag|search|i|login)$/,
 };
@@ -227,8 +227,9 @@ const NOT_A_PROFILE: Record<string, RegExp> = {
 /** The social network of a profile link ("facebook", "instagram"…), or null for share buttons and other links. */
 function socialProfile(href: string): string | null {
   let u: URL;
-  try { u = new URL(href); } catch { return null; }
-  if (u.protocol !== "https:" && u.protocol !== "http:") return null;
+  // The base only resolves protocol-relative links (//facebook.com/x), as a browser does; a relative path stays on it.
+  try { u = new URL(href, "https://same-site.invalid/"); } catch { return null; }
+  if ((u.protocol !== "https:" && u.protocol !== "http:") || u.username || u.password) return null;
   const platform = SOCIAL_HOSTS[u.hostname.toLowerCase().replace(/^www\./, "")];
   if (!platform) return null;
   const [first = "", second = ""] = u.pathname.split("/").filter(Boolean).map((s) => s.toLowerCase());
@@ -257,7 +258,10 @@ function isContactPageLink(href: string, pageUrl?: string): boolean {
 
 const FORM_NOT_CONTACT = /search|recherche|newsletter|subscribe|abonn|login|log-in|signin|sign-in|connexion|password|comment|cart|panier|checkout|coupon|availability|disponibilit/i;
 const FORM_CONTACT_HINT = /contact|wpcf7|wpforms|gform|ninja-forms|fluentform|formspree|enquiry|inquiry|devis|quote/i;
-const CONTACT_FIELD = /e-?mail|courriel|phone|t[ée]l[ée]phone|\btel\b|whatsapp|mobile/i;
+/** Forms per page, and tags per form, that are looked at: enough for any real page, bounded on a hostile one. */
+const MAX_FORMS = 50;
+const MAX_FORM_TAGS = 300;
+const CONTACT_FIELD =/e-?mail|courriel|phone|t[ée]l[ée]phone|\btel\b|whatsapp|mobile/i;
 
 /**
  * True when one of the page's forms is a way to write to the business: it has a message box, or it is marked as a
@@ -267,15 +271,16 @@ const CONTACT_FIELD = /e-?mail|courriel|phone|t[ée]l[ée]phone|\btel\b|whatsapp
 function hasContactForm(html: string): boolean {
   const lower = asciiLower(html);
   let from = 0;
-  for (;;) {
+  for (let forms = 0; ; ) {
     const start = lower.indexOf("<form", from);
-    if (start < 0) return false;
+    if (start < 0 || forms >= MAX_FORMS) return false;
     from = start + 5;
     const next = lower[start + 5];
     if (next !== undefined && !TAG_NAME_END.test(next)) continue; // <formula> is not <form>
     const close = lower.indexOf("</form", start);
     // An unclosed form runs to the end of the page: read it once, so many unclosed forms can't make this quadratic.
     from = close < 0 ? html.length : close;
+    forms++;
     const tags = openingTags(html.slice(start, from));
     const form = attrsOf(tags.next().value?.attrs ?? "");
     const hint = [form.id, form.class, form.name, form.action, form.role].filter(Boolean).join(" ");
@@ -283,7 +288,9 @@ function hasContactForm(html: string): boolean {
     let textarea = false;
     let contactField = false;
     let excluded = false;
+    let seen = 0;
     for (const { name, attrs } of tags) {
+      if (++seen > MAX_FORM_TAGS) break; // a real form has a few dozen fields
       const tag = name.toLowerCase();
       if (tag === "textarea") textarea = true;
       if (tag !== "input") continue;

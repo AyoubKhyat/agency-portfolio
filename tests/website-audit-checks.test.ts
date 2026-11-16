@@ -433,6 +433,15 @@ test("social profiles and contact-page links are recognised but kept apart from 
     <a href="https://www.tiktok.com/tag/marrakech">tag</a><a href="https://www.youtube.com/watch?v=abc">video</a><a href="https://facebook.com/">home</a></body></html>`);
   assert.deepEqual(shares.socialProfiles, [], "share buttons, posts and home pages aren't profiles");
 
+  const socialOf = (href: string) => parsePage(`<html><body><a href="${href}">x</a></body></html>`).socialProfiles;
+  for (const href of ["https://www.facebook.com/hashtag/marrakech", "https://facebook.com/groups/riads", "https://facebook.com/events/123",
+    "https://www.facebook.com/watch/?v=1", "https://www.facebook.com/photo.php?fbid=1", "https://user:pw@facebook.com/riad",
+    "https://facebook.com.evil.example/riad", "javascript:alert(1)//facebook.com/riad"]) {
+    assert.deepEqual(socialOf(href), [], href);
+  }
+  assert.deepEqual(socialOf("https://www.facebook.com/profile.php?id=1000"), ["facebook"]);
+  assert.deepEqual(socialOf("//facebook.com/riadatlas"), ["facebook"], "protocol-relative, as a browser follows it");
+
   for (const [href, url, expected] of [
     ["/nous-contacter", undefined, true], ["#contact", undefined, true], ["https://riad-atlas.ma/contactez-nous/", "https://riad-atlas.ma/", true],
     ["https://www.riad-atlas.ma/contact-us", "https://riad-atlas.ma/", true], ["https://booking.com/contact", "https://riad-atlas.ma/", false],
