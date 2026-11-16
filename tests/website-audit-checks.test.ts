@@ -346,3 +346,110 @@ test("the visitor's own text can't choose what gets fetched", () => {
     assert.equal(parseDiagnosisMessage(bad), null, bad);
   }
 });
+
+/* ───────────────── Contact detection (E_CONTACT) ───────────────── */
+
+const kinds = (body: string, url?: string) => parsePage(`<html><body><h1>Riad</h1>${body}</body></html>`, url).contactKinds;
+
+test("contact details written in the footer text count, each as its own type", () => {
+  assert.deepEqual(kinds(`<footer>Tél : +212 5 24 38 47 00 · Email : contact@riad-atlas.ma</footer>`), ["email", "phone"]);
+  assert.deepEqual(kinds(`<footer>Appelez-nous au 05 24 38 47 00</footer>`), ["phone"]);
+  assert.deepEqual(kinds(`<footer>WhatsApp&nbsp;: 06.61.23.45.78</footer>`), ["phone"], "a number in text is a phone, not a WhatsApp link");
+  assert.deepEqual(kinds(`<footer>Call +33 1 42 68 53 00</footer>`), ["phone"]);
+  assert.deepEqual(kinds(`<p>info@riad-atlas.com</p>`), ["email"]);
+  assert.deepEqual(kinds(`<a href="  tel:+212524384700 ">Appeler</a>`), ["phone"], "spaces around the link are ignored, like a browser does");
+});
+
+test("WhatsApp chat links count in every form; share buttons don't", () => {
+  for (const href of ["https://wa.me/212661234578", "https://api.whatsapp.com/send?phone=212661234578", "whatsapp://send?phone=212661234578",
+    "https://web.whatsapp.com/send?phone=212661234578", "https://wa.me/message/ABCDEF12", "https://wa.link/x7k2p9"]) {
+    assert.deepEqual(kinds(`<a href="${href}">Chat</a>`), ["whatsapp"], href);
+  }
+  for (const href of ["https://wa.me/?text=https%3A%2F%2Friad.ma", "https://api.whatsapp.com/send?text=Regardez%20ce%20riad", "whatsapp://send?text=hello",
+    "https://chat.whatsapp.com/AbCdEf123", "https://example.com/?ref=wa.me/212661234578"]) {
+    assert.deepEqual(kinds(`<a href="${href}">Partager</a>`), [], href);
+  }
+});
+
+test("emails: real addresses count; share-by-email, placeholders and file names don't", () => {
+  assert.deepEqual(kinds(`<a href="mailto:Reservations@Riad-Atlas.ma?subject=Booking">Écrire</a>`), ["email"]);
+  for (const body of [`<a href="mailto:?subject=Un%20riad&body=https%3A%2F%2Friad.ma">Partager par email</a>`, `<a href="mailto:">x</a>`,
+    `<p>Écrivez à email@example.com</p>`, `<p>votre@email.com</p>`, `<p>name@domain.com</p>`, `<p>contact@yourdomain.ma</p>`,
+    `<p><img src="logo@2x.png" alt="logo"> logo@2x.png</p>`, `<p>Signalé par 12ab@sentry.io</p>`]) {
+    assert.deepEqual(kinds(body), [], body);
+  }
+});
+
+test("phones: template numbers, prices, years and ids in text don't count", () => {
+  for (const body of [`<p>Tél : +212 6 00 00 00 00</p>`, `<p>Tél : 06 00 00 00 00</p>`, `<p>Tél : 0512345678</p>`, `<p>Chambre à partir de 1 200 MAD, depuis 2015</p>`,
+    `<p>ICE 001234567000089 · RC 12345</p>`, `<p>Ouvert 08.30 - 18.00</p>`, `<p>Tél : +33 1 11 11 11 11</p>`]) {
+    assert.deepEqual(kinds(body), [], body);
+  }
+  assert.deepEqual(kinds(`<a href="tel:">Appeler</a>`), [], "an empty tel: link isn't a number");
+});
+
+test("forms: a real contact form counts; search, newsletter, login, comment and shop forms don't", () => {
+  const field = (t: string, name = t) => `<input type="${t}" name="${name}">`;
+  assert.deepEqual(kinds(`<form action="/send">${field("text", "nom")}${field("email")}<textarea name="message"></textarea><button>Envoyer</button></form>`), ["form"]);
+  assert.deepEqual(kinds(`<form class="wpcf7-form" action="/contact/#wpcf7">${field("text", "your-name")}${field("tel", "your-phone")}<input type="submit"></form>`), ["form"],
+    "a form marked as a contact form that asks for a phone");
+  assert.deepEqual(kinds(`<form method="post" class="contact-form">${field("email", "email")}</form>`), ["form"]);
+  for (const body of [
+    `<form role="search" action="/"><input type="search" name="s"><button>Rechercher</button></form>`,
+    `<form action="/"><input type="text" name="q"></form>`,
+    `<form class="newsletter" action="/subscribe">${field("email")}<button>OK</button></form>`,
+    `<form>${field("email")}<button>S'abonner</button></form>`,
+    `<form action="/login">${field("email")}${field("password")}</form>`,
+    `<form id="commentform" action="/wp-comments-post.php">${field("email")}<textarea name="comment"></textarea></form>`,
+    `<form class="cart" action="/panier">${field("number", "qty")}</form>`,
+    `<formula>x</formula>`,
+  ]) {
+    assert.deepEqual(kinds(body), [], body);
+  }
+});
+
+test("contact types stay distinct and E_CONTACT's vocabulary is unchanged", () => {
+  const all = kinds(`<a href="tel:+212524384700">t</a><a href="mailto:hello@riad.ma">m</a><a href="https://wa.me/212661234578">w</a>`
+    + `<form><input type="email" name="email"><textarea></textarea></form>`);
+  assert.deepEqual(all, ["email", "form", "phone", "whatsapp"]);
+  const e = evidence(page(`<!doctype html><html lang="fr"><head><title>R</title></head><body><h1>R</h1>${lorem}<footer>contact@riad.ma · 05 24 38 47 00</footer></body></html>`))
+    .find((x) => x.id === "E_CONTACT")!;
+  assert.equal(e.status, "pass");
+  assert.equal(e.observed, "email, phone");
+});
+
+test("social profiles and contact-page links are recognised but kept apart from E_CONTACT", () => {
+  const p = parsePage(`<html><body><h1>R</h1>
+    <a href="https://www.instagram.com/riadatlas/">IG</a><a href="https://facebook.com/RiadAtlas">FB</a><a href="https://www.tiktok.com/@riadatlas">TT</a>
+    <a href="https://www.linkedin.com/company/riad-atlas">LI</a><a href="https://www.youtube.com/@riadatlas">YT</a><a href="https://x.com/riadatlas">X</a>
+    <a href="/contact/">Contact</a></body></html>`, "https://riad-atlas.ma/");
+  assert.deepEqual(p.socialProfiles, ["facebook", "instagram", "linkedin", "tiktok", "x", "youtube"]);
+  assert.equal(p.hasContactPageLink, true);
+  assert.deepEqual(p.contactKinds, [], "neither counts as a contact option on this page");
+
+  const shares = parsePage(`<html><body>
+    <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Friad.ma">Partager</a><a href="https://twitter.com/intent/tweet?url=x">Tweet</a>
+    <a href="https://x.com/share?url=x">X</a><a href="https://www.linkedin.com/sharing/share-offsite/?url=x">LI</a><a href="https://www.instagram.com/p/Cx1/">post</a>
+    <a href="https://www.tiktok.com/tag/marrakech">tag</a><a href="https://www.youtube.com/watch?v=abc">video</a><a href="https://facebook.com/">home</a></body></html>`);
+  assert.deepEqual(shares.socialProfiles, [], "share buttons, posts and home pages aren't profiles");
+
+  for (const [href, url, expected] of [
+    ["/nous-contacter", undefined, true], ["#contact", undefined, true], ["https://riad-atlas.ma/contactez-nous/", "https://riad-atlas.ma/", true],
+    ["https://www.riad-atlas.ma/contact-us", "https://riad-atlas.ma/", true], ["https://booking.com/contact", "https://riad-atlas.ma/", false],
+    ["/contacts-utiles.pdf", undefined, false], ["/a-propos", undefined, false], ["mailto:contact@riad.ma", undefined, false], ["/contactless-payment", undefined, false],
+  ] as const) {
+    assert.equal(parsePage(`<html><body><a href="${href}">x</a></body></html>`, url).hasContactPageLink, expected, href);
+  }
+});
+
+test("contact detection stays fast on hostile pages (unclosed forms, thousands of links, long address-like runs)", () => {
+  const hostile = "<form><input name=q>".repeat(15_000) + '<a href="/contactless">x</a><a href="https://facebook.com/sharer/x">s</a>'.repeat(8_000)
+    + "a".repeat(64) + "@" + "b-".repeat(150_000) + "0 5 ".repeat(60_000);
+  assert.ok(hostile.length > 1_000_000);
+  const started = Date.now();
+  const p = parsePage(hostile.slice(0, 1_500_000));
+  assert.ok(Date.now() - started < 3000, `took ${Date.now() - started} ms`);
+  assert.deepEqual(p.contactKinds, []);
+  assert.deepEqual(p.socialProfiles, []);
+  assert.equal(p.hasContactPageLink, false);
+});
