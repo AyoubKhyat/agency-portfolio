@@ -57,9 +57,15 @@ export function casablancaDay(now: Date): string {
 /** SECTORS_PER_DAY sectors for the day, moving on by that many every day, so all sectors take turns. */
 export function rotateSectors(day: string, available: readonly string[], n = SECTORS_PER_DAY): string[] {
   if (available.length <= n) return [...available];
+  return rotationOrder(day, available, n).slice(0, n);
+}
+
+/** Every sector once, starting with the day's SECTORS_PER_DAY: the order in which a day tops up its checks. */
+export function rotationOrder(day: string, available: readonly string[], n = SECTORS_PER_DAY): string[] {
+  if (available.length === 0) return [];
   const dayNumber = Math.floor(Date.parse(`${day}T00:00:00Z`) / 86_400_000);
   const start = ((dayNumber * n) % available.length + available.length) % available.length;
-  return Array.from({ length: n }, (_, i) => available[(start + i) % available.length]);
+  return Array.from({ length: available.length }, (_, i) => available[(start + i) % available.length]);
 }
 
 /* ───────────────── Types ───────────────── */
@@ -106,7 +112,9 @@ export type DailyLead = {
 export type IdentityReview = { osmId: string; osmUrl: string; name: string; sector: string; website: string; siteName: string | null; reason: string };
 
 export type RunStats = {
+  /** The day's sectors, then any searched to top up the checks (also listed in topUpSectors). */
   sectors: string[];
+  topUpSectors?: string[];
   checked: number;
   outcomes: Record<string, number>;
   skipped: { noWebsite: number; platformOnly: number; inCrm: number; possibleDuplicate: number; sameSiteInBatch: number; shownBefore: number };
@@ -300,31 +308,41 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
 
     const available = SECTORS.map((s) => s.key).filter((k) => sectorEntries(data, k).length > 0);
     if (available.length === 0) return await fail(PUBLIC_ERRORS.empty);
-    const sectors = rotateSectors(day, available);
+    const order = rotationOrder(day, available);
+    const sectors = order.slice(0, SECTORS_PER_DAY);
 
     const stats: RunStats = {
-      sectors, checked: 0, outcomes: {},
+      sectors: [...sectors], topUpSectors: [], checked: 0, outcomes: {},
       skipped: { noWebsite: 0, platformOnly: 0, inCrm: 0, possibleDuplicate: 0, sameSiteInBatch: 0, shownBefore: 0 },
       noWebsiteWithContact: 0, sectorErrors: [], stoppedEarly: false,
     };
     const isShown = (osmId: string, website: string | null) => shown.osmIds.has(osmId) || (!!website && shown.sites.has(siteKey(website) ?? ""));
 
     // 1. Search each sector from its cursor (P6C: CRM matches and possible duplicates already left out).
-    type SectorWork = { sector: string; list: OsmEntry[]; from: number; to: number; end: boolean; toCheck: BatchCandidate[] };
+    type SectorWork = { sector: string; list: OsmEntry[]; from: number; to: number; end: boolean; toCheck: BatchCandidate[]; topUp: boolean };
     const work: SectorWork[] = [];
-    for (const sector of sectors) {
+    const search = async (sector: string, topUp: boolean) => {
       const list = sectorEntries(data, sector);
       const saved = previous.cursors[sector] ?? 0;
       const from = saved >= 0 && saved < list.length ? saved : 0;
       const summary = await searchBatch(sector, from, { dataset: async () => data, loadCrm: async () => crm });
-      if (summary.sourceError) { stats.sectorErrors.push(`${sector}: ${summary.sourceError}`); continue; }
+      if (summary.sourceError) { stats.sectorErrors.push(`${sector}: ${summary.sourceError}`); return; }
       for (const k of Object.keys(summary.skipped) as (keyof typeof summary.skipped)[]) stats.skipped[k] += summary.skipped[k];
       const toCheck = summary.candidates.filter((c) => {
         if (!isShown(c.sourceId, c.website)) return true;
         stats.skipped.shownBefore++;
         return false;
       });
-      work.push({ sector, list, from: summary.progress.from, to: summary.progress.to, end: summary.progress.nextCursor === null, toCheck });
+      work.push({ sector, list, from: summary.progress.from, to: summary.progress.to, end: summary.progress.nextCursor === null, toCheck, topUp });
+    };
+    for (const sector of sectors) await search(sector, false);
+    // Small sectors can't fill the day's checks: carry on into the next sectors in rotation order, from their own cursors.
+    const eligible = () => work.reduce((n, w) => n + w.toCheck.length, 0);
+    for (const sector of order.slice(SECTORS_PER_DAY)) {
+      if (eligible() >= MAX_SITE_CHECKS) break;
+      await search(sector, true);
+      stats.sectors.push(sector);
+      stats.topUpSectors!.push(sector);
     }
 
     // 2. Check at most MAX_SITE_CHECKS sites, sectors taking turns, a few at a time, within the time limit.
@@ -347,10 +365,12 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
 
     // 4. Businesses with no website but an explicit contact tag: their own scan (no request is made for them).
     //    Up to MAX_NO_WEBSITE per sector are collected; the ones not picked today are looked at again next time.
+    //    Only the day's own sectors: the top-up is for website checks.
+    const daySectors = work.filter((w) => !w.topUp);
     const noSiteCursors: Record<string, number> = { ...(previous.noSiteCursors ?? {}) };
     const collected: { entry: OsmEntry; sector: string; index: number }[] = [];
     const scanEnd: Record<string, number> = {};
-    for (const w of work) {
+    for (const w of daySectors) {
       const saved = noSiteCursors[w.sector] ?? 0;
       let i = saved >= 0 && saved < w.list.length ? saved : 0;
       let found = 0;
@@ -367,7 +387,7 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
     }
     stats.noWebsiteWithContact = collected.length;
     const pickedNoSite = rankNoWebsite(collected).slice(0, MAX_NO_WEBSITE);
-    for (const w of work) {
+    for (const w of daySectors) {
       const left = collected.filter((c) => c.sector === w.sector && !pickedNoSite.includes(c));
       noSiteCursors[w.sector] = left.length > 0 ? Math.min(...left.map((c) => c.index)) : scanEnd[w.sector];
     }

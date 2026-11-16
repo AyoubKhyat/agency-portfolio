@@ -281,6 +281,97 @@ test("an exhausted sector starts again from the top, and what was shown stays ou
   assert.equal(s.saved.length, 2, "nothing shown twice");
 });
 
+/* ── sector top-up ── */
+
+/** The order the agent tops up in, for a dataset: the available sectors (app order), rotated for the day. */
+async function orderFor(day: string, list: OsmEntry[]) {
+  const { SECTORS } = await import("../src/lib/discovery-providers");
+  const { sectorEntries } = await import("../src/lib/batch-discovery");
+  const d = dataset(list);
+  return m.rotationOrder(day, SECTORS.map((s) => s.key).filter((k) => sectorEntries(d, k).length > 0));
+}
+
+test("rotation order: every sector once, starting with the day's 3", () => {
+  const all = ["A", "B", "C", "D", "E", "F", "G"];
+  const order = m.rotationOrder("2026-11-14", all);
+  assert.deepEqual([...order].sort(), all);
+  assert.deepEqual(order.slice(0, m.SECTORS_PER_DAY), m.rotateSectors("2026-11-14", all));
+  assert.deepEqual(m.rotationOrder("2026-11-14", []), []);
+});
+
+test("small sectors: the checks are topped up from the next sectors in rotation order, up to 12, never twice", async () => {
+  // One site in each of six sectors and twenty in GUEST_HOUSES: the day's sectors alone can't fill the checks.
+  let id = 1;
+  const list: OsmEntry[] = [];
+  for (const s of ["HOTELS", "RIADS", "TRAVEL_AGENCIES", "CAR_RENTAL", "RESTAURANTS", "CAFES"]) list.push(e(id++, s));
+  for (let i = 0; i < 20; i++) list.push(e(id++, "GUEST_HOUSES"));
+  list.push(e(id++, "GUEST_HOUSES", { website: "", whatsapp: "https://wa.me/212612349999" })); // a top-up sector's no-website business
+  const order = await orderFor("2026-11-14", list);
+  const sizes: Record<string, number> = Object.fromEntries(order.map((k) => [k, k === "GUEST_HOUSES" ? 20 : 1]));
+  const expectedTopUp: string[] = [];
+  let eligible = order.slice(0, m.SECTORS_PER_DAY).reduce((n, k) => n + sizes[k], 0);
+  for (const k of order.slice(m.SECTORS_PER_DAY)) {
+    if (eligible >= m.MAX_SITE_CHECKS) break;
+    expectedTopUp.push(k);
+    eligible += sizes[k];
+  }
+  assert.ok(expectedTopUp.length > 0, "the fixture needs a top-up");
+
+  const s = memStore();
+  const { fetcher, homeHits } = makeFetcher();
+  const r = await m.runDailyLeads({ store: s.store, dataset: async () => dataset(list), loadCrm: noCrm, fetcher, now: at(DAY1) });
+  assert.equal(r.result, "COMPLETED");
+  assert.equal(r.checked, Math.min(m.MAX_SITE_CHECKS, eligible), "checks filled up to the cap");
+  assert.equal(new Set(homeHits).size, r.checked, "no site checked twice");
+  assert.equal(r.leads, m.MAX_LEADS);
+  const out = s.runs.get("2026-11-14")!.outcome!;
+  assert.ok(out.status === "COMPLETED");
+  if (out.status !== "COMPLETED") return;
+  assert.deepEqual(out.stats.topUpSectors, expectedTopUp);
+  assert.deepEqual(out.stats.sectors, [...order.slice(0, m.SECTORS_PER_DAY), ...expectedTopUp], "the summary lists the extra sectors");
+  for (const k of expectedTopUp) assert.ok(k in out.state.cursors, `${k} keeps its own cursor`);
+  if (expectedTopUp.includes("GUEST_HOUSES")) {
+    assert.ok(s.saved.every((x) => x.lead.kind === "WEBSITE"), "no-website leads stay on the day's own sectors");
+    assert.ok(!("GUEST_HOUSES" in (out.state.noSiteCursors ?? {})));
+  }
+
+  // The next day doesn't recheck what day 1 showed.
+  const { fetcher: f2 } = makeFetcher();
+  await m.runDailyLeads({ store: s.store, dataset: async () => dataset(list), loadCrm: noCrm, fetcher: f2, now: at(DAY2) });
+  const ids = s.saved.map((x) => x.lead.osmId);
+  assert.equal(new Set(ids).size, ids.length, "nothing shown twice");
+});
+
+test("all sectors small: every sector is searched once and the run stops when they're exhausted", async () => {
+  const list = ["HOTELS", "RIADS", "TRAVEL_AGENCIES", "CAR_RENTAL", "RESTAURANTS"].map((sec, i) => e(i + 1, sec));
+  const order = await orderFor("2026-11-14", list);
+  const s = memStore();
+  const { fetcher, homeHits } = makeFetcher();
+  const r = await m.runDailyLeads({ store: s.store, dataset: async () => dataset(list), loadCrm: noCrm, fetcher, now: at(DAY1) });
+  assert.equal(r.checked, 5);
+  assert.equal(new Set(homeHits).size, 5);
+  const out = s.runs.get("2026-11-14")!.outcome!;
+  assert.ok(out.status === "COMPLETED" && out.stats.sectors.length === order.length);
+  if (out.status === "COMPLETED") assert.deepEqual(out.stats.topUpSectors, order.slice(m.SECTORS_PER_DAY));
+});
+
+test("large sectors: the day's 3 sectors fill the checks, no top-up", async () => {
+  const list = bigList();
+  for (let i = 0; i < 5; i++) list.push(e(900 + i, "GUEST_HOUSES")); // another sector that must not be reached
+  const s = memStore();
+  const { fetcher, homeHits } = makeFetcher();
+  const r = await m.runDailyLeads({ store: s.store, dataset: async () => dataset(list), loadCrm: noCrm, fetcher, now: at(DAY1) });
+  assert.equal(r.checked, m.MAX_SITE_CHECKS);
+  const out = s.runs.get("2026-11-14")!.outcome!;
+  assert.ok(out.status === "COMPLETED");
+  if (out.status !== "COMPLETED") return;
+  const order = await orderFor("2026-11-14", list);
+  assert.deepEqual(out.stats.topUpSectors, []);
+  assert.deepEqual(out.stats.sectors, order.slice(0, m.SECTORS_PER_DAY));
+  const daySites = new Set(list.filter((x) => x.website && x.sectors.some((k) => out.stats.sectors.includes(k))).map((x) => new URL(x.website).hostname));
+  assert.ok(homeHits.every((h) => daySites.has(h)), "only the day's sectors were checked");
+});
+
 /* ── wiring and guarantees ── */
 
 test("cron secret: required, at least 16 characters, exact Bearer match", async () => {
