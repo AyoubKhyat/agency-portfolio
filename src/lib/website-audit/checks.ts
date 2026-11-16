@@ -6,6 +6,7 @@
  * as a failure. Observed strings come from the site and stay untrusted wherever they are used.
  */
 import { qualityLabelFromScore } from "@/lib/discovery/score";
+import { explicitWhatsAppLink } from "@/lib/contact-check";
 import type { SafeResponse } from "./safe-fetch";
 
 export type EvidenceStatus = "pass" | "fail" | "unknown";
@@ -166,13 +167,163 @@ export type ParsedPage = {
   imgTotal: number;
   imgMissingAlt: number;
   hasStructuredData: boolean;
+  /** What E_CONTACT counts: "email", "form", "phone", "whatsapp" (links, genuine forms, or details in the visible text). */
   contactKinds: string[];
+  /** Social profile links (not share buttons), e.g. "facebook", "instagram". Recorded only: E_CONTACT doesn't count them. */
+  socialProfiles: string[];
+  /** A same-site link to a contact page or section. Recorded only: E_CONTACT doesn't count it. */
+  hasContactPageLink: boolean;
   textChars: number;
   scriptCount: number;
   isShell: boolean;
 };
 
-export function parsePage(html: string): ParsedPage {
+/* ───────────────── Contact details ───────────────── */
+
+const EMAIL_ADDRESS = /^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]{1,63}(?:\.[A-Za-z0-9-]{1,63}){0,8}\.[A-Za-z]{2,24}$/;
+const EMAIL_IN_TEXT = /[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]{1,63}(?:\.[A-Za-z0-9-]{1,63}){1,9}/g;
+/** Placeholders, site-builder and monitoring addresses, and file names such as logo@2x.png. */
+const NOT_A_CONTACT_EMAIL = /@(?:example|exemple|domain|domaine|yourdomain|votredomaine|email|test)\.[a-z]{2,6}$|@(?:sentry\.io|wixpress\.com|cookiebot\.com)$|^(?:your|you|name|nom|user|username|votre|test|email|e-mail)(?:[._-]?(?:name|nom|email|mail))?@|\.(?:png|jpe?g|gif|svg|webp|avif|ico|css|js|json|woff2?)$/i;
+
+/** Moroccan numbers (+212 / 00212 / 0, then 5–7 and 8 digits) and other numbers written with a "+" country code. */
+const PHONE_MA = /(?<![\d+])(?:(?:\+|00)212[\s.-]?(?:\(0\)[\s.-]?)?|0)[5-7](?:[\s.-]?\d){8}(?!\d)/g;
+const PHONE_INTL = /(?<![\d+])\+(?!212)[1-9]\d{0,2}[\s.-]?(?:\(0\)[\s.-]?)?\d(?:[\s.-]?\d){6,11}(?!\d)/g;
+/** Template numbers: the last 8 digits all the same, or a 12345678 run. */
+const placeholderNumber = (digits: string) => /^(\d)\1{7}$/.test(digits.slice(-8)) || /12345678|23456789/.test(digits);
+
+function contactEmail(address: string): boolean {
+  return EMAIL_ADDRESS.test(address) && !NOT_A_CONTACT_EMAIL.test(address);
+}
+
+/** A WhatsApp chat with this business: a number (or a wa.me/wa.link business link), never a share button. */
+function isWhatsAppContact(href: string): boolean {
+  if (explicitWhatsAppLink(href)) return true;
+  let u: URL;
+  try { u = new URL(href); } catch { return false; }
+  const host = u.hostname.toLowerCase().replace(/^www\./, "");
+  const phone = (u.searchParams.get("phone") ?? "").replace(/\D/g, "");
+  if (u.protocol === "whatsapp:") return phone.length >= 8;
+  if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+  if ((host === "api.whatsapp.com" || host === "web.whatsapp.com") && /^\/send\/?$/.test(u.pathname)) return phone.length >= 8;
+  if (host === "wa.me") return /^\/(?:\+?[1-9]\d{7,14}|message\/[A-Za-z0-9]{4,})\/?$/.test(u.pathname);
+  if (host === "wa.link") return /^\/[A-Za-z0-9]{3,}\/?$/.test(u.pathname);
+  return false;
+}
+
+/** Social and contact-page links whose URL is parsed, per kind and page. */
+const MAX_LINKS_CHECKED = 100;
+const SOCIAL_HINT =/facebook\.com|fb\.com|instagram\.com|tiktok\.com|linkedin\.com|youtube\.com|\/\/(?:www\.)?(?:x|twitter)\.com/;
+const SOCIAL_HOSTS: Record<string, string> = {
+  "facebook.com": "facebook", "m.facebook.com": "facebook", "web.facebook.com": "facebook", "fb.com": "facebook",
+  "instagram.com": "instagram", "tiktok.com": "tiktok", "linkedin.com": "linkedin", "youtube.com": "youtube", "x.com": "x", "twitter.com": "x",
+};
+/** Path starts that are share buttons, posts or app pages, not a profile. */
+const NOT_A_PROFILE: Record<string, RegExp> = {
+  facebook: /^(?:sharer|sharer\.php|share|share\.php|dialog|plugins|tr|login|login\.php|l\.php|hashtag|groups|events|watch|photo\.php|photo|story\.php|permalink\.php)$/,
+  instagram: /^(?:p|reel|reels|explore|accounts|stories|share)$/,
+  x: /^(?:intent|share|home|hashtag|search|i|login)$/,
+};
+
+/** The social network of a profile link ("facebook", "instagram"…), or null for share buttons and other links. */
+function socialProfile(href: string): string | null {
+  let u: URL;
+  // The base only resolves protocol-relative links (//facebook.com/x), as a browser does; a relative path stays on it.
+  try { u = new URL(href, "https://same-site.invalid/"); } catch { return null; }
+  if ((u.protocol !== "https:" && u.protocol !== "http:") || u.username || u.password) return null;
+  const platform = SOCIAL_HOSTS[u.hostname.toLowerCase().replace(/^www\./, "")];
+  if (!platform) return null;
+  const [first = "", second = ""] = u.pathname.split("/").filter(Boolean).map((s) => s.toLowerCase());
+  if (!first) return null;
+  if (platform === "tiktok") return first.startsWith("@") && first.length > 1 ? platform : null;
+  if (platform === "linkedin") return ["company", "in", "school"].includes(first) && second ? platform : null;
+  if (platform === "youtube") return (first.startsWith("@") && first.length > 1) || (["channel", "c", "user"].includes(first) && second) ? platform : null;
+  return NOT_A_PROFILE[platform]?.test(first) ? null : platform;
+}
+
+const CONTACT_PAGE = /(?:^|[/_#-])(?:contact|contacts|contactez|contactez-nous|nous-contacter|contact-us|contacto)(?:[/_.#-]|$)/i;
+
+/** A link to this site's contact page or section (relative, or absolute on the same host when pageUrl is known). */
+function isContactPageLink(href: string, pageUrl?: string): boolean {
+  const BASE = "https://same-site.invalid/";
+  let u: URL;
+  let base: URL;
+  try { base = new URL(pageUrl ?? BASE); u = new URL(href, base); } catch { return false; }
+  if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+  if (u.hostname.toLowerCase().replace(/^www\./, "") !== base.hostname.toLowerCase().replace(/^www\./, "")) return false;
+  if (/\.(?:pdf|jpe?g|png|gif|webp|svg|zip|docx?|xlsx?|mp4|mp3)$/i.test(u.pathname)) return false; // a file, not a page
+  let path: string;
+  try { path = decodeURIComponent(u.pathname + u.hash); } catch { path = u.pathname + u.hash; }
+  return CONTACT_PAGE.test(path);
+}
+
+const FORM_NOT_CONTACT = /search|recherche|newsletter|subscribe|abonn|login|log-in|signin|sign-in|connexion|password|comment|cart|panier|checkout|coupon|availability|disponibilit/i;
+const FORM_CONTACT_HINT = /contact|wpcf7|wpforms|gform|ninja-forms|fluentform|formspree|enquiry|inquiry|devis|quote/i;
+/** Forms per page, and tags per form, that are looked at: enough for any real page, bounded on a hostile one. */
+const MAX_FORMS = 50;
+const MAX_FORM_TAGS = 300;
+const CONTACT_FIELD =/e-?mail|courriel|phone|t[ée]l[ée]phone|\btel\b|whatsapp|mobile/i;
+
+/**
+ * True when one of the page's forms is a way to write to the business: it has a message box, or it is marked as a
+ * contact form and asks for an email or phone. Search, newsletter, login, comment and shop forms don't count.
+ * Scans by position (no regex over the page), like the rest of this parser.
+ */
+function hasContactForm(html: string): boolean {
+  const lower = asciiLower(html);
+  let from = 0;
+  for (let forms = 0; ; ) {
+    const start = lower.indexOf("<form", from);
+    if (start < 0 || forms >= MAX_FORMS) return false;
+    from = start + 5;
+    const next = lower[start + 5];
+    if (next !== undefined && !TAG_NAME_END.test(next)) continue; // <formula> is not <form>
+    const close = lower.indexOf("</form", start);
+    // An unclosed form runs to the end of the page: read it once, so many unclosed forms can't make this quadratic.
+    from = close < 0 ? html.length : close;
+    forms++;
+    const tags = openingTags(html.slice(start, from));
+    const form = attrsOf(tags.next().value?.attrs ?? "");
+    const hint = [form.id, form.class, form.name, form.action, form.role].filter(Boolean).join(" ");
+    if (FORM_NOT_CONTACT.test(hint)) continue;
+    let textarea = false;
+    let contactField = false;
+    let excluded = false;
+    let seen = 0;
+    for (const { name, attrs } of tags) {
+      if (++seen > MAX_FORM_TAGS) break; // a real form has a few dozen fields
+      const tag = name.toLowerCase();
+      if (tag === "textarea") textarea = true;
+      if (tag !== "input") continue;
+      const a = attrsOf(attrs);
+      const type = (a.type ?? "").toLowerCase();
+      if (type === "password" || type === "search" || (a.role ?? "").toLowerCase() === "search") { excluded = true; break; }
+      if (type === "email" || type === "tel" || CONTACT_FIELD.test(`${a.name ?? ""} ${a.id ?? ""}`)) contactField = true;
+    }
+    if (!excluded && (textarea || (FORM_CONTACT_HINT.test(hint) && contactField))) return true;
+  }
+}
+
+/** Phone numbers and email addresses written in the visible text (a footer, a contact block), placeholders left out. */
+function textContactKinds(text: string): string[] {
+  const out: string[] = [];
+  // Only around each "@" (at most 500 of them), so long runs of address-like characters stay linear.
+  let at = -1;
+  emails: for (let n = 0; n < 500; n++) {
+    at = text.indexOf("@", at + 1);
+    if (at < 0) break;
+    for (const m of text.slice(Math.max(0, at - 64), at + 650).matchAll(EMAIL_IN_TEXT)) {
+      if (contactEmail(m[0])) { out.push("email"); break emails; }
+    }
+  }
+  for (const re of [PHONE_MA, PHONE_INTL]) {
+    for (const m of text.matchAll(re)) {
+      if (!placeholderNumber(m[0].replace(/\D/g, ""))) { out.push("phone"); return out; }
+    }
+  }
+  return out;
+}
+
+export function parsePage(html: string, pageUrl?: string): ParsedPage {
   const noComments = stripComments(html);
   const scriptCount = (noComments.match(/<script\b/gi) ?? []).length;
   const hasStructuredData = /<script\b[^<>]{0,200}application\/ld\+json/i.test(noComments);
@@ -180,9 +331,13 @@ export function parsePage(html: string): ParsedPage {
 
   const page: ParsedPage = {
     lang: "", title: "", description: "", hasViewport: false, hasCanonical: false, ogTags: [],
-    h1Count: 0, imgTotal: 0, imgMissingAlt: 0, hasStructuredData, contactKinds: [], textChars: 0, scriptCount, isShell: false,
+    h1Count: 0, imgTotal: 0, imgMissingAlt: 0, hasStructuredData, contactKinds: [], socialProfiles: [], hasContactPageLink: false,
+    textChars: 0, scriptCount, isShell: false,
   };
   const contact = new Set<string>();
+  const social = new Set<string>();
+  let socialChecked = 0;
+  let contactChecked = 0;
 
   const titleStart = noScript.search(/<title\b/i);
   if (titleStart >= 0) {
@@ -211,18 +366,35 @@ export function parsePage(html: string): ParsedPage {
     } else if (tag === "img") {
       page.imgTotal++;
       if (!("alt" in attrsOf(attrs))) page.imgMissingAlt++;
-    } else if (tag === "form") {
-      contact.add("form");
     } else if (tag === "a") {
-      const href = (attrsOf(attrs).href ?? "").toLowerCase();
-      if (href.startsWith("tel:")) contact.add("phone");
-      if (href.startsWith("mailto:")) contact.add("email");
-      if (href.includes("wa.me/") || href.includes("api.whatsapp.com")) contact.add("whatsapp");
+      const href = (attrsOf(attrs).href ?? "").trim();
+      const lowerHref = href.toLowerCase();
+      if (lowerHref.startsWith("tel:")) {
+        if (/\d/.test(href)) contact.add("phone");
+      } else if (lowerHref.startsWith("mailto:")) {
+        // mailto:?subject=… is a "share by email" button, not an address.
+        if (contactEmail(href.slice(7).split("?")[0].split(",")[0].trim())) contact.add("email");
+      } else if (/wa\.(?:me|link)|whatsapp/.test(lowerHref) && isWhatsAppContact(href)) {
+        contact.add("whatsapp");
+      } else if (SOCIAL_HINT.test(lowerHref)) {
+        // Cheap text tests first, and a cap on URLs parsed: a real page has a handful of these, a hostile one thousands.
+        if (socialChecked++ < MAX_LINKS_CHECKED) {
+          const network = socialProfile(href);
+          if (network) social.add(network);
+        }
+      } else if (!page.hasContactPageLink && lowerHref.includes("contact") && contactChecked++ < MAX_LINKS_CHECKED) {
+        if (isContactPageLink(href, pageUrl)) page.hasContactPageLink = true;
+      }
     }
   }
-  page.contactKinds = [...contact].sort();
+  if (hasContactForm(noScript)) contact.add("form");
 
-  page.textChars = stripTags(noScript).replace(/\s+/g, " ").trim().length;
+  const text = stripTags(noScript);
+  for (const kind of textContactKinds(decodeEntities(text))) contact.add(kind);
+  page.contactKinds = [...contact].sort();
+  page.socialProfiles = [...social].sort();
+
+  page.textChars = text.replace(/\s+/g, " ").trim().length;
   page.isShell = scriptCount > 0 && page.textChars < SHELL_TEXT_CHARS;
   return page;
 }
