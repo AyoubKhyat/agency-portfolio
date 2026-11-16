@@ -47,7 +47,7 @@ function EmptyQueue({ filter, done }: { filter: Filter; done: number }) {
       <p className="mt-5 text-[18px] font-semibold text-[var(--os-text)]">{filter === "all" ? "You're clear" : "Nothing here"}</p>
       <p className="mt-1.5 text-[14px] text-[var(--os-text-muted)] max-w-md mx-auto">{copy[filter]}</p>
       <div className="flex flex-wrap justify-center gap-3 mt-6">
-        <Link href="/admin/discovery" className={FIND_NEW}><Compass className="w-4 h-4" /> Find new leads</Link>
+        <Link href="/admin/batch-discovery" className={FIND_NEW}><Compass className="w-4 h-4" /> Find new leads</Link>
         <Link href="/admin/prospecting" className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-semibold border border-[var(--os-border)] text-[var(--os-text)] hover:bg-[var(--os-hover)]">
           <Users className="w-4 h-4" /> All prospects
         </Link>
@@ -262,7 +262,7 @@ export default function LeadQueuePage() {
           <h1 className="text-[22px] sm:text-[28px] font-semibold tracking-tight text-[var(--os-text)]">Work through leads</h1>
           <p className="text-[12.5px] text-[var(--os-text-muted)]">One lead at a time. Optional: everything is also in the <Link href="/admin/prospecting" className="underline">prospect list</Link>.</p>
         </div>
-        <Link href="/admin/discovery" aria-label="Find new leads" className={cn(FIND_NEW, "shrink-0 max-sm:px-3 max-sm:py-2 max-sm:text-[13px]")}>
+        <Link href="/admin/batch-discovery" aria-label="Find new leads" className={cn(FIND_NEW, "shrink-0 max-sm:px-3 max-sm:py-2 max-sm:text-[13px]")}>
           <Search className="w-4 h-4" /> <span>Find new<span className="max-sm:hidden"> leads</span></span>
         </Link>
       </header>
