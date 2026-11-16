@@ -9,6 +9,10 @@ import { classify, siteKey, type ExistingProspectLite } from "../src/lib/discove
 import { normalizePhoneMA } from "../src/lib/discovery-providers";
 import { explicitWhatsAppLink } from "../src/lib/contact-check";
 import type { DiscoveryCandidate } from "../src/lib/discovery-providers";
+import { issueCopy } from "../src/lib/lead-issue-copy";
+
+const titleOf = (id: string) => issueCopy({ id, sentence: "", observed: "" }).title;
+const re = (s: string) => new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
 
 const cand = (over: Partial<DiscoveryCandidate>): DiscoveryCandidate => ({
   sourceId: "node/1", source: "OSM", name: "Riad Nouveau", sector: "RIADS", city: "Marrakech", neighborhood: null,
@@ -56,7 +60,7 @@ test("WhatsApp: only an explicit https link with a number; a phone never becomes
 /* ───────────────── The route ───────────────── */
 
 type Row = Record<string, unknown> & { id: string };
-const db = { prospects: [] as Row[], created: [] as Row[] };
+const db = { prospects: [] as Row[], created: [] as Row[], creates: 0, failCreate: false };
 mock.module("@/lib/auth", { namedExports: { getSession: async () => ({ userId: "u1", fullName: "Test User", role: "admin" }) } });
 mock.module("@/lib/prisma", {
   namedExports: {
@@ -64,7 +68,11 @@ mock.module("@/lib/prisma", {
     prisma: {
       prospect: {
         findMany: async () => db.prospects.map((p) => ({ ...p })),
-        create: async ({ data }: { data: Row }) => { const row: Row = { ...data, id: `new${db.created.length}` }; db.created.push(row); return { id: row.id, name: row["name"] }; },
+        create: async ({ data }: { data: Row }) => {
+          db.creates++;
+          if (db.failCreate) throw new Error("write failed");
+          const row: Row = { ...data, id: `new${db.created.length}` }; db.created.push(row); return { id: row.id, name: row["name"] };
+        },
       },
       discoverySweep: { updateMany: async () => ({ count: 0 }) },
     },
@@ -73,7 +81,7 @@ mock.module("@/lib/prisma", {
 
 const route = import("../src/app/api/admin/prospect-discovery/import/route");
 async function importCandidates(candidates: Partial<DiscoveryCandidate>[], extra: object = {}) {
-  db.created = [];
+  db.created = []; db.creates = 0;
   const { POST } = await route;
   const res = await POST(new Request("http://x/api", { method: "POST", body: JSON.stringify({ candidates: candidates.map((c) => cand(c)), ...extra }) }));
   return { status: res.status, body: await res.json() };
@@ -117,4 +125,130 @@ test("Bulk Sweep behaviour kept: new businesses import, possible duplicates wait
   assert.equal(held.body.skippedDetails[0].reason, "Similar name + same sector");
   const allowed = await importCandidates([{ name: "Jardin Bleu", sector: "RIADS" }], { allowPossibleDuplicates: true });
   assert.equal(allowed.body.imported, 1);
+});
+
+/* ───────────────── Find businesses: the website check kept as a dated note ───────────────── */
+
+const NOW = new Date().toISOString();
+const SITE = "https://riad-audit.ma";
+const finding = (over: Record<string, unknown> = {}) => ({ id: "E_DESCRIPTION", observed: "None found", sourceUrl: `${SITE}/`, fetchedAt: NOW, ...over });
+const audit = (over: Record<string, unknown> = {}) => ({ outcome: "COMPLETE", auditedAt: NOW, finalUrl: `${SITE}/`, findings: [finding()], ...over });
+const noteOf = (row: Row) => (row.notes as { create?: { content: string; authorId: string; authorName: string } } | undefined)?.create;
+const withAudit = (a: unknown, over: Partial<DiscoveryCandidate> = {}) => ({ name: "Riad Audit", website: SITE, ...over, audit: a } as Partial<DiscoveryCandidate>);
+
+test("a completed check with findings becomes a dated note written by the server, saved with the prospect", async () => {
+  db.prospects = [];
+  const r = await importCandidates([withAudit(audit({ findings: [finding(), finding({ id: "E_OPEN_GRAPH", sourceUrl: `${SITE}/fr` })] }))]);
+  assert.equal(r.status, 200);
+  assert.equal(r.body.imported, 1);
+  const note = noteOf(db.created[0]);
+  assert.ok(note, "the note is part of the prospect's own create");
+  const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Casablanca", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(NOW));
+  assert.match(note.content, new RegExp(`^Website check on ${day} \\(${SITE}/\\): 2 problems a customer would notice\\.`));
+  assert.match(note.content, re(`• ${titleOf("E_DESCRIPTION")}: seen "None found" (${SITE}/)`));
+  assert.match(note.content, re(`• ${titleOf("E_OPEN_GRAPH")}: seen "None found" (${SITE}/fr)`));
+  assert.match(note.content, /Saved from Find businesses\./);
+  assert.deepEqual([note.authorId, note.authorName], ["u1", "Test User"]);
+});
+
+test("no note for a check that didn't complete, had no usable finding, or had a bad date", async () => {
+  db.prospects = [];
+  const future = new Date(Date.now() + 60 * 60_000).toISOString();
+  const cases: [string, unknown][] = [
+    ["unreadable", audit({ outcome: "UNREADABLE" })],
+    ["robots", audit({ outcome: "ROBOTS_DISALLOWED" })],
+    ["error", audit({ outcome: "ERROR", finalUrl: null, findings: [] })],
+    ["no findings", audit({ findings: [] })],
+    ["future date", audit({ auditedAt: future })],
+    ["not a date", audit({ auditedAt: "yesterday" })],
+    ["unknown check", audit({ findings: [finding({ id: "E_ROBOTS" }), finding({ id: "E_MADE_UP" })] })],
+    ["another site", audit({ findings: [finding({ sourceUrl: "https://evil.example/" }), finding({ sourceUrl: "https://riad-audit.ma.evil.example/" })] })],
+    ["not a web address", audit({ findings: [finding({ sourceUrl: "javascript:alert(1)" }), finding({ sourceUrl: "https://user:pw@riad-audit.ma/" })] })],
+    ["empty after cleaning", audit({ findings: [finding({ observed: "<b></b>" })] })],
+  ];
+  for (const [label, a] of cases) {
+    const r = await importCandidates([withAudit(a)]);
+    assert.equal(r.body.imported, 1, `${label}: the prospect is still imported`);
+    assert.equal("notes" in db.created[0], false, `${label}: no note`);
+  }
+  // A business without a website of its own has nothing the evidence could belong to.
+  const r = await importCandidates([withAudit(audit(), { website: null })]);
+  assert.equal(r.body.imported, 1);
+  assert.equal("notes" in db.created[0], false);
+});
+
+test("only valid findings are kept: one line per check, own-site evidence, text cleaned", async () => {
+  db.prospects = [];
+  await importCandidates([withAudit(audit({ findings: [
+    finding({ observed: "None <script>x</script>\u0007found" }),
+    finding({ observed: "duplicate of the same check" }),
+    finding({ id: "E_MADE_UP" }),
+    finding({ id: "E_TITLE", sourceUrl: "https://evil.example/" }),
+    finding({ id: "E_HTTPS", observed: "http://www.riad-audit.ma", sourceUrl: "http://www.riad-audit.ma/" }),
+  ] }))]);
+  const note = noteOf(db.created[0])!.content;
+  assert.match(note, /: 2 problems a customer would notice\./);
+  assert.doesNotMatch(note, /<script|<\/script|\u0007|duplicate of|E_MADE_UP|evil\.example/);
+  assert.match(note, re(`• ${titleOf("E_DESCRIPTION")}: seen "None x found"`), "tags and control characters removed");
+  assert.match(note, re(`• ${titleOf("E_HTTPS")}: seen "http://www.riad-audit.ma"`), "www and http are the same site");
+  const foreignFinal = await importCandidates([withAudit(audit({ finalUrl: "https://elsewhere.example/" }))]);
+  assert.equal(foreignFinal.body.imported, 1);
+  assert.match(noteOf(db.created[0])!.content, /^Website check on \S+ \(https:\/\/riad-audit\.ma\)/, "a final address on another site is never shown");
+});
+
+test("malformed audits are refused before anything is written", async () => {
+  db.prospects = [];
+  const many = Array.from({ length: 13 }, (_, i) => finding({ fetchedAt: `${i}` }));
+  for (const [label, a] of [
+    ["too many findings", audit({ findings: many })],
+    ["observed too long", audit({ findings: [finding({ observed: "x".repeat(501) })] })],
+    ["source address too long", audit({ findings: [finding({ sourceUrl: `${SITE}/${"a".repeat(400)}` })] })],
+    ["an extra field (client-written text)", audit({ note: "Call them now" })],
+    ["an extra field on a finding", audit({ findings: [{ ...finding(), sentence: "made up" }] })],
+    ["wrong types", audit({ findings: "E_TITLE" })],
+    ["missing fields", { outcome: "COMPLETE" }],
+  ] as [string, unknown][]) {
+    const r = await importCandidates([withAudit(a)]);
+    assert.equal(r.status, 400, label);
+    assert.equal(db.creates, 0, `${label}: nothing written`);
+  }
+});
+
+test("skipped duplicates get no prospect and no note", async () => {
+  db.prospects = [{ id: "p1", name: "Riad Jardin Secret", phone: "", instagram: "", whatsappLink: "", neighborhood: "", sector: "RIADS", website: "https://riad-audit.ma", email: "" }];
+  const exists = await importCandidates([withAudit(audit(), { name: "Some Other Name" })]);
+  assert.equal(exists.body.imported, 0);
+  assert.equal(exists.body.skippedDetails[0].reason, "Same website domain");
+  assert.equal(db.creates, 0);
+  const possible = await importCandidates([withAudit(audit(), { name: "Jardin Secret", sector: "RIADS", website: "https://jardin-secret.ma" })]);
+  assert.equal(possible.body.imported, 0, "a possible duplicate waits for a person");
+  assert.equal(db.creates, 0);
+});
+
+test("the prospect and its note are one write: a failed write leaves neither", async () => {
+  db.prospects = [];
+  db.failCreate = true;
+  try {
+    const { POST } = await route;
+    db.created = []; db.creates = 0;
+    await assert.rejects(POST(new Request("http://x/api", { method: "POST", body: JSON.stringify({ candidates: [cand(withAudit(audit()))] }) })));
+    assert.equal(db.creates, 1, "a single write was attempted");
+    assert.equal(db.created.length, 0);
+  } finally {
+    db.failCreate = false;
+  }
+  // The mock has no prospectNote model: any separate note write would have thrown above.
+});
+
+test("without an audit (Daily Lead Agent, older callers) the import is exactly as before; scoring ignores the audit", async () => {
+  db.prospects = [];
+  const plain = await importCandidates([{ name: "Riad Audit", website: SITE, phone: "+212612345678" }]);
+  const plainRow = { ...db.created[0] };
+  assert.equal(plain.body.imported, 1);
+  assert.equal("notes" in plainRow, false);
+  await importCandidates([withAudit(audit(), { phone: "+212612345678" })]);
+  const audited = db.created[0];
+  for (const k of ["score", "scoreLabel", "qualityLabel", "priority", "status", "whatsappStatus", "instagramStatus", "source"]) {
+    assert.deepEqual(audited[k], plainRow[k], k);
+  }
 });
