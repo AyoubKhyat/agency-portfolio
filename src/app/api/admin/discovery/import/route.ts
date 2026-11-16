@@ -74,7 +74,7 @@ export async function POST(req: Request) {
   if (live.status === "EXISTS") {
     return NextResponse.json(
       {
-        error: `Duplicate — already in Relationships${live.prospectName ? ` as "${live.prospectName}"` : ""}`,
+        error: `Duplicate — already in Prospects${live.prospectName ? ` as "${live.prospectName}"` : ""}`,
         duplicateStatus: "EXISTS",
         reason: live.reason,
         prospectId: live.prospectId,
@@ -126,7 +126,7 @@ export async function POST(req: Request) {
   });
 
   const details = [
-    `Discovered by AI Business Development Agent — "${result.name}"`,
+    `Discovered by template-based discovery — "${result.name}"`,
     result.city && result.country ? `(${result.city}, ${result.country})` : "",
     `Opportunity ${result.opportunityScore} · Confidence ${result.confidenceScore}`,
     live.status === "POSSIBLE"

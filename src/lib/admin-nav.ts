@@ -53,9 +53,9 @@ export const MAIN_NAV: readonly MainSection[] = [
     tabs: [
       { href: "/admin/batch-discovery", label: "Find businesses" },
       { href: "/admin/qualify", label: "Check a website" },
-      { href: "/admin/discovery", label: "AI search" },
     ],
-    alsoMatches: ["/admin/workspace/discovery"],
+    // /admin/discovery (template-based discovery) is no longer a tab: no AI runs behind it. The route and its data stay.
+    alsoMatches: ["/admin/discovery", "/admin/workspace/discovery"],
     phone: true,
   },
   {

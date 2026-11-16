@@ -92,8 +92,8 @@ export default function DiscoveryPage() {
   return (
     <div>
       <PageHeader
-        title="AI Business Development"
-        subtitle="Describe an ideal client — the agent finds, audits, scores and pre-qualifies them."
+        title="Template-based discovery"
+        subtitle="Describe an ideal client: businesses are found, checked and scored by fixed rules. Summaries and drafts are templates, not AI."
       />
 
       {/* Search bar */}
@@ -298,7 +298,7 @@ export default function DiscoveryPage() {
           </div>
           <div className="text-[15px] font-semibold text-[var(--os-text)]">Ready to find your next clients</div>
           <p className="text-[13px] text-[var(--os-text-muted)] mt-1.5 max-w-md mx-auto">
-            The AI Business Development Agent will search, audit, score and pre-qualify each business — then let you import the good ones into Relationships in one click.
+            Template-based discovery searches business listings, checks and scores each one by fixed rules, then lets you import the good ones into Prospects in one click. Summaries and message drafts are templates, not AI.
           </p>
         </motion.div>
       )}
