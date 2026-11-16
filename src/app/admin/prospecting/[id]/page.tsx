@@ -3,22 +3,23 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { HiOutlineArrowLeft, HiOutlineChatBubbleLeft, HiOutlinePhone } from "react-icons/hi2";
+import { HiOutlineArrowLeft, HiOutlinePhone } from "react-icons/hi2";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import AvatarChip from "@/components/AvatarChip";
 import { PlaybookPanel } from "./PlaybookPanel";
 import { ContactCheck } from "@/components/admin/contact-check";
 import { OutreachDraftPanel } from "@/components/admin/outreach-draft-panel";
 import { CONTACT_CHECK_LABELS, lastContactCheck, type ContactCheckStatus } from "@/lib/contact-check";
+import {
+  CONFIRMED_SEND_SINCE, REPLY_LABELS, VISIBLE_SEND_LABELS, contactSummary, detailActionHref, displayStageOf, getDisplayGroupByKey,
+  showsSendEvidence, type RowSummary, type VisibleSendEvidence,
+} from "@/lib/prospect-groups";
 
+// The detailed status control (Advanced). Same values and PATCH as before.
 const STATUSES = ["A_ENVOYER", "ENVOYE", "REPONDU", "PAS_DE_WHATSAPP", "CONVERTI"];
-const STATUS_LABELS: Record<string, string> = { A_ENVOYER: "To Send", ENVOYE: "Sent", REPONDU: "Replied", PAS_DE_WHATSAPP: "No WhatsApp", CONVERTI: "Converted" };
-const STATUS_COLORS: Record<string, string> = {
-  A_ENVOYER: "bg-blue-50 text-blue-600 border-blue-100",
-  ENVOYE: "bg-amber-50 text-amber-600 border-amber-100",
-  REPONDU: "bg-emerald-50 text-emerald-600 border-emerald-100",
-  PAS_DE_WHATSAPP: "bg-red-50 text-red-500 border-red-100",
-  CONVERTI: "bg-violet-50 text-violet-600 border-violet-100",
+const STATUS_LABELS: Record<string, string> = {
+  A_ENVOYER: "To Send", ENVOYE: "Sent", REPONDU: "Replied", PAS_DE_WHATSAPP: "No WhatsApp", CONVERTI: "Converted",
+  MEETING: "Meeting", PROPOSAL_SENT: "Proposal sent", NEGOTIATION: "Negotiation", CLIENT: "Client", LOST: "Lost", PERDU: "Lost (old)", REFUSE: "Refused (old)",
 };
 const PRIORITY_LABELS: Record<number, string> = { 1: "Instagram sans site", 2: "Sans site", 3: "A un site" };
 const ACTION_LABELS: Record<string, string> = {
@@ -26,7 +27,12 @@ const ACTION_LABELS: Record<string, string> = {
   FOLLOW_UP: "sent follow-up", MARKED_REPLIED: "marked as replied", MARKED_NO_WHATSAPP: "marked no WhatsApp",
   STATUS_ENVOYE: "changed status to Sent", STATUS_REPONDU: "marked as replied", STATUS_CONVERTI: "converted to lead",
   NOTE_ADDED: "added a note", UPDATED: "updated details",
+  REPLY_SNOOZED: "chose a date to come back to the reply", REPLY_REVIEWED: "checked a possible old reply", NO_MORE_FOLLOW_UP: "stopped follow-ups",
   ...CONTACT_CHECK_LABELS,
+};
+const REASON_LABELS: Record<string, string> = {
+  INTERESTED: "Interested", MEETING_REQUESTED: "Wants a meeting", PROPOSAL_REQUESTED: "Wants a proposal", LATER: "Asked to call later",
+  NOT_INTERESTED: "Not interested", HAS_PROVIDER: "Has a provider", TOO_EXPENSIVE: "Too expensive", NO_BUDGET: "No budget",
 };
 
 type Note = { id: string; content: string; createdAt: string };
@@ -34,15 +40,25 @@ type Activity = { id: string; userId: string; userName: string; actionType: stri
 type Owner = { id: string; fullName: string; avatarInitials: string };
 type TeamUser = { id: string; fullName: string; avatarInitials: string };
 type SentBy = { id: string; fullName: string; avatarInitials: string } | null;
+type Message = { id: string; channel: string; body: string; sentAt: string; replied: boolean; repliedAt: string | null; replyReason: string | null };
 type Prospect = {
   id: string; name: string; phone: string; whatsappLink: string; sector: string; neighborhood: string; instagram: string;
-  hasWebsite: boolean; whatsappStatus: string; instagramStatus: string;
+  hasWebsite: boolean; website?: string; whatsappStatus: string; instagramStatus: string;
   priority: number; status: string; sentAt: string | null; createdAt: string; owner: Owner | null;
   sentByUser: SentBy; sentByName: string | null;
   contactedByName: string | null; contactedAt: string | null; lastActionByName: string | null; lastActionAt: string | null;
   notes: Note[]; activities: Activity[];
   score?: number | null; scoreLabel?: "HIGH" | "MEDIUM" | "LOW" | null;
+  /** Read-only extras from the GET route (prospect-groups rules). Absent if they couldn't be worked out. */
+  summary?: RowSummary | null; sendEvidence?: VisibleSendEvidence; lastConfirmedSendDay?: string | null;
 };
+
+const fmt = (d: string, withTime = false) =>
+  new Date(d).toLocaleDateString("fr-FR", withTime ? { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" } : { day: "2-digit", month: "short", year: "numeric" });
+
+const card = "bg-white rounded-2xl border border-gray-100 p-5 mb-4 scroll-mt-20";
+const h2 = "text-[15px] font-semibold text-gray-900";
+const label = "text-[11px] text-gray-400 uppercase tracking-wide mb-1";
 
 export default function ProspectDetailPage() {
   const router = useRouter();
@@ -50,6 +66,7 @@ export default function ProspectDetailPage() {
   const id = params.id as string;
 
   const [prospect, setProspect] = useState<Prospect | null>(null);
+  const [messages, setMessages] = useState<Message[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [noteText, setNoteText] = useState("");
   const [saving, setSaving] = useState(false);
@@ -61,6 +78,7 @@ export default function ProspectDetailPage() {
       if (r.status === 404) { router.push("/admin/prospecting"); return null; }
       return r.json();
     }).then((data) => { if (data) setProspect(data); setLoading(false); });
+    fetch(`/api/admin/prospecting/${id}/outreach`).then((r) => (r.ok ? r.json() : [])).then(setMessages).catch(() => setMessages([]));
     fetch("/api/admin/users").then((r) => r.ok ? r.json() : []).then((users) => setTeamUsers(users.filter((u: { isActive: boolean }) => u.isActive))).catch(() => {});
   }, [id, router]);
 
@@ -99,39 +117,69 @@ export default function ProspectDetailPage() {
   }
 
   async function refreshData() {
-    const res = await fetch(`/api/admin/prospecting/${id}`);
+    const [res, msgs] = await Promise.all([fetch(`/api/admin/prospecting/${id}`), fetch(`/api/admin/prospecting/${id}/outreach`)]);
     if (res.ok) { const data = await res.json(); setProspect(data); }
+    if (msgs.ok) setMessages(await msgs.json());
   }
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>;
   if (!prospect) return null;
 
+  const summary = prospect.summary ?? null;
+  const group = getDisplayGroupByKey(summary?.group);
+  const stage = displayStageOf({ status: prospect.status, messageReplied: summary?.replyState === "CONFIRMED" });
+  const action = summary?.nextAction ?? null;
+  const actionHref = action?.actionable ? detailActionHref(action.key) : null;
+  const evidence = prospect.sendEvidence ?? "NOT_CONTACTED";
+  const told = contactSummary({ sendEvidence: evidence, replyState: summary?.replyState ?? "NONE", lastConfirmedSendDay: prospect.lastConfirmedSendDay, group: summary?.group });
+  const ig = prospect.instagram.replace(/^@/, "");
+  const statusOptions = STATUSES.includes(prospect.status) ? STATUSES : [prospect.status, ...STATUSES];
+
   return (
     <div className="max-w-3xl mx-auto">
-      <Link href="/admin/prospecting" className="inline-flex items-center gap-2 text-[13px] text-gray-400 hover:text-gray-600 transition-colors mb-6">
-        <HiOutlineArrowLeft className="w-4 h-4" /> Back
+      <Link href="/admin/prospecting" className="inline-flex items-center gap-2 text-[13px] text-gray-400 hover:text-gray-600 transition-colors mb-5">
+        <HiOutlineArrowLeft className="w-4 h-4" /> Back to prospects
       </Link>
 
-      {/* Header */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
-        <div className="flex items-start justify-between mb-5">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">{prospect.name}</h1>
-            <div className="flex items-center gap-3 mt-1.5">
-              <span className="text-[12px] font-medium text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">{prospect.sector}</span>
-              {prospect.neighborhood && <span className="text-[12px] text-gray-400">{prospect.neighborhood}</span>}
-              <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-semibold uppercase border ${STATUS_COLORS[prospect.status]}`}>
-                {STATUS_LABELS[prospect.status]}
-              </span>
-            </div>
+      {/* 1-3: who they are, have we contacted them, what to do next */}
+      <section className={card} data-testid="overview">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-xl font-semibold text-gray-900 break-words">{prospect.name}</h1>
+            <p className="mt-1 text-[13px] text-gray-500">
+              {[prospect.sector, prospect.neighborhood].filter(Boolean).join(" · ")}
+              {" · "}{prospect.hasWebsite ? "Has a website" : "No website"}
+            </p>
           </div>
-          <select value={prospect.status} onChange={(e) => handleStatusChange(e.target.value)} className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 cursor-pointer">
-            {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-          </select>
+          <div className="flex items-center gap-1.5 flex-wrap" title={`Detailed status: ${STATUS_LABELS[prospect.status] ?? prospect.status}`}>
+            {group && <span data-testid="group-badge" className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-violet-50 text-violet-700 border border-violet-100">{group.label}</span>}
+            <span className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-gray-50 text-gray-600 border border-gray-200">{stage?.label ?? prospect.status}</span>
+          </div>
         </div>
 
-        {/* Contact actions */}
-        <div className="flex gap-2 mb-5">
+        <div className="mt-4 grid gap-1 text-[13px]" data-testid="contact-summary">
+          <p className="text-gray-700"><span className="text-gray-400">Contacted: </span>{told.contacted}</p>
+          {told.reply && <p className="text-gray-700"><span className="text-gray-400">Reply: </span>{told.reply}</p>}
+        </div>
+
+        <div className="mt-4 rounded-xl bg-violet-50/60 border border-violet-100 p-4 flex flex-col sm:flex-row sm:items-center gap-3" data-testid="next-step">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] uppercase tracking-wide text-violet-500 font-semibold">Next step</p>
+            <p className="text-[15px] font-semibold text-gray-900">{action?.label ?? "Open the details below"}</p>
+            {action?.hint && <p className="text-[12.5px] text-gray-500 mt-0.5">{action.hint}</p>}
+          </div>
+          {actionHref && (
+            actionHref.startsWith("#")
+              ? <a href={actionHref} className="shrink-0 inline-flex justify-center items-center gap-1.5 px-4 py-2.5 rounded-xl text-[13px] font-semibold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:opacity-90">{action!.label} →</a>
+              : <Link href={actionHref} className="shrink-0 inline-flex justify-center items-center gap-1.5 px-4 py-2.5 rounded-xl text-[13px] font-semibold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:opacity-90">{action!.label} →</Link>
+          )}
+        </div>
+      </section>
+
+      {/* Contact details. A channel opens only once someone confirmed it by hand. */}
+      <section id="contact" className={card}>
+        <h2 className={`${h2} mb-3`}>Contact</h2>
+        <div className="flex flex-wrap gap-2 mb-4">
           {prospect.phone && (
             <a href={`tel:${prospect.phone}`} className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-600 hover:bg-gray-100 transition-colors">
               <HiOutlinePhone className="w-4 h-4" /> {prospect.phone}
@@ -143,106 +191,77 @@ export default function ProspectDetailPage() {
             </a>
           )}
           {prospect.instagram && prospect.instagramStatus === "VERIFIED" && (
-            <a href={`https://instagram.com/${prospect.instagram.replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 bg-purple-50 border border-purple-200 rounded-xl text-[13px] font-medium text-purple-700 hover:bg-purple-100 transition-colors">
-              <FaInstagram className="w-4 h-4" /> @{prospect.instagram.replace(/^@/, "")}
+            <a href={`https://instagram.com/${ig}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 bg-purple-50 border border-purple-200 rounded-xl text-[13px] font-medium text-purple-700 hover:bg-purple-100 transition-colors">
+              <FaInstagram className="w-4 h-4" /> @{ig}
             </a>
           )}
+          {!prospect.phone && !prospect.instagram && <p className="text-[13px] text-gray-400">No phone or Instagram saved.</p>}
         </div>
-
-        {/* Details grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div>
-            <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">Priority</p>
-            <p className="text-[13px] text-gray-700 font-medium">{PRIORITY_LABELS[prospect.priority]}</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">Website</p>
-            <p className="text-[13px] font-medium">{prospect.hasWebsite ? <span className="text-emerald-600">Yes</span> : <span className="text-red-500">No</span>}</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">Sent</p>
-            <p className="text-[13px] text-gray-700">{prospect.sentAt ? new Date(prospect.sentAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) : "—"}</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">Added</p>
-            <p className="text-[13px] text-gray-700">{new Date(prospect.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}</p>
-          </div>
-        </div>
-
         {/* A person opens each contact and records what they saw. Nothing is checked automatically. */}
-        <div className="mt-5">
-          <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">Contact checks</p>
-          <div className="grid gap-2">
-            <ContactCheck channel="WHATSAPP" value={prospect.whatsappLink} phone={prospect.phone} status={prospect.whatsappStatus}
-              lastCheck={lastContactCheck(prospect.activities, "WHATSAPP")} onSet={(s) => handleContactCheck("whatsappStatus", s)} />
-            <ContactCheck channel="INSTAGRAM" value={prospect.instagram} status={prospect.instagramStatus}
-              lastCheck={lastContactCheck(prospect.activities, "INSTAGRAM")} onSet={(s) => handleContactCheck("instagramStatus", s)} />
-          </div>
+        <p className={`${label} mb-2`}>Contact checks</p>
+        <div className="grid gap-2">
+          <ContactCheck channel="WHATSAPP" value={prospect.whatsappLink} phone={prospect.phone} status={prospect.whatsappStatus}
+            lastCheck={lastContactCheck(prospect.activities, "WHATSAPP")} onSet={(s) => handleContactCheck("whatsappStatus", s)} />
+          <ContactCheck channel="INSTAGRAM" value={prospect.instagram} status={prospect.instagramStatus}
+            lastCheck={lastContactCheck(prospect.activities, "INSTAGRAM")} onSet={(s) => handleContactCheck("instagramStatus", s)} />
         </div>
-      </div>
-
-      <OutreachDraftPanel prospect={prospect} onRecorded={refreshData} />
-
-      {/* Owner + Contact info cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        <div className="bg-white rounded-2xl border border-gray-100 p-4">
-          <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">Owner</p>
-          <div className="flex gap-1.5">
+        <div className="mt-4">
+          <p className={`${label} mb-2`}>Owner</p>
+          <div className="flex flex-wrap gap-1.5">
             {teamUsers.map((u) => (
               <AvatarChip key={u.id} initials={u.avatarInitials} name={u.fullName} showName={false} size="md" onClick={() => handleOwnerChange(u.id)} active={prospect.owner?.id === u.id} />
             ))}
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 p-4">
-          <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">Sent By</p>
-          {prospect.sentByUser ? (
-            <div className="flex items-center gap-2">
-              <AvatarChip initials={prospect.sentByUser.avatarInitials} name={prospect.sentByUser.fullName} size="sm" />
-            </div>
-          ) : <p className="text-[13px] text-gray-400">Not sent yet</p>}
-          {prospect.sentAt && <p className="text-[11px] text-gray-400 mt-1">{new Date(prospect.sentAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>}
-        </div>
-        <div className="bg-white rounded-2xl border border-gray-100 p-4">
-          <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">First Contact</p>
-          {prospect.contactedByName ? (
-            <><p className="text-[13px] font-medium text-gray-800">{prospect.contactedByName}</p><p className="text-[11px] text-gray-400">{prospect.contactedAt && new Date(prospect.contactedAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</p></>
-          ) : <p className="text-[13px] text-gray-400">Not yet</p>}
-        </div>
-        <div className="bg-white rounded-2xl border border-gray-100 p-4">
-          <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">Last Action</p>
-          {prospect.lastActionByName ? (
-            <><p className="text-[13px] font-medium text-gray-800">{prospect.lastActionByName}</p><p className="text-[11px] text-gray-400">{prospect.lastActionAt && new Date(prospect.lastActionAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p></>
-          ) : <p className="text-[13px] text-gray-400">None</p>}
-        </div>
+      </section>
+
+      {/* First message: written, opened and confirmed in the existing panel ("did you send it?"). */}
+      <div id="first-message" className="scroll-mt-20">
+        <OutreachDraftPanel prospect={prospect} onRecorded={refreshData} />
       </div>
 
-      {/* Convert button */}
-      {prospect.status === "REPONDU" && (
-        <button onClick={handleConvertToLead} className="w-full mb-4 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-2xl text-[13px] font-semibold shadow-sm shadow-violet-200 hover:shadow-md hover:shadow-violet-200 transition-all">
-          Convert to Lead →
-        </button>
-      )}
+      {/* Conversation history: saved messages only. A record before 20 Aug 2026 is not proof of a send. */}
+      <section id="conversation" className={card}>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <h2 className={h2}>Conversation</h2>
+          {showsSendEvidence(summary?.group) && evidence !== "NOT_CONTACTED" && (
+            <span title={VISIBLE_SEND_LABELS[evidence].title} className="text-[11px] px-2 py-0.5 rounded-md border bg-gray-50 text-gray-600 border-gray-200">{VISIBLE_SEND_LABELS[evidence].label}</span>
+          )}
+        </div>
+        {summary?.replyState === "POSSIBLE_OLD" && (
+          <p className="mb-3 text-[12.5px] rounded-lg bg-slate-50 border border-slate-200 text-slate-600 px-3 py-2" title={REPLY_LABELS.POSSIBLE_OLD.title}>{REPLY_LABELS.POSSIBLE_OLD.title}</p>
+        )}
+        {messages === null ? <p className="text-[13px] text-gray-400">Loading…</p> : messages.length === 0 ? (
+          <p className="text-[13px] text-gray-400">No messages saved yet.</p>
+        ) : (
+          <ul className="space-y-2.5" data-testid="messages">
+            {messages.map((m) => {
+              const confirmed = new Date(m.sentAt).getTime() >= CONFIRMED_SEND_SINCE.getTime();
+              return (
+                <li key={m.id} className="p-3 bg-gray-50 rounded-xl">
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
+                    <span className="font-semibold text-gray-700">{m.channel === "WHATSAPP" ? "WhatsApp" : m.channel === "INSTAGRAM" ? "Instagram" : m.channel}</span>
+                    <span>{fmt(m.sentAt, true)}</span>
+                    <span className={confirmed ? "text-blue-700" : "text-amber-700"}>{confirmed ? "Confirmed as sent" : "Older record, not confirmed"}</span>
+                    {m.replied && <span className="text-emerald-700 font-medium">Replied{m.replyReason ? `: ${REASON_LABELS[m.replyReason] ?? m.replyReason}` : ""}</span>}
+                  </div>
+                  <p className="mt-1 text-[13px] text-gray-700 whitespace-pre-wrap line-clamp-4">{m.body}</p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {prospect.status === "REPONDU" && (
+          <button onClick={handleConvertToLead} className="w-full mt-4 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-2xl text-[13px] font-semibold shadow-sm shadow-violet-200 hover:shadow-md hover:shadow-violet-200 transition-all">
+            Convert to Lead →
+          </button>
+        )}
+      </section>
 
-      {/* Sales Playbook panel */}
-      <PlaybookPanel
-        prospect={{
-          id: prospect.id,
-          name: prospect.name,
-          sector: prospect.sector,
-          neighborhood: prospect.neighborhood,
-          instagram: prospect.instagram,
-          whatsappLink: prospect.whatsappLink,
-          hasWebsite: prospect.hasWebsite,
-          score: prospect.score,
-          scoreLabel: prospect.scoreLabel,
-        }}
-        onScoreUpdated={(score, label) => setProspect((prev) => prev ? { ...prev, score, scoreLabel: label as "HIGH" | "MEDIUM" | "LOW" } : prev)}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         {/* Notes */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
-          <h2 className="text-[15px] font-semibold text-gray-900 mb-4">Notes</h2>
+        <section id="notes" className="bg-white rounded-2xl border border-gray-100 p-5 scroll-mt-20">
+          <h2 className={`${h2} mb-4`}>Notes</h2>
           <form onSubmit={handleAddNote} className="mb-4">
             <textarea value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="Add a note..." rows={3} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all mb-2 resize-none" />
             <button type="submit" disabled={saving || !noteText.trim()} className="px-4 py-2 bg-gray-900 text-white rounded-xl text-[13px] font-medium hover:bg-gray-800 transition-colors disabled:opacity-40">
@@ -254,16 +273,16 @@ export default function ProspectDetailPage() {
               {prospect.notes.map((note) => (
                 <div key={note.id} className="p-3 bg-gray-50 rounded-xl">
                   <p className="text-[13px] text-gray-700 whitespace-pre-wrap">{note.content}</p>
-                  <p className="text-[11px] text-gray-400 mt-1.5">{new Date(note.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+                  <p className="text-[11px] text-gray-400 mt-1.5">{fmt(note.createdAt, true)}</p>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </section>
 
-        {/* Activity Timeline */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
-          <h2 className="text-[15px] font-semibold text-gray-900 mb-4">Activity</h2>
+        {/* Activity timeline (unchanged) */}
+        <section className="bg-white rounded-2xl border border-gray-100 p-5">
+          <h2 className={`${h2} mb-4`}>Activity</h2>
           {(!prospect.activities || prospect.activities.length === 0) ? <p className="text-[13px] text-gray-400">No activity yet.</p> : (
             <div className="space-y-0 border-l-2 border-gray-100 ml-2">
               {prospect.activities.map((a) => (
@@ -271,13 +290,57 @@ export default function ProspectDetailPage() {
                   <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-violet-400" />
                   <p className="text-[13px] text-gray-600"><span className="font-medium text-gray-800">{a.userName}</span> {ACTION_LABELS[a.actionType] ?? a.actionType}</p>
                   {a.details && a.actionType === "NOTE_ADDED" && <p className="text-[11px] text-gray-400 mt-0.5 truncate">&ldquo;{a.details}&rdquo;</p>}
-                  <p className="text-[10px] text-gray-400 mt-0.5">{new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{fmt(a.createdAt, true)}</p>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </section>
       </div>
+
+      {/* Sales playbook and score (unchanged), folded away. */}
+      <details className="mb-4 rounded-2xl border border-gray-100 bg-white">
+        <summary className="cursor-pointer select-none px-5 py-3 text-[13px] font-semibold text-gray-700">Sales playbook and score</summary>
+        <div className="px-2 pb-2">
+          <PlaybookPanel
+            prospect={{
+              id: prospect.id,
+              name: prospect.name,
+              sector: prospect.sector,
+              neighborhood: prospect.neighborhood,
+              instagram: prospect.instagram,
+              whatsappLink: prospect.whatsappLink,
+              hasWebsite: prospect.hasWebsite,
+              score: prospect.score,
+              scoreLabel: prospect.scoreLabel,
+            }}
+            onScoreUpdated={(score, label) => setProspect((prev) => prev ? { ...prev, score, scoreLabel: label as "HIGH" | "MEDIUM" | "LOW" } : prev)}
+          />
+        </div>
+      </details>
+
+      {/* Advanced: the detailed status and record-keeping fields. Opens itself when the next step points here. */}
+      <details id="advanced" className="mb-8 rounded-2xl border border-gray-100 bg-white scroll-mt-20" open={actionHref === "#advanced" || undefined}>
+        <summary className="cursor-pointer select-none px-5 py-3 text-[13px] font-semibold text-gray-700">Advanced</summary>
+        <div className="px-5 pb-5 space-y-4">
+          <div>
+            <p className={label}>Detailed status</p>
+            <p className="text-[12px] text-gray-400 mb-2">Changes the stored status. Sending a message updates it for you; change it here only to correct it.</p>
+            <select value={prospect.status} onChange={(e) => handleStatusChange(e.target.value)} className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 cursor-pointer">
+              {statusOptions.map((s) => <option key={s} value={s} disabled={!STATUSES.includes(s)}>{STATUS_LABELS[s] ?? s}</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div><p className={label}>Priority</p><p className="text-[13px] text-gray-700">{PRIORITY_LABELS[prospect.priority] ?? prospect.priority}</p></div>
+            <div><p className={label}>Added</p><p className="text-[13px] text-gray-700">{fmt(prospect.createdAt)}</p></div>
+            <div><p className={label}>Marked sent</p><p className="text-[13px] text-gray-700" title="The stored send date. Not proof that a message was sent.">{prospect.sentAt ? fmt(prospect.sentAt, true) : "—"}</p></div>
+            <div><p className={label}>Sent by</p>{prospect.sentByUser ? <AvatarChip initials={prospect.sentByUser.avatarInitials} name={prospect.sentByUser.fullName} size="sm" /> : <p className="text-[13px] text-gray-400">—</p>}</div>
+            <div><p className={label}>First contact</p><p className="text-[13px] text-gray-700">{prospect.contactedByName ? `${prospect.contactedByName}${prospect.contactedAt ? `, ${fmt(prospect.contactedAt)}` : ""}` : "—"}</p></div>
+            <div><p className={label}>Last action</p><p className="text-[13px] text-gray-700">{prospect.lastActionByName ? `${prospect.lastActionByName}${prospect.lastActionAt ? `, ${fmt(prospect.lastActionAt, true)}` : ""}` : "—"}</p></div>
+          </div>
+          <Link href={`/admin/prospecting/${prospect.id}/edit`} className="inline-flex text-[13px] text-violet-600 hover:underline">Edit details</Link>
+        </div>
+      </details>
     </div>
   );
 }

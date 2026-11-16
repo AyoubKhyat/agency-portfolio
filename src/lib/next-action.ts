@@ -41,8 +41,12 @@ const GROUP_OF: Record<QueueKind, QueueGroup> = {
   ready: "ready",
 };
 
-/** Activity types the queue may log without a status change. They record a decision, never a contact. */
-export const QUEUE_ACTIVITY_TYPES = ["NO_MORE_FOLLOW_UP", "REPLY_REVIEWED"] as const;
+/**
+ * Activity types the queue may log without a status change. They record a decision, never a contact.
+ * REPLY_SNOOZED: someone chose a date to come back to a reply ("In 3 days", "Schedule callback").
+ */
+export const QUEUE_ACTIVITY_TYPES = ["NO_MORE_FOLLOW_UP", "REPLY_REVIEWED", "REPLY_SNOOZED"] as const;
+export const REPLY_SNOOZED = "REPLY_SNOOZED";
 
 /** Days after a confirmed send before an undated prospect asks for a decision. */
 export const DECISION_AFTER_DAYS = 3;
@@ -90,6 +94,11 @@ export type ProspectRow = {
   replyWasReset: boolean;
   replyReviewed: boolean;
   followUpStopped: boolean;
+  /**
+   * Someone chose a date to come back to this reply, after the reply was recorded (a REPLY_SNOOZED
+   * activity no older than the reply). Absent / false: any follow-up date predates the reply.
+   */
+  replySnoozed?: boolean;
   liveMeeting: boolean;
   hasProposal: boolean;
 };
@@ -235,7 +244,10 @@ export function classifyProspect(p: ProspectRow, today: string): QueueKind | nul
 
   if (hasReply(p)) {
     const negative = !!p.replyReason && NEGATIVE_REASONS.includes(p.replyReason);
-    if (negative || scheduledLater(p, today)) return null;
+    if (negative) return null;
+    // Only a date someone chose after the reply puts it off. A date left from before it (for example
+    // the follow-up set when the send was confirmed) never hides a reply waiting for an answer.
+    if (p.replySnoozed && scheduledLater(p, today)) return null;
     return "reply";
   }
   if (replyUnderReview(p)) return scheduledLater(p, today) ? null : "reply_review";

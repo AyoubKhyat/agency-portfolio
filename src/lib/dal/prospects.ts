@@ -1,10 +1,13 @@
 import { bulkUpdateStatusWith, updateProspectStatusWith } from "../prospect-first-contact";
-import { statusWhere, channelWhere, evidenceWhere, sendRecordInclude, latestSendAt } from "../prospect-stages";
+import { statusWhere, channelWhere, evidenceWhere, sendRecordInclude, latestSendAt, SEND_ACTION_TYPES } from "../prospect-stages";
 import { db } from "./db";
+import { DISPLAY_GROUPS, describeProspect, getDisplayGroupByKey, getVisibleSendEvidence, visibleEvidenceWhere, withGroup, type DisplayGroupKey } from "../prospect-groups";
+import { LEAD_QUEUE_CLOCK_SQL, PROSPECT_ROWS_BY_IDS_SQL } from "../lead-queue-sql";
+import type { ProspectRow } from "../next-action";
 
 // ─── Prospecting ────────────────────────────────────────────────
 
-export async function getProspects(page = 1, status?: string, sector?: string, ownerUserId?: string, search?: string, qualityLabel?: string, segment?: string, due?: string, channel?: string, evidence?: string) {
+export async function getProspects(page = 1, status?: string, sector?: string, ownerUserId?: string, search?: string, qualityLabel?: string, segment?: string, due?: string, channel?: string, evidence?: string, group?: string) {
   const take = 20;
   const skip = (page - 1) * take;
   const where: Record<string, unknown> = {};
@@ -41,8 +44,17 @@ export async function getProspects(page = 1, status?: string, sector?: string, o
     ];
   }
   // Channel / send-evidence filters go under AND so they never collide with the search OR.
-  const andFilters = [channelWhere(channel), evidenceWhere(evidence)].filter(Boolean);
+  // "confirmed" / "unconfirmed" use the stricter 2026-08-20 rule; older values keep their meaning.
+  const andFilters = [channelWhere(channel), visibleEvidenceWhere(evidence) ?? evidenceWhere(evidence)].filter(Boolean);
   if (andFilters.length) where.AND = andFilters;
+
+  // Display group (New Leads, Contacted, ...). The list and the tab counts share withGroup(),
+  // so a tab's count is exactly what that tab lists. Counts ignore a status= filter (old links)
+  // but keep every other filter, search included.
+  const groupKey = getDisplayGroupByKey(group)?.key;
+  const countBase: Record<string, unknown> = { ...where };
+  if (statusFilter && !isDueFilter) delete countBase.status;
+  const listWhere = groupKey ? withGroup(where, groupKey) : where;
 
   // Follow-up views sort oldest-first so the most urgent row rises to the top;
   // every other view keeps the default newest-first order.
@@ -50,9 +62,9 @@ export async function getProspects(page = 1, status?: string, sector?: string, o
     ? ({ followUpDate: "asc" } as const)
     : ({ createdAt: "desc" } as const);
 
-  const [prospects, total] = await Promise.all([
+  const [prospects, total, ...groupTotals] = await Promise.all([
     db().prospect.findMany({
-      where,
+      where: listWhere,
       orderBy,
       take,
       skip,
@@ -63,16 +75,35 @@ export async function getProspects(page = 1, status?: string, sector?: string, o
         ...sendRecordInclude(),
       },
     }),
-    db().prospect.count({ where }),
+    db().prospect.count({ where: listWhere }),
+    ...DISPLAY_GROUPS.map((g) => db().prospect.count({ where: withGroup(countBase, g.key) })),
   ]);
+  const groupCounts = Object.fromEntries(DISPLAY_GROUPS.map((g, i) => [g.key, groupTotals[i]])) as Record<DisplayGroupKey, number>;
+
+  // Each row's group and next action, from the same row facts and rules as the lead queue.
+  const ids = prospects.map((p) => p.id);
+  const [clock, facts] = ids.length
+    ? await Promise.all([
+        db().$queryRawUnsafe<{ today: string }[]>(LEAD_QUEUE_CLOCK_SQL),
+        db().$queryRawUnsafe<ProspectRow[]>(PROSPECT_ROWS_BY_IDS_SQL, ids),
+      ])
+    : [[], []];
+  const today = clock[0]?.today;
+  const factsById = new Map(facts.map((f) => [f.id, f]));
 
   // Reduce the send-record includes to one date; the list shows evidence, not message bodies.
-  const rows = prospects.map(({ outreachMessages, activities, ...p }) => ({
-    ...p,
-    lastSendAt: latestSendAt([outreachMessages[0]?.sentAt, activities[0]?.createdAt]),
-  }));
+  const rows = prospects.map(({ outreachMessages, activities, ...p }) => {
+    const lastSendAt = latestSendAt([outreachMessages[0]?.sentAt, activities[0]?.createdAt]);
+    const f = factsById.get(p.id);
+    return {
+      ...p,
+      lastSendAt,
+      sendEvidence: getVisibleSendEvidence({ status: p.status, sentAt: p.sentAt, lastSendAt, lastMessageAt: outreachMessages[0]?.sentAt ?? null }),
+      summary: f && today ? describeProspect(f, today) : null,
+    };
+  });
 
-  return { prospects: rows, total, pages: Math.ceil(total / take) };
+  return { prospects: rows, total, pages: Math.ceil(total / take), groupCounts };
 }
 
 export async function getProspectById(id: string) {
@@ -88,6 +119,27 @@ export async function getProspectById(id: string) {
       },
     },
   });
+}
+
+/**
+ * The prospect page's summary: display group, next action and reply state from the lead
+ * queue's own row facts, plus the stricter send evidence. Read-only.
+ */
+export async function getProspectSummary(id: string, status: string, sentAt: Date | null) {
+  const [clock, facts, lastMessage, lastSendActivity] = await Promise.all([
+    db().$queryRawUnsafe<{ today: string }[]>(LEAD_QUEUE_CLOCK_SQL),
+    db().$queryRawUnsafe<ProspectRow[]>(PROSPECT_ROWS_BY_IDS_SQL, [id]),
+    db().outreachMessage.findFirst({ where: { prospectId: id }, orderBy: { sentAt: "desc" }, select: { sentAt: true } }),
+    db().prospectActivity.findFirst({ where: { prospectId: id, actionType: { in: [...SEND_ACTION_TYPES] } }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+  ]);
+  const f = facts[0];
+  const today = clock[0]?.today;
+  const lastMessageAt = lastMessage?.sentAt ?? null;
+  return {
+    sendEvidence: getVisibleSendEvidence({ status, sentAt, lastSendAt: latestSendAt([lastMessageAt, lastSendActivity?.createdAt]), lastMessageAt }),
+    lastConfirmedSendDay: f?.lastSendDay ?? null,
+    summary: f && today ? describeProspect(f, today) : null,
+  };
 }
 
 export async function findDuplicateProspect(phone: string, instagram?: string) {

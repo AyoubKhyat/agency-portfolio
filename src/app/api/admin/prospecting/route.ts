@@ -18,10 +18,11 @@ export async function GET(req: Request) {
   const due = url.searchParams.get("due") || undefined;
   const channel = url.searchParams.get("channel") || undefined;
   const evidence = url.searchParams.get("evidence") || undefined;
+  const group = url.searchParams.get("group") || undefined;
   let owner = url.searchParams.get("owner") || undefined;
   if (url.searchParams.get("unassigned") === "true") owner = "UNASSIGNED";
 
-  const result = await getProspects(page, status, sector, owner, search, qualityLabel, segment, due, channel, evidence);
+  const result = await getProspects(page, status, sector, owner, search, qualityLabel, segment, due, channel, evidence, group);
   return NextResponse.json(result);
 }
 

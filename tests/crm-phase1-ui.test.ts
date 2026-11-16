@@ -51,37 +51,38 @@ test("tests stay visible in the inbox, off the board, out of new-enquiry counts"
 
 // ─── Prospects filters ──────────────────────────────────────────
 
-test("Prospects: search, stage and contact readiness visible; the rest under Advanced filters", () => {
+test("Prospects: search and the four groups visible; every other filter under More filters", () => {
   const src = read("src/app/admin/prospecting/page.tsx");
-  const adv = src.indexOf("{/* Advanced filters");
+  const adv = src.indexOf("{/* More filters");
   const advEnd = src.indexOf("</details>", adv);
-  assert.ok(adv > 0 && advEnd > adv, "Advanced filters block not found");
+  assert.ok(adv > 0 && advEnd > adv, "More filters block not found");
   const before = src.slice(src.indexOf("{/* Search */}"), adv);
   const inside = src.slice(adv, advEnd);
 
   assert.match(before, /placeholder="Search by name/);
-  assert.match(before, /STAGES\.map/);
-  assert.match(before, />Contact readiness</);
+  assert.match(before, /VISIBLE_GROUPS\.map/);
+  assert.match(before, /showGroup\("ARCHIVED"\)/);
 
-  // Every other existing filter is still there, now inside the panel.
+  // Every other existing filter is still there, inside the panel.
   for (const [name, marker] of [
+    ["contact readiness", '{ id: "verified", label: "Channel verified" }'],
     ["segment", "PROSPECT_SEGMENTS.map"],
     ["detailed status", "STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s]"],
-    ["outreach record", '{ id: "legacy", label: "Old send, unconfirmed" }'],
+    ["send evidence", '{ id: "unconfirmed", label: "Send not confirmed" }'],
     ["sector", "SECTORS.map"],
     ["quality", '{ id: "HOT", label: "🔥 HOT only"'],
     ["owner", '{ id: "UNASSIGNED", label: "Unassigned"'],
   ] as const) {
-    assert.ok(inside.includes(marker), `${name} filter missing from Advanced filters`);
+    assert.ok(inside.includes(marker), `${name} filter missing from More filters`);
     assert.ok(!before.includes(marker), `${name} filter still in the always-visible area`);
   }
-  // The panel opens by itself when a URL arrives with an advanced filter set.
+  // The panel opens by itself when a URL arrives with one of those filters set.
   assert.match(inside, /open=\{advancedCount > 0 \|\| undefined\}/);
-  for (const f of ["segmentFilter", "evidenceFilter", "sectorFilter", "qualityFilter", "ownerFilter"]) {
+  for (const f of ["segmentFilter", "evidenceFilter", "sectorFilter", "qualityFilter", "ownerFilter", "channelFilter", "statusFilter"]) {
     assert.match(src, new RegExp(`${f} !== "ALL",`), `${f} not counted as an advanced filter`);
   }
-  // URL parameters are unchanged.
-  for (const q of ["status", "sector", "qualityLabel", "segment", "due", "channel", "evidence", "owner", "page"]) {
+  // URL parameters are unchanged; group is added.
+  for (const q of ["status", "sector", "qualityLabel", "segment", "due", "channel", "evidence", "owner", "page", "group"]) {
     assert.ok(src.includes(`qs.set("${q}"`), `URL parameter ${q} no longer written`);
   }
 });

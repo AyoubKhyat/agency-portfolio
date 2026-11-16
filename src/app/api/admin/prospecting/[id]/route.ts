@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin, requireTeam } from "@/lib/authz";
-import { getProspectById, updateProspectStatus, updateProspect, deleteProspect, assignProspectOwner, logProspectActivity, setProspectFirstContact, setProspectSentBy, notifyTeam } from "@/lib/dal";
+import { getProspectById, getProspectSummary, updateProspectStatus, updateProspect, deleteProspect, assignProspectOwner, logProspectActivity, setProspectFirstContact, setProspectSentBy, notifyTeam } from "@/lib/dal";
 import { resolveStatusChange } from "@/lib/prospect-status-guard";
 import { sendAlreadyLogged } from "@/lib/record-send";
 import { QUEUE_ACTIVITY_TYPES } from "@/lib/next-action";
@@ -17,7 +17,9 @@ export async function GET(
   const { id } = await params;
   const prospect = await getProspectById(id);
   if (!prospect) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(prospect);
+  // Read-only extras for the prospect page (group, next step, send evidence). Never blocks the page.
+  const extras = await getProspectSummary(id, prospect.status, prospect.sentAt).catch(() => null);
+  return NextResponse.json({ ...prospect, ...(extras ?? {}) });
 }
 
 const patchSchema = z.object({

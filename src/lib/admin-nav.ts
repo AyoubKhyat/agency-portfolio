@@ -1,6 +1,6 @@
 /**
- * Ibda3 OS navigation: a Client Acquisition flow (Find → Qualify → Contact →
- * Follow up → Close), a quieter Business group, and More.
+ * Ibda3 OS navigation: a short Client Acquisition flow (Today → Find →
+ * Prospects → Deals), a quieter Business group, and More.
  *
  * Links only. Every URL is an existing page, and every query string is a
  * filter that page already reads (lead-queue `view`, prospecting `status`).
@@ -16,7 +16,7 @@ export type NavLink = {
   hideTitleOnPhone?: boolean;
 };
 export type SectionKey =
-  | "today" | "find" | "qualify" | "contact" | "followUp" | "close" | "prospects"
+  | "today" | "find" | "prospects" | "close"
   | "clients" | "projects" | "invoices" | "revenue"
   | "more" | "settings";
 export type NavGroup = "acquisition" | "business" | "more";
@@ -43,6 +43,7 @@ export const NAV_GROUP_LABELS: Record<NavGroup, string> = {
 const IN_TALKS = "/admin/prospecting?status=MEETING,PROPOSAL_SENT,NEGOTIATION";
 
 export const MAIN_NAV: readonly MainSection[] = [
+  // Today: the daily summary and the Daily Lead Agent ("Today's Leads").
   { key: "today", label: "Today", group: "acquisition", href: "/admin", tabs: [], phone: true },
   {
     key: "find",
@@ -51,39 +52,30 @@ export const MAIN_NAV: readonly MainSection[] = [
     href: "/admin/batch-discovery",
     tabs: [
       { href: "/admin/batch-discovery", label: "Find businesses" },
+      { href: "/admin/qualify", label: "Check a website" },
       { href: "/admin/discovery", label: "AI search" },
     ],
     alsoMatches: ["/admin/workspace/discovery"],
     phone: true,
   },
-  { key: "qualify", label: "Qualify", group: "acquisition", href: "/admin/qualify", tabs: [] },
   {
-    key: "contact",
-    label: "Contact",
+    // The one place to manage businesses. "Work through leads" is the optional one-at-a-time
+    // focus mode; every old /admin/lead-queue?view= link still lands on it.
+    key: "prospects",
+    label: "Prospects",
     group: "acquisition",
-    href: "/admin/lead-queue",
+    href: "/admin/prospecting",
     tabs: [
-      { href: "/admin/lead-queue", label: "Next" },
-      { href: "/admin/outreach", label: "Outreach" },
+      { href: "/admin/prospecting", label: "Prospect list" },
+      { href: "/admin/lead-queue", label: "Work through leads" },
     ],
-    phone: true,
-  },
-  {
-    key: "followUp",
-    label: "Follow Up",
-    group: "acquisition",
-    href: "/admin/lead-queue?view=followUps",
-    tabs: [
-      { href: "/admin/lead-queue?view=followUps", label: "Follow-ups" },
-      { href: "/admin/inbox", label: "Replies" },
-    ],
-    // Today's "Replies waiting" card opens the queue's replies view.
-    alsoMatches: ["/admin/lead-queue?view=replies"],
+    // A prospect's own page and its workspace sit here.
+    alsoMatches: ["/admin/workspace/prospect"],
     phone: true,
   },
   {
     key: "close",
-    label: "Close",
+    label: "Deals",
     group: "acquisition",
     href: IN_TALKS,
     tabs: [
@@ -91,15 +83,6 @@ export const MAIN_NAV: readonly MainSection[] = [
       { href: "/admin/meetings", label: "Meetings" },
       { href: "/admin/contracts", label: "Contracts" },
     ],
-  },
-  {
-    key: "prospects",
-    label: "All Prospects",
-    group: "acquisition",
-    href: "/admin/prospecting",
-    tabs: [],
-    // A prospect's own page (with the P6B draft panel) and its workspace sit here.
-    alsoMatches: ["/admin/workspace/prospect"],
   },
   { key: "clients", label: "Clients", group: "business", href: "/admin/clients", tabs: [] },
   { key: "projects", label: "Projects", group: "business", href: "/admin/pipeline", tabs: [] },
@@ -126,6 +109,8 @@ export const MORE_GROUPS: readonly { label: string; links: readonly NavLink[] }[
     label: "Sales",
     links: [
       { href: "/admin/sales-playbook", label: "Sales Playbook" },
+      { href: "/admin/inbox", label: "Reply Inbox" },
+      { href: "/admin/outreach", label: "Outreach stats" },
     ],
   },
   {
@@ -204,8 +189,8 @@ function sectionHrefs(s: MainSection): string[] {
 }
 
 /**
- * The section a page belongs to, using the query string so Contact, Follow Up
- * and Close can share a page with All Prospects. Anything unclaimed is More.
+ * The section a page belongs to, using the query string so Deals ("In talks")
+ * can share the prospect list page with Prospects. Anything unclaimed is More.
  */
 export function sectionForPath(pathname: string, search = ""): MainSection {
   const more = MAIN_NAV.find((s) => s.key === "more")!;

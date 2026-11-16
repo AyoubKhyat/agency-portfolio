@@ -10,6 +10,7 @@ import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { PageHeader } from "@/components/admin/page-header";
 import { FilterTabs } from "@/components/admin/filter-tabs";
 import { cn } from "@/lib/utils";
+import { REPLY_SNOOZED } from "@/lib/next-action";
 
 /* ---------- Types ---------- */
 type InboxItem = {
@@ -361,7 +362,8 @@ function CallbackModal({ item, onClose, onSaved }: { item: InboxItem; onClose: (
     await fetch(`/api/admin/prospecting/${item.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ followUpDate, actionType: "FOLLOW_UP" }),
+      // A callback date on a reply is a recorded decision, so the reply waits until then.
+      body: JSON.stringify({ followUpDate, actionType: REPLY_SNOOZED }),
     });
     setSaving(false);
     onSaved();

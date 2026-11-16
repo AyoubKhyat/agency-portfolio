@@ -16,17 +16,18 @@ const allPaths = allLinks.map(hrefPath);
 
 test("the menu is Client acquisition, then Business, then More", () => {
   const byGroup = (g: string) => MAIN_NAV.filter((s) => s.group === g).map((s) => s.label);
-  assert.deepEqual(byGroup("acquisition"), ["Today", "Find", "Qualify", "Contact", "Follow Up", "Close", "All Prospects"]);
+  assert.deepEqual(byGroup("acquisition"), ["Today", "Find", "Prospects", "Deals"]);
   assert.deepEqual(byGroup("business"), ["Clients", "Projects", "Invoices", "Revenue"]);
   assert.deepEqual(byGroup("more"), ["More tools", "Settings"]);
-  assert.equal(MAIN_NAV.length, 13);
+  assert.equal(MAIN_NAV.length, 10);
 });
 
-test("P6C finder leads Find, P6A sits under Qualify, P6B stays on the prospect page", () => {
+test("P6C finder leads Find, P6A is Find's website check, P6B stays on the prospect page", () => {
   const find = MAIN_NAV.find((s) => s.key === "find")!;
   assert.equal(find.href, "/admin/batch-discovery");
   assert.equal(find.tabs[0].href, "/admin/batch-discovery");
-  assert.equal(MAIN_NAV.find((s) => s.key === "qualify")!.href, "/admin/qualify");
+  assert.deepEqual(find.tabs.map((t) => t.label), ["Find businesses", "Check a website", "AI search"]);
+  assert.equal(find.tabs[1].href, "/admin/qualify");
   assert.match(readFileSync(url("src/app/admin/prospecting/[id]/page.tsx"), "utf8"), /OutreachDraftPanel/);
   assert.equal(sectionForPath("/admin/prospecting/abc").key, "prospects");
 });
@@ -84,13 +85,17 @@ test("pages land in the right section, using the query string where pages are sh
     ["/admin/batch-discovery", "", "find"],
     ["/admin/discovery", "", "find"],
     ["/admin/workspace/discovery/abc", "", "find"],
-    ["/admin/qualify", "", "qualify"],
-    ["/admin/lead-queue", "", "contact"],
-    ["/admin/lead-queue", "view=ready", "contact"],
-    ["/admin/outreach", "", "contact"],
-    ["/admin/lead-queue", "view=followUps", "followUp"],
-    ["/admin/lead-queue", "view=replies", "followUp"],
-    ["/admin/inbox", "", "followUp"],
+    ["/admin/qualify", "", "find"],
+    // Every old lead-queue link lands in Prospects (the optional focus mode).
+    ["/admin/lead-queue", "", "prospects"],
+    ["/admin/lead-queue", "view=ready", "prospects"],
+    ["/admin/lead-queue", "view=followUps", "prospects"],
+    ["/admin/lead-queue", "view=replies", "prospects"],
+    ["/admin/lead-queue", "view=verify", "prospects"],
+    ["/admin/lead-queue", "view=enquiries", "prospects"],
+    ["/admin/outreach", "", "more"],
+    ["/admin/inbox", "", "more"],
+    ["/admin/prospecting", "group=CONTACTED", "prospects"],
     ["/admin/prospecting", "status=MEETING,PROPOSAL_SENT,NEGOTIATION", "close"],
     ["/admin/meetings", "scope=today", "close"],
     ["/admin/contracts", "", "close"],
@@ -115,18 +120,19 @@ test("pages land in the right section, using the query string where pages are sh
 
 test("tabs appear only where a tab matches, and the query picks the tab", () => {
   assert.equal(activeTab("/admin/batch-discovery")?.label, "Find businesses");
-  assert.equal(activeTab("/admin/lead-queue")?.label, "Next");
-  assert.equal(activeTab("/admin/lead-queue", "view=followUps")?.label, "Follow-ups");
-  assert.equal(activeTab("/admin/lead-queue", "view=replies"), null); // in Follow Up, but no tab of its own
+  assert.equal(activeTab("/admin/qualify")?.label, "Check a website");
+  for (const v of ["", "view=followUps", "view=replies", "view=verify"]) assert.equal(activeTab("/admin/lead-queue", v)?.label, "Work through leads", v);
   assert.equal(activeTab("/admin/prospecting", "status=MEETING,PROPOSAL_SENT,NEGOTIATION")?.label, "In talks");
-  assert.equal(activeTab("/admin/prospecting"), null);
+  assert.equal(activeTab("/admin/prospecting")?.label, "Prospect list");
+  assert.equal(activeTab("/admin/prospecting/abc")?.label, "Prospect list");
   assert.equal(activeTab("/admin"), null);
   assert.equal(activeTab("/admin/more"), null);
   assert.equal(activeTab("/admin/workspace/prospect/abc"), null);
+  assert.equal(activeTab("/admin/inbox"), null);
 });
 
 test("the phone bar keeps five daily entries and the layout passes the query to the nav", () => {
-  assert.deepEqual(MAIN_NAV.filter((s) => s.phone).map((s) => s.key), ["today", "find", "contact", "followUp", "more"]);
+  assert.deepEqual(MAIN_NAV.filter((s) => s.phone).map((s) => s.key), ["today", "find", "prospects", "more"]);
   const src = readFileSync(url("src/app/admin/layout.tsx"), "utf8");
   assert.match(src, /SIMPLE_NAV && tab\?\.hideTitleOnPhone && pathname === tab\.href && "max-lg:\[&_h1\]:sr-only"/);
   assert.match(src, /SIMPLE_NAV && tab \? sectionForPath\(pathname, search\)\.label : getPageTitle\(pathname\)/);
@@ -146,4 +152,30 @@ test("the classic sidebar stays one switch away and the login page keeps no menu
   assert.match(src, /const SIMPLE_NAV = true;/);
   assert.match(src, /SIMPLE_NAV\s*\?\s*SIMPLE_SECTIONS\s*:\s*FOCUS_MODE/);
   assert.match(src, /if \(isLogin\) return <>\{children\}<\/>;/);
+});
+
+test("beginner menu: one entry per job, the prospect list first, focus mode and the Daily Lead Agent one click away", () => {
+  const acquisition = MAIN_NAV.filter((s) => s.group === "acquisition");
+  // No two menu entries open the same page (the old Contact / Follow Up / All Prospects overlap).
+  const paths = acquisition.filter((s) => s.key !== "close").map((s) => hrefPath(s.href));
+  assert.equal(new Set(paths).size, paths.length);
+  assert.ok(!MAIN_NAV.some((s) => hrefPath(s.href) === "/admin/lead-queue"), "the focus mode is a tab, not a menu entry");
+  const prospects = MAIN_NAV.find((s) => s.key === "prospects")!;
+  assert.equal(prospects.href, "/admin/prospecting");
+  assert.deepEqual(prospects.tabs.map((t) => [t.label, t.href]), [["Prospect list", "/admin/prospecting"], ["Work through leads", "/admin/lead-queue"]]);
+  // The Daily Lead Agent stays on Today.
+  assert.equal(MAIN_NAV[0].href, "/admin");
+  assert.match(readFileSync(url("src/app/admin/page.tsx"), "utf8"), /<TodaysLeads \/>/);
+  // The list reaches the focus mode through the Prospects tabs (shown on every Prospects page, phone and desktop),
+  // not a second button with the same name; the focus mode links back.
+  assert.equal(activeTab("/admin/prospecting")?.label, "Prospect list");
+  assert.doesNotMatch(readFileSync(url("src/app/admin/prospecting/page.tsx"), "utf8"), /href="\/admin\/lead-queue"/);
+  assert.match(readFileSync(url("src/app/admin/layout.tsx"), "utf8"), /SIMPLE_NAV && <SectionTabs pathname=\{pathname\} search=\{search\} \/>/);
+  assert.match(readFileSync(url("src/app/admin/layout.tsx"), "utf8"), /const SIMPLE_NAV = true;/);
+  const queue = readFileSync(url("src/app/admin/lead-queue/page.tsx"), "utf8");
+  assert.match(queue, />Work through leads<\/h1>/);
+  assert.doesNotMatch(queue, />Command Center<\/h1>/, "not the same name as the Command Center report");
+  // Every icon key matches a menu entry.
+  const layout = readFileSync(url("src/app/admin/layout.tsx"), "utf8");
+  for (const s of MAIN_NAV) assert.match(layout, new RegExp(`\\b${s.key}: `), s.key);
 });

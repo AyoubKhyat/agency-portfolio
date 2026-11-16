@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  addDays, buildLeadQueue, channelsFor, classifyProspect, daysBetween, instagramUrl, isLandline, nextFollowUpStep,
+  QUEUE_ACTIVITY_TYPES, addDays, buildLeadQueue, channelsFor, classifyProspect, daysBetween, instagramUrl, isLandline, nextFollowUpStep,
   whatsappUrl, type EnquiryRow, type ProspectRow,
 } from "../src/lib/next-action";
 import { browserToday, recordConfirmedSend, type RequestFn } from "../src/lib/lead-actions";
@@ -113,7 +113,9 @@ test("handled replies leave the list: meeting, proposal, future callback, negati
   const r = { status: "REPONDU" };
   assert.equal(classifyProspect(row({ ...r, liveMeeting: true }), TODAY), null);
   assert.equal(classifyProspect(row({ ...r, hasProposal: true }), TODAY), null);
-  assert.equal(classifyProspect(row({ ...r, followUpDay: "2026-11-10" }), TODAY), null);
+  // A callback someone chose after the reply (REPLY_SNOOZED). A date from before the reply does not count:
+  // see "a recorded reply is answered even when a follow-up date from before it is still in the future".
+  assert.equal(classifyProspect(row({ ...r, followUpDay: "2026-11-10", replySnoozed: true }), TODAY), null);
   for (const replyReason of ["NOT_INTERESTED", "HAS_PROVIDER", "TOO_EXPENSIVE", "NO_BUDGET"]) {
     assert.equal(classifyProspect(row({ messageReplied: true, replyReason }), TODAY), null, replyReason);
   }
@@ -405,7 +407,51 @@ test("the command center files are not swallowed by the gitignored leads/ rule",
   assert.match(read(".gitignore"), /^\/?leads\/$/m);
 });
 
-test("queue decisions are logged only for the two known types, and only without a status change", () => {
+test("queue decisions are logged only for the three known types, and only without a status change", () => {
+  assert.deepEqual([...QUEUE_ACTIVITY_TYPES], ["NO_MORE_FOLLOW_UP", "REPLY_REVIEWED", "REPLY_SNOOZED"]);
   const route = read("src/app/api/admin/prospecting/[id]/route.ts");
   assert.match(route, /!parsed\.data\.status && decision && \(QUEUE_ACTIVITY_TYPES as readonly string\[\]\)\.includes\(decision\)/);
+});
+
+// ─── A recorded reply vs an older follow-up date (2026-11-16) ───────────
+
+test("a recorded reply is answered even when a follow-up date from before it is still in the future", () => {
+  // The date set when the send was confirmed (send day + 3), then a reply: the reply must not wait.
+  const sentThenReplied = { ...sentAndConfirmed, followUpDay: addDays(TODAY, 2) };
+  assert.equal(classifyProspect(row({ ...sentThenReplied, status: "REPONDU" }), TODAY), "reply");
+  assert.equal(classifyProspect(row({ ...sentThenReplied, messageReplied: true, replyReason: "INTERESTED" }), TODAY), "reply");
+  const q = buildLeadQueue([row({ ...sentThenReplied, status: "REPONDU" })], [], TODAY);
+  assert.deepEqual(q.items.map((i) => i.kind), ["reply"]);
+  assert.equal(q.notes.scheduled, 0);
+});
+
+test("a date chosen after the reply (REPLY_SNOOZED) still puts the reply off until that day", () => {
+  const snoozed = { ...sentAndConfirmed, status: "REPONDU", replySnoozed: true };
+  assert.equal(classifyProspect(row({ ...snoozed, followUpDay: addDays(TODAY, 3) }), TODAY), null);
+  assert.equal(classifyProspect(row({ ...snoozed, followUpDay: TODAY }), TODAY), "reply"); // the day has come
+  assert.equal(classifyProspect(row({ ...snoozed, followUpDay: addDays(TODAY, -1) }), TODAY), "reply");
+  assert.equal(classifyProspect(row({ ...snoozed, followUpDay: null }), TODAY), "reply");
+});
+
+test("possible old replies and negative replies are unchanged by the fix", () => {
+  // Not a recorded reply: an old reset stays a check, and a future date still defers that check.
+  const reset = { ...sentAndConfirmed, replyWasReset: true };
+  assert.equal(classifyProspect(row(reset), TODAY), "reply_review");
+  assert.equal(classifyProspect(row({ ...reset, followUpDay: addDays(TODAY, 3) }), TODAY), null);
+  assert.equal(classifyProspect(row({ ...reset, followUpDay: addDays(TODAY, 3), replySnoozed: false }), TODAY), null);
+  // A "no thanks" reply is never put back in front of anyone.
+  assert.equal(classifyProspect(row({ ...sentAndConfirmed, status: "REPONDU", messageReplied: true, replyReason: "NOT_INTERESTED", followUpDay: addDays(TODAY, 3) }), TODAY), null);
+});
+
+test("snoozing is recorded only from the two reply screens; follow-up dates elsewhere are unchanged", () => {
+  const queue = read("src/app/admin/lead-queue/page.tsx");
+  assert.match(queue, /actionType: item\.kind === "reply" \? REPLY_SNOOZED : "FOLLOW_UP"/);
+  assert.match(read("src/app/admin/inbox/page.tsx"), /JSON\.stringify\(\{ followUpDate, actionType: REPLY_SNOOZED \}\)/);
+  // The send-confirm flow still sets plain follow-up dates and never claims a snooze.
+  assert.doesNotMatch(read("src/lib/lead-actions.ts"), /REPLY_SNOOZED/);
+  // The SQL counts a snooze only when it is no older than the reply (message reply or REPONDU change).
+  const sql = read("src/lib/lead-queue-sql.ts");
+  assert.match(sql, /a\.action_type = 'REPLY_SNOOZED'\s+AND a\.created_at >= COALESCE\(GREATEST\(r\.replied_at,/);
+  assert.match(sql, /b\.new_status = 'REPONDU'/);
+  assert.match(sql, /AS "replySnoozed"/);
 });

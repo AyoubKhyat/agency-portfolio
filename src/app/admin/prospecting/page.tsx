@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Fragment, Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Plus, Upload, Send, CheckCircle, PhoneOff, Pencil, Trash2, Phone, LayoutGrid, List, Target, Search, X, Zap, ArrowUpDown, ShieldCheck, ShieldAlert, FileQuestion, History } from "lucide-react";
+import { Plus, Upload, Send, CheckCircle, PhoneOff, Pencil, Trash2, Phone, LayoutGrid, List, Target, Search, X, Zap, ArrowUpDown, ShieldCheck, ShieldAlert, FileQuestion, MoreHorizontal, ArrowRight, Archive, MessageCircleQuestion, ExternalLink } from "lucide-react";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { PageHeader } from "@/components/admin/page-header";
 import { FilterTabs } from "@/components/admin/filter-tabs";
@@ -17,7 +17,12 @@ import { browserToday, recordConfirmedSend, type NextFollowUp } from "@/lib/lead
 import type { SendChannel } from "@/lib/next-action";
 import { cn } from "@/lib/utils";
 import { PROSPECT_SEGMENTS, SEGMENT_LABELS, SEGMENT_TOKENS, type ProspectSegment } from "@/lib/prospect-segments";
-import { STAGES, getStage, stageStatusParam, stageForStatusParam, getChannelState, getSendEvidence, CHANNEL_LABELS, SEND_LABELS, SEND_ACTION_TYPES } from "@/lib/prospect-stages";
+import { stageForStatusParam, getChannelState, CHANNEL_LABELS } from "@/lib/prospect-stages";
+import {
+  VISIBLE_GROUPS, VISIBLE_SEND_LABELS, REPLY_LABELS, LEGACY_EVIDENCE_LABELS, getDisplayGroupByKey,
+  displayStageOf, isLegacyEvidenceParam, showsSendEvidence,
+  type DisplayGroupKey, type RowSummary, type VisibleSendEvidence,
+} from "@/lib/prospect-groups";
 
 type MsgTemplate = (ig: string, followers: string) => string;
 
@@ -128,6 +133,10 @@ type Prospect = {
   notes: { id: string; content: string; authorName: string | null; createdAt: string }[];
   /** Latest send record (outreach message or SENT_WHATSAPP / SENT_INSTAGRAM activity), if any. */
   lastSendAt?: string | null;
+  /** Stricter evidence (confirmed outreach message since 2026-08-20), worked out by the server. */
+  sendEvidence?: VisibleSendEvidence;
+  /** Group, next action and reply state, from the lead queue's own rules. Null if not available. */
+  summary?: RowSummary | null;
 };
 
 type OwnerStat = { id: string; fullName: string; avatarInitials: string; count: number };
@@ -238,9 +247,13 @@ function ScoreBadge({ prospect, factors }: { prospect: Prospect; factors?: strin
   );
 }
 
-/** Simple stage badge; the detailed stored status stays visible on hover. */
-function StageBadge({ status }: { status: string }) {
-  const stage = getStage(status);
+/**
+ * Simple stage badge; the detailed stored status stays visible on hover. A recorded
+ * reply shows "Replied" rather than a stage that contradicts it (display only).
+ */
+function StageBadge({ prospect }: { prospect: Prospect }) {
+  const status = prospect.status;
+  const stage = displayStageOf({ status, messageReplied: prospect.summary?.replyState === "CONFIRMED" });
   return (
     <span title={`Detailed status: ${STATUS_LABELS[status] ?? status}`}>
       <Badge variant={stage?.badge ?? "default"} size="sm" dot>{stage?.label ?? (STATUS_LABELS[status] ?? status)}</Badge>
@@ -264,22 +277,42 @@ function ChannelChip({ prospect }: { prospect: Prospect }) {
   );
 }
 
-/** Outreach evidence: does the app hold a record of a message being sent? Only for prospects marked contacted. */
+/** Send evidence, stricter rule: only a message someone confirmed (since 20 Aug 2026) counts as sent. */
 function SendChip({ prospect }: { prospect: Prospect }) {
-  const evidence = getSendEvidence(prospect);
-  if (evidence === "NOT_CONTACTED") return null;
-  const meta = SEND_LABELS[evidence];
+  const evidence = prospect.sendEvidence;
+  if (!evidence || evidence === "NOT_CONTACTED") return null;
+  const meta = VISIBLE_SEND_LABELS[evidence];
+  const confirmed = evidence === "CONFIRMED";
   return (
     <span title={meta.title} className={cn(
       "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium border",
-      evidence === "RECORDED" && "bg-blue-50 text-blue-700 border-blue-100",
-      evidence === "LEGACY" && "bg-slate-50 text-slate-500 border-slate-200",
-      evidence === "NOT_RECORDED" && "bg-amber-50 text-amber-800 border-amber-100",
+      confirmed ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-amber-50 text-amber-800 border-amber-100",
     )}>
-      {evidence === "RECORDED" ? <Send className="w-3 h-3" /> : evidence === "LEGACY" ? <History className="w-3 h-3" /> : <FileQuestion className="w-3 h-3" />}
+      {confirmed ? <Send className="w-3 h-3" /> : <FileQuestion className="w-3 h-3" />}
       {meta.label}
     </span>
   );
+}
+
+/** A recorded reply, or a possible old one that still needs checking. */
+function ReplyChip({ prospect }: { prospect: Prospect }) {
+  const state = prospect.summary?.replyState;
+  if (!state || state === "NONE") return null;
+  const meta = REPLY_LABELS[state];
+  return (
+    <span title={meta.title} className={cn(
+      "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium border",
+      state === "CONFIRMED" ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-slate-50 text-slate-600 border-slate-200",
+    )}>
+      {state === "CONFIRMED" ? <CheckCircle className="w-3 h-3" /> : <MessageCircleQuestion className="w-3 h-3" />}
+      {meta.label}
+    </span>
+  );
+}
+
+/** The evidence badges, in one place for the three views. */
+function Chips({ prospect }: { prospect: Prospect }) {
+  return <><ChannelChip prospect={prospect} />{showsSendEvidence(prospect.summary?.group) && <SendChip prospect={prospect} />}<ReplyChip prospect={prospect} /></>;
 }
 
 function ProspectingContent() {
@@ -294,6 +327,12 @@ function ProspectingContent() {
   const channelFilter = searchParams.get("channel") ?? "ALL";
   const evidenceFilter = searchParams.get("evidence") ?? "ALL";
   const pageParam = parseInt(searchParams.get("page") ?? "1", 10);
+  // Display group tab. Old status= / due= links keep their exact meaning and show no group;
+  // a plain visit opens New Leads.
+  const groupParam = getDisplayGroupByKey(searchParams.get("group"))?.key ?? null;
+  // An older evidence= value (recorded, legacy, none, unbacked) is a global filter, as before groups.
+  const legacyEvidence = isLegacyEvidenceParam(evidenceFilter);
+  const groupFilter: DisplayGroupKey | null = groupParam ?? (statusFilter === "ALL" && dueFilter === "ALL" && !legacyEvidence ? "NEW_LEADS" : null);
 
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [total, setTotal] = useState(0);
@@ -311,6 +350,10 @@ function ProspectingContent() {
   const [scoring, setScoring] = useState(false);
   const [sortByScore, setSortByScore] = useState(false);
   const [scoreFactors, setScoreFactors] = useState<Record<string, string[]>>({});
+  const [groupCounts, setGroupCounts] = useState<Record<DisplayGroupKey, number> | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const reload = () => setReloadKey((k) => k + 1);
   const [kpis, setKpis] = useState<{ warmRelationships: number; agencyOpportunities: number; luxuryBrands: number; legacyCold: number; meetingsScheduled: number; proposalValue: number; pipelineValue: number; clientsWon: number; upcomingFollowups: number; overdueFollowups: number; currency: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -341,14 +384,20 @@ function ProspectingContent() {
     if (ownerFilter !== "ALL" && ownerFilter !== "UNASSIGNED") qs.set("owner", ownerFilter);
     if (ownerFilter === "UNASSIGNED") qs.set("unassigned", "true");
     if (debouncedSearch.trim()) qs.set("search", debouncedSearch.trim());
+    if (groupFilter) qs.set("group", groupFilter);
     qs.set("page", String(pageParam));
     fetch(`/api/admin/prospecting?${qs}`)
       .then((r) => { if (r.status === 401) { router.push("/admin/login"); return null; } return r.json(); })
-      .then((data) => { if (data) { setProspects(data.prospects); setTotal(data.total); setPages(data.pages); } setLoading(false); });
-  }, [statusFilter, sectorFilter, qualityFilter, segmentFilter, dueFilter, channelFilter, evidenceFilter, ownerFilter, debouncedSearch, pageParam, router]);
+      .then((data) => { if (data) { setProspects(data.prospects); setTotal(data.total); setPages(data.pages); setGroupCounts(data.groupCounts ?? null); } setLoading(false); });
+  }, [statusFilter, sectorFilter, qualityFilter, segmentFilter, dueFilter, channelFilter, evidenceFilter, ownerFilter, debouncedSearch, pageParam, groupFilter, reloadKey, router]);
 
-  function navigate(status: string, sector: string, page = 1, owner = ownerFilter, quality = qualityFilter, segment = segmentFilter, due = dueFilter, channel = channelFilter, evidence = evidenceFilter) {
+  /**
+   * Same positional signature as before, plus the group. A detailed status or a due view
+   * replaces the group (they kept their own meaning before groups existed).
+   */
+  function navigate(status: string, sector: string, page = 1, owner = ownerFilter, quality = qualityFilter, segment = segmentFilter, due = dueFilter, channel = channelFilter, evidence = evidenceFilter, group: DisplayGroupKey | null = groupFilter) {
     const qs = new URLSearchParams();
+    if (status === "ALL" && due === "ALL" && group) qs.set("group", group);
     if (status !== "ALL") qs.set("status", status);
     if (sector !== "ALL") qs.set("sector", sector);
     if (quality !== "ALL") qs.set("qualityLabel", quality);
@@ -361,9 +410,9 @@ function ProspectingContent() {
     router.push(`/admin/prospecting${qs.toString() ? `?${qs}` : ""}`);
   }
 
-  // A send logged from this page is a new send record, so the chip is right without a reload.
+  // A send logged from this page is a new send record; the reload that follows refreshes the labels.
   function withSendRecord(pr: Prospect, actionType: string): Prospect {
-    return SEND_ACTION_TYPES.includes(actionType) ? { ...pr, lastSendAt: new Date().toISOString() } : pr;
+    return actionType === "SENT_WHATSAPP" || actionType === "SENT_INSTAGRAM" ? { ...pr, lastSendAt: new Date().toISOString() } : pr;
   }
 
   function armSend(send: NonNullable<typeof pendingSend>) {
@@ -386,6 +435,7 @@ function ProspectingContent() {
     setProspects((prev) => prev.map((pr) => pr.id === p.id ? withSendRecord({ ...pr, status: pr.status === "A_ENVOYER" ? "ENVOYE" : pr.status }, actionType) : pr));
     setPendingSend((current) => (current === pending ? null : current)); // another prospect may have been opened meanwhile
     setSendError(null);
+    reload(); // the group, evidence and next action come from the server
   }
 
   async function handleSendWA(p: Prospect) {
@@ -434,6 +484,14 @@ function ProspectingContent() {
     else { alert("No phone or Instagram for this prospect."); }
   }
 
+  /** "Send first message": the next action only offers it when a channel is confirmed, so use that one. */
+  async function handleFirstMessage(p: Prospect) {
+    const digits = p.phone?.replace(/\D/g, "") || "";
+    if (p.whatsappStatus === "VERIFIED" && digits && !isLandline(p.phone)) return handleSendWA(p);
+    if (p.instagramStatus === "VERIFIED" && p.instagram) return handleSendIG(p);
+    return handleSend(p);
+  }
+
   async function handleFollowUp(p: Prospect) {
     const msg = getFollowupMessage(p);
     const digits = p.phone?.replace(/\D/g, "") || "";
@@ -461,17 +519,19 @@ function ProspectingContent() {
   async function handleMarkReplied(p: Prospect) {
     await fetch(`/api/admin/prospecting/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "REPONDU" }) });
     setProspects((prev) => prev.map((pr) => pr.id === p.id ? { ...pr, status: "REPONDU" } : pr));
+    reload();
   }
 
   async function handleMarkNoWhatsApp(p: Prospect) {
     await fetch(`/api/admin/prospecting/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "PAS_DE_WHATSAPP" }) });
     setProspects((prev) => prev.map((pr) => pr.id === p.id ? { ...pr, status: "PAS_DE_WHATSAPP" } : pr));
+    reload();
   }
 
   async function handleDelete(id: string, name: string) {
     if (!confirm(`Delete prospect "${name}"?`)) return;
     const res = await fetch(`/api/admin/prospecting/${id}`, { method: "DELETE" });
-    if (res.ok) setProspects((prev) => prev.filter((p) => p.id !== id));
+    if (res.ok) { setProspects((prev) => prev.filter((p) => p.id !== id)); reload(); }
   }
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -555,144 +615,135 @@ function ProspectingContent() {
   const activeStage = stageForStatusParam(statusFilter);
   const advancedCount = [
     segmentFilter !== "ALL",
-    statusFilter !== "ALL" && !activeStage,
+    statusFilter !== "ALL",
     evidenceFilter !== "ALL",
     sectorFilter !== "ALL",
     qualityFilter !== "ALL",
     ownerFilter !== "ALL",
+    channelFilter !== "ALL",
   ].filter(Boolean).length;
   const canFollowUp = (p: Prospect) => p.status === "ENVOYE" && p.sentAt && (Date.now() - new Date(p.sentAt).getTime()) > 3 * 86400000;
+  const legacyStatusLabel = statusFilter === "ALL" ? null
+    : activeStage?.label ?? statusFilter.split(",").map((s) => STATUS_LABELS[s] ?? s).join(", ");
+  const activeGroup = getDisplayGroupByKey(groupFilter);
+  const showGroup = (key: DisplayGroupKey | null) => navigate("ALL", sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, "ALL", channelFilter, evidenceFilter, key);
+  const pill = "text-[11.5px] px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-all";
+  const pillOff = "text-[#475569] bg-white border border-[var(--os-border)] hover:bg-gray-50";
+  const pillOn = "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm";
+  const rowLabel = "text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mr-1 w-[104px] shrink-0";
+
+  /** The one primary step for a prospect, from the lead queue's rules. Quiet text when there is nothing to do. */
+  function renderNextAction(p: Prospect) {
+    const a = p.summary?.nextAction;
+    if (!a) return <span className="text-[11px] text-[#94A3B8]">—</span>;
+    if (!a.actionable) return <span title={a.hint} className="text-[12px] text-[#64748B]">{a.label}</span>;
+    const primary = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:opacity-90 transition-all whitespace-nowrap";
+    const onClick =
+      a.key === "ready" ? () => handleFirstMessage(p)
+      : a.key === "follow_up_overdue" || a.key === "follow_up_today" ? () => handleFollowUp(p)
+      : null;
+    if (onClick) {
+      return <button type="button" onClick={onClick} title={a.hint} className={primary}><Send className="w-3.5 h-3.5" /> {a.label}</button>;
+    }
+    // Deciding on a follow-up lives in the focus mode; everything else is done on the prospect page.
+    const href = a.key === "follow_up_decision" ? "/admin/lead-queue?view=followUps" : `/admin/prospecting/${p.id}`;
+    return <Link href={href} title={a.hint} className={primary}>{a.label} <ArrowRight className="w-3.5 h-3.5" /></Link>;
+  }
+
+  /** The "more" toggle for every other action. Only one row's actions are open at a time. */
+  // `where` keeps ids unique: the phone cards and the table are both in the page (one is hidden by CSS).
+  function renderMenuButton(p: Prospect, where: "card" | "row") {
+    const open = openMenuId === p.id;
+    return (
+      <button type="button" title="More actions" aria-expanded={open} aria-controls={`actions-${where}-${p.id}`}
+        onClick={() => setOpenMenuId(open ? null : p.id)}
+        className={cn("inline-flex p-1.5 rounded-md transition-colors", open ? "bg-gray-100 text-[#0F172A]" : "text-[#64748B] hover:text-[#0F172A] hover:bg-gray-100")}>
+        <MoreHorizontal className="w-4 h-4" />
+      </button>
+    );
+  }
+
+  /** Every other action, unchanged. In the table they open in a full-width row below, so no column moves. */
+  function renderMenuItems(p: Prospect, where: "card" | "row") {
+    const digits = p.phone?.replace(/\D/g, "") || "";
+    const item = "flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors";
+    return (
+      <div id={`actions-${where}-${p.id}`} data-testid={`${where}-actions`} className="flex flex-wrap justify-end gap-1">
+        {digits && <button onClick={() => handleSendWA(p)} className={cn(item, "bg-emerald-50 text-emerald-600 hover:bg-emerald-100")}><FaWhatsapp className="w-3.5 h-3.5" /> WhatsApp</button>}
+        {p.instagram && <button onClick={() => handleSendIG(p)} className={cn(item, "bg-purple-50 text-purple-600 hover:bg-purple-100")}><FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "Instagram"}</button>}
+        {digits && <a href={`tel:${p.phone}`} className={cn(item, "bg-amber-50 text-amber-600 hover:bg-amber-100")} title={`Call ${p.phone}`}><Phone className="w-3.5 h-3.5" /> Call</a>}
+        {!digits && !p.instagram && <span className="text-[11px] text-red-500 px-2" title="No contact data — audit at /admin/data-audit">no contact</span>}
+        {canFollowUp(p) && <button onClick={() => handleFollowUp(p)} className={cn(item, "bg-amber-50 text-amber-600 hover:bg-amber-100")}><Send className="w-3 h-3" /> Follow up</button>}
+        {p.status !== "REPONDU" && p.status !== "CONVERTI" && <button onClick={() => handleMarkReplied(p)} className={cn(item, "text-emerald-600 hover:bg-emerald-50")}><CheckCircle className="w-3.5 h-3.5" /> Mark replied</button>}
+        {p.status !== "PAS_DE_WHATSAPP" && <button onClick={() => handleMarkNoWhatsApp(p)} className={cn(item, "text-red-500 hover:bg-red-50")}><PhoneOff className="w-3.5 h-3.5" /> No WhatsApp</button>}
+        <Link href={`/admin/prospecting/${p.id}`} className={cn(item, "text-[#475569] hover:bg-gray-100")}><ExternalLink className="w-3.5 h-3.5" /> Open</Link>
+        <Link href={`/admin/prospecting/${p.id}/edit`} className={cn(item, "text-[#475569] hover:bg-gray-100")}><Pencil className="w-3.5 h-3.5" /> Edit</Link>
+        <button onClick={() => handleDelete(p.id, p.name)} className={cn(item, "text-[#64748B] hover:text-red-600 hover:bg-red-50")}><Trash2 className="w-3.5 h-3.5" /> Delete</button>
+      </div>
+    );
+  }
+
+  function renderName(p: Prospect) {
+    return (
+      <div className="min-w-0">
+        <button onClick={() => setDrawerProspectId(p.id)} className="text-[14px] font-semibold text-[#0F172A] hover:text-[#8B00FF] transition-colors text-left">{p.name}</button>
+        {p.instagram && <span className="ml-1.5 text-[11px] text-[#64748B]">@{p.instagram.replace(/^@/, "")}</span>}
+        <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-[#64748B]">
+          <span>{[p.sector, p.neighborhood].filter(Boolean).join(" · ")}</span>
+          {p.score != null && !!p.scoreLabel && <ScoreBadge prospect={p} factors={scoreFactors[p.id]} />}
+        </div>
+      </div>
+    );
+  }
+
+  function renderCard(p: Prospect) {
+    return (
+      <>
+        <div className="flex items-start justify-between gap-2 mb-2">
+          {renderName(p)}
+          <StageBadge prospect={p} />
+        </div>
+        <div className="flex items-center gap-1.5 flex-wrap mb-3"><Chips prospect={p} /></div>
+        <div className="flex items-start justify-between gap-2 pt-2.5 border-t border-[var(--os-border)]">
+          <div className="pt-0.5">{renderNextAction(p)}</div>
+          {renderMenuButton(p, "card")}
+        </div>
+        {openMenuId === p.id && <div className="mt-2">{renderMenuItems(p, "card")}</div>}
+      </>
+    );
+  }
+
+  const pagination = pages > 1 && (
+    <div className="flex justify-center gap-1.5 mt-6">
+      {Array.from({ length: pages }, (_, i) => i + 1).map((pg) => (
+        <button key={pg} onClick={() => navigate(statusFilter, sectorFilter, pg)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", pg === pageParam ? "bg-purple-500 text-white" : "text-[#475569] hover:bg-gray-100")}>{pg}</button>
+      ))}
+    </div>
+  );
 
   return (
     <div>
       <PageHeader
         title="Prospects"
         count={total}
-        subtitle="Everyone you are talking to, by stage."
+        subtitle="One list. Each prospect shows its next step."
         actions={
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <div className="flex items-center bg-white border border-[var(--os-border)] rounded-lg p-0.5">
-              <button onClick={() => setView("list")} className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "text-[#475569] hover:text-[#0F172A]")}>
+              <button onClick={() => setView("list")} title="List" className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "text-[#475569] hover:text-[#0F172A]")}>
                 <List className="w-4 h-4" />
               </button>
-              <button onClick={() => setView("grid")} className={cn("p-1.5 rounded-md transition-colors", view === "grid" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "text-[#475569] hover:text-[#0F172A]")}>
+              <button onClick={() => setView("grid")} title="Cards" className={cn("p-1.5 rounded-md transition-colors", view === "grid" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "text-[#475569] hover:text-[#0F172A]")}>
                 <LayoutGrid className="w-4 h-4" />
               </button>
             </div>
-            <button
-              onClick={() => setSortByScore(!sortByScore)}
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 py-2 border rounded-lg text-xs sm:text-sm font-medium transition-all",
-                sortByScore
-                  ? "border-[#8B00FF] bg-[#8B00FF]/10 text-[#8B00FF]"
-                  : "border-[var(--os-border)] hover:border-[var(--os-border-hover)] text-gray-600 hover:text-[#0F172A]"
-              )}
-              title="Sort by score (highest first)"
-            >
-              <ArrowUpDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Score
-            </button>
-            <button
-              onClick={handleScoreAll}
-              disabled={scoring}
-              className="flex items-center gap-1.5 px-2.5 py-2 border border-[var(--os-border)] hover:border-[var(--os-border-hover)] rounded-lg text-xs sm:text-sm text-gray-600 hover:text-[#0F172A] transition-all disabled:opacity-50"
-              title="Score all prospects"
-            >
-              <Zap className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", scoring && "animate-pulse text-amber-500")} /> {scoring ? "Scoring..." : "Score All"}
-            </button>
             <input ref={fileRef} type="file" accept=".csv" onChange={handleImport} className="hidden" />
-            <button onClick={() => fileRef.current?.click()} disabled={importing} className="flex items-center gap-1.5 px-2.5 py-2 border border-[var(--os-border)] hover:border-[var(--os-border-hover)] rounded-lg text-xs sm:text-sm text-gray-600 hover:text-[#0F172A] transition-all disabled:opacity-50">
-              <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {importing ? "..." : "CSV"}
-            </button>
             <Link href="/admin/prospecting/new" className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:opacity-90 text-white rounded-lg text-xs sm:text-sm font-medium transition-all shadow-md shadow-purple-500/20">
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> New
             </Link>
           </div>
         }
       />
-
-      {/* KPI strip — 8 tiles, decision-driving metrics only. Agency EU + Luxury stay as segment pills. */}
-      <motion.div
-        initial={{ opacity: 0, y: -4 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 mb-5"
-      >
-        {[
-          { label: "Warm Contacts", value: kpis?.warmRelationships ?? 0, tone: "emerald" },
-          { label: "Legacy Cold", value: kpis?.legacyCold ?? 0, tone: "slate" },
-          { label: "Open Proposals", value: kpis ? `${(kpis.proposalValue / 1000).toFixed(0)}k` : "0", suffix: kpis?.currency ?? "MAD", tone: "slate" },
-          { label: "Pipeline", value: kpis ? `${(kpis.pipelineValue / 1000).toFixed(0)}k` : "0", suffix: kpis?.currency ?? "MAD", tone: "slate" },
-          { label: "Meetings", value: kpis?.meetingsScheduled ?? 0, tone: "slate" },
-          { label: "Clients", value: kpis?.clientsWon ?? 0, tone: "emerald" },
-          { label: "Follow-up dates", value: kpis?.upcomingFollowups ?? 0, tone: "slate", due: "today" as const, title: "Follow-up dates set in the next 14 days. A date is not evidence that a first message was sent." },
-          { label: "Overdue dates", value: kpis?.overdueFollowups ?? 0, tone: "amber", due: "overdue" as const, title: "Follow-up dates in the past, including historical records from before the July 2026 cleanup. Today shows which are backed by a recorded send." },
-        ].map((k) => {
-          const clickable = "due" in k && k.due;
-          const content = (
-            <>
-              <div className="text-[10px] uppercase tracking-[0.14em] text-[#94A3B8] font-medium">{k.label}</div>
-              <div className="mt-1 flex items-baseline gap-1">
-                <span className={cn(
-                  "text-[18px] font-semibold tabular-nums",
-                  k.tone === "emerald" && "text-emerald-700",
-                  k.tone === "slate" && "text-[#0F172A]",
-                  k.tone === "amber" && "text-amber-700",
-                )}>{k.value}</span>
-                {k.suffix && <span className="text-[10px] text-[#94A3B8] font-medium">{k.suffix}</span>}
-              </div>
-            </>
-          );
-          if (clickable) {
-            const active = dueFilter === k.due;
-            const isOverdue = k.due === "overdue";
-            return (
-              <button
-                key={k.label}
-                type="button"
-                title={"title" in k ? k.title : undefined}
-                onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, k.due)}
-                className={cn(
-                  "text-left rounded-xl border px-3 py-2.5 transition-all",
-                  active
-                    ? isOverdue
-                      ? "bg-amber-50 border-amber-200 ring-1 ring-amber-200/60"
-                      : "bg-[#0F172A]/[0.04] border-[#0F172A]/20 ring-1 ring-[#0F172A]/10"
-                    : isOverdue
-                      ? "bg-amber-50/50 border-amber-100 hover:border-amber-200 hover:bg-amber-50"
-                      : "bg-white/60 border-[var(--os-border)] hover:border-[#CBD5E1] hover:bg-white",
-                )}
-              >
-                {content}
-              </button>
-            );
-          }
-          return (
-            <div key={k.label} className="rounded-xl border border-[var(--os-border)] bg-white/60 px-3 py-2.5">
-              {content}
-            </div>
-          );
-        })}
-      </motion.div>
-
-      {/* Follow-up workflow filter — dismiss pill signalling the active due-view */}
-      {(dueFilter === "today" || dueFilter === "overdue") && (
-        <div className="mb-3 flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, "ALL")}
-            className={cn(
-              "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium border shadow-sm",
-              dueFilter === "overdue"
-                ? "bg-amber-600 text-white border-amber-600"
-                : "bg-[#0F172A] text-white border-[#0F172A]",
-            )}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
-            {dueFilter === "overdue" ? "Overdue follow-up dates" : "Follow-up dates today"}
-            <X className="w-3.5 h-3.5 opacity-70" />
-          </button>
-        </div>
-      )}
 
       {/* Search */}
       <div className="relative mb-3">
@@ -711,183 +762,191 @@ function ProspectingContent() {
         )}
       </div>
 
-      {/* Stage filter — simple stages group the stored statuses (display only, no data change) */}
-      <FilterTabs
-        items={[{ value: "ALL", label: "All" }, ...STAGES.map((s) => ({ value: stageStatusParam(s), label: s.label }))]}
-        active={statusFilter === "ALL" ? "ALL" : activeStage ? stageStatusParam(activeStage) : ""}
-        onChange={(v) => navigate(v, sectorFilter, 1, ownerFilter)}
-        className="mb-2"
-      />
-      {/* Contact readiness — a WhatsApp or Instagram confirmed by hand. Not evidence of a send. */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-3">
-        <span className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mr-1 shrink-0">Contact readiness</span>
-        {[
-          { id: "ALL", label: "All" },
-          { id: "verified", label: "Channel verified" },
-          { id: "unverified", label: "Channel unverified" },
-        ].map((item) => (
-          <button
-            key={item.id}
-            onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, dueFilter, item.id)}
-            className={cn(
-              "text-[11.5px] px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-all",
-              channelFilter === item.id
-                ? item.id === "verified" ? "bg-emerald-600 text-white shadow-sm"
-                  : item.id === "unverified" ? "bg-amber-500 text-white shadow-sm"
-                  : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
-                : "text-[#475569] bg-white border border-[var(--os-border)] hover:bg-gray-50"
-            )}
-          >
-            {item.label}
-          </button>
-        ))}
+      {/* Four groups (display only: stored statuses are unchanged). Counts follow every filter except a detailed status. */}
+      {/* Phones: a 2x2 grid, so all four tabs are visible without scrolling. Wider screens: one row. */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 mb-1" data-testid="group-tabs">
+        <FilterTabs
+          items={VISIBLE_GROUPS.map((g) => ({ value: g.key, label: g.label, count: groupCounts?.[g.key] }))}
+          active={groupFilter ?? ""}
+          onChange={(v) => showGroup(v as DisplayGroupKey)}
+          size="md"
+          className="grid grid-cols-2 overflow-visible pb-0 sm:flex sm:overflow-x-auto min-w-0 [&>button]:justify-center sm:[&>button]:justify-start"
+        />
+        <button
+          type="button"
+          onClick={() => showGroup("ARCHIVED")}
+          title="Unreachable, closed, or an unknown status"
+          className={cn("self-end sm:ml-auto shrink-0 inline-flex items-center gap-1 text-[11.5px] hover:underline", groupFilter === "ARCHIVED" ? "text-[var(--os-purple)] font-semibold" : "text-[#94A3B8]")}
+        >
+          <Archive className="w-3.5 h-3.5" /> Archived{groupCounts ? ` (${groupCounts.ARCHIVED})` : ""}
+        </button>
       </div>
+      <p className="text-[11.5px] text-[#94A3B8] mb-3 min-h-[1em]">{activeGroup?.hint ?? ""}</p>
 
-      {/* Advanced filters — every other filter, unchanged, folded away. Opens when one is in use. */}
-      <details className="mb-6 rounded-xl border border-[var(--os-border)] bg-white/40" open={advancedCount > 0 || undefined}>
+      {/* An old status= or due= link: shown as a removable filter, with its old meaning. */}
+      {(legacyStatusLabel || legacyEvidence || dueFilter === "today" || dueFilter === "overdue") && (
+        <div className="mb-3 flex items-center gap-2 flex-wrap">
+          {legacyEvidence && (
+            <button type="button" onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, dueFilter, channelFilter, "ALL")}
+              title="An older outreach-record filter, across all prospects"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium border shadow-sm bg-[#0F172A] text-white border-[#0F172A]">
+              Outreach: {LEGACY_EVIDENCE_LABELS[evidenceFilter]} <X className="w-3.5 h-3.5 opacity-70" />
+            </button>
+          )}
+          {legacyStatusLabel && (
+            <button type="button" onClick={() => navigate("ALL", sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, dueFilter, channelFilter, evidenceFilter, null)}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium border shadow-sm bg-[#0F172A] text-white border-[#0F172A]">
+              Status: {legacyStatusLabel} <X className="w-3.5 h-3.5 opacity-70" />
+            </button>
+          )}
+          {(dueFilter === "today" || dueFilter === "overdue") && (
+            <button type="button" onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, "ALL")}
+              className={cn("inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium border shadow-sm",
+                dueFilter === "overdue" ? "bg-amber-600 text-white border-amber-600" : "bg-[#0F172A] text-white border-[#0F172A]")}>
+              {dueFilter === "overdue" ? "Overdue follow-up dates" : "Follow-up dates today"} <X className="w-3.5 h-3.5 opacity-70" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* More filters — every other filter, number and tool, unchanged, folded away. Opens when one is in use. */}
+      <details className="mb-5 rounded-xl border border-[var(--os-border)] bg-white/40" open={advancedCount > 0 || undefined}>
         <summary className="cursor-pointer select-none px-3 py-2 text-[12px] font-medium text-[#475569] hover:text-[#0F172A] flex items-center gap-2">
-          Advanced filters
+          More filters
           {advancedCount > 0 && (
             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 text-[#7C3AED]">{advancedCount} active</span>
           )}
-          <span className="text-[11px] font-normal text-[#94A3B8]">Segment, detailed status, outreach record, sector, quality, owner</span>
         </summary>
-        <div className="px-3 pb-3 pt-1 space-y-1">
-          <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mb-1.5">Segment</div>
-        {/* Segment pills — muted, tone-on-tone identity */}
-        <div className="flex items-center gap-1.5 flex-wrap mb-3">
-          {[
-            { value: "ALL" as const, label: "All", dot: "bg-slate-300" },
-            ...PROSPECT_SEGMENTS.map((s) => ({
-              value: s,
-              label: SEGMENT_LABELS[s],
-              dot: SEGMENT_TOKENS[s].dot,
-            })),
-          ].map((seg) => {
-            const active = segmentFilter === seg.value;
-            return (
-              <button
-                key={seg.value}
-                onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, seg.value)}
-                className={cn(
-                  "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium border transition-all",
-                  active
-                    ? "bg-[#0F172A] text-white border-[#0F172A] shadow-sm"
-                    : "bg-white text-[#475569] border-[var(--os-border)] hover:border-[#CBD5E1] hover:bg-gray-50"
-                )}
-              >
-                <span className={cn("w-1.5 h-1.5 rounded-full", active ? "bg-white/70" : seg.dot)} />
-                {seg.label}
+        <div className="px-3 pb-3 pt-1 space-y-2">
+          {/* Numbers — the follow-up tiles still open their due views. */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+            {[
+              { label: "Warm Contacts", value: kpis?.warmRelationships ?? 0, tone: "emerald" },
+              { label: "Legacy Cold", value: kpis?.legacyCold ?? 0, tone: "slate" },
+              { label: "Open Proposals", value: kpis ? `${(kpis.proposalValue / 1000).toFixed(0)}k` : "0", suffix: kpis?.currency ?? "MAD", tone: "slate" },
+              { label: "Pipeline", value: kpis ? `${(kpis.pipelineValue / 1000).toFixed(0)}k` : "0", suffix: kpis?.currency ?? "MAD", tone: "slate" },
+              { label: "Meetings", value: kpis?.meetingsScheduled ?? 0, tone: "slate" },
+              { label: "Clients", value: kpis?.clientsWon ?? 0, tone: "emerald" },
+              { label: "Follow-up dates", value: kpis?.upcomingFollowups ?? 0, tone: "slate", due: "today" as const, title: "Follow-up dates set in the next 14 days. A date is not evidence that a first message was sent." },
+              { label: "Overdue dates", value: kpis?.overdueFollowups ?? 0, tone: "amber", due: "overdue" as const, title: "Follow-up dates in the past, including historical records from before the July 2026 cleanup. Today shows which are backed by a recorded send." },
+            ].map((k) => {
+              const content = (
+                <>
+                  <div className="text-[10px] uppercase tracking-[0.14em] text-[#94A3B8] font-medium">{k.label}</div>
+                  <div className="mt-1 flex items-baseline gap-1">
+                    <span className={cn("text-[16px] font-semibold tabular-nums", k.tone === "emerald" && "text-emerald-700", k.tone === "slate" && "text-[#0F172A]", k.tone === "amber" && "text-amber-700")}>{k.value}</span>
+                    {k.suffix && <span className="text-[10px] text-[#94A3B8] font-medium">{k.suffix}</span>}
+                  </div>
+                </>
+              );
+              if ("due" in k && k.due) {
+                return (
+                  <button key={k.label} type="button" title={k.title} onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, k.due)}
+                    className={cn("text-left rounded-xl border px-3 py-2 transition-all", dueFilter === k.due ? "bg-[#0F172A]/[0.04] border-[#0F172A]/20 ring-1 ring-[#0F172A]/10" : "bg-white/60 border-[var(--os-border)] hover:border-[#CBD5E1] hover:bg-white")}>
+                    {content}
+                  </button>
+                );
+              }
+              return <div key={k.label} className="rounded-xl border border-[var(--os-border)] bg-white/60 px-3 py-2">{content}</div>;
+            })}
+          </div>
+
+          {/* Contact readiness — a WhatsApp or Instagram confirmed by hand. Not evidence of a send. */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            <span className={rowLabel}>Channel</span>
+            {[{ id: "ALL", label: "All" }, { id: "verified", label: "Channel verified" }, { id: "unverified", label: "Channel unverified" }].map((item) => (
+              <button key={item.id} onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, dueFilter, item.id)}
+                className={cn(pill, channelFilter === item.id ? pillOn : pillOff)}>{item.label}</button>
+            ))}
+          </div>
+
+          {/* Send evidence — stricter rule: a confirmed message since 20 Aug 2026. Older evidence= links still work. */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            <span className={rowLabel}>Message</span>
+            {[{ id: "ALL", label: "All" }, { id: "confirmed", label: "Message sent" }, { id: "unconfirmed", label: "Send not confirmed" }].map((item) => (
+              <button key={item.id} onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, dueFilter, channelFilter, item.id)}
+                className={cn(pill, evidenceFilter === item.id ? pillOn : pillOff)}>{item.label}</button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className={rowLabel}>Detailed status</span>
+            <FilterTabs
+              items={STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] || s }))}
+              active={statusFilter}
+              onChange={(v) => navigate(v, sectorFilter, 1, ownerFilter)}
+              className="min-w-0"
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={rowLabel}>Segment</span>
+            {[
+              { value: "ALL" as const, label: "All", dot: "bg-slate-300" },
+              ...PROSPECT_SEGMENTS.map((s) => ({ value: s, label: SEGMENT_LABELS[s], dot: SEGMENT_TOKENS[s].dot })),
+            ].map((seg) => {
+              const active = segmentFilter === seg.value;
+              return (
+                <button key={seg.value} onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, seg.value)}
+                  className={cn("inline-flex items-center gap-2", pill, active ? "bg-[#0F172A] text-white shadow-sm" : pillOff)}>
+                  <span className={cn("w-1.5 h-1.5 rounded-full", active ? "bg-white/70" : seg.dot)} />
+                  {seg.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className={rowLabel}>Sector</span>
+            <FilterTabs
+              items={SECTORS.map((s) => ({ value: s, label: s === "ALL" ? "All sectors" : s }))}
+              active={sectorFilter}
+              onChange={(v) => navigate(statusFilter, v, 1, ownerFilter)}
+              className="min-w-0"
+              scrollable
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            <span className={rowLabel}>Quality</span>
+            {[{ id: "ALL", label: "All" }, { id: "HOT", label: "🔥 HOT only" }, { id: "WARM", label: "WARM" }, { id: "COLD", label: "COLD" }].map((item) => (
+              <button key={item.id} onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, item.id)}
+                className={cn(pill, qualityFilter === item.id ? pillOn : pillOff)}>{item.label}</button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            <span className={rowLabel}>Owner</span>
+            {[
+              { id: "ALL", label: "All", count: 0 },
+              { id: "UNASSIGNED", label: "Unassigned", count: 0 },
+              ...ownerStats.map((o) => ({ id: o.id, label: o.avatarInitials, count: o.count })),
+            ].map((item) => (
+              <button key={item.id} onClick={() => navigate(statusFilter, sectorFilter, 1, item.id)}
+                className={cn("flex items-center gap-1.5 shrink-0", pill, ownerFilter === item.id ? pillOn : pillOff)}>
+                {item.label}
+                {item.count > 0 && <span className={cn("text-[10px] font-bold px-1 rounded-full", ownerFilter === item.id ? "bg-white/25" : "bg-[#F1F5F9]")}>{item.count}</span>}
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
 
-        <div className="flex items-center gap-1.5 mb-2">
-          <span className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mr-1 w-[104px] shrink-0">Detailed status</span>
-          <FilterTabs
-            items={STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] || s }))}
-            active={statusFilter}
-            onChange={(v) => navigate(v, sectorFilter, 1, ownerFilter)}
-            className="min-w-0"
-          />
-        </div>
-        {/* Send-evidence filter — independent of the channel filter above */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-2">
-          <span className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mr-1 w-[104px] shrink-0">Outreach</span>
-          {[
-            { id: "ALL", label: "All" },
-            { id: "recorded", label: "Send recorded" },
-            { id: "legacy", label: "Old send, unconfirmed" },
-            { id: "none", label: "No send record" },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, dueFilter, channelFilter, item.id)}
-              className={cn(
-                "text-[11.5px] px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-all",
-                evidenceFilter === item.id
-                  ? item.id === "recorded" ? "bg-blue-600 text-white shadow-sm"
-                    : item.id === "none" ? "bg-amber-500 text-white shadow-sm"
-                    : item.id === "legacy" ? "bg-slate-600 text-white shadow-sm"
-                    : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
-                  : "text-[#475569] bg-white border border-[var(--os-border)] hover:bg-gray-50"
-              )}
-            >
-              {item.label}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={rowLabel}>Tools</span>
+            <button onClick={() => setSortByScore(!sortByScore)} title="Sort this page by score (highest first)"
+              className={cn("inline-flex items-center gap-1.5", pill, sortByScore ? pillOn : pillOff)}>
+              <ArrowUpDown className="w-3.5 h-3.5" /> Sort by score
             </button>
-          ))}
-        </div>
-          <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mb-1.5">Sector</div>
-        <FilterTabs
-          items={SECTORS.map((s) => ({ value: s, label: s === "ALL" ? "All sectors" : s }))}
-          active={sectorFilter}
-          onChange={(v) => navigate(statusFilter, v, 1, ownerFilter)}
-          className="mb-2"
-          scrollable
-        />
-
-        {/* Quality filter chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-2">
-          <span className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mr-1 w-[104px] shrink-0">Quality</span>
-          {[
-            { id: "ALL", label: "All", emoji: "" },
-            { id: "HOT", label: "🔥 HOT only", emoji: "" },
-            { id: "WARM", label: "WARM", emoji: "" },
-            { id: "COLD", label: "COLD", emoji: "" },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, item.id)}
-              className={cn(
-                "text-[11.5px] px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-all",
-                qualityFilter === item.id
-                  ? item.id === "HOT" ? "bg-rose-500 text-white shadow-sm"
-                    : item.id === "WARM" ? "bg-amber-500 text-white shadow-sm"
-                    : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
-                  : "text-[#475569] bg-white border border-[var(--os-border)] hover:bg-gray-50"
-              )}
-            >
-              {item.label}
+            <button onClick={handleScoreAll} disabled={scoring} title="Score all prospects" className={cn("inline-flex items-center gap-1.5 disabled:opacity-50", pill, pillOff)}>
+              <Zap className={cn("w-3.5 h-3.5", scoring && "animate-pulse text-amber-500")} /> {scoring ? "Scoring..." : "Score all"}
             </button>
-          ))}
-        </div>
-
-          <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mb-1.5">Owner</div>
-        {/* Owner filter chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {[
-            { id: "ALL", label: "All", count: total },
-            { id: "UNASSIGNED", label: "Unassigned", count: 0 },
-            ...ownerStats.map((o) => ({ id: o.id, label: o.avatarInitials, count: o.count })),
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => navigate(statusFilter, sectorFilter, 1, item.id)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all shrink-0",
-                ownerFilter === item.id
-                  ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
-                  : "bg-white text-[#475569] border border-[#E2E8F0] hover:border-[#CBD5E1]"
-              )}
-            >
-              {item.label}
-              {item.count > 0 && (
-                <span className={cn("text-[10px] font-bold px-1 rounded-full", ownerFilter === item.id ? "bg-white/25" : "bg-[#F1F5F9]")}>
-                  {item.count}
-                </span>
-              )}
+            <button onClick={() => fileRef.current?.click()} disabled={importing} className={cn("inline-flex items-center gap-1.5 disabled:opacity-50", pill, pillOff)}>
+              <Upload className="w-3.5 h-3.5" /> {importing ? "Importing..." : "Import CSV"}
             </button>
-          ))}
-        </div>
+          </div>
 
           {advancedCount > 0 && (
-            <button
-              type="button"
-              onClick={() => navigate(activeStage || statusFilter === "ALL" ? statusFilter : "ALL", "ALL", 1, "ALL", "ALL", "ALL", dueFilter, channelFilter, "ALL")}
-              className="text-[11.5px] text-[#7C3AED] hover:underline mt-1"
-            >
-              Clear advanced filters
+            <button type="button" onClick={() => navigate("ALL", "ALL", 1, "ALL", "ALL", "ALL", dueFilter, "ALL", "ALL", groupFilter)} className="text-[11.5px] text-[#7C3AED] hover:underline">
+              Clear filters
             </button>
           )}
         </div>
@@ -896,67 +955,13 @@ function ProspectingContent() {
       {loading ? (
         <div className="space-y-2">{[...Array(8)].map((_, i) => <div key={i} className="os-skeleton h-14 rounded-lg" />)}</div>
       ) : prospects.length === 0 ? (
-        <EmptyState icon={<Target className="w-6 h-6" />} title="No prospects found" description="Try changing filters or add new prospects." />
+        <EmptyState icon={<Target className="w-6 h-6" />} title="No prospects here" description="Try another group, change the filters, or add a prospect." />
       ) : view === "list" ? (
         <>
-          {/* Mobile card list */}
+          {/* Mobile cards */}
           <div className="md:hidden space-y-3">
             {displayedProspects.map((p) => (
-              <div key={p.id} className="rounded-xl border border-[var(--os-border)] bg-white/80 p-3.5">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="min-w-0">
-                    <button onClick={() => setDrawerProspectId(p.id)} className="text-[14px] font-semibold text-[#0F172A] hover:text-[#8B00FF] transition-colors text-left">{p.name}</button>
-                    {p.instagram && <span className="ml-1.5 text-[11px] text-[#64748B]">@{p.instagram.replace(/^@/, "")}</span>}
-                  </div>
-                  <StageBadge status={p.status} />
-                </div>
-                <div className="flex items-center gap-2 flex-wrap mb-2.5">
-                  <Badge variant="default" size="sm">{p.sector}</Badge>
-                  <ScoreBadge prospect={p} factors={scoreFactors[p.id]} />
-                  <ChannelChip prospect={p} /><SendChip prospect={p} />
-                  {p.neighborhood && <span className="text-[11px] text-[#64748B]">{p.neighborhood}</span>}
-                  {p.notes?.[0] && <span className="text-[10px] text-[#64748B] truncate max-w-[180px]" title={p.notes[0].content}>{p.notes[0].content}</span>}
-                </div>
-                {p.lastActionByName && (
-                  <div className="flex items-center gap-2 text-[10px] text-[#64748B] mb-2">
-                    <span className="font-medium text-[#475569]">{p.lastActionByName}</span>
-                    {p.lastActionAt && <span>{new Date(p.lastActionAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>}
-                  </div>
-                )}
-                <div className="flex items-center gap-1 flex-wrap pt-2 border-t border-[var(--os-border)]">
-                  {canFollowUp(p) && (
-                    <button onClick={() => handleFollowUp(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-                      <Send className="w-3 h-3" /> Follow up
-                    </button>
-                  )}
-                  {(() => {
-                    const digits = p.phone?.replace(/\D/g, "") || "";
-                    const hasPhone = !!digits;
-                    const hasIG = !!p.instagram;
-                    if (!hasPhone && !hasIG) return <span className="text-[11px] text-red-500 px-2" title="No contact data — audit at /admin/data-audit">no contact</span>;
-                    return (
-                      <>
-                        {hasPhone && (
-                          <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors" title="WhatsApp"><FaWhatsapp className="w-3.5 h-3.5" /> WA</button>
-                        )}
-                        {hasIG && (
-                          <button onClick={() => handleSendIG(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors" title="Instagram DM"><FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "IG"}</button>
-                        )}
-                        {hasPhone && (
-                          <a href={`tel:${p.phone}`} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title={`Call ${p.phone}`}><Phone className="w-3.5 h-3.5" /> Call</a>
-                        )}
-                      </>
-                    );
-                  })()}
-                  {p.status !== "REPONDU" && p.status !== "CONVERTI" && (
-                    <button onClick={() => handleMarkReplied(p)} className="p-1 rounded-md text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Replied"><CheckCircle className="w-3.5 h-3.5" /></button>
-                  )}
-                  <div className="ml-auto flex gap-0.5">
-                    <Link href={`/admin/prospecting/${p.id}/edit`} className="p-1 rounded-md text-[#64748B] hover:text-[#1E293B] hover:bg-gray-100 transition-colors"><Pencil className="w-3.5 h-3.5" /></Link>
-                    <button onClick={() => handleDelete(p.id, p.name)} className="p-1 rounded-md text-[#64748B] hover:text-red-600 hover:bg-red-50 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
-                  </div>
-                </div>
-              </div>
+              <div key={p.id} className="rounded-xl border border-[var(--os-border)] bg-white/80 p-3.5">{renderCard(p)}</div>
             ))}
           </div>
 
@@ -966,174 +971,46 @@ function ProspectingContent() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--os-border)] bg-gray-50">
-                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Name</th>
-                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Sector</th>
-                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider hidden lg:table-cell">Location</th>
-                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Priority</th>
-                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Score</th>
+                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Prospect</th>
                   <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Status</th>
-                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider hidden lg:table-cell">Sent</th>
-                  <th className="text-right px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Actions</th>
+                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Next step</th>
+                  <th className="px-4 py-2.5"><span className="sr-only">More</span></th>
                 </tr>
               </thead>
               <tbody>
-                {displayedProspects.map((p) => {
-                  const ss = getSendStyle(p);
-                  return (
-                    <tr key={p.id} className="border-b border-[var(--os-border)] hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-2.5">
-                        <button onClick={() => setDrawerProspectId(p.id)} className="text-[#0F172A] font-medium text-[13px] hover:text-[#8B00FF] transition-colors text-left">{p.name}</button>
-                        {p.instagram && <span className="ml-1.5 text-[11px] text-[#64748B]">@{p.instagram.replace(/^@/, "")}</span>}
-                      </td>
-                      <td className="px-4 py-2.5 text-[#475569] text-xs">{p.sector}</td>
-                      <td className="px-4 py-2.5 text-[#475569] text-xs hidden lg:table-cell">{p.neighborhood || "—"}</td>
-                      <td className="px-4 py-2.5"><Badge variant={PRIORITY_BADGE[p.priority] as "green" | "amber" | "default"} size="sm">{PRIORITY_LABELS[p.priority]}</Badge></td>
-                      <td className="px-4 py-2.5"><ScoreBadge prospect={p} factors={scoreFactors[p.id]} /></td>
-                      <td className="px-4 py-2.5"><div className="flex flex-col items-start gap-1"><StageBadge status={p.status} /><ChannelChip prospect={p} /><SendChip prospect={p} /></div></td>
-                      <td className="px-4 py-2.5 text-[#64748B] text-xs hidden lg:table-cell">{p.sentAt ? new Date(p.sentAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) : "—"}</td>
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center justify-end gap-1">
-                          {canFollowUp(p) && (
-                            <button onClick={() => handleFollowUp(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title="Follow up">
-                              <Send className="w-3 h-3" /> Follow up
-                            </button>
-                          )}
-                          {(() => {
-                            const digits = p.phone?.replace(/\D/g, "") || "";
-                            const hasPhone = !!digits;
-                            const hasIG = !!p.instagram;
-                            if (!hasPhone && !hasIG) return <span className="text-[11px] text-red-500 px-2" title="No contact data — audit at /admin/data-audit">no contact</span>;
-                            return (
-                              <>
-                                {hasPhone && (
-                                  <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors" title="WhatsApp">
-                                    <FaWhatsapp className="w-3.5 h-3.5" /> WA
-                                  </button>
-                                )}
-                                {hasIG && (
-                                  <button onClick={() => handleSendIG(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors" title="Instagram DM">
-                                    <FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "IG"}
-                                  </button>
-                                )}
-                                {hasPhone && (
-                                  <a href={`tel:${p.phone}`} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title={`Call ${p.phone}`}>
-                                    <Phone className="w-3.5 h-3.5" /> Call
-                                  </a>
-                                )}
-                                {false && (
-                                  <span />
-                                )}
-                              </>
-                            );
-                          })()}
-                          {p.status !== "REPONDU" && p.status !== "CONVERTI" && (
-                            <button onClick={() => handleMarkReplied(p)} className="p-1 rounded-md text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Replied">
-                              <CheckCircle className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                          {p.status !== "PAS_DE_WHATSAPP" && (
-                            <button onClick={() => handleMarkNoWhatsApp(p)} className="p-1 rounded-md text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="No WA">
-                              <PhoneOff className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                          <Link href={`/admin/prospecting/${p.id}/edit`} className="p-1 rounded-md text-[#64748B] hover:text-[#1E293B] hover:bg-gray-100 transition-colors"><Pencil className="w-3.5 h-3.5" /></Link>
-                          <button onClick={() => handleDelete(p.id, p.name)} className="p-1 rounded-md text-[#64748B] hover:text-red-600 hover:bg-red-50 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
-                        </div>
-                      </td>
+                {displayedProspects.map((p) => (
+                  <Fragment key={p.id}>
+                    <tr className={cn("hover:bg-gray-50 transition-colors align-top", openMenuId !== p.id && "border-b border-[var(--os-border)]")}>
+                      <td className="px-4 py-3">{renderName(p)}</td>
+                      <td className="px-4 py-3"><div className="flex flex-col items-start gap-1"><StageBadge prospect={p} /><div className="flex flex-wrap gap-1"><Chips prospect={p} /></div></div></td>
+                      <td className="px-4 py-3">{renderNextAction(p)}</td>
+                      <td className="px-4 py-3 text-right w-12">{renderMenuButton(p, "row")}</td>
                     </tr>
-                  );
-                })}
+                    {openMenuId === p.id && (
+                      <tr className="border-b border-[var(--os-border)] bg-gray-50/60">
+                        <td colSpan={4} className="px-4 pb-3 pt-0">{renderMenuItems(p, "row")}</td>
+                      </tr>
+                    )}
+                  </Fragment>
+                ))}
               </tbody>
             </table>
             </div>
           </div>
-          {pages > 1 && (
-            <div className="flex justify-center gap-1.5 mt-6">
-              {Array.from({ length: pages }, (_, i) => i + 1).map((pg) => (
-                <button key={pg} onClick={() => navigate(statusFilter, sectorFilter, pg)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", pg === pageParam ? "bg-purple-500 text-white" : "text-[#475569] hover:bg-gray-100")}>{pg}</button>
-              ))}
-            </div>
-          )}
+          {pagination}
         </>
       ) : (
-        /* Grid View */
+        /* Card view */
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {displayedProspects.map((p, i) => {
-              const ss = getSendStyle(p);
-              return (
-                <motion.div key={p.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: i * 0.02 }}
-                  className="group rounded-xl border border-[var(--os-border)] bg-white/80 p-4 hover:border-[var(--os-border-hover)] hover:bg-white/80 transition-all">
-                  <div className="flex items-start justify-between mb-2">
-                    <button onClick={() => setDrawerProspectId(p.id)} className="text-[14px] font-semibold text-[#0F172A] hover:text-[#8B00FF] transition-colors truncate text-left">{p.name}</button>
-                    <StageBadge status={p.status} />
-                  </div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Badge variant="default" size="sm">{p.sector}</Badge>
-                    <ScoreBadge prospect={p} factors={scoreFactors[p.id]} />
-                    <ChannelChip prospect={p} /><SendChip prospect={p} />
-                    {p.neighborhood && <span className="text-[11px] text-[#64748B]">{p.neighborhood}</span>}
-                  </div>
-                  <div className="flex items-center gap-3 text-[11px] text-[#475569] mb-3">
-                    {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
-                    {p.instagram && <span className="flex items-center gap-1"><FaInstagram className="w-3 h-3" />@{p.instagram.replace(/^@/, "")}</span>}
-                  </div>
-                  {p.lastActionByName && (
-                    <div className="flex items-center gap-2 text-[10px] text-[#64748B] mb-3 bg-[#F8FAFC] rounded-lg px-2.5 py-1.5 border border-[#F1F5F9]">
-                      <span className="font-medium text-[#475569]">{p.lastActionByName}</span>
-                      {p.lastActionAt && <span>{new Date(p.lastActionAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1 pt-2 border-t border-[var(--os-border)]">
-                    {canFollowUp(p) && (
-                      <button onClick={() => handleFollowUp(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-                        <Send className="w-3 h-3" /> Follow up
-                      </button>
-                    )}
-                    {(() => {
-                      const digits = p.phone?.replace(/\D/g, "") || "";
-                      const hasPhone = !!digits;
-                      const hasIG = !!p.instagram;
-                      if (!hasPhone && !hasIG) return <span className="text-[11px] text-red-500 px-2" title="No contact data — audit at /admin/data-audit">no contact</span>;
-                      return (
-                        <>
-                          {hasPhone && (
-                            <button onClick={() => handleSendWA(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors" title="WhatsApp">
-                              <FaWhatsapp className="w-3.5 h-3.5" /> WA
-                            </button>
-                          )}
-                          {hasIG && (
-                            <button onClick={() => handleSendIG(p)} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors" title="Instagram DM">
-                              <FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "IG"}
-                            </button>
-                          )}
-                          {hasPhone && (
-                            <a href={`tel:${p.phone}`} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title={`Call ${p.phone}`}>
-                              <Phone className="w-3.5 h-3.5" /> Call
-                            </a>
-                          )}
-                        </>
-                      );
-                    })()}
-                    {p.status !== "REPONDU" && p.status !== "CONVERTI" && (
-                      <button onClick={() => handleMarkReplied(p)} className="p-1 rounded-md text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Replied"><CheckCircle className="w-3.5 h-3.5" /></button>
-                    )}
-                    <div className="ml-auto flex gap-0.5">
-                      <Link href={`/admin/prospecting/${p.id}/edit`} className="p-1 rounded-md text-[#64748B] hover:text-[#1E293B] hover:bg-gray-100 transition-colors"><Pencil className="w-3.5 h-3.5" /></Link>
-                      <button onClick={() => handleDelete(p.id, p.name)} className="p-1 rounded-md text-[#64748B] hover:text-red-600 hover:bg-red-50 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+            {displayedProspects.map((p, i) => (
+              <motion.div key={p.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: i * 0.02 }}
+                className="rounded-xl border border-[var(--os-border)] bg-white/80 p-4 hover:border-[var(--os-border-hover)] transition-all">
+                {renderCard(p)}
+              </motion.div>
+            ))}
           </div>
-          {pages > 1 && (
-            <div className="flex justify-center gap-1.5 mt-6">
-              {Array.from({ length: pages }, (_, i) => i + 1).map((pg) => (
-                <button key={pg} onClick={() => navigate(statusFilter, sectorFilter, pg)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", pg === pageParam ? "bg-purple-500 text-white" : "text-[#475569] hover:bg-gray-100")}>{pg}</button>
-              ))}
-            </div>
-          )}
+          {pagination}
         </>
       )}
       {pendingSend && (

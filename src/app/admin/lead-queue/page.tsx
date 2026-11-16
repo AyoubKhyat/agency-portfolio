@@ -11,7 +11,7 @@ import { ProspectDrawer } from "@/components/admin/prospect-drawer";
 import { ScheduleMeetingModal } from "@/components/admin/schedule-meeting-modal";
 import { SendConfirm } from "@/components/admin/send-confirm";
 import { recordConfirmedSend, type NextFollowUp } from "@/lib/lead-actions";
-import { addDays, type LeadQueue, type QueueGroup, type QueueItem, type SendChannel } from "@/lib/next-action";
+import { REPLY_SNOOZED, addDays, type LeadQueue, type QueueGroup, type QueueItem, type SendChannel } from "@/lib/next-action";
 import { cn } from "@/lib/utils";
 
 type Filter = "all" | QueueGroup;
@@ -217,7 +217,8 @@ export default function LeadQueuePage() {
     if (action === "meeting") { setMeetingFor(item); return; }
 
     const prospect = `/api/admin/prospecting/${item.id}`;
-    const later = (days: number) => ({ followUpDate: addDays(queue!.today, days), actionType: "FOLLOW_UP" });
+    // On a reply, "later" is a recorded decision (REPLY_SNOOZED); otherwise unchanged.
+    const later = (days: number) => ({ followUpDate: addDays(queue!.today, days), actionType: item.kind === "reply" ? REPLY_SNOOZED : "FOLLOW_UP" });
     const steps: Partial<Record<CardAction, [string, unknown, string]>> = {
       later3: [prospect, later(3), "Back in 3 days"],
       later7: [prospect, later(7), "Back in 7 days"],
@@ -258,7 +259,8 @@ export default function LeadQueuePage() {
       <header className="flex items-end justify-between gap-3 mb-5">
         <div className="min-w-0">
           {queue && <p className="text-[13px] text-[var(--os-text-muted)]">{dateLabel(queue.today)}</p>}
-          <h1 className="text-[22px] sm:text-[28px] font-semibold tracking-tight text-[var(--os-text)]">Command Center</h1>
+          <h1 className="text-[22px] sm:text-[28px] font-semibold tracking-tight text-[var(--os-text)]">Work through leads</h1>
+          <p className="text-[12.5px] text-[var(--os-text-muted)]">One lead at a time. Optional: everything is also in the <Link href="/admin/prospecting" className="underline">prospect list</Link>.</p>
         </div>
         <Link href="/admin/discovery" aria-label="Find new leads" className={cn(FIND_NEW, "shrink-0 max-sm:px-3 max-sm:py-2 max-sm:text-[13px]")}>
           <Search className="w-4 h-4" /> <span>Find new<span className="max-sm:hidden"> leads</span></span>
