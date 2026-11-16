@@ -5,6 +5,7 @@ import { Loader2, Search, ExternalLink } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { SECTORS } from "@/lib/discovery-providers";
 import { rankTop } from "@/lib/batch-rank";
+import { fullCheckHref } from "@/lib/qualify-link";
 import type { AuditedCandidate, BatchCandidate, SearchSummary, Confidence } from "@/lib/batch-discovery";
 
 const AUDIT_CHUNK = 3;
@@ -25,9 +26,18 @@ function when(iso: string) {
 
 type ImportState = { status: "idle" | "busy" | "done" | "skipped" | "error"; message?: string };
 
+/** The parts of a card's website check the import route accepts (see audit-note.ts). */
+function auditFor(a: AuditedCandidate) {
+  return {
+    outcome: a.outcome, auditedAt: a.auditedAt, finalUrl: a.finalUrl,
+    findings: a.findings.map((f) => ({ id: f.id, observed: f.observed, sourceUrl: f.sourceUrl, fetchedAt: f.fetchedAt })),
+  };
+}
+
 function ResultCard({ a, rank }: { a: AuditedCandidate; rank: number }) {
   const [imp, setImp] = useState<ImportState>({ status: "idle" });
   const c = a.candidate;
+  const fullCheck = fullCheckHref(a.finalUrl ?? c.website);
 
   /** The import route rechecks duplicates against the CRM as it is now, and saves contacts UNVERIFIED. */
   async function importOne() {
@@ -35,7 +45,8 @@ function ResultCard({ a, rank }: { a: AuditedCandidate; rank: number }) {
     try {
       const res = await fetch("/api/admin/prospect-discovery/import", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ candidates: [{ ...c, whatsapp: a.whatsapp.link || null }] }),
+        // The check shown on this card goes along; the server keeps it as a dated note only if it completed.
+        body: JSON.stringify({ candidates: [{ ...c, whatsapp: a.whatsapp.link || null, audit: auditFor(a) }] }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) setImp({ status: "error", message: data?.error ?? "The import failed." });
@@ -81,6 +92,11 @@ function ResultCard({ a, rank }: { a: AuditedCandidate; rank: number }) {
         {c.mapsUrl && (
           <a href={c.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-[12px] text-[var(--os-purple)] hover:underline inline-flex items-center gap-1">
             OpenStreetMap source <ExternalLink className="w-3 h-3" />
+          </a>
+        )}
+        {fullCheck && (
+          <a href={fullCheck} target="_blank" rel="noopener noreferrer" className="text-[12px] text-[var(--os-purple)] hover:underline inline-flex items-center gap-1">
+            Full check <ExternalLink className="w-3 h-3" />
           </a>
         )}
         <button type="button" onClick={importOne} disabled={imp.status === "busy" || imp.status === "done"}

@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, Search, AlertTriangle, HelpCircle, CheckCircle2, ExternalLink, Users } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import type { QualificationResult, FoundContact, ProspectMatch } from "@/lib/prospect-qualification";
 import { contactOpenUrl } from "@/lib/contact-check";
+import { prefillUrl } from "@/lib/qualify-link";
 
 const OUTCOME_TEXT: Record<QualificationResult["outcome"], string> = {
   COMPLETE: "Page read. The results below are from the page.",
@@ -92,6 +93,15 @@ export default function QualifyPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<QualificationResult | null>(null);
+
+  // "Full check" from Find businesses opens this page with ?url=…: fill the box only. Nothing runs until Check.
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      const prefill = prefillUrl(window.location.search);
+      if (prefill) setUrl((current) => current || prefill);
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, []);
 
   async function run(e: React.FormEvent) {
     e.preventDefault();

@@ -8,6 +8,7 @@ import { classify } from "@/lib/discovery-duplicates";
 import { CITIES, SECTORS, type DiscoveryCandidate } from "@/lib/discovery-providers";
 import { repairInstagram } from "@/lib/discovery/validate";
 import { explicitWhatsAppLink } from "@/lib/contact-check";
+import { auditSchema, buildAuditNote } from "@/lib/audit-note";
 
 const candidateSchema = z.object({
   sourceId: z.string(),
@@ -25,6 +26,8 @@ const candidateSchema = z.object({
   mapsUrl: z.string().nullable().optional(),
   rating: z.number().nullable().optional(),
   reviewCount: z.number().nullable().optional(),
+  // Optional: the website check Find businesses ran. Kept as a dated note on the new prospect (see audit-note.ts).
+  audit: auditSchema.optional(),
 });
 
 const bodySchema = z.object({
@@ -128,8 +131,13 @@ export async function POST(req: Request) {
       proposalCount: 0,
     });
 
+    // Written here from validated fields only; null for an incomplete check or nothing left to keep.
+    const auditNote = cand.audit ? buildAuditNote(cand.audit, website) : null;
+
+    // One write: the prospect and its audit note are saved together or not at all.
     const prospect = await prisma.prospect.create({
       data: {
+        ...(auditNote ? { notes: { create: { content: auditNote, authorId: session.userId, authorName: session.fullName } } } : {}),
         name: cand.name,
         phone,
         whatsappLink,
