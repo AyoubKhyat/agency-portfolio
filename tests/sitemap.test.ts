@@ -55,8 +55,11 @@ test("lastmod: only real dates; never the time of the request", async () => {
   }
   const xml = resolveSitemap(first);
   assert.equal((xml.match(/<url>/g) ?? []).length, first.length);
-  assert.equal((xml.match(/<lastmod>/g) ?? []).length, first.filter((e) => e.lastModified).length);
-  assert.ok(!xml.includes(`<lastmod>${new Date().toISOString().slice(0, 10)}`), "no entry claims it changed today");
+  // Every <lastmod> is one of the posts' own dates (a post dated today is fine; a clock reading isn't).
+  const sourceDates = new Set(readdirSync("content/blog/fr").map((f) => String(matter(readFileSync(`content/blog/fr/${f}`, "utf8")).data.date)));
+  const written = [...xml.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1]);
+  assert.equal(written.length, first.filter((e) => e.lastModified).length);
+  for (const d of written) assert.ok(sourceDates.has(d), `<lastmod>${d}</lastmod> comes from a post's own date`);
 });
 
 test("content dates: real past calendar days only", async () => {
