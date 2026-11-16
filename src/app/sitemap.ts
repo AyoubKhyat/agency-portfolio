@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { getAllProjectSlugs } from "@/lib/dal";
-import { getAllPostSlugs } from "@/lib/blog";
+import { getSitemapProjects } from "@/lib/dal";
+import { getAllPosts } from "@/lib/blog";
 import { SITE_URL } from "@/lib/site";
 import { DETAIL_PAGE_IDS } from "@/lib/services-catalog";
 
@@ -12,10 +12,15 @@ const locales = ["fr", "en", "ar"];
 const pages = ["", "/services", "/portfolio", "/blog", "/about", "/contact"];
 const serviceSlugs = DETAIL_PAGE_IDS; // service detail pages, from the shared catalog
 
+/**
+ * lastModified only where a real change date exists (a project's or a DB post's updatedAt, a post's front matter).
+ * Static and service pages have none, so they have no <lastmod>: never the time of the request.
+ */
 function entry(
   path: string,
   freq: "daily" | "weekly" | "monthly",
   priority: number,
+  lastModified?: Date | string | null,
 ): MetadataRoute.Sitemap[number] {
   const alternates: Record<string, string> = {
     "x-default": `${BASE_URL}/fr${path}`,
@@ -25,7 +30,7 @@ function entry(
   }
   return {
     url: `${BASE_URL}/fr${path}`,
-    lastModified: new Date(),
+    ...(lastModified ? { lastModified } : {}),
     changeFrequency: freq,
     priority,
     alternates: { languages: alternates },
@@ -45,13 +50,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push(entry(`/services/${slug}`, "monthly", 0.85));
   }
 
-  const projectSlugs = await getAllProjectSlugs();
-  for (const slug of projectSlugs) {
-    entries.push(entry(`/portfolio/${slug}`, "monthly", 0.8));
+  for (const project of await getSitemapProjects()) {
+    entries.push(entry(`/portfolio/${project.slug}`, "monthly", 0.8, project.lastModified));
   }
 
-  for (const slug of await getAllPostSlugs("fr")) {
-    entries.push(entry(`/blog/${slug}`, "monthly", 0.75));
+  for (const post of await getAllPosts("fr")) {
+    entries.push(entry(`/blog/${post.slug}`, "monthly", 0.75, post.lastModified));
   }
 
   return entries;

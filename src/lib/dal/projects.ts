@@ -309,16 +309,25 @@ async function getFallbackSlug(slug: string, locale: string) {
 }
 
 export async function getAllProjectSlugs() {
-  if (!hasPrisma()) return FALLBACK_SLUGS;
+  return (await getSitemapProjects()).map((p) => p.slug);
+}
+
+/**
+ * Visible projects for the sitemap, with the row's updatedAt (moved by every admin edit, which saves the project
+ * row and its translations together). The fallback list has no real date, so it has none.
+ */
+export async function getSitemapProjects(): Promise<{ slug: string; lastModified: Date | null }[]> {
+  const fallback = () => FALLBACK_SLUGS.map((slug) => ({ slug, lastModified: null }));
+  if (!hasPrisma()) return fallback();
   try {
     const projects = await prisma.project.findMany({
       where: { visible: true },
-      select: { slug: true },
+      select: { slug: true, updatedAt: true },
       orderBy: { sortOrder: "asc" },
     });
-    return projects.length > 0 ? projects.map((p) => p.slug) : FALLBACK_SLUGS;
+    return projects.length > 0 ? projects.map((p) => ({ slug: p.slug, lastModified: p.updatedAt })) : fallback();
   } catch {
-    return FALLBACK_SLUGS;
+    return fallback();
   }
 }
 
