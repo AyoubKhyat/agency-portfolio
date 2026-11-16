@@ -26,7 +26,8 @@ test("P6C finder leads Find, P6A is Find's website check, P6B stays on the prosp
   const find = MAIN_NAV.find((s) => s.key === "find")!;
   assert.equal(find.href, "/admin/batch-discovery");
   assert.equal(find.tabs[0].href, "/admin/batch-discovery");
-  assert.deepEqual(find.tabs.map((t) => t.label), ["Find businesses", "Check a website", "AI search"]);
+  assert.deepEqual(find.tabs.map((t) => t.label), ["Find businesses", "Check a website"]);
+  assert.ok(!find.tabs.some((t) => t.href === "/admin/discovery"), "template-based discovery isn't presented as an AI tab");
   assert.equal(find.tabs[1].href, "/admin/qualify");
   assert.match(readFileSync(url("src/app/admin/prospecting/[id]/page.tsx"), "utf8"), /OutreachDraftPanel/);
   assert.equal(sectionForPath("/admin/prospecting/abc").key, "prospects");

@@ -1,5 +1,5 @@
 /**
- * AI Business Development Agent — shared types.
+ * Template-based discovery (formerly "AI Business Development Agent") — shared types.
  *
  *   - DiscoveryCandidate: raw shape returned by any provider (search step).
  *   - RepairedCandidate  : after validate + repair (see ./validate.ts).
