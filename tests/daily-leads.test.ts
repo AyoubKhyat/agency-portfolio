@@ -430,7 +430,8 @@ test("Today's card: completed status, live in-progress state, and who can start 
     assert.ok(card.includes(s), s);
   }
   assert.match(card, /const inProgress = view\?\.run\?\.status === "RUNNING" && !view\.run\.stale;/, "polls only while a live run is in progress");
-  assert.match(card, /if \(!inProgress\) return;\s*const t = window\.setTimeout\(\(\) => void load\(\), 15_000\);/);
+  assert.match(card, /if \(!inProgress\) return;\s*const t = window\.setInterval\(\(\) => void load\(\), 15_000\);\s*return \(\) => window\.clearInterval\(t\);/,
+    "keeps checking after a failed request, and stops when the run ends or the card unmounts");
   assert.doesNotMatch(card, /COMPLETED"[^\n]*runButton\(/, "no run button on a completed day");
   assert.doesNotMatch(read("src/lib/daily-leads-day.ts"), /from "@\/lib\/(daily-leads|prisma)/, "client-safe: no server code");
 });

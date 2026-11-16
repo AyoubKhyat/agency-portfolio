@@ -224,12 +224,13 @@ export function TodaysLeads() {
   }, [load]);
 
   // While a run is in progress (and not stale), look again every 15 s so the card shows when it finishes or fails.
+  // An interval, so one failed check doesn't stop the updates; cleared when the run ends, goes stale or the card unmounts.
   const inProgress = view?.run?.status === "RUNNING" && !view.run.stale;
   useEffect(() => {
     if (!inProgress) return;
-    const t = window.setTimeout(() => void load(), 15_000);
-    return () => window.clearTimeout(t);
-  }, [inProgress, view, load]);
+    const t = window.setInterval(() => void load(), 15_000);
+    return () => window.clearInterval(t);
+  }, [inProgress, load]);
 
   async function run() {
     setRunning(true); setRunError(null);
