@@ -69,7 +69,7 @@ export default function ProjectsPage() {
   return (
     <div>
       <PageHeader
-        title="Projects"
+        title="Portfolio"
         subtitle="Manage portfolio, live websites and applications"
         count={projects.length}
         actions={

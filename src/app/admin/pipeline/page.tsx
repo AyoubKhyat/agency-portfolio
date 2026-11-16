@@ -91,7 +91,7 @@ export default function PipelinePage() {
   if (loading) {
     return (
       <div>
-        <PageHeader title="Pipeline" subtitle="Client projects & delivery" />
+        <PageHeader title="Client Projects" subtitle="Delivery pipeline" />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
           {[...Array(4)].map((_, i) => <div key={i} className="os-skeleton h-28 rounded-xl" />)}
         </div>
@@ -102,8 +102,8 @@ export default function PipelinePage() {
   return (
     <div>
       <PageHeader
-        title="Pipeline"
-        subtitle="Client projects & delivery"
+        title="Client Projects"
+        subtitle="Delivery pipeline"
         count={projects.length}
         actions={
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
