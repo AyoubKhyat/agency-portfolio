@@ -27,5 +27,7 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/((?!api|admin|sign|_next|_vercel|.*\..*).*)"],
+  // "\\." is a literal dot in the regex. Written as "\." the JS string drops the backslash, the pattern
+  // becomes ".*..*" and the proxy only ran on "/": every locale page then rendered <html lang="fr">.
+  matcher: ["/admin/:path*", "/((?!api|admin|sign|_next|_vercel|.*\\..*).*)"],
 };
