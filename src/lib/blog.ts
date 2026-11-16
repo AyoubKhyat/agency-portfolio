@@ -14,7 +14,18 @@ export type BlogPost = {
   locale: string;
   author: string;
   image?: string;
+  /** Last real change, for the sitemap: the DB row's updatedAt, or the MDX `updated` (else `date`) front matter. */
+  lastModified?: string;
 };
+
+/** A YYYY-MM-DD (or YAML date) that is a real calendar day and not in the future; otherwise undefined. */
+export function validContentDate(value: unknown): string | undefined {
+  const day = value instanceof Date ? (Number.isNaN(value.getTime()) ? "" : value.toISOString().slice(0, 10)) : typeof value === "string" ? value.trim() : "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return undefined;
+  const t = Date.parse(`${day}T00:00:00Z`);
+  if (Number.isNaN(t) || new Date(t).toISOString().slice(0, 10) !== day || t > Date.now()) return undefined;
+  return day;
+}
 
 export type BlogPostWithContent = BlogPost & {
   content: string;
@@ -49,6 +60,7 @@ function getMdxPosts(locale: string): BlogPost[] {
       locale: data.locale ?? locale,
       author: data.author ?? "Ibda3 Digital",
       image: data.image,
+      lastModified: validContentDate(data.updated ?? data.date),
     } satisfies BlogPost;
   });
 }
@@ -81,6 +93,7 @@ export async function getAllPosts(locale: string): Promise<BlogPost[]> {
       locale: p.locale,
       author: p.author,
       image: p.image ?? undefined,
+      lastModified: p.updatedAt.toISOString(),
     }));
 
     // DB posts take priority: filter out MDX posts that have a matching DB slug
