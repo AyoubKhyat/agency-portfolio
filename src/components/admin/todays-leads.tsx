@@ -6,6 +6,7 @@ import { ArrowRight, ChevronDown, ExternalLink, Loader2, MapPin, RefreshCw, Spar
 import { SECTORS } from "@/lib/discovery-providers";
 import { cn } from "@/lib/utils";
 import { groupIssues, issueCopy } from "@/lib/lead-issue-copy";
+import { dayLabel, nextDay } from "@/lib/daily-leads-day";
 import type { TodayLead, TodayLeadsView } from "@/lib/daily-leads-store";
 
 type View = TodayLeadsView & { canRun: boolean };
@@ -37,6 +38,20 @@ function IdentityReviewList({ view }: { view: View }) {
       </ul>
       <p className="mt-2 text-[11px] text-[var(--os-text-muted)]">Not ranked, and no website problems or contacts were attached. If the OSM listing points to the wrong site, it can be corrected on OpenStreetMap.</p>
     </div>
+  );
+}
+
+/** A completed day: when it finished, what it found, and that the next run is tomorrow (Casablanca day). */
+function CompletedStatus({ view }: { view: View }) {
+  const n = view.leads.length;
+  const done = view.run?.completedAt;
+  return (
+    <p role="status" className="mb-3 text-[12.5px] text-[var(--os-text)]">
+      <span className="font-semibold text-emerald-700 dark:text-emerald-400">✓ Completed{done ? ` at ${time(done)}` : ""}</span>
+      {done && <span className="text-[var(--os-text-muted)]"> Casablanca time</span>}
+      {" · "}{n} qualified lead{n === 1 ? "" : "s"} found
+      <span className="text-[var(--os-text-muted)]"> · One run per day: the next one can be prepared tomorrow, {dayLabel(nextDay(view.day))}.</span>
+    </p>
   );
 }
 
@@ -208,6 +223,15 @@ export function TodaysLeads() {
     return () => window.clearTimeout(t);
   }, [load]);
 
+  // While a run is in progress (and not stale), look again every 15 s so the card shows when it finishes or fails.
+  // An interval, so one failed check doesn't stop the updates; cleared when the run ends, goes stale or the card unmounts.
+  const inProgress = view?.run?.status === "RUNNING" && !view.run.stale;
+  useEffect(() => {
+    if (!inProgress) return;
+    const t = window.setInterval(() => void load(), 15_000);
+    return () => window.clearInterval(t);
+  }, [inProgress, load]);
+
   async function run() {
     setRunning(true); setRunError(null);
     try {
@@ -242,6 +266,7 @@ export function TodaysLeads() {
     </button>
   );
 
+  const ownerOnly = view && !view.canRun && <p className="text-[12px] text-[var(--os-text-muted)] mt-2">An owner or admin can start it.</p>;
   const box = "rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-5";
   let body: React.ReactNode;
   if (failed && !view) {
@@ -254,26 +279,31 @@ export function TodaysLeads() {
         <p className="text-[14px] text-[var(--os-text)]">Not prepared yet today.</p>
         <p className="text-[12px] text-[var(--os-text-muted)] mt-1">When the daily schedule is on, the list is prepared once a day between {time(`${view.day}T06:00:00Z`)} and {time(`${view.day}T06:59:00Z`)} Casablanca time.</p>
         <div className="mt-3">{runButton("Prepare today's leads now")}</div>
+        {ownerOnly}
       </div>
     );
   } else if (view.run.status === "RUNNING") {
     body = (
-      <div className={box}>
-        <p className="text-[14px] text-[var(--os-text)] inline-flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Being prepared since {time(view.run.startedAt)}…</p>
-        {view.run.stale && <><p className="text-[12px] text-[var(--os-text-muted)] mt-1">This is taking longer than it should; the run probably stopped.</p><div className="mt-3">{runButton("Start again")}</div></>}
+      <div className={box} role="status">
+        <p className="text-[14px] text-[var(--os-text)] inline-flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Being prepared since {time(view.run.startedAt)} Casablanca time…</p>
+        {view.run.stale
+          ? <><p className="text-[12px] text-[var(--os-text-muted)] mt-1">This is taking longer than it should; the run probably stopped.</p><div className="mt-3">{runButton("Start again")}</div>{ownerOnly}</>
+          : <p className="text-[12px] text-[var(--os-text-muted)] mt-1">Usually done within 5 minutes. This updates by itself.</p>}
       </div>
     );
   } else if (view.run.status === "FAILED") {
     body = (
       <div className={box} role="alert">
         <p className="text-[14px] text-[var(--os-text)]">Couldn&apos;t prepare today&apos;s leads.</p>
-        <p className="text-[13px] text-[var(--os-text-muted)] mt-1">{view.run.error ?? "Unknown error."}</p>
+        <p className="text-[13px] text-[var(--os-text-muted)] mt-1">{view.run.error ?? "Unknown error."}{view.run.completedAt ? ` (stopped at ${time(view.run.completedAt)} Casablanca time)` : ""}</p>
         <div className="mt-3">{runButton("Try again")}</div>
+        {ownerOnly}
       </div>
     );
   } else if (view.leads.length === 0) {
     body = (
       <div className={box}>
+        <CompletedStatus view={view} />
         <p className="text-[14px] text-[var(--os-text)]">No business met the bar today.</p>
         <p className="text-[12px] text-[var(--os-text-muted)] mt-1">A lead needs a website read completely with a problem a customer would notice, or no website in OpenStreetMap but an explicit WhatsApp or Instagram tag. Nothing was padded.</p>
         <StatsLine view={view} />
@@ -283,6 +313,7 @@ export function TodaysLeads() {
   } else {
     body = (
       <>
+        <CompletedStatus view={view} />
         <ul className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {view.leads.map((l) => <LeadCard key={l.resultId} lead={l} state={imports[l.resultId] ?? {}} onImport={() => void importLead(l)} />)}
         </ul>
