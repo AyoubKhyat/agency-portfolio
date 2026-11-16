@@ -144,10 +144,12 @@ test("a completed check with findings becomes a dated note written by the server
   const note = noteOf(db.created[0]);
   assert.ok(note, "the note is part of the prospect's own create");
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Casablanca", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(NOW));
-  assert.match(note.content, new RegExp(`^Website check on ${day} \\(${SITE}/\\): 2 problems a customer would notice\\.`));
+  assert.match(note.content, new RegExp(`^Website check from Find businesses, dated ${day} \\(${SITE}/\\): 2 problems a customer would notice\\.`));
   assert.match(note.content, re(`• ${titleOf("E_DESCRIPTION")}: seen "None found" (${SITE}/)`));
   assert.match(note.content, re(`• ${titleOf("E_OPEN_GRAPH")}: seen "None found" (${SITE}/fr)`));
-  assert.match(note.content, /Saved from Find businesses\./);
+  assert.match(note.content, /Sent by the browser with the import and checked here for format and site only; the site was not re-checked\./,
+    "the note never claims the server verified the evidence");
+  assert.doesNotMatch(note.content, /verified|confirmed|this is what the site showed/i);
   assert.deepEqual([note.authorId, note.authorName], ["u1", "Test User"]);
 });
 
@@ -161,6 +163,11 @@ test("no note for a check that didn't complete, had no usable finding, or had a 
     ["no findings", audit({ findings: [] })],
     ["future date", audit({ auditedAt: future })],
     ["not a date", audit({ auditedAt: "yesterday" })],
+    ["lenient date \"1\" (Date.parse → 2001)", audit({ auditedAt: "1" })],
+    ["lenient date \"May 5\"", audit({ auditedAt: "May 5" })],
+    ["date without time", audit({ auditedAt: "2026-11-16" })],
+    ["impossible date", audit({ auditedAt: "2026-02-30T10:00:00.000Z" })],
+    ["local time, not UTC", audit({ auditedAt: "2026-11-16T10:00:00+01:00" })],
     ["unknown check", audit({ findings: [finding({ id: "E_ROBOTS" }), finding({ id: "E_MADE_UP" })] })],
     ["another site", audit({ findings: [finding({ sourceUrl: "https://evil.example/" }), finding({ sourceUrl: "https://riad-audit.ma.evil.example/" })] })],
     ["not a web address", audit({ findings: [finding({ sourceUrl: "javascript:alert(1)" }), finding({ sourceUrl: "https://user:pw@riad-audit.ma/" })] })],
@@ -193,7 +200,7 @@ test("only valid findings are kept: one line per check, own-site evidence, text 
   assert.match(note, re(`• ${titleOf("E_HTTPS")}: seen "http://www.riad-audit.ma"`), "www and http are the same site");
   const foreignFinal = await importCandidates([withAudit(audit({ finalUrl: "https://elsewhere.example/" }))]);
   assert.equal(foreignFinal.body.imported, 1);
-  assert.match(noteOf(db.created[0])!.content, /^Website check on \S+ \(https:\/\/riad-audit\.ma\)/, "a final address on another site is never shown");
+  assert.match(noteOf(db.created[0])!.content, /^Website check from Find businesses, dated \S+ \(https:\/\/riad-audit\.ma\)/, "a final address on another site is never shown");
 });
 
 test("malformed audits are refused before anything is written", async () => {
