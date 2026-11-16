@@ -408,6 +408,33 @@ test("no AI, no paid API, no Prospect writes, no messages in the agent", () => {
   assert.match(store, /aiProvider: "NONE"/);
 });
 
+test("next run day: the Casablanca day after today, across month, year and leap-year ends", async () => {
+  const { nextDay, dayLabel } = await import("../src/lib/daily-leads-day");
+  assert.equal(nextDay("2026-11-16"), "2026-11-17");
+  assert.equal(nextDay("2026-11-30"), "2026-12-01");
+  assert.equal(nextDay("2026-12-31"), "2027-01-01");
+  assert.equal(nextDay("2028-02-28"), "2028-02-29");
+  assert.equal(dayLabel("2026-11-17"), "Tuesday 17 November");
+  assert.throws(() => nextDay("17/11/2026"));
+  // The day comes from the server (casablancaDay, tz database), so a browser in another time zone shows the same date.
+  for (const iso of ["2026-11-16T06:05:00Z", "2026-11-16T23:30:00Z", "2026-12-31T22:45:00Z"]) {
+    const t = new Date(iso);
+    assert.equal(nextDay(m.casablancaDay(t)), m.casablancaDay(new Date(t.getTime() + 86_400_000)), iso);
+  }
+});
+
+test("Today's card: completed status, live in-progress state, and who can start a run", () => {
+  const card = read("src/components/admin/todays-leads.tsx");
+  for (const s of ["✓ Completed", "qualified lead", "One run per day: the next one can be prepared tomorrow", "dayLabel(nextDay(view.day))",
+    "Usually done within 5 minutes. This updates by itself.", "stopped at", "An owner or admin can start it."]) {
+    assert.ok(card.includes(s), s);
+  }
+  assert.match(card, /const inProgress = view\?\.run\?\.status === "RUNNING" && !view\.run\.stale;/, "polls only while a live run is in progress");
+  assert.match(card, /if \(!inProgress\) return;\s*const t = window\.setTimeout\(\(\) => void load\(\), 15_000\);/);
+  assert.doesNotMatch(card, /COMPLETED"[^\n]*runButton\(/, "no run button on a completed day");
+  assert.doesNotMatch(read("src/lib/daily-leads-day.ts"), /from "@\/lib\/(daily-leads|prisma)/, "client-safe: no server code");
+});
+
 test("Today shows the card with review, import and the empty/failed states", () => {
   const page = read("src/app/admin/page.tsx");
   assert.match(page, /<TodaysLeads \/>/);
