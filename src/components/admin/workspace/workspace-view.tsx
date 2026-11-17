@@ -144,7 +144,7 @@ function Workspace({ data }: { data: LeadWorkspace }) {
 
 function Breadcrumbs({ data }: { data: LeadWorkspace }) {
   const section = data.source === "discovery"
-    ? { label: "Discovery", href: "/admin/discovery" }
+    ? { label: "Find businesses", href: "/admin/batch-discovery" }
     : { label: "Relationships", href: "/admin/prospecting" };
   return (
     <nav className="flex items-center gap-1.5 text-[12.5px] text-[var(--os-text-dim)] mb-6 flex-wrap">
@@ -248,7 +248,7 @@ function ContinuityBanner({ data }: { data: LeadWorkspace }) {
           <span>This company entered through</span>
           <Link href={`/admin/workspace/discovery/${data.origin.discoveryResultId}`}
             className="font-semibold text-[var(--os-purple)] hover:opacity-80 inline-flex items-center gap-1">
-            AI Discovery <ArrowUpRight className="w-3 h-3" />
+            Discovery <ArrowUpRight className="w-3 h-3" />
           </Link>
         </div>
       </div>
@@ -923,8 +923,8 @@ function EmptyState({ icon: Icon, title, hint }: { icon: typeof Globe; title: st
       </div>
       <h1 className="text-[17px] font-semibold text-[var(--os-text)]">{title}</h1>
       <p className="text-[13px] text-[var(--os-text-muted)] mt-1.5">{hint}</p>
-      <Link href="/admin/discovery" className="inline-flex items-center gap-1.5 mt-6 text-[13px] font-medium text-[var(--os-purple)] hover:opacity-80">
-        <ArrowLeft className="w-3.5 h-3.5" /> Back to Discovery
+      <Link href="/admin/batch-discovery" className="inline-flex items-center gap-1.5 mt-6 text-[13px] font-medium text-[var(--os-purple)] hover:opacity-80">
+        <ArrowLeft className="w-3.5 h-3.5" /> Back to Find businesses
       </Link>
     </div>
   );
