@@ -233,3 +233,45 @@ test("outreach next-city button: Marrakech opens Find businesses, other cities k
   assert.ok(existsSync(url("src/app/api/admin/prospect-discovery/search/route.ts")));
   assert.equal(sectionForPath("/admin/prospect-discovery").key, "more");
 });
+
+test("Reports (Phase 1): login lands on Today; Today links the Business report; the old dashboard stays reachable", () => {
+  // Login goes to Today, not straight to a report.
+  const login = readFileSync(url("src/app/admin/login/page.tsx"), "utf8");
+  assert.match(login, /if \(res\.ok\) \{ router\.push\("\/admin"\); \}/);
+  assert.doesNotMatch(login, /router\.push\("\/admin\/command-center"\)/);
+
+  // Today's header points to the Business report, no longer to the old dashboard.
+  const today = readFileSync(url("src/app/admin/page.tsx"), "utf8");
+  assert.match(today, /<Link href="\/admin\/command-center"[^>]*>\s*Business report <ArrowRight/);
+  assert.doesNotMatch(today, /href="\/admin\/overview"/);
+
+  // More → Reports, in this order; every page exists, the old dashboard last but still linked.
+  const reports = MORE_GROUPS.find((g) => g.label === "Reports")!;
+  assert.deepEqual(reports.links.map((l) => [l.label, l.href]), [
+    ["Business report", "/admin/command-center"],
+    ["Prospecting report", "/admin/analytics"],
+    ["Activity", "/admin/activity"],
+    ["Notifications", "/admin/notifications"],
+    ["Full dashboard (old)", "/admin/overview"],
+  ]);
+  for (const l of reports.links) assert.ok(existsSync(url(`src/app${l.href}/page.tsx`)), l.href);
+  assert.equal(sectionForPath("/admin/overview").key, "more");
+
+  // Command palette: same names, no entry for the old dashboard, every link a real page.
+  const palette = readFileSync(url("src/components/admin/command-palette.tsx"), "utf8");
+  assert.doesNotMatch(palette, /qa-dashboard/);
+  assert.doesNotMatch(palette, /href: "\/admin\/overview"/);
+  assert.match(palette, /id: "qa-cmd", +label: "Business report",[^\n]*href: "\/admin\/command-center"/);
+  assert.match(palette, /id: "qa-analytics", +label: "Prospecting report",[^\n]*href: "\/admin\/analytics"/);
+  for (const [, href] of palette.matchAll(/href: "(\/admin[^"?]*)(?:\?[^"]*)?"/g)) {
+    assert.ok(href === "/admin" || existsSync(url(`src/app${href}/page.tsx`)), `palette link ${href}`);
+  }
+
+  // Page titles follow the new names.
+  const cc = readFileSync(url("src/app/admin/command-center/page.tsx"), "utf8");
+  assert.doesNotMatch(cc, /title="Command Center"/);
+  assert.equal(cc.match(/title="Business report"/g)?.length, 3, "loading, error and loaded states");
+  const an = readFileSync(url("src/app/admin/analytics/page.tsx"), "utf8");
+  assert.doesNotMatch(an, /title="Analytics"/);
+  assert.equal(an.match(/title="Prospecting report"/g)?.length, 2, "loading and loaded states");
+});
