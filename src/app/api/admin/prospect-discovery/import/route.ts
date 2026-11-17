@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireOwnerOrAdmin } from "@/lib/authz";
+import { hasPrisma } from "@/lib/prisma";
 import { importCandidates } from "@/lib/prospect-import";
 
 /**
@@ -11,6 +12,8 @@ import { importCandidates } from "@/lib/prospect-import";
 export async function POST(req: Request) {
   const auth = await requireOwnerOrAdmin();
   if (auth.response) return auth.response;
+  // As before the move: refused callers never learn the database state, and an outage is a 503 before the body is read.
+  if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
   const { status, body } = await importCandidates(await req.json(), auth.session);
   return NextResponse.json(body, { status });
 }

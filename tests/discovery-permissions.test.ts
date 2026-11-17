@@ -126,6 +126,19 @@ test("the import API: an admin and the owner (any role) import; Find businesses'
   assert.equal(bad.status, 400, "validation unchanged");
 });
 
+test("the import API during a database outage: 503 for an admin, still 403/401 for others, body never read", async () => {
+  const { POST } = await import("../src/app/api/admin/prospect-discovery/import/route");
+  const unreadable = () => new Request("http://x/api", { method: "POST", body: "not json" });
+  for (const [s, status] of [[as("admin"), 503], [as("sales", "owner-1"), 503], [as("sales"), 403], [null, 401]] as const) {
+    reset(s);
+    state.hasPrisma = false;
+    const res = await POST(unreadable());
+    assert.equal(res.status, status, s ? `${s.role}/${s.userId}` : "no session");
+    if (status === 503) assert.deepEqual(await res.json(), { error: "DB unavailable" });
+    assert.equal(state.prismaCalls, 0);
+  }
+});
+
 /* ───────────────── Reads stay team ───────────────── */
 
 test("a sales user still reads sweeps, campaigns, targets, coverage, sectors, Data Audit and sweep checks", async () => {
