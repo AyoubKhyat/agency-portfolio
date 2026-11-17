@@ -67,7 +67,7 @@ export default function AnalyticsPage() {
   if (loading) {
     return (
       <div>
-        <PageHeader title="Analytics" subtitle="Performance metrics and insights" />
+        <PageHeader title="Prospecting report" subtitle="Outreach and replies by sector" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => <div key={i} className="os-skeleton h-28 rounded-xl" />)}
         </div>
@@ -99,7 +99,7 @@ export default function AnalyticsPage() {
 
   return (
     <div>
-      <PageHeader title="Analytics" subtitle="Performance metrics and insights" />
+      <PageHeader title="Prospecting report" subtitle="Outreach and replies by sector" />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

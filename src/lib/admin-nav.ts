@@ -116,11 +116,12 @@ export const MORE_GROUPS: readonly { label: string; links: readonly NavLink[] }[
   {
     label: "Reports",
     links: [
-      { href: "/admin/overview", label: "Full Dashboard" },
-      { href: "/admin/command-center", label: "Command Center" },
-      { href: "/admin/analytics", label: "Analytics" },
+      { href: "/admin/command-center", label: "Business report" },
+      { href: "/admin/analytics", label: "Prospecting report" },
       { href: "/admin/activity", label: "Activity" },
       { href: "/admin/notifications", label: "Notifications" },
+      // The previous dashboard: kept reachable, no longer promoted from Today or the command palette.
+      { href: "/admin/overview", label: "Full dashboard (old)" },
     ],
   },
   {

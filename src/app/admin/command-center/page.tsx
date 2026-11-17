@@ -122,7 +122,7 @@ export default function CommandCenterPage() {
   if (!loading && loadError) {
     return (
       <div>
-        <PageHeader title="Command Center" subtitle="How the agency is doing, right now." />
+        <PageHeader title="Business report" subtitle="How the agency is doing, right now." />
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
           <p className="text-[14px] font-semibold text-red-700">Could not load dashboard</p>
           <p className="text-[13px] text-red-600 mt-1">{loadError}</p>
@@ -135,7 +135,7 @@ export default function CommandCenterPage() {
   if (loading || !data) {
     return (
       <div>
-        <PageHeader title="Command Center" subtitle="How the agency is doing, right now." />
+        <PageHeader title="Business report" subtitle="How the agency is doing, right now." />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           {[...Array(4)].map((_, i) => <div key={i} className="os-skeleton h-24 rounded-2xl" />)}
         </div>
@@ -152,7 +152,7 @@ export default function CommandCenterPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Command Center"
+        title="Business report"
         subtitle="How the agency is doing, right now."
         actions={<HealthPill score={crmHealth.score} />}
       />

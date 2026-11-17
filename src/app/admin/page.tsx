@@ -141,8 +141,8 @@ export default function TodayPage() {
         title="Today"
         subtitle={dateLabel}
         actions={
-          <Link href="/admin/overview" className="text-xs text-[#64748B] hover:text-[#0F172A] flex items-center gap-1">
-            Full dashboard <ArrowRight className="w-3 h-3" />
+          <Link href="/admin/command-center" className="text-xs text-[#64748B] hover:text-[#0F172A] flex items-center gap-1">
+            Business report <ArrowRight className="w-3 h-3" />
           </Link>
         }
       />
