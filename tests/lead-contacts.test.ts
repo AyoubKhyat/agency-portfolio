@@ -94,6 +94,21 @@ test("discovery stops safely: robots 5xx, home disallowed, a page leaving the si
   assert.ok(r.pagesRead.length < 2, "the per-site time budget stops further pages");
 });
 
+test("discovery records each linked Contact page: read, fully parsed, and its contact options (About pages aren't)", async () => {
+  const works = site({
+    "/robots.txt": "User-agent: *\nDisallow:",
+    "/": html('<a href="/contact">Contact</a><a href="/a-propos">About</a>'),
+    "/contact": html("", "Appelez-nous au 0524 43 21 00. ".repeat(10)), "/a-propos": html(""),
+  });
+  const r1 = await lc.discoverSiteContacts("https://riad.ma/", { fetcher: works.fetcher });
+  assert.deepEqual(r1.contactPages, [{ url: "https://riad.ma/contact", read: true, complete: true, kinds: ["phone"] }]);
+  const broken = site({ "/robots.txt": "User-agent: *\nDisallow:", "/": html('<a href="/contact">Contact</a>'), "/contact": 500 });
+  const r2 = await lc.discoverSiteContacts("https://riad.ma/", { fetcher: broken.fetcher });
+  assert.deepEqual(r2.contactPages, [{ url: "https://riad.ma/contact", read: false, complete: false, kinds: [] }]);
+  const none = site({ "/robots.txt": "User-agent: *\nDisallow:", "/": html("") });
+  assert.deepEqual((await lc.discoverSiteContacts("https://riad.ma/", { fetcher: none.fetcher })).contactPages, []);
+});
+
 /* ── ranking and confidence ── */
 
 const finding = (id: string, observed = "None found") => ({ id, check: id, observed, sourceUrl: "s", fetchedAt: "t", sentence: id });
@@ -146,12 +161,13 @@ function memStore() {
 const entry = (id: number, host: string): OsmEntry => ({ id: `node/${id}`, name: host, sectors: ["HOTELS"], website: `https://${host}.ma` });
 const ds = (entries: OsmEntry[]): OsmDataset => ({ version: 1, city: "Marrakech", source: "t", licence: "t", boundary: { wikidata: "Q", relation: 1, name: "M" }, osmDataUntil: null, generatedAt: "t", sectors: {}, sharedWebsites: 0, entries });
 
-/** Every site: same problems on the home page (no description, no link preview); some link a contact page. */
+/** Every site: same problems on the home page (no viewport, no description, no link preview); some link a contact page. */
+const noViewport = (body: string) => body.replace('<meta name="viewport" content="width=device-width">', "");
 const multiSite: SafeFetch = async (url) => {
   const u = new URL(url);
   const h = u.hostname.split(".")[0];
   if (u.pathname === "/robots.txt") return res(url, "User-agent: *\nDisallow:");
-  if (u.pathname === "/") return res(url, html('<a href="/contact">Contact</a><a href="mailto:hi@x.ma">m</a>'));
+  if (u.pathname === "/") return res(url, noViewport(html('<a href="/contact">Contact</a><a href="mailto:hi@x.ma">m</a>')));
   if (u.pathname === "/contact") {
     if (h === "reachable") return res(url, html('<a href="https://wa.me/212611112222">WhatsApp</a>'));
     if (h === "known") return res(url, html('<a href="https://wa.me/212633334444">WhatsApp</a>'));
@@ -176,7 +192,7 @@ test("a run reads contact pages, records where each contact was found, prefers t
 
 test("guarantees: own site only, no AI, no paid API, nothing marked verified", () => {
   const src = readFileSync(new URL("../src/lib/lead-contacts.ts", import.meta.url), "utf8");
-  assert.match(src, /import \{ anchorHrefs, notARealPage, robotsAllows \} from "@\/lib\/website-audit\/checks"/);
+  assert.match(src, /import \{ anchorHrefs, notARealPage, parsePage, robotsAllows \} from "@\/lib\/website-audit\/checks"/);
   assert.match(src, /import \{ safeFetch, type SafeFetch, type SafeResponse \} from "@\/lib\/website-audit\/safe-fetch"/);
   assert.doesNotMatch(src, /@\/lib\/ai|googleapis|graph\.facebook|i\.instagram|VERIFIED"/);
   const card = readFileSync(new URL("../src/components/admin/todays-leads.tsx", import.meta.url), "utf8");

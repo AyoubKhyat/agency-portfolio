@@ -55,6 +55,8 @@ function CompletedStatus({ view }: { view: View }) {
   );
 }
 
+const rejectedWeak = (s: NonNullable<View["run"]>["stats"]) => (s?.rejected ? s.rejected.seoOnly + s.rejected.uncertainOnly : 0);
+
 function StatsLine({ view }: { view: View }) {
   const s = view.run?.stats;
   if (!s) return null;
@@ -66,6 +68,8 @@ function StatsLine({ view }: { view: View }) {
       {notRead > 0 && <>, {notRead} couldn&apos;t be read completely (never counted as problems)</>}
       {s.skipped.inCrm + s.skipped.possibleDuplicate > 0 && <> · {s.skipped.inCrm + s.skipped.possibleDuplicate} already in the CRM or possible duplicates</>}
       {s.skipped.shownBefore > 0 && <> · {s.skipped.shownBefore} shown on an earlier day</>}
+      {rejectedWeak(s) > 0 && <> · {rejectedWeak(s)} left out as weak (SEO-only or unconfirmed problems)</>}
+      {(s.rejected?.competitor ?? 0) > 0 && <> · {s.rejected!.competitor} agenc{s.rejected!.competitor === 1 ? "y" : "ies"} like ours skipped</>}
       {s.stoppedEarly && <> · stopped early at the time limit</>}
       {s.sectorErrors.length > 0 && <> · {s.sectorErrors.length} sector{s.sectorErrors.length === 1 ? "" : "s"} couldn&apos;t be searched</>}
     </p>
@@ -81,7 +85,11 @@ function IssueList({ findings, open }: { findings: TodayLead["findings"]; open: 
     <li key={x.finding.id} className="flex gap-2.5">
       <span aria-hidden className={cn("mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full", tone === "customer" ? "bg-amber-500" : "bg-[var(--os-text-muted)]")} />
       <div className="min-w-0">
-        <p className="text-[13px] font-semibold text-[var(--os-text)] leading-snug">{x.copy.title}</p>
+        <p className="text-[13px] font-semibold text-[var(--os-text)] leading-snug">
+          {x.copy.title}
+          {x.finding.evidence === "UNCERTAIN" && <span className="ml-2 rounded-full border border-amber-500/40 px-1.5 py-px text-[10.5px] font-medium text-amber-700 dark:text-amber-300">Unconfirmed</span>}
+        </p>
+        {x.finding.note && <p className="text-[12px] text-[var(--os-text-muted)] leading-relaxed italic">{x.finding.note}</p>}
         {x.copy.explanation && <p className="text-[12.5px] text-[var(--os-text-muted)] leading-relaxed">{x.copy.explanation}</p>}
         {x.copy.impact && <p className="text-[12px] text-[var(--os-text-muted)] leading-relaxed"><span className="font-medium">Possible impact:</span> {x.copy.impact}</p>}
       </div>

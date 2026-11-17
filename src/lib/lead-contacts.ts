@@ -8,7 +8,7 @@
  * the exact page it was found on. Nothing is inferred from a phone number or a name, no social site is fetched,
  * and nothing found here is "verified": a person checks it on the prospect page.
  */
-import { anchorHrefs, notARealPage, robotsAllows } from "@/lib/website-audit/checks";
+import { anchorHrefs, notARealPage, parsePage, robotsAllows } from "@/lib/website-audit/checks";
 import { safeFetch, type SafeFetch, type SafeResponse } from "@/lib/website-audit/safe-fetch";
 import { extractContactLinks } from "@/lib/prospect-qualification";
 import { identitySignals, type IdentitySignals } from "@/lib/lead-identity";
@@ -28,8 +28,20 @@ export type SiteContact = {
   sourceUrl: string;
 };
 
-/** signals: identity signals of the home page read here (null when it wasn't read), for lead-identity.ts. */
-export type SiteContacts = { contacts: SiteContact[]; pagesRead: string[]; signals: IdentitySignals | null };
+/**
+ * A Contact page linked from the home page, and what the audit's own parser saw on it. read: fetched and usable on
+ * the same site; complete: not a JavaScript shell or cut off, so an empty `kinds` means none was there.
+ */
+export type ContactPageCheck = { url: string; read: boolean; complete: boolean; kinds: string[] };
+
+/**
+ * signals: identity signals of the home page read here (null when it wasn't read), for lead-identity.ts.
+ * homeMs: how long this second home-page request took, a second speed sample for daily-leads-quality.ts.
+ * contactPages: the Contact (not About) pages the home page links to, read or not, for daily-leads-quality.ts.
+ */
+export type SiteContacts = {
+  contacts: SiteContact[]; pagesRead: string[]; signals: IdentitySignals | null; homeMs?: number; contactPages?: ContactPageCheck[];
+};
 
 /** Contact/About page paths in the languages Marrakech sites use (FR, EN, AR transliterations, ES). */
 const PAGE_HINT = /(^|[/_-])(contact|contacts|contactez|contactez-nous|nous-contacter|contact-us|contacto|about|about-us|a-propos|apropos|qui-sommes-nous|notre-histoire)([/_.-]|$)/i;
@@ -118,16 +130,25 @@ export async function discoverSiteContacts(siteUrl: string, deps: { fetcher?: Sa
   try { home = await fetcher(siteUrl, { kind: "html", deadlineAt }); } catch { return result; }
   if (!usable(home)) return result;
   result.pagesRead.push(home.finalUrl);
+  if (typeof home.ms === "number" && Number.isFinite(home.ms)) result.homeMs = home.ms;
   result.signals = identitySignals(home.body, home.finalUrl);
   add(fromPage(home));
 
+  result.contactPages = [];
   for (const url of contactPageLinks(home.body, home.finalUrl)) {
+    const isContact = /contact/i.test(new URL(url).pathname);
+    const check: ContactPageCheck = { url, read: false, complete: false, kinds: [] };
+    if (isContact) result.contactPages.push(check);
     if (now() >= deadlineAt || !allowed(url)) continue;
     try {
       const page = await fetcher(url, { kind: "html", deadlineAt });
       if (!usable(page) || bareHost(new URL(page.finalUrl).hostname) !== bareHost(new URL(home.finalUrl).hostname)) continue;
       result.pagesRead.push(page.finalUrl);
       add(fromPage(page));
+      if (isContact) {
+        const parsed = parsePage(page.body, page.finalUrl);
+        Object.assign(check, { url: page.finalUrl, read: true, complete: !parsed.isShell && !page.truncated, kinds: parsed.contactKinds });
+      }
     } catch {
       // one page failing never hides what the others gave
     }

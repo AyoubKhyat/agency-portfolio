@@ -7,8 +7,10 @@
  *   2. Picks 3 sectors by rotation and carries on from where each sector's list stopped last time.
  *   3. Uses P6C's search (private OSM list, CRM duplicates left out), skips anything an earlier day showed,
  *      and checks at most 12 websites with P6A's safe check, within a time limit.
- *   4. Keeps the businesses whose site was read completely and has at least one problem a customer would
- *      notice, and up to 2 businesses with no website in the OSM list but an explicit WhatsApp or Instagram tag.
+ *   4. Keeps the businesses whose site was read completely and has at least one FIRM problem a customer would
+ *      notice (daily-leads-quality.ts: SEO-only sites and unconfirmed problems are counted as rejected, never
+ *      shown), and up to 2 businesses with no website in the OSM list but an explicit WhatsApp or Instagram tag.
+ *      Web/SEO/marketing agencies (competitors) are left out. Fewer than 5 leads is normal: the list is never padded.
  *      A site that couldn't be read is never ranked as having problems. For the best 8 readable sites, the
  *      site's own Contact/About pages are read (robots.txt allowing) for explicit WhatsApp, Instagram and
  *      mailto: links; contactability then breaks ties between comparable problems (lead-contacts.ts).
@@ -29,6 +31,10 @@ import type { SafeFetch } from "@/lib/website-audit/safe-fetch";
 import { contactRank, discoverSiteContacts, type SiteContact } from "@/lib/lead-contacts";
 import { issueCopy } from "@/lib/lead-issue-copy";
 import { assessIdentity, type Identity } from "@/lib/lead-identity";
+import {
+  COMPETITOR_SECTORS, firmCustomerIssues, gradeFindings, hasCustomerIssue, isCompetitor, qualifies, sectorPriority,
+  type FindingEvidence, type GradedFinding,
+} from "@/lib/daily-leads-quality";
 
 export const AGENT = "DAILY_AGENT";
 export const AGENT_CITY = "MARRAKECH";
@@ -76,7 +82,14 @@ export const EMPTY_STATE: AgentState = { v: 1, cursors: {} };
 /** The no-website scan reads only the local list (no request), but still stops somewhere. */
 export const NO_WEBSITE_SCAN = 500;
 
-export type LeadFinding = { id: string; sentence: string; observed: string; sourceUrl: string; fetchedAt: string };
+/**
+ * evidence/note (daily-leads-quality.ts): FIRM or UNCERTAIN, and why. Absent on leads saved before they existed.
+ * Only a FIRM customer-facing finding qualifies a lead; UNCERTAIN ones are shown as unconfirmed.
+ */
+export type LeadFinding = {
+  id: string; sentence: string; observed: string; sourceUrl: string; fetchedAt: string;
+  evidence?: FindingEvidence; note?: string;
+};
 /** An explicit link and the exact page or OSM object it came from. Never verified by the agent. */
 export type LeadContact = {
   channel: "WHATSAPP" | "INSTAGRAM" | "EMAIL" | "FACEBOOK";
@@ -123,6 +136,11 @@ export type RunStats = {
   contactPagesRead?: number;
   inCrmByContact?: number;
   identityReview?: IdentityReview[];
+  /**
+   * Read completely and not in the CRM, but not a lead: only SEO/technical findings, customer-facing findings that
+   * a second read didn't confirm, or a direct competitor (web/SEO/marketing agency, never checked).
+   */
+  rejected?: { seoOnly: number; uncertainOnly: number; competitor: number };
   sectorErrors: string[];
   stoppedEarly: boolean;
 };
@@ -232,17 +250,21 @@ export function whatsappConfidenceOf(contacts: LeadContact[]): DailyLead["whatsa
 export const customerIssues = (findings: readonly { id: string; sentence: string; observed: string }[]) =>
   findings.filter((f) => issueCopy(f).group === "CUSTOMER").length;
 
-type Ranked = { audited: AuditedCandidate; contacts: LeadContact[]; identity?: DailyLead["identity"] };
+/** graded: the findings with their evidence after the second read; graded from the audit alone when absent. */
+type Ranked = { audited: AuditedCandidate; contacts: LeadContact[]; identity?: DailyLead["identity"]; graded?: GradedFinding<AuditedCandidate["findings"][number]>[] };
 
 /**
- * Problems first, contactability only between comparable leads: leads with customer-facing problems before
- * SEO-only ones, more customer-facing problems first; then WhatsApp > Instagram > e-mail > none; then the
- * check's own score. So a reachable site with only SEO details never outranks a serious problem.
+ * Evidence first, then sector, then contactability: leads with a firm customer-facing problem before any other;
+ * among those, priority sectors (hotels, riads, spas, clinics, restaurants...) first, then more firm problems, then
+ * WhatsApp > Instagram > e-mail > none, then the check's own score. The sector only orders leads that already
+ * qualify on evidence; the run never keeps a lead without a firm problem.
  */
 export function rankWebsiteLeads<T extends Ranked>(items: T[]): T[] {
   const key = (x: Ranked) => {
-    const serious = customerIssues(x.audited.findings);
-    return [serious > 0 ? 1 : 0, serious, contactRank(x.contacts.map((c) => c.channel)), x.audited.score, x.audited.findings.length];
+    const graded = x.graded ?? gradeFindings(x.audited.findings);
+    const firm = firmCustomerIssues(graded);
+    return [firm > 0 ? 1 : 0, sectorPriority(x.audited.candidate.sector), firm, customerIssues(x.audited.findings),
+      contactRank(x.contacts.map((c) => c.channel)), x.audited.score, x.audited.findings.length];
   };
   return [...items].sort((a, b) => {
     const ka = key(a), kb = key(b);
@@ -251,11 +273,14 @@ export function rankWebsiteLeads<T extends Ranked>(items: T[]): T[] {
   });
 }
 
-function websiteLead({ audited: a, contacts, identity }: Ranked): DailyLead {
+function websiteLead({ audited: a, contacts, identity, graded }: Ranked): DailyLead {
+  const findings = graded ?? gradeFindings(a.findings);
   return {
     kind: "WEBSITE", osmId: a.candidate.sourceId, osmUrl: a.candidate.mapsUrl ?? `https://www.openstreetmap.org/${a.candidate.sourceId}`,
     name: a.candidate.name, sector: a.candidate.sector, website: a.candidate.website, finalUrl: a.finalUrl, outcome: a.outcome,
-    findings: a.findings.map((f) => ({ id: f.id, sentence: f.sentence, observed: f.observed, sourceUrl: f.sourceUrl, fetchedAt: f.fetchedAt })),
+    findings: findings.map((f) => ({
+      id: f.id, sentence: f.sentence, observed: f.observed, sourceUrl: f.sourceUrl, fetchedAt: f.fetchedAt, evidence: f.evidence, ...(f.note ? { note: f.note } : {}),
+    })),
     score: a.score, contacts, whatsappConfidence: whatsappConfidenceOf(contacts), checkedAt: a.auditedAt,
     ...(identity ? { identity } : {}),
   };
@@ -306,7 +331,8 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
     try { crm = await deps.loadCrm(); } catch { return await fail(PUBLIC_ERRORS.crm); }
     const shown = await deps.store.shown();
 
-    const available = SECTORS.map((s) => s.key).filter((k) => sectorEntries(data, k).length > 0);
+    // Competitor sectors (web/SEO/marketing agencies) are never searched.
+    const available = SECTORS.map((s) => s.key).filter((k) => !COMPETITOR_SECTORS.has(k) && sectorEntries(data, k).length > 0);
     if (available.length === 0) return await fail(PUBLIC_ERRORS.empty);
     const order = rotationOrder(day, available);
     const sectors = order.slice(0, SECTORS_PER_DAY);
@@ -315,7 +341,9 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
       sectors: [...sectors], topUpSectors: [], checked: 0, outcomes: {},
       skipped: { noWebsite: 0, platformOnly: 0, inCrm: 0, possibleDuplicate: 0, sameSiteInBatch: 0, shownBefore: 0 },
       noWebsiteWithContact: 0, sectorErrors: [], stoppedEarly: false,
+      rejected: { seoOnly: 0, uncertainOnly: 0, competitor: 0 },
     };
+    const rejected = stats.rejected!;
     const isShown = (osmId: string, website: string | null) => shown.osmIds.has(osmId) || (!!website && shown.sites.has(siteKey(website) ?? ""));
 
     // 1. Search each sector from its cursor (P6C: CRM matches and possible duplicates already left out).
@@ -329,9 +357,10 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
       if (summary.sourceError) { stats.sectorErrors.push(`${sector}: ${summary.sourceError}`); return; }
       for (const k of Object.keys(summary.skipped) as (keyof typeof summary.skipped)[]) stats.skipped[k] += summary.skipped[k];
       const toCheck = summary.candidates.filter((c) => {
-        if (!isShown(c.sourceId, c.website)) return true;
-        stats.skipped.shownBefore++;
-        return false;
+        if (isShown(c.sourceId, c.website)) { stats.skipped.shownBefore++; return false; }
+        // A web/SEO/marketing agency elsewhere in the list: a competitor, so its site isn't checked.
+        if (isCompetitor(c)) { rejected.competitor++; return false; }
+        return true;
       });
       work.push({ sector, list, from: summary.progress.from, to: summary.progress.to, end: summary.progress.nextCursor === null, toCheck, topUp });
     };
@@ -378,6 +407,7 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
       for (; i < stop && found < MAX_NO_WEBSITE; i++) {
         const entry = w.list[i];
         if (!contactOnly(entry) || isShown(entry.id, null)) continue;
+        if (isCompetitor({ name: entry.name, sector: w.sector })) continue;
         if (noWebsiteStatus(entry, w.sector, crm) !== "NEW") continue;
         if (collected.some((n) => n.entry.id === entry.id)) continue;
         collected.push({ entry, sector: w.sector, index: i });
@@ -397,8 +427,12 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
     const noSite = pickedNoSite.map((n) => noWebsiteLead(n.entry, n.sector, at));
     // The best readable sites (P6C's rule and order) get their own Contact/About pages read for contacts.
     // rankTop's rule (read completely, not in the CRM, a customer-facing problem) and order, but a wider pool.
-    const pool = audited.filter((a) => a.outcome === "COMPLETE" && !a.inCrm && a.findings.length > 0)
-      .sort((x, y) => y.score - x.score || y.findings.length - x.findings.length || x.candidate.name.localeCompare(y.candidate.name))
+    // SEO/technical findings alone never make a lead, so those sites don't use up a contact lookup.
+    const readable = audited.filter((a) => a.outcome === "COMPLETE" && !a.inCrm && a.findings.length > 0);
+    rejected.seoOnly = readable.filter((a) => !hasCustomerIssue(a.findings)).length;
+    const pool = readable.filter((a) => hasCustomerIssue(a.findings))
+      .sort((x, y) => sectorPriority(y.candidate.sector) - sectorPriority(x.candidate.sector)
+        || y.score - x.score || y.findings.length - x.findings.length || x.candidate.name.localeCompare(y.candidate.name))
       .slice(0, CONTACT_POOL);
     const ranked: Ranked[] = [];
     stats.contactPagesRead = 0;
@@ -428,7 +462,10 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
         const email = contacts.find((c) => c.channel === "EMAIL")?.value ?? null;
         const status = classify({ ...a.candidate, phone: wa ? `+${digitsOf(wa.link)}` : null, instagram: ig?.link ?? a.candidate.instagram, email }, crm).status;
         if (status !== "NEW") { stats.inCrmByContact!++; return; }
-        ranked.push({ audited: a, contacts, identity: { status: identity.status, siteName: identity.siteName, reason: identity.reason } });
+        // At least one firm customer-facing problem, judged with the second read (speed sample, home-page links).
+        const graded = gradeFindings(a.findings, found[j]);
+        if (!qualifies(graded)) { rejected.uncertainOnly++; return; }
+        ranked.push({ audited: a, contacts, graded, identity: { status: identity.status, siteName: identity.siteName, reason: identity.reason } });
       });
     }
     const withSite = rankWebsiteLeads(ranked).slice(0, MAX_LEADS - noSite.length).map(websiteLead);
