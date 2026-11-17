@@ -84,6 +84,21 @@ test("finish saves leads once; a completed day can't be claimed again, even with
   assert.equal(view.leads[0].findings[0].observed, "None found", "the evidence comes back with the lead");
 });
 
+test("evidence grades, their notes and the rejected counts are saved and come back in Today's view", { skip }, async () => {
+  const s = store.prismaDailyStore;
+  const c = await s.claim("2026-11-14", new Date("2026-11-14T06:00:00Z"), { retry: false });
+  assert.ok(c.claimed);
+  const findings = [
+    { id: "E_VIEWPORT", sentence: "no viewport", observed: "None found", sourceUrl: "https://ok-1.ma/", fetchedAt: "t", evidence: "FIRM" },
+    { id: "E_RESPONSE_TIME", sentence: "slow", observed: "4400 ms", sourceUrl: "https://ok-1.ma/", fetchedAt: "t", evidence: "UNCERTAIN", note: "A second check took about 0.6 s." },
+  ];
+  const rejected = { seoOnly: 2, uncertainOnly: 1, competitor: 1 };
+  await s.finish("2026-11-14", c.startedAt, { status: "COMPLETED", state: { v: 1, cursors: {} }, stats: { ...stats, rejected }, leads: [lead(1, { findings })] }, new Date());
+  const view = await store.getTodayLeads("2026-11-14");
+  assert.deepEqual(view.leads[0].findings.map((f) => [f.evidence, f.note ?? null]), [["FIRM", null], ["UNCERTAIN", "A second check took about 0.6 s."]]);
+  assert.deepEqual(view.run?.stats?.rejected, rejected);
+});
+
 test("a FAILED day keeps the previous cursors and can be retried only on request; a crashed RUNNING one can be taken over", { skip }, async () => {
   const s = store.prismaDailyStore;
   const c1 = await s.claim("2026-11-13", new Date("2026-11-13T06:00:00Z"), { retry: false });

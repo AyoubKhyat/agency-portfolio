@@ -18,12 +18,19 @@ test.before(async () => { m = await import("../src/lib/daily-leads"); });
 const res = (url: string, body: string, status = 200): SafeResponse => ({
   requestedUrl: url, finalUrl: url, status, headers: {}, body, bytes: body.length, truncated: false, ms: 300, hops: [],
 });
-const page = `<!doctype html><html lang="fr"><head><title>Biz</title><meta name="viewport" content="width=device-width"></head>
+/** A site with a firm customer-facing problem (no viewport for phones) besides minor SEO ones. */
+const page = `<!doctype html><html lang="fr"><head><title>Biz</title></head>
   <body><h1>Biz</h1><p>${"Une entreprise à Marrakech. ".repeat(40)}</p><a href="mailto:a@b.ma">Mail</a></body></html>`;
+/** Only SEO details missing (description, social preview): never a lead on its own. */
+const seoOnlyPage = page.replace("<title>Biz</title>", `<title>Biz</title><meta name="viewport" content="width=device-width">`);
 
-/** Host prefix decides the site: ok-* readable with problems, robots-* asks not to be read, down-* fails, err-* 500. */
+/**
+ * Host prefix decides the site: ok-* readable with a firm problem, robots-* asks not to be read, down-* fails,
+ * err-* 500, minor-* only SEO problems, slow1-* slow on its first home-page request only, slow2-* slow every time.
+ */
 function makeFetcher() {
   const homeHits: string[] = [];
+  const hits = (h: string) => homeHits.filter((x) => x === h).length;
   const fetcher: SafeFetch = async (url) => {
     const u = new URL(url);
     if (u.protocol === "http:") return { ...res(url, "", 301), headers: { location: url.replace("http:", "https:") } };
@@ -31,6 +38,9 @@ function makeFetcher() {
     if (u.hostname.startsWith("down-")) throw new Error("connection refused");
     if (u.hostname.startsWith("err-")) return res(url, "oops", 500);
     if (u.pathname === "/robots.txt") return res(url, u.hostname.startsWith("robots-") ? "User-agent: *\nDisallow: /" : "User-agent: *\nDisallow:");
+    if (u.pathname === "/" && u.hostname.startsWith("minor-")) return res(url, seoOnlyPage);
+    if (u.pathname === "/" && u.hostname.startsWith("slow1-")) return { ...res(url, seoOnlyPage), ms: hits(u.hostname) === 1 ? 4400 : 600 };
+    if (u.pathname === "/" && u.hostname.startsWith("slow2-")) return { ...res(url, seoOnlyPage), ms: 5200 };
     if (u.pathname === "/") return res(url, page);
     return res(url, "", 404);
   };
@@ -443,4 +453,56 @@ test("Today shows the card with review, import and the empty/failed states", () 
   for (const s of ["Not prepared yet today.", "Couldn&apos;t prepare today&apos;s leads.", "No business met the bar today.", "Review evidence", "Import to prospects", "Imported · open prospect", "No website listed in OpenStreetMap", "unverified", "nothing is sent automatically"]) {
     assert.ok(card.includes(s), s);
   }
+});
+
+test("quality: SEO-only and unconfirmed sites are rejected and counted, competitors never checked, no padding", async () => {
+  const s = memStore();
+  const { fetcher, homeHits } = makeFetcher();
+  const entries = [
+    e(1, "HOTELS"),                                                     // firm: no viewport
+    e(2, "HOTELS", { website: "https://minor-2.ma" }),                   // SEO-only
+    e(3, "HOTELS", { website: "https://slow1-3.ma" }),                   // slow once (4.4 s)
+    e(7, "HOTELS", { website: "https://slow2-7.ma" }),                   // slow in both reads: still unconfirmed
+    e(4, "LAWYERS"),                                                    // firm, but not a priority sector
+    e(5, "HOTELS", { name: "SEOCOM", website: "https://seocom-5.ma" }),  // competitor by name
+    e(6, "MARKETING", { name: "Atlas Pub", website: "https://ok-6.ma" }), // competitor sector: never searched
+  ];
+  const r = await m.runDailyLeads({ store: s.store, dataset: async () => dataset(entries), loadCrm: noCrm, fetcher, now: at(DAY1) });
+  assert.equal(r.result, "COMPLETED");
+  assert.ok(!homeHits.includes("seocom-5.ma") && !homeHits.includes("ok-6.ma"), "competitors are never fetched");
+  const leads = s.saved.map((x) => x.lead);
+  assert.deepEqual(leads.map((l) => l.name), ["Biz 1", "Biz 4"], "priority sector first; only firm problems; 2 leads, not padded to 5");
+  assert.equal(leads[0].findings.find((f) => f.id === "E_VIEWPORT")!.evidence, "FIRM");
+  const outcome = s.runs.get("2026-11-14")!.outcome!;
+  assert.equal(outcome.status, "COMPLETED");
+  if (outcome.status === "COMPLETED") {
+    assert.deepEqual(outcome.stats.rejected, { seoOnly: 1, uncertainOnly: 2, competitor: 1 });
+    assert.ok(!outcome.stats.sectors.includes("MARKETING"));
+  }
+});
+
+test("quality: a day with nothing firm saves zero website leads instead of weak ones", async () => {
+  const s = memStore();
+  const { fetcher } = makeFetcher();
+  const entries = [e(2, "HOTELS", { website: "https://minor-2.ma" }), e(3, "SPAS", { website: "https://slow1-3.ma" })];
+  const r = await m.runDailyLeads({ store: s.store, dataset: async () => dataset(entries), loadCrm: noCrm, fetcher, now: at(DAY1) });
+  assert.equal(r.result, "COMPLETED");
+  assert.equal(r.leads, 0);
+  assert.equal(s.saved.length, 0);
+});
+
+test("quality: no-website leads are unaffected when every website is rejected; only explicit agency names are left out", async () => {
+  const s = memStore();
+  const { fetcher } = makeFetcher();
+  const entries = [
+    e(2, "HOTELS", { website: "https://minor-2.ma" }),
+    e(3, "SPAS", { website: "https://slow1-3.ma" }),
+    e(10, "HOTELS", { website: "", whatsapp: "https://wa.me/212611223344" }),
+    e(11, "SPAS", { name: "Spa Atlas Communication", website: "", instagram: "https://www.instagram.com/spaatlas/" }),
+    e(12, "SPAS", { name: "Agence Web Kech", website: "", instagram: "https://www.instagram.com/agencewebkech/" }),
+  ];
+  const r = await m.runDailyLeads({ store: s.store, dataset: async () => dataset(entries), loadCrm: noCrm, fetcher, now: at(DAY1) });
+  assert.equal(r.result, "COMPLETED");
+  const leads = s.saved.map((x) => x.lead);
+  assert.deepEqual(leads.map((l) => [l.kind, l.name]).sort(), [["NO_WEBSITE", "Biz 10"], ["NO_WEBSITE", "Spa Atlas Communication"]]);
 });
