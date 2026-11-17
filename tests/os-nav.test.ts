@@ -180,3 +180,40 @@ test("beginner menu: one entry per job, the prospect list first, focus mode and 
   const layout = readFileSync(url("src/app/admin/layout.tsx"), "utf8");
   for (const s of MAIN_NAV) assert.match(layout, new RegExp(`\\b${s.key}: `), s.key);
 });
+
+test("legacy discovery: active links lead to Find businesses; old routes, records and APIs stay", () => {
+  const palette = readFileSync(url("src/components/admin/command-palette.tsx"), "utf8");
+  const workspace = readFileSync(url("src/components/admin/workspace/workspace-view.tsx"), "utf8");
+  const outreach = readFileSync(url("src/app/admin/outreach/page.tsx"), "utf8");
+  const legacyPage = /["'`]\/admin\/(discovery|prospect-discovery)["'`?]/;
+
+  // No active link opens the hidden template-based or old Prospect Discovery pages.
+  assert.doesNotMatch(palette, /qa-discovery/);
+  assert.match(palette, /id: "qa-find",[^\n]*href: "\/admin\/batch-discovery"/);
+  for (const [name, src] of [["command palette", palette], ["workspace", workspace], ["outreach", outreach]] as const) {
+    assert.doesNotMatch(src, legacyPage, `${name} links to a legacy discovery page`);
+  }
+
+  // Generic back navigation from a discovery record goes to Find businesses.
+  assert.match(workspace, /\{ label: "Find businesses", href: "\/admin\/batch-discovery" \}/);
+  assert.match(workspace, /href="\/admin\/batch-discovery"[^\n]*\n\s*<ArrowLeft[^\n]*Back to Find businesses/);
+  assert.match(outreach, /href="\/admin\/batch-discovery"/);
+
+  // A prospect's own discovery record is still linked, without claiming AI.
+  assert.match(workspace, /href=\{`\/admin\/workspace\/discovery\/\$\{data\.origin\.discoveryResultId\}`\}/);
+  assert.doesNotMatch(workspace, /AI Discovery/);
+
+  // Legacy pages and APIs are kept, and still belong to a section / More.
+  for (const f of [
+    "src/app/admin/discovery/page.tsx",
+    "src/app/admin/prospect-discovery/page.tsx",
+    "src/app/admin/workspace/discovery/[id]/page.tsx",
+    "src/app/api/admin/discovery/search/route.ts",
+    "src/app/api/admin/discovery/import/route.ts",
+    "src/app/api/admin/prospect-discovery/search/route.ts",
+    "src/app/api/admin/prospect-discovery/import/route.ts",
+  ]) assert.ok(existsSync(url(f)), f);
+  assert.equal(sectionForPath("/admin/discovery").key, "find");
+  assert.equal(sectionForPath("/admin/workspace/discovery/abc").key, "find");
+  assert.ok(MORE_GROUPS.some((g) => g.links.some((l) => l.href === "/admin/prospect-discovery")));
+});

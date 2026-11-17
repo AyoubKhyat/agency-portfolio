@@ -6,7 +6,7 @@ import {
   Search, Target, Users, Building2, FolderKanban, CheckSquare,
   Calendar, MessageSquare, X, ArrowRight, Loader2,
   LayoutDashboard, BarChart3, Settings, Activity, Layers,
-  FileSignature, Crown, BellRing, Sun, Sparkles, FileText, CalendarDays,
+  FileSignature, Crown, BellRing, Sun, FileText, CalendarDays,
   Radar, ShieldCheck, Send, Flame, Repeat, Inbox, Handshake, Receipt, Banknote, LayoutGrid,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -68,7 +68,6 @@ const QUICK_ACTIONS: QuickAction[] = [
   // Client acquisition — same order and names as the sidebar
   { id: "qa-today",     label: "Today",             sublabel: "What to do right now",    href: "/admin",                icon: Sun },
   { id: "qa-find",      label: "Find",              sublabel: "Find businesses (Marrakech list)", href: "/admin/batch-discovery", icon: Radar },
-  { id: "qa-discovery", label: "Find · Template-based discovery",  sublabel: "Listing search with template drafts (no AI)", href: "/admin/discovery",     icon: Sparkles },
   { id: "qa-qualify",   label: "Qualify",           sublabel: "Check a website before contact", href: "/admin/qualify", icon: ShieldCheck },
   { id: "qa-contact",   label: "Contact",           sublabel: "Next people to contact",  href: "/admin/lead-queue",     icon: Send },
   { id: "qa-outreach",  label: "Contact · Outreach", sublabel: "Outreach queue and templates", href: "/admin/outreach",  icon: Flame },
