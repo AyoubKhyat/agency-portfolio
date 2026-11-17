@@ -6,6 +6,7 @@ import {
   Zap, FastForward, Flame,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { apiErrorMessage } from "@/lib/api-error";
 import { computeQualityLabel, channelFlags, type QualityLabel } from "@/lib/prospect-quality";
 
 type Sector = { key: string; label: string; category: string };
@@ -131,6 +132,7 @@ export function BulkSweepTab({
   const [errors, setErrors] = useState<Array<{ city: string; sector: string; neighborhood: string | null; message: string }>>([]);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
   const [sweepCheck, setSweepCheck] = useState<SweepCheckResult | null>(null);
   const [checkingSweeps, setCheckingSweeps] = useState(false);
   const [skipRecent, setSkipRecent] = useState(true);
@@ -265,12 +267,15 @@ export function BulkSweepTab({
     setResults([]);
     setErrors([]);
     setImportResult(null);
+    setImportError(null);
     setSweepDone(false);
     setProgress({ total: effectiveQueries.length, completed: 0, currentLabel: "", errors: 0 });
 
     const accumulated = new Map<string, Aggregated>();
     let errorCount = 0;
     const localErrors: typeof errors = [];
+    // A denied search (owner or admin only) fails every query the same way: stop at the first one.
+    let denied = false;
 
     for (let i = 0; i < effectiveQueries.length; i++) {
       if (cancelRef.current) break;
@@ -299,6 +304,7 @@ export function BulkSweepTab({
           errorCount++;
           queryStatus = "FAILED";
           queryError = data.message || data.error || `HTTP ${res.status}`;
+          if (res.status === 401 || res.status === 403) denied = true;
           localErrors.push({ city: q.city, sector: q.sector, neighborhood: q.neighborhood, message: queryError || "error" });
         } else {
           queryResultCount = (data.items as SearchItem[]).length;
@@ -345,6 +351,7 @@ export function BulkSweepTab({
       // Update results live so user sees them accumulate
       setResults(Array.from(accumulated.values()).sort((a, b) => b.opportunityScore - a.opportunityScore));
       setErrors(localErrors.slice());
+      if (denied) break;
 
       // Pace between requests (skip pacing on last)
       if (i < effectiveQueries.length - 1 && !cancelRef.current) {
@@ -394,10 +401,15 @@ export function BulkSweepTab({
     });
     if (toImport.length === 0) return;
     setImporting(true);
+    setImportError(null);
+    // Chunk by 100 to stay within import endpoint limits
+    let imported = 0;
+    let skipped = 0;
+    // Only businesses in a batch the server accepted are marked EXISTS. A failed batch (denied, invalid, network)
+    // stops the import and marks nothing, so those businesses stay importable.
+    const accepted = new Set<string>();
+    let failure: string | null = null;
     try {
-      // Chunk by 100 to stay within import endpoint limits
-      let imported = 0;
-      let skipped = 0;
       for (let i = 0; i < toImport.length; i += 100) {
         const batch = toImport.slice(i, i + 100);
         const res = await fetch("/api/admin/prospect-discovery/import", {
@@ -415,17 +427,22 @@ export function BulkSweepTab({
             tier: importTier,
           }),
         });
-        if (res.ok) {
-          const data = await res.json();
-          imported += data.imported || 0;
-          skipped += data.skipped || 0;
+        if (!res.ok) {
+          failure = await apiErrorMessage(res, "Import failed");
+          break;
         }
+        const data = await res.json();
+        imported += data.imported || 0;
+        skipped += data.skipped || 0;
+        for (const b of batch) accepted.add(b.name);
       }
-      setImportResult({ imported, skipped });
-      // Mark imported items as EXISTS in current results
-      const importedNames = new Set(toImport.map((t) => t.name));
-      setResults((prev) => prev.map((r) => importedNames.has(r.name) ? { ...r, duplicateStatus: "EXISTS" as const } : r));
+    } catch {
+      failure = "Import failed: network error";
     } finally {
+      if (accepted.size > 0) setImportResult({ imported, skipped });
+      if (failure) setImportError(failure);
+      // Mark items of accepted batches as EXISTS in current results
+      setResults((prev) => prev.map((r) => accepted.has(r.name) ? { ...r, duplicateStatus: "EXISTS" as const } : r));
       setImporting(false);
     }
   }
@@ -748,6 +765,13 @@ export function BulkSweepTab({
               </button>
             </div>
           </div>
+
+          {importError && (
+            <div role="alert" className="px-4 py-2 text-[12px] bg-red-50 text-red-700 border-b border-red-100 flex items-center gap-2">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {importError}
+            </div>
+          )}
 
           {importResult && (
             <div className="px-4 py-2 text-[12px] bg-emerald-50 text-emerald-800 border-b border-emerald-100">

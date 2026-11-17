@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireTeam } from "@/lib/authz";
+import { requireOwnerOrAdmin } from "@/lib/authz";
 import { z } from "zod";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { getAiProvider } from "@/lib/ai";
@@ -15,7 +15,7 @@ const schema = z.object({
  * provider (which itself falls back to Mock on error).
  */
 export async function POST(req: Request) {
-  const auth = await requireTeam();
+  const auth = await requireOwnerOrAdmin();
   if (auth.response) return auth.response;
 
   const body = await req.json().catch(() => ({}));

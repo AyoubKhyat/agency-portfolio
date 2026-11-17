@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireTeam } from "@/lib/authz";
+import { requireOwnerOrAdmin } from "@/lib/authz";
 import { z } from "zod";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import {
@@ -25,7 +25,7 @@ export type SearchResultItem = DiscoveryCandidate & {
 };
 
 export async function POST(req: Request) {
-  const auth = await requireTeam();
+  const auth = await requireOwnerOrAdmin();
   if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 

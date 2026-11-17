@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/admin/page-header";
 import { EmptyState } from "@/components/admin/empty-state";
 import { FilterTabs } from "@/components/admin/filter-tabs";
 import { cn } from "@/lib/utils";
+import { apiErrorMessage } from "@/lib/api-error";
 import { BulkSweepTab } from "./_components/BulkSweepTab";
 import { CoverageTab } from "./_components/CoverageTab";
 
@@ -101,6 +102,7 @@ export default function ProspectDiscoveryPage() {
   // Import state
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ imported: number; skipped: number; createdIds: string[] } | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   // Side data
   const [users, setUsers] = useState<User[]>([]);
@@ -227,6 +229,7 @@ export default function ProspectDiscoveryPage() {
     if (items.length === 0) return;
 
     setImporting(true);
+    setImportError(null);
     try {
       const res = await fetch("/api/admin/prospect-discovery/import", {
         method: "POST",
@@ -259,7 +262,12 @@ export default function ProspectDiscoveryPage() {
           items: prev.items.map((i) => importedNames.has(i.name) ? { ...i, duplicateStatus: "EXISTS" as DuplicateStatus } : i),
         } : prev);
         loadTargets();
+      } else {
+        // Nothing was imported: results keep their status, and the reason is shown (e.g. owner or admin only).
+        setImportError(await apiErrorMessage(res, "Import failed"));
       }
+    } catch {
+      setImportError("Import failed: network error");
     } finally {
       setImporting(false);
     }
@@ -396,6 +404,13 @@ export default function ProspectDiscoveryPage() {
               </div>
             )}
           </div>
+
+          {importError && (
+            <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[12.5px] text-red-700 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {importError}
+            </div>
+          )}
 
           {/* Import result */}
           {importResult && (
@@ -640,14 +655,26 @@ function ProviderStatusBanner({ provider }: { provider: "GOOGLE" | "OSM" }) {
 function TargetsWidget({ targets, onUpdate }: { targets: Target[]; onUpdate: () => void }) {
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [editValue, setEditValue] = useState(0);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   async function save(userId: string) {
     const today = new Date().toISOString().slice(0, 10);
-    await fetch("/api/admin/prospect-discovery/targets", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, date: today, targetImports: editValue }),
-    });
+    setSaveError(null);
+    try {
+      const res = await fetch("/api/admin/prospect-discovery/targets", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, date: today, targetImports: editValue }),
+      });
+      if (!res.ok) {
+        // Keep the editor open so the value isn't silently lost.
+        setSaveError(await apiErrorMessage(res, "Couldn't save the target"));
+        return;
+      }
+    } catch {
+      setSaveError("Couldn't save the target: network error");
+      return;
+    }
     setEditingUser(null);
     onUpdate();
   }
@@ -658,6 +685,12 @@ function TargetsWidget({ targets, onUpdate }: { targets: Target[]; onUpdate: () 
         <TargetIcon className="w-4 h-4 text-[#8B00FF]" />
         <h2 className="text-[14px] font-semibold text-[#0F172A]">Today&apos;s prospecting targets</h2>
       </div>
+      {saveError && (
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[12.5px] text-red-700 mb-3 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          {saveError}
+        </div>
+      )}
 
       {targets.length === 0 ? (
         <p className="text-[12px] text-[#94A3B8]">No active team members.</p>

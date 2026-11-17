@@ -5,7 +5,7 @@ import { hasPrisma } from "@/lib/prisma";
 import { casablancaDay } from "@/lib/daily-leads";
 import { getTodayLeads, importCandidate, markImported } from "@/lib/daily-leads-store";
 import { runDailyLeadsNow } from "@/lib/daily-leads-run";
-import { POST as importProspects } from "@/app/api/admin/prospect-discovery/import/route";
+import { importCandidates } from "@/lib/prospect-import";
 
 export const maxDuration = 300;
 export const dynamic = "force-dynamic";
@@ -27,7 +27,8 @@ export async function GET() {
 const schema = z.discriminatedUnion("action", [
   // Prepare (or, after a failure, retry) today's list now. Owner or admin only. Never repeats a completed day.
   z.object({ action: z.literal("run") }).strict(),
-  // Import one of today's leads through the existing import route, which re-checks duplicates.
+  // Import one of today's leads through the shared import helper, which re-checks duplicates. Any team member may
+  // do this (the bulk import API is owner or admin only); the candidate is built here from the stored lead.
   z.object({ action: z.literal("import"), resultId: z.string().min(1).max(64) }).strict(),
 ]);
 
@@ -58,15 +59,10 @@ export async function POST(req: Request) {
     if (!lead) return NextResponse.json({ error: "That lead isn't in today's list" }, { status: 404 });
     if (lead.importedProspectId) return NextResponse.json({ prospectId: lead.importedProspectId, already: true });
 
-    const res = await importProspects(new Request("http://internal/api/admin/prospect-discovery/import", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ candidates: [importCandidate(lead)], allowPossibleDuplicates: false }),
-    }));
-    const body = (await res.json().catch(() => null)) as { created?: { id: string }[]; skippedDetails?: { reason: string }[]; error?: string } | null;
-    if (!res.ok) return NextResponse.json({ error: body?.error ?? "Import failed" }, { status: res.status });
-    const created = body?.created?.[0];
-    if (!created) return NextResponse.json({ skipped: body?.skippedDetails?.[0]?.reason ?? "Not imported" }, { status: 409 });
+    const out = await importCandidates({ candidates: [importCandidate(lead)], allowPossibleDuplicates: false }, auth.session);
+    if (out.status !== 200) return NextResponse.json({ error: out.body.error ?? "Import failed" }, { status: out.status });
+    const created = out.body.created[0];
+    if (!created) return NextResponse.json({ skipped: out.body.skippedDetails[0]?.reason ?? "Not imported" }, { status: 409 });
     await markImported(resultId, created.id, auth.session);
     return NextResponse.json({ prospectId: created.id });
   } catch {
