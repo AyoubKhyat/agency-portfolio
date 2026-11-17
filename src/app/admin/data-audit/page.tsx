@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { cn } from "@/lib/utils";
+import { apiErrorMessage } from "@/lib/api-error";
 
 type SlimProspect = {
   id: string; name: string; phone: string | null; whatsapp: string | null;
@@ -38,6 +39,7 @@ export default function DataAuditPage() {
   const [loading, setLoading] = useState(true);
   const [fixing, setFixing] = useState<string | null>(null);
   const [fixResult, setFixResult] = useState<{ action: string; updated: number } | null>(null);
+  const [fixError, setFixError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -52,6 +54,7 @@ export default function DataAuditPage() {
     if (fixing) return;
     setFixing(action);
     setFixResult(null);
+    setFixError(null);
     try {
       const res = await fetch("/api/admin/data-audit", {
         method: "POST",
@@ -62,7 +65,11 @@ export default function DataAuditPage() {
         const data = await res.json();
         setFixResult({ action: data.action, updated: data.updated });
         await load();
+      } else {
+        setFixError(await apiErrorMessage(res, "The fix didn't run"));
       }
+    } catch {
+      setFixError("The fix didn't run: network error");
     } finally {
       setFixing(null);
     }
@@ -153,6 +160,13 @@ export default function DataAuditPage() {
           </div>
         </div>
       </div>
+
+      {fixError && (
+        <div role="alert" className="mb-5 p-3 rounded-xl border border-red-200 bg-red-50 flex items-center gap-2 text-[12.5px] text-red-700">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          {fixError}
+        </div>
+      )}
 
       {/* Fix result toast */}
       {fixResult && (

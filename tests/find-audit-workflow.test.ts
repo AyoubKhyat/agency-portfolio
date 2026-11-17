@@ -55,7 +55,7 @@ test("Find businesses: Full check link on each result, and the card's check goes
 });
 
 test("the import route accepts the audit as optional and writes the note inside the prospect's create", () => {
-  const route = read("src/app/api/admin/prospect-discovery/import/route.ts");
+  const route = read("src/lib/prospect-import.ts"); // the import logic, shared by the import API and the Daily Lead Agent
   assert.match(route, /audit: auditSchema\.optional\(\),/);
   assert.match(route, /const auditNote = cand\.audit \? buildAuditNote\(cand\.audit, website\) : null;/);
   assert.match(route, /prisma\.prospect\.create\(\{\s*data: \{\s*\.\.\.\(auditNote \? \{ notes: \{ create: \{ content: auditNote/);

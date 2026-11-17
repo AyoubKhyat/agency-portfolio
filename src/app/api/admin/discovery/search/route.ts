@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireTeam } from "@/lib/authz";
+import { requireOwnerOrAdmin } from "@/lib/authz";
 import { z } from "zod";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { runDiscovery, activeLeadSource } from "@/lib/discovery/pipeline";
@@ -12,7 +12,7 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const auth = await requireTeam();
+  const auth = await requireOwnerOrAdmin();
   if (auth.response) return auth.response;
   const { session } = auth;
 

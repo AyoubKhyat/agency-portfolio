@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireTeam } from "@/lib/authz";
+import { requireOwnerOrAdmin, requireTeam } from "@/lib/authz";
 import { z } from "zod";
 import { prisma, hasPrisma } from "@/lib/prisma";
 
@@ -73,7 +73,7 @@ export async function GET(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  const auth = await requireTeam();
+  const auth = await requireOwnerOrAdmin();
   if (auth.response) return auth.response;
   if (!hasPrisma()) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 
