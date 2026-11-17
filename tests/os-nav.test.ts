@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { MAIN_NAV, MORE_GROUPS, activeTab, hrefPath, sectionForPath } from "../src/lib/admin-nav";
+import { nextCitySweepLink } from "../src/lib/next-city-link";
 
 const url = (rel: string) => new URL(`../${rel}`, import.meta.url);
 const tabLinks = MAIN_NAV.flatMap((s) => s.tabs.map((t) => t.href));
@@ -190,6 +191,7 @@ test("legacy discovery: active links lead to Find businesses; old routes, record
   // No active link opens the hidden template-based or old Prospect Discovery pages.
   assert.doesNotMatch(palette, /qa-discovery/);
   assert.match(palette, /id: "qa-find",[^\n]*href: "\/admin\/batch-discovery"/);
+  // The outreach next-city button is the one deliberate legacy link (see the next test), built by nextCitySweepLink.
   for (const [name, src] of [["command palette", palette], ["workspace", workspace], ["outreach", outreach]] as const) {
     assert.doesNotMatch(src, legacyPage, `${name} links to a legacy discovery page`);
   }
@@ -197,7 +199,7 @@ test("legacy discovery: active links lead to Find businesses; old routes, record
   // Generic back navigation from a discovery record goes to Find businesses.
   assert.match(workspace, /\{ label: "Find businesses", href: "\/admin\/batch-discovery" \}/);
   assert.match(workspace, /href="\/admin\/batch-discovery"[^\n]*\n\s*<ArrowLeft[^\n]*Back to Find businesses/);
-  assert.match(outreach, /href="\/admin\/batch-discovery"/);
+  assert.match(outreach, /href=\{nextCitySweepLink\(recommendations\[0\]\)\.href\}/);
 
   // A prospect's own discovery record is still linked, without claiming AI.
   assert.match(workspace, /href=\{`\/admin\/workspace\/discovery\/\$\{data\.origin\.discoveryResultId\}`\}/);
@@ -216,4 +218,18 @@ test("legacy discovery: active links lead to Find businesses; old routes, record
   assert.equal(sectionForPath("/admin/discovery").key, "find");
   assert.equal(sectionForPath("/admin/workspace/discovery/abc").key, "find");
   assert.ok(MORE_GROUPS.some((g) => g.links.some((l) => l.href === "/admin/prospect-discovery")));
+});
+
+test("outreach next-city button: Marrakech opens Find businesses, other cities keep the legacy sweep", () => {
+  assert.deepEqual(nextCitySweepLink({ key: "MARRAKECH", label: "Marrakech" }),
+    { href: "/admin/batch-discovery", label: "Find more Marrakech businesses" });
+  assert.equal(nextCitySweepLink({ key: " marrakech ", label: "Marrakech" }).href, "/admin/batch-discovery");
+  for (const [key, label] of [["CASABLANCA", "Casablanca"], ["RABAT", "Rabat"], ["FES", "Fès"]]) {
+    assert.deepEqual(nextCitySweepLink({ key, label }),
+      { href: "/admin/prospect-discovery", label: `Open Discovery to sweep ${label}` });
+  }
+  // The legacy sweep page and its search API stay, so the non-Marrakech link still works.
+  assert.ok(existsSync(url("src/app/admin/prospect-discovery/page.tsx")));
+  assert.ok(existsSync(url("src/app/api/admin/prospect-discovery/search/route.ts")));
+  assert.equal(sectionForPath("/admin/prospect-discovery").key, "more");
 });

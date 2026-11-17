@@ -12,6 +12,7 @@ import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { PageHeader } from "@/components/admin/page-header";
 import { FilterTabs } from "@/components/admin/filter-tabs";
 import { cn } from "@/lib/utils";
+import { nextCitySweepLink } from "@/lib/next-city-link";
 
 /* ---------- Types ---------- */
 type QueueProspect = {
@@ -662,11 +663,11 @@ function CoverageBlock({ coverage, loading }: { coverage: Coverage | null; loadi
           )}
           <div className="mt-3">
             <Link
-              href="/admin/batch-discovery"
+              href={nextCitySweepLink(recommendations[0]).href}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md hover:shadow-lg"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              Find more Marrakech businesses
+              {nextCitySweepLink(recommendations[0]).label}
             </Link>
           </div>
         </div>
