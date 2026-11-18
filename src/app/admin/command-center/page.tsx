@@ -162,7 +162,7 @@ export default function CommandCenterPage() {
         <KPI label="Revenue won"      value={fmt(kpis.revenueWon)}      suffix="MAD" tone="purple" hint={monthChange ? `${monthChange} vs last month` : undefined} />
         <KPI label="Pipeline value"   value={fmt(kpis.pipelineValue)}   suffix="MAD" tone="blue" />
         <KPI label="Active clients"   value={String(kpis.activeClients)}              tone="emerald" hint={`${kpis.totalClients} total`} />
-        <KPI label="Prospects won"    value={`${kpis.conversionRate}%`}                tone="amber" hint="Won stage ÷ all prospects, all time" />
+        <KPI label="Prospects won (%)" value={`${kpis.conversionRate}%`}                tone="amber" hint="Won stage ÷ all prospects, all time" />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         <KPI label="Revenue forecast" value={fmt(kpis.revenueForecast)} suffix="MAD" tone="indigo" />

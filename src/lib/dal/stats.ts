@@ -221,8 +221,6 @@ export async function getAnalyticsData() {
   };
 }
 
-export type AnalyticsData = Awaited<ReturnType<typeof getAnalyticsData>>;
-
 export async function getClients() {
   const [convertedProspects, qualifiedLeads] = await Promise.all([
     db().prospect.findMany({

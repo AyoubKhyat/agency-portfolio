@@ -180,12 +180,15 @@ export default function AnalyticsPage() {
           <div className="space-y-3">
             {report.funnel.map((step, i) => {
               const prev = i > 0 ? report.funnel[i - 1] : null;
-              const dropOff = prev && prev.count > 0 ? Math.round(((prev.count - step.count) / prev.count) * 100) : null;
+              // Prospects → Contacted is the backlog, not a loss: say so plainly instead of a red drop-off.
+              const notYetContacted = step.key === "CONTACTED" && prev ? prev.count - step.count : null;
+              const dropOff = notYetContacted === null && prev && prev.count > 0 ? Math.round(((prev.count - step.count) / prev.count) * 100) : null;
               return (
                 <div key={step.key}>
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
                       <span className="text-[13px] font-medium text-[#0F172A]">{step.label}</span>
+                      {notYetContacted !== null && notYetContacted > 0 && <span className="text-[10px] text-[#64748B] font-medium">{notYetContacted} not yet contacted</span>}
                       {dropOff !== null && dropOff > 0 && <span className="text-[10px] text-red-500 font-medium">-{dropOff}%</span>}
                     </div>
                     <span className="text-[13px] font-bold text-[#0F172A]">{step.count}</span>
@@ -207,6 +210,7 @@ export default function AnalyticsPage() {
             <span>Closed (lost or refused): <span className="font-bold">{report.funnelAside.closed}</span></span>
             <span>Unreachable: <span className="font-bold">{report.funnelAside.unreachable}</span></span>
           </div>
+          <p className="mt-2 text-[11px] text-[#64748B]">Closed and Unreachable are stages of their own, not funnel steps. One with a first-contact date or a send record is also counted in Contacted.</p>
         </GlassCard>
       </motion.div>
 
@@ -261,7 +265,7 @@ export default function AnalyticsPage() {
           <Def term="Send recorded">A send button or saved outreach message logged since the 7 July 2026 cleanup. Older records are shown as &ldquo;Old send only&rdquo;. A status of Sent (ENVOYE) on its own is not a send record.</Def>
           <Def term="Replied">Prospects now in Replied, In talks or Won.</Def>
           <Def term="Won">Stage Won (CLIENT or CONVERTI).</Def>
-          <Def term="Closed">Lost or refused (LOST, PERDU, REFUSE). Counted apart and never as a reply, because the stored status can&apos;t show whether they answered first.</Def>
+          <Def term="Closed">Lost or refused (LOST, PERDU, REFUSE). Never counted as a reply, because the stored status can&apos;t show whether they answered first. Like Unreachable, it is a stage of its own, and is also counted in Contacted when there is a first-contact date or a send record.</Def>
           <Def term="Rates">Shown as &ldquo;—&rdquo; when there is nothing to divide by.</Def>
           <Def term="Proposal values">{REPORT_CURRENCY} only; proposals in another currency are counted separately, not converted. Accepted proposals are not invoiced or paid revenue.</Def>
         </dl>

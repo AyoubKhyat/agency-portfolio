@@ -24,7 +24,7 @@ const WON_STATUSES = getStageByKey("WON")?.statuses ?? [];
  *   Meetings this week = startAt within 7-day window
  *   Tasks overdue      = open tasks past their due date
  *   Prospects won      = prospects in the Won stage (CLIENT / CONVERTI) /
- *                        total prospects, all time (shown as "Prospects won")
+ *                        total prospects, all time (shown as "Prospects won (%)")
  *   Funnel             = all-time counts, no date window
  */
 export async function GET() {

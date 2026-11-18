@@ -77,7 +77,10 @@ export type ProspectingReport = {
   stages: { key: StageKey | "OTHER"; label: string; count: number }[];
   /** Each step is a subset of the one before, so drop-off is meaningful. */
   funnel: FunnelStep[];
-  /** Outside the funnel: closed and unreachable prospects. */
+  /**
+   * Closed and unreachable stages, shown beside the funnel. They are not funnel
+   * steps, but one with a first-contact date or a send record is also in CONTACTED.
+   */
   funnelAside: { closed: number; unreachable: number };
   sectors: SectorRow[];
 };

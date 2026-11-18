@@ -102,7 +102,7 @@ test("a send exactly on the cleanup day counts as recorded", () => {
 
 // ─── Funnel and sectors ─────────────────────────────────────────
 
-test("funnel steps are nested subsets, closed and unreachable sit outside", () => {
+test("funnel steps are nested subsets; closed and unreachable are separate stages", () => {
   const { funnel, funnelAside } = buildProspectingReport([
     p("A_ENVOYER"), p("ENVOYE"), p("REPONDU"), p("MEETING"), p("CLIENT"), p("LOST"), p("PAS_DE_WHATSAPP"),
   ]);
