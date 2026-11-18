@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireTeam } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
 import { getStageByKey } from "@/lib/prospect-stages";
+import { buildBusinessMoney, SIGNED_CONTRACT_STATUSES, AWAITING_SIGNATURE_STATUS } from "@/lib/business-report";
 
 /** Stored statuses of the shared Won stage (CLIENT / CONVERTI). */
 const WON_STATUSES = getStageByKey("WON")?.statuses ?? [];
@@ -13,12 +14,11 @@ const WON_STATUSES = getStageByKey("WON")?.statuses ?? [];
  * Reuses the existing Notification / Activity / Task models. Doesn't introduce
  * new tables. Numbers below are sourced as follows:
  *
- *   Revenue won        = sum of SIGNED + ACTIVE + COMPLETED contracts
- *                        (falls back to ACCEPTED proposals if no contracts)
- *   Pipeline value     = sum of DRAFT + SENT proposals + DRAFT +
- *                        PENDING_SIGNATURE contracts
- *   Revenue forecast   = accepted proposals + signed contracts + active
- *                        contract value (deduplicating where they overlap)
+ *   Money figures      = built by src/lib/business-report.ts (MAD only, no
+ *                        conversion, no fallback): signed contract value,
+ *                        sent-proposal pipeline, drafts, contracts awaiting
+ *                        signature, accepted-but-unsigned proposals, and paid
+ *                        invoices (VAT included) on their own.
  *   Active clients     = Client.status = ACTIVE
  *   Active projects    = ClientProject not in (COMPLETED, ON_HOLD)
  *   Meetings this week = startAt within 7-day window
@@ -37,19 +37,13 @@ export async function GET() {
   const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
   const today = startOfDay(now);
   const weekEnd = addDays(today, 7);
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const thirtyDaysAgo = addDays(today, -30);
 
   const [
-    // Revenue
-    contractsRevenue,       // SIGNED + ACTIVE + COMPLETED contracts
-    acceptedProposals,      // ACCEPTED proposals
-    pipelineProposals,      // DRAFT + SENT
-    pipelineContracts,      // DRAFT + PENDING_SIGNATURE
-    signedAndActiveValue,   // SIGNED + ACTIVE — current forecast
-    wonThisMonth,
-    wonLastMonth,
+    // Money: plain rows, every rule lives in business-report.ts
+    proposalRows,
+    contractRows,
+    paidInvoiceRows,
     // Counts
     activeClientsCount,
     totalClientsCount,
@@ -72,18 +66,24 @@ export async function GET() {
     overdueTasks,
     // Upcoming meetings (next 7 days)
     upcomingMeetings,
-    // Sectors with revenue
-    sectorBreakdown,
     // Team breakdown
     teamMembers,
   ] = await Promise.all([
-    prisma.contract.aggregate({ where: { status: { in: ["SIGNED", "ACTIVE", "COMPLETED"] } }, _sum: { amount: true } }),
-    prisma.proposal.aggregate({ where: { status: "ACCEPTED" }, _sum: { amount: true } }),
-    prisma.proposal.aggregate({ where: { status: { in: ["DRAFT", "SENT"] } }, _sum: { amount: true } }),
-    prisma.contract.aggregate({ where: { status: { in: ["DRAFT", "PENDING_SIGNATURE"] } }, _sum: { amount: true } }),
-    prisma.contract.aggregate({ where: { status: { in: ["SIGNED", "ACTIVE"] } }, _sum: { amount: true } }),
-    prisma.contract.aggregate({ where: { status: { in: ["SIGNED", "ACTIVE", "COMPLETED"] }, signedDate: { gte: monthStart } }, _sum: { amount: true }, _count: true }),
-    prisma.contract.aggregate({ where: { status: { in: ["SIGNED", "ACTIVE", "COMPLETED"] }, signedDate: { gte: lastMonthStart, lt: monthStart } }, _sum: { amount: true }, _count: true }),
+    prisma.proposal.findMany({
+      where: { status: { in: ["DRAFT", "SENT", "ACCEPTED"] } },
+      select: { id: true, status: true, amount: true, currency: true },
+    }),
+    prisma.contract.findMany({
+      where: { status: { in: [...SIGNED_CONTRACT_STATUSES, AWAITING_SIGNATURE_STATUS] } },
+      select: {
+        id: true, status: true, amount: true, currency: true, proposalId: true, signedDate: true, createdById: true,
+        prospect: { select: { sector: true } },
+      },
+    }),
+    prisma.invoice.findMany({
+      where: { status: "PAID" },
+      select: { status: true, total: true, currency: true, paidAt: true },
+    }),
 
     prisma.client.count({ where: { status: "ACTIVE" } }),
     prisma.client.count(),
@@ -139,72 +139,32 @@ export async function GET() {
       },
     }),
 
-    // Top sectors by revenue (contracts grouped via prospect.sector)
-    prisma.$queryRaw<{ sector: string; revenue: number; deals: bigint }[]>`
-      SELECT p.sector AS sector,
-             COALESCE(SUM(c.amount), 0)::float AS revenue,
-             COUNT(c.id) AS deals
-      FROM contracts c
-      LEFT JOIN prospects p ON p.id = c.prospect_id
-      WHERE c.status IN ('SIGNED', 'ACTIVE', 'COMPLETED') AND p.sector IS NOT NULL AND p.sector <> ''
-      GROUP BY p.sector
-      ORDER BY revenue DESC
-      LIMIT 5
-    `,
-
     prisma.user.findMany({
       where: { isActive: true },
       select: { id: true, fullName: true, avatarInitials: true, role: true },
     }),
   ]);
 
-  // Revenue won: prefer real contract revenue when present, fall back to
-  // accepted-proposal amounts during the early-data window where no contracts
-  // exist yet.
-  const contractsAmount = contractsRevenue._sum.amount ?? 0;
-  const acceptedAmount  = acceptedProposals._sum.amount ?? 0;
-  const revenueWon = contractsAmount > 0 ? contractsAmount : acceptedAmount;
-
-  // Pipeline value: open proposals + open contract drafts.
-  const pipelineValue =
-    (pipelineProposals._sum.amount ?? 0) +
-    (pipelineContracts._sum.amount ?? 0);
-
-  // Forecast = signed + active contract value + accepted proposals not yet
-  // contracted (rough estimate).
-  const revenueForecast =
-    (signedAndActiveValue._sum.amount ?? 0) +
-    Math.max(0, acceptedAmount - contractsAmount);
+  const money = buildBusinessMoney({
+    proposals: proposalRows,
+    contracts: contractRows.map((c) => ({
+      id: c.id, status: c.status, amount: c.amount, currency: c.currency, proposalId: c.proposalId,
+      signedDate: c.signedDate, createdById: c.createdById, sector: c.prospect?.sector ?? null,
+    })),
+    invoices: paidInvoiceRows,
+  }, now);
 
   const conversionRate = totalProspects > 0
     ? Math.round((convertedProspects / totalProspects) * 100)
     : 0;
 
-  // Top salesperson: count signed contracts per createdBy in last 90 days.
-  const salesAgg = await prisma.contract.groupBy({
-    by: ["createdById"],
-    where: { status: { in: ["SIGNED", "ACTIVE", "COMPLETED"] }, signedDate: { not: null } },
-    _sum: { amount: true },
-    _count: { _all: true },
-    orderBy: { _sum: { amount: "desc" } },
-    take: 1,
-  });
-  let topSalesperson: { userId: string | null; fullName: string | null; avatarInitials: string | null; revenue: number; deals: number } | null = null;
-  if (salesAgg.length > 0) {
-    const top = salesAgg[0];
-    const u = top.createdById ? teamMembers.find((t) => t.id === top.createdById) : null;
-    topSalesperson = {
-      userId: top.createdById,
-      fullName: u?.fullName ?? null,
-      avatarInitials: u?.avatarInitials ?? null,
-      revenue: top._sum.amount ?? 0,
-      deals: top._count._all,
-    };
-  }
-
-  const topSector = sectorBreakdown.length > 0
-    ? { sector: sectorBreakdown[0].sector, revenue: sectorBreakdown[0].revenue, deals: Number(sectorBreakdown[0].deals) }
+  // Leaderboard and sectors use the same MAD-only signed contracts as the totals.
+  const top = money.topSalesperson;
+  const topUser = top ? teamMembers.find((t) => t.id === top.userId) : null;
+  const topSalesperson = top
+    ? { userId: top.userId, fullName: topUser?.fullName ?? null, avatarInitials: topUser?.avatarInitials ?? null, revenue: top.revenue, deals: top.deals }
     : null;
+  const topSector = money.sectors[0] ?? null;
 
   // CRM health: a quick rollup of red-flag signals.
   const [
@@ -248,17 +208,19 @@ export async function GET() {
 
   return NextResponse.json({
     kpis: {
-      revenueWon,
-      pipelineValue,
-      revenueForecast,
       activeClients: activeClientsCount,
       totalClients: totalClientsCount,
       activeProjects: activeProjectsCount,
       meetingsThisWeek: meetingsThisWeekCount,
       tasksOverdue: tasksOverdueCount,
       conversionRate,
-      wonThisMonth: { amount: wonThisMonth._sum.amount ?? 0, count: wonThisMonth._count ?? 0 },
-      wonLastMonth: { amount: wonLastMonth._sum.amount ?? 0, count: wonLastMonth._count ?? 0 },
+    },
+    money: {
+      signed: money.signed,
+      pipeline: money.pipeline,
+      paidInvoices: money.paidInvoices,
+      excluded: money.excluded,
+      proposalsWithSeveralContracts: money.proposalsWithSeveralContracts,
     },
     funnel: {
       scheduled:        funnelScheduled,
@@ -290,7 +252,7 @@ export async function GET() {
     upcomingMeetings,
     topSalesperson,
     topSector,
-    sectorBreakdown: sectorBreakdown.map((s) => ({ sector: s.sector, revenue: s.revenue, deals: Number(s.deals) })),
+    sectorBreakdown: money.sectors,
     crmHealth: {
       score: crmHealthScore,
       signals: crmHealthSignals,

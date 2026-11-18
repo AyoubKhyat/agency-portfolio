@@ -12,13 +12,11 @@ import {
 import { PageHeader } from "@/components/admin/page-header";
 import { GlassCard } from "@/components/admin/glass-card";
 import { cn } from "@/lib/utils";
+import { monthChange, REPORT_CURRENCY, type BusinessMoney } from "@/lib/business-report";
 
 type KPIs = {
-  revenueWon: number; pipelineValue: number; revenueForecast: number;
   activeClients: number; totalClients: number; activeProjects: number;
   meetingsThisWeek: number; tasksOverdue: number; conversionRate: number;
-  wonThisMonth: { amount: number; count: number };
-  wonLastMonth: { amount: number; count: number };
 };
 type Funnel = { scheduled: number; completed: number; proposalSent: number; contractSigned: number; clients: number };
 type Win = {
@@ -50,8 +48,11 @@ type CrmHealth = {
   signals: { label: string; count: number; severity: "ok" | "warn" | "danger" }[];
 };
 
+type Money = Pick<BusinessMoney, "signed" | "pipeline" | "paidInvoices" | "excluded" | "proposalsWithSeveralContracts">;
+
 type CommandCenter = {
   kpis: KPIs;
+  money: Money;
   funnel: Funnel;
   recentWins: Win[];
   projectsAtRisk: Risk[];
@@ -65,13 +66,6 @@ type CommandCenter = {
 
 function fmt(value: number) {
   return new Intl.NumberFormat("fr-MA", { maximumFractionDigits: 0 }).format(value);
-}
-
-function fmtPct(value: number, prev?: number) {
-  if (typeof prev !== "number" || prev === 0) return null;
-  const change = ((value - prev) / prev) * 100;
-  const sign = change >= 0 ? "+" : "";
-  return `${sign}${Math.round(change)}%`;
 }
 
 function relativeDate(iso: string | null): string {
@@ -146,8 +140,9 @@ export default function CommandCenterPage() {
     );
   }
 
-  const { kpis, funnel, recentWins, projectsAtRisk, overdueTasks, upcomingMeetings, topSalesperson, topSector, crmHealth } = data;
-  const monthChange = fmtPct(kpis.wonThisMonth.amount, kpis.wonLastMonth.amount);
+  const { kpis, money, funnel, recentWins, projectsAtRisk, overdueTasks, upcomingMeetings, topSalesperson, topSector, crmHealth } = data;
+  const signedChange = monthChange(money.signed.thisMonth.value, money.signed.lastMonth.value);
+  const paidChange = monthChange(money.paidInvoices.thisMonth.value, money.paidInvoices.lastMonth.value);
 
   return (
     <div className="space-y-6">
@@ -159,16 +154,21 @@ export default function CommandCenterPage() {
 
       {/* Top KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <KPI label="Revenue won"      value={fmt(kpis.revenueWon)}      suffix="MAD" tone="purple" hint={monthChange ? `${monthChange} vs last month` : undefined} />
-        <KPI label="Pipeline value"   value={fmt(kpis.pipelineValue)}   suffix="MAD" tone="blue" />
+        <KPI label="Signed contracts" value={fmt(money.signed.value)} suffix={REPORT_CURRENCY} tone="purple"
+          hint={`${money.signed.count} signed, active or completed${signedChange ? ` · ${signedChange} vs last month` : ""}`} />
+        <KPI label="Pipeline: sent proposals" value={fmt(money.pipeline.sent.value)} suffix={REPORT_CURRENCY} tone="blue"
+          hint={`${money.pipeline.sent.count} awaiting an answer · drafts not included`} />
         <KPI label="Active clients"   value={String(kpis.activeClients)}              tone="emerald" hint={`${kpis.totalClients} total`} />
         <KPI label="Prospects won (%)" value={`${kpis.conversionRate}%`}                tone="amber" hint="Won stage ÷ all prospects, all time" />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-        <KPI label="Revenue forecast" value={fmt(kpis.revenueForecast)} suffix="MAD" tone="indigo" />
+        <KPI label="Paid invoices" value={fmt(money.paidInvoices.value)} suffix={`${REPORT_CURRENCY}, VAT incl.`} tone="indigo"
+          hint={`${money.paidInvoices.count} marked paid${paidChange ? ` · ${paidChange} vs last month` : ""}`} />
         <KPI label="Active projects"  value={String(kpis.activeProjects)} tone="cyan" />
         <KPI label="Tasks overdue"    value={String(kpis.tasksOverdue)}   tone={kpis.tasksOverdue > 0 ? "red" : "ok"} />
       </div>
+
+      <MoneyDetail money={money} />
 
       {/* Funnel + Health */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -339,7 +339,7 @@ export default function CommandCenterPage() {
       {/* Top performers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <GlassCard padding="lg" className="border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50">
-          <SectionHeader title="Top salesperson" subtitle="By signed contract revenue." icon={<Crown className="w-4 h-4 text-[#8B00FF]" />} />
+          <SectionHeader title="Top salesperson" subtitle="By signed contract value (MAD)." icon={<Crown className="w-4 h-4 text-[#8B00FF]" />} />
           {topSalesperson ? (
             <div className="flex items-center gap-4">
               <span className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[16px] font-bold">
@@ -357,7 +357,7 @@ export default function CommandCenterPage() {
         </GlassCard>
 
         <GlassCard padding="lg">
-          <SectionHeader title="Top sector" subtitle="Where the revenue lives." icon={<Target className="w-4 h-4 text-emerald-600" />} />
+          <SectionHeader title="Top sector" subtitle="Signed contract value (MAD) by prospect sector." icon={<Target className="w-4 h-4 text-emerald-600" />} />
           {topSector ? (
             <>
               <div className="flex items-center justify-between mb-3">
@@ -395,6 +395,60 @@ export default function CommandCenterPage() {
         </GlassCard>
       </div>
     </div>
+  );
+}
+
+function plural(n: number, one: string, many: string) {
+  return `${n} ${n === 1 ? one : many}`;
+}
+
+function MoneyDetail({ money }: { money: Money }) {
+  const { pipeline, signed, paidInvoices, excluded } = money;
+  const rows: { label: string; value: number; count: number; note: string }[] = [
+    { label: "Accepted, not yet signed", value: pipeline.acceptedUnsigned.value, count: pipeline.acceptedUnsigned.count, note: "No signed or pending contract yet" },
+    { label: "Contracts awaiting signature", value: pipeline.awaitingSignature.value, count: pipeline.awaitingSignature.count, note: "Pending signature" },
+    { label: "Draft proposals", value: pipeline.drafts.value, count: pipeline.drafts.count, note: "Not sent; not in the pipeline" },
+    { label: "Signed this month", value: signed.thisMonth.value, count: signed.thisMonth.count, note: `Last month: ${fmt(signed.lastMonth.value)}` },
+    { label: "Paid this month (VAT incl.)", value: paidInvoices.thisMonth.value, count: paidInvoices.thisMonth.count, note: `Last month: ${fmt(paidInvoices.lastMonth.value)}` },
+  ];
+  const notes: string[] = [];
+  const excludedParts = [
+    excluded.contracts ? plural(excluded.contracts, "contract", "contracts") : "",
+    excluded.proposals ? plural(excluded.proposals, "proposal", "proposals") : "",
+    excluded.invoices ? plural(excluded.invoices, "paid invoice", "paid invoices") : "",
+  ].filter(Boolean);
+  if (excludedParts.length > 0) {
+    notes.push(`${excludedParts.join(", ")} in another currency (or without a valid amount) left out of the ${REPORT_CURRENCY} figures. Nothing is converted.`);
+  }
+  if (signed.signedWithoutDate > 0) notes.push(`${plural(signed.signedWithoutDate, "signed contract has", "signed contracts have")} no signing date: in the total, not in a month.`);
+  if (paidInvoices.paidWithoutDate > 0) notes.push(`${plural(paidInvoices.paidWithoutDate, "paid invoice has", "paid invoices have")} no payment date: in the total, not in a month.`);
+  if (money.proposalsWithSeveralContracts > 0) {
+    notes.push(`${plural(money.proposalsWithSeveralContracts, "proposal has", "proposals have")} more than one signed or pending contract. Each is counted; check them for duplicates.`);
+  }
+
+  return (
+    <GlassCard padding="lg">
+      <SectionHeader title="Money, in detail" subtitle={`All amounts in ${REPORT_CURRENCY}. Each deal is counted in one place only.`} />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {rows.map((r) => (
+          <div key={r.label} className="rounded-xl bg-[#F9FAFB] p-3">
+            <p className="text-[16px] font-bold text-[#111827]">{fmt(r.value)} <span className="text-[10px] font-normal text-[#9CA3AF]">{REPORT_CURRENCY}</span></p>
+            <p className="text-[12px] font-medium text-[#374151]">{r.label}</p>
+            <p className="text-[11px] text-[#6B7280]">{r.count} · {r.note}</p>
+          </div>
+        ))}
+      </div>
+      {notes.length > 0 && (
+        <ul className="mt-3 space-y-1 text-[12px] text-amber-700">
+          {notes.map((n) => <li key={n}>{n}</li>)}
+        </ul>
+      )}
+      <p className="mt-3 text-[11px] text-[#6B7280]">
+        Signed contracts are signed, active or completed, dated by their signing date. The pipeline is sent proposals only.
+        Paid invoices include VAT and are marked paid by hand; contract and proposal values are before tax, so the two are never added together.
+        There is no forecast figure, because it mixed these amounts.
+      </p>
+    </GlassCard>
   );
 }
 
