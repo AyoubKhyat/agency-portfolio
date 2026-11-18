@@ -165,3 +165,38 @@ test("rounds: each round is its own row and lock; Today shows every round's lead
   // Another day's rounds are separate.
   assert.deepEqual(await s.dayRounds("2026-11-15"), []);
 });
+
+test("two simultaneous Continues through the real store: one round 2 row, no lead saved twice", { skip }, async () => {
+  // Fake list and sites (no network): ok-* have a firm problem (no viewport), minor-* only SEO details.
+  const html = (viewport: boolean) => `<!doctype html><html lang="fr"><head><title>Biz</title>${viewport ? `<meta name="viewport" content="width=device-width">` : ""}</head>
+    <body><h1>Biz</h1><p>${"Une entreprise à Marrakech. ".repeat(40)}</p><a href="mailto:a@b.ma">Mail</a></body></html>`;
+  const fetcher = async (url: string) => {
+    const u = new URL(url);
+    const body = u.pathname === "/robots.txt" ? "User-agent: *\nDisallow:" : u.pathname === "/" ? html(u.hostname.startsWith("minor-")) : "";
+    return { requestedUrl: url, finalUrl: url, status: body ? 200 : 404, headers: {}, body, bytes: body.length, truncated: false, ms: 300, hops: [] };
+  };
+  const entries = Array.from({ length: 40 }, (_, i) => i + 1).map((id) => ({
+    id: `node/${id}`, name: `Biz ${id}`, sectors: ["HOTELS"], website: `https://${[5, 15, 16].includes(id) ? "ok" : "minor"}-${id}.ma`,
+  }));
+  const dataset = async () => ({
+    version: 1, city: "Marrakech", source: "test", licence: "test", boundary: { wikidata: "Q101625", relation: 1, name: "Marrakesh" },
+    osmDataUntil: null, generatedAt: "t", sectors: {}, sharedWebsites: 0, entries,
+  }) as any;
+  const base = { store: store.prismaDailyStore, dataset, loadCrm: async () => [], fetcher: fetcher as any };
+  const day = "2026-11-14";
+
+  const r1 = await agent.runDailyLeads({ ...base, now: () => new Date("2026-11-14T06:05:00Z") });
+  assert.deepEqual([r1.result, r1.leads], ["COMPLETED", 1]);
+  const cont = { ...base, now: () => new Date("2026-11-14T06:20:00Z"), retry: true, continueRound: true, expectDay: day };
+  const [a, b] = await Promise.all([agent.runDailyLeads(cont), agent.runDailyLeads(cont)]);
+  assert.deepEqual([a.result, b.result].sort(), ["ALREADY_RUNNING", "COMPLETED"], "exactly one Continue runs");
+
+  const sweeps = await client.discoverySweep.findMany({ where: { provider: "DAILY_AGENT" }, orderBy: { id: "asc" } });
+  assert.deepEqual(sweeps.map((x: any) => [x.id, x.status]), [["daily-agent-2026-11-14", "COMPLETED"], ["daily-agent-2026-11-14-r2", "COMPLETED"]], "no round 3, no second round 2");
+  const rows = await client.discoveryResult.findMany({ where: { sweep: { provider: "DAILY_AGENT" } } });
+  const urls = rows.map((r: any) => r.sourceUrl);
+  assert.equal(new Set(urls).size, urls.length, "no lead saved twice");
+  assert.deepEqual(urls.sort(), ["https://www.openstreetmap.org/node/15", "https://www.openstreetmap.org/node/16", "https://www.openstreetmap.org/node/5"]);
+  const view = await store.getTodayLeads(day);
+  assert.deepEqual([view.leads.length, view.continuation.roundsUsed, view.continuation.canContinue], [3, 2, true]);
+});
