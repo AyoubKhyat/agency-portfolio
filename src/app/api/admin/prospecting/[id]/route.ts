@@ -5,6 +5,7 @@ import { resolveStatusChange } from "@/lib/prospect-status-guard";
 import { sendAlreadyLogged } from "@/lib/record-send";
 import { QUEUE_ACTIVITY_TYPES } from "@/lib/next-action";
 import { checksClearedByEdit, contactCheckActivity } from "@/lib/contact-check";
+import { getProspectContactEvidence } from "@/lib/daily-leads-store";
 import { z } from "zod";
 
 export async function GET(
@@ -19,7 +20,9 @@ export async function GET(
   if (!prospect) return NextResponse.json({ error: "Not found" }, { status: 404 });
   // Read-only extras for the prospect page (group, next step, send evidence). Never blocks the page.
   const extras = await getProspectSummary(id, prospect.status, prospect.sentAt).catch(() => null);
-  return NextResponse.json({ ...prospect, ...(extras ?? {}) });
+  // Public contact evidence from the Today lead it came from, if any. Read-only; never blocks the page.
+  const contactEvidence = await getProspectContactEvidence(id).catch(() => null);
+  return NextResponse.json({ ...prospect, ...(extras ?? {}), contactEvidence });
 }
 
 const patchSchema = z.object({

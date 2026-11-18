@@ -3,8 +3,44 @@
 import { useState } from "react";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { CHECK_TEXT, contactOpenUrl, type ContactChannel, type ContactCheckStatus } from "@/lib/contact-check";
+import { CONFIDENCE_TEXT, sourceText, type EvidenceItem, type WhatsAppConfidence } from "@/lib/contact-evidence";
 
 type LastCheck = { userName: string; at: string } | null;
+/** Public evidence saved when the prospect was imported from Today (null: none, e.g. another source). */
+export type CheckEvidence = { items: EvidenceItem[]; otherValue: boolean; confidence?: WhatsAppConfidence; checkedAt?: string | null } | null;
+
+/** "site.ma/contact": the page, short enough for a phone. */
+const shortUrl = (url: string) => { try { const u = new URL(url); return (u.hostname.replace(/^www\./, "") + u.pathname).replace(/\/$/, ""); } catch { return url; } };
+
+/** Where the contact was published, as saved at import. Information only: it is never a check. */
+function EvidenceList({ channel, evidence }: { channel: ContactChannel; evidence: NonNullable<CheckEvidence> }) {
+  const what = channel === "WHATSAPP" ? "number" : "account";
+  if (evidence.otherValue) {
+    return <p className="text-[11px] text-amber-700 mt-1">The public evidence saved at import was for a different {what}; it doesn&apos;t apply to the one saved now.</p>;
+  }
+  return (
+    <div className="mt-1.5 rounded-lg bg-gray-50 px-2.5 py-1.5" data-evidence={channel}>
+      <p className="text-[11px] font-medium text-gray-600">
+        Public evidence{evidence.checkedAt ? `, seen ${new Date(evidence.checkedAt).toLocaleDateString("en-GB", { dateStyle: "medium", timeZone: "Africa/Casablanca" })}` : ""} · not a check
+      </p>
+      <ul className="mt-0.5 space-y-0.5">
+        {evidence.items.map((i) => (
+          <li key={i.source + i.link + i.sourceUrl} className="text-[11px] text-gray-500 break-all">
+            {i.source === "OSM_TAG" ? "OpenStreetMap tag" : "Website"}:{" "}
+            {i.sourceUrl
+              ? <a href={i.sourceUrl} target="_blank" rel="noopener noreferrer nofollow" className="text-violet-600 hover:underline">{shortUrl(i.sourceUrl)}</a>
+              : <span>{sourceText(i)}</span>}
+          </li>
+        ))}
+      </ul>
+      {channel === "WHATSAPP" && evidence.confidence && evidence.confidence !== "NONE" && (
+        <p className={`text-[11px] mt-0.5 ${evidence.confidence === "CONFLICT" ? "text-red-600" : "text-gray-500"}`}>
+          Confidence {evidence.confidence}: {CONFIDENCE_TEXT[evidence.confidence]}
+        </p>
+      )}
+    </div>
+  );
+}
 
 const BADGE: Record<ContactCheckStatus, string> = {
   VERIFIED: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -16,8 +52,10 @@ const BADGE: Record<ContactCheckStatus, string> = {
  * One contact, checked by a person: open it, then say what you saw. Nothing is checked automatically.
  * `value` is the stored WhatsApp link or Instagram handle; a phone number alone is never turned into a link.
  */
-export function ContactCheck({ channel, value, phone = "", status, lastCheck, onSet }: {
+export function ContactCheck({ channel, value, phone = "", status, lastCheck, onSet, evidence = null }: {
   channel: ContactChannel;
+  /** Where this contact was published, saved at import (Today leads). Shown, never used as a check. */
+  evidence?: CheckEvidence;
   value: string;
   /** WhatsApp only: the saved phone, shown (never linked) when no WhatsApp link is saved. */
   phone?: string;
@@ -47,6 +85,7 @@ export function ContactCheck({ channel, value, phone = "", status, lastCheck, on
       <p className="text-[11px] text-gray-400 mt-1">
         {lastCheck ? `Last checked by ${lastCheck.userName}, ${new Date(lastCheck.at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}` : current === "UNVERIFIED" ? "No one has checked it yet." : "Who set this isn't in the recent activity (older change or a bulk cleanup)."}
       </p>
+      {evidence && (evidence.otherValue || evidence.items.length > 0) && <EvidenceList channel={channel} evidence={evidence} />}
       {(value || phone) && (
         <div className="flex flex-wrap items-center gap-2 mt-2">
           {open ? (

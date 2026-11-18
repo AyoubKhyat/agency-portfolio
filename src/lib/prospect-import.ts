@@ -59,7 +59,15 @@ export type ImportOutcome =
   | { status: 400 | 503; body: { error: string; details?: unknown } };
 
 /** Imports the candidates in `input` (the import API's JSON body) as `session`. Never throws for bad input. */
-export async function importCandidates(input: unknown, session: ImportSession): Promise<ImportOutcome> {
+export type ImportOptions = {
+  /**
+   * Server-only: notes written by the caller from data it already holds (the Daily Lead Agent's saved run), per
+   * candidate sourceId. Never taken from the request body, so a client can't add note text through it.
+   */
+  serverNotes?: (sourceId: string) => readonly string[];
+};
+
+export async function importCandidates(input: unknown, session: ImportSession, opts: ImportOptions = {}): Promise<ImportOutcome> {
   if (!hasPrisma()) return { status: 503, body: { error: "DB unavailable" } };
 
   const parsed = bodySchema.safeParse(input);
@@ -149,11 +157,13 @@ export async function importCandidates(input: unknown, session: ImportSession): 
 
     // Written here from validated fields only; null for an incomplete check or nothing left to keep.
     const auditNote = cand.audit ? buildAuditNote(cand.audit, website) : null;
+    const noteTexts = [...(auditNote ? [auditNote] : []), ...(opts.serverNotes?.(cand.sourceId) ?? []).filter((n) => n.trim().length > 0)];
+    const noteRows = noteTexts.map((content) => ({ content, authorId: session.userId, authorName: session.fullName }));
 
-    // One write: the prospect and its audit note are saved together or not at all.
+    // One write: the prospect and its notes are saved together or not at all (a single note as before).
     const prospect = await prisma.prospect.create({
       data: {
-        ...(auditNote ? { notes: { create: { content: auditNote, authorId: session.userId, authorName: session.fullName } } } : {}),
+        ...(noteRows.length > 0 ? { notes: { create: noteRows.length === 1 ? noteRows[0] : noteRows } } : {}),
         name: cand.name,
         phone,
         whatsappLink,

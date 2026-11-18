@@ -84,12 +84,15 @@ test("legacy discovery writes start with requireOwnerOrAdmin(); their reads and 
 
 test("the shared import helper is server code with no route and no guard of its own; Today calls it, not the API", () => {
   const helper = readFileSync(new URL("../src/lib/prospect-import.ts", import.meta.url), "utf8");
-  assert.match(helper, /export async function importCandidates\(input: unknown, session: ImportSession\)/);
+  assert.match(helper, /export async function importCandidates\(input: unknown, session: ImportSession, opts: ImportOptions = \{\}\)/,
+    "the third argument is server-side options only (notes the caller writes), never part of the request body");
   assert.doesNotMatch(helper, /\bexport (async )?function (GET|POST|PUT|PATCH|DELETE)\b/, "not a route handler");
   assert.doesNotMatch(helper, /"use client"/);
   const daily = readFileSync(new URL("../src/app/api/admin/daily-leads/route.ts", import.meta.url), "utf8");
   assert.doesNotMatch(daily, /prospect-discovery\/import\/route/, "Today no longer goes through the owner-or-admin API");
-  assert.match(daily, /importCandidates\(\{ candidates: \[importCandidate\(lead\)\], allowPossibleDuplicates: false \}, auth\.session\)/);
+  assert.match(daily, /importCandidates\(\{ candidates: \[importCandidate\(lead\)\], allowPossibleDuplicates: false \}, auth\.session,\s*\{ serverNotes: \(sourceId\) => \(sourceId === lead\.osmId \? notes : \[\]\) \}\)/,
+    "duplicates are still re-checked; the notes come from the server's own copy of the lead");
+  assert.match(daily, /const notes = importNotes\(lead\);/);
 });
 
 test("public webhook objects never carry the signing secret", () => {

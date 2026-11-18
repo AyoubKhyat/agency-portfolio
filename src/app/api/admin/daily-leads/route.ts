@@ -3,7 +3,7 @@ import { z } from "zod";
 import { isAdmin, requireTeam, sessionIsOwner } from "@/lib/authz";
 import { hasPrisma } from "@/lib/prisma";
 import { casablancaDay } from "@/lib/daily-leads";
-import { getTodayLeads, importCandidate, markImported } from "@/lib/daily-leads-store";
+import { getTodayLeads, importCandidate, importNotes, markImported } from "@/lib/daily-leads-store";
 import { runDailyLeadsNow } from "@/lib/daily-leads-run";
 import { importCandidates } from "@/lib/prospect-import";
 
@@ -64,7 +64,10 @@ export async function POST(req: Request) {
     if (!lead) return NextResponse.json({ error: "That lead isn't in today's list" }, { status: 404 });
     if (lead.importedProspectId) return NextResponse.json({ prospectId: lead.importedProspectId, already: true });
 
-    const out = await importCandidates({ candidates: [importCandidate(lead)], allowPossibleDuplicates: false }, auth.session);
+    // The contact evidence and website findings notes are written from the saved run, saved with the prospect.
+    const notes = importNotes(lead);
+    const out = await importCandidates({ candidates: [importCandidate(lead)], allowPossibleDuplicates: false }, auth.session,
+      { serverNotes: (sourceId) => (sourceId === lead.osmId ? notes : []) });
     if (out.status !== 200) return NextResponse.json({ error: out.body.error ?? "Import failed" }, { status: out.status });
     const created = out.body.created[0];
     if (!created) return NextResponse.json({ skipped: out.body.skippedDetails[0]?.reason ?? "Not imported" }, { status: 409 });

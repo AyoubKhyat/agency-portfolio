@@ -57,7 +57,15 @@ function checkDay(iso: string, now: number): string | null {
  * The note text for an audit, or null when there is nothing trustworthy to keep: a check that didn't complete,
  * an invalid date, or no finding left after the checks above.
  */
-export function buildAuditNote(audit: AuditInput, website: string | null | undefined, now = Date.now()): string | null {
+export function buildAuditNote(
+  audit: AuditInput, website: string | null | undefined, now = Date.now(),
+  /**
+   * origin DAILY_AGENT: the findings come from the Daily Lead Agent's saved run (server side), not the browser.
+   * unconfirmed: finding ids a second read didn't confirm; they are kept, marked as unconfirmed.
+   */
+  opts: { origin?: "FIND" | "DAILY_AGENT"; unconfirmed?: ReadonlySet<string> } = {},
+): string | null {
+  const daily = opts.origin === "DAILY_AGENT";
   if (audit.outcome !== "COMPLETE") return null;
   const host = webHost(website);
   const day = checkDay(audit.auditedAt, now);
@@ -71,14 +79,17 @@ export function buildAuditNote(audit: AuditInput, website: string | null | undef
     const observed = sanitizeObserved(f.observed);
     if (!observed) continue;
     seen.add(f.id);
-    lines.push(`• ${issueCopy({ id: f.id, sentence: "", observed }).title}: seen "${observed}" (${f.sourceUrl.trim()})`);
+    const unsure = opts.unconfirmed?.has(f.id) ? " (unconfirmed)" : "";
+    lines.push(`• ${issueCopy({ id: f.id, sentence: "", observed }).title}${unsure}: seen "${observed}" (${f.sourceUrl.trim()})`);
   }
   if (lines.length === 0) return null;
 
   const page = webHost(audit.finalUrl) === host ? audit.finalUrl!.trim() : website!.trim();
   return [
-    `Website check from Find businesses, dated ${day} (${page}): ${lines.length} problem${lines.length === 1 ? "" : "s"} a customer would notice.`,
+    `Website check from ${daily ? "the Daily Lead Agent" : "Find businesses"}, dated ${day} (${page}): ${lines.length} problem${lines.length === 1 ? "" : "s"} a customer would notice.`,
     ...lines,
-    "Sent by the browser with the import and checked here for format and site only; the site was not re-checked. Check it again before relying on it.",
+    daily
+      ? "Saved by that day's Daily Lead Agent run; the site was not re-checked at import. Check it again before relying on it."
+      : "Sent by the browser with the import and checked here for format and site only; the site was not re-checked. Check it again before relying on it.",
   ].join("\n");
 }

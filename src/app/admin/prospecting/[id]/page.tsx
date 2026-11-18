@@ -8,6 +8,7 @@ import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import AvatarChip from "@/components/AvatarChip";
 import { PlaybookPanel } from "./PlaybookPanel";
 import { ContactCheck } from "@/components/admin/contact-check";
+import { evidenceForSaved, sourceText, type ContactEvidence } from "@/lib/contact-evidence";
 import { OutreachDraftPanel } from "@/components/admin/outreach-draft-panel";
 import { CONTACT_CHECK_LABELS, lastContactCheck, type ContactCheckStatus } from "@/lib/contact-check";
 import {
@@ -51,6 +52,8 @@ type Prospect = {
   score?: number | null; scoreLabel?: "HIGH" | "MEDIUM" | "LOW" | null;
   /** Read-only extras from the GET route (prospect-groups rules). Absent if they couldn't be worked out. */
   summary?: RowSummary | null; sendEvidence?: VisibleSendEvidence; lastConfirmedSendDay?: string | null;
+  /** Public contact evidence from the Today lead this prospect was imported from (null: none). */
+  contactEvidence?: ContactEvidence | null;
 };
 
 const fmt = (d: string, withTime = false) =>
@@ -133,6 +136,9 @@ export default function ProspectDetailPage() {
   const evidence = prospect.sendEvidence ?? "NOT_CONTACTED";
   const told = contactSummary({ sendEvidence: evidence, replyState: summary?.replyState ?? "NONE", lastConfirmedSendDay: prospect.lastConfirmedSendDay, group: summary?.group });
   const ig = prospect.instagram.replace(/^@/, "");
+  // Evidence saved with a Today import: where each contact was published. Shown beside the checks, never a check.
+  const ev = prospect.contactEvidence ?? null;
+  const otherFound = (ev?.items ?? []).filter((i) => i.channel === "EMAIL" || i.channel === "FACEBOOK");
   const statusOptions = STATUSES.includes(prospect.status) ? STATUSES : [prospect.status, ...STATUSES];
 
   return (
@@ -201,10 +207,22 @@ export default function ProspectDetailPage() {
         <p className={`${label} mb-2`}>Contact checks</p>
         <div className="grid gap-2">
           <ContactCheck channel="WHATSAPP" value={prospect.whatsappLink} phone={prospect.phone} status={prospect.whatsappStatus}
-            lastCheck={lastContactCheck(prospect.activities, "WHATSAPP")} onSet={(s) => handleContactCheck("whatsappStatus", s)} />
+            lastCheck={lastContactCheck(prospect.activities, "WHATSAPP")} onSet={(s) => handleContactCheck("whatsappStatus", s)}
+            evidence={ev ? { ...evidenceForSaved(ev, "WHATSAPP", prospect.whatsappLink), confidence: ev.whatsappConfidence, checkedAt: ev.checkedAt } : null} />
           <ContactCheck channel="INSTAGRAM" value={prospect.instagram} status={prospect.instagramStatus}
-            lastCheck={lastContactCheck(prospect.activities, "INSTAGRAM")} onSet={(s) => handleContactCheck("instagramStatus", s)} />
+            lastCheck={lastContactCheck(prospect.activities, "INSTAGRAM")} onSet={(s) => handleContactCheck("instagramStatus", s)}
+            evidence={ev ? { ...evidenceForSaved(ev, "INSTAGRAM", prospect.instagram), checkedAt: ev.checkedAt } : null} />
         </div>
+        {otherFound.length > 0 && (
+          <div className="mt-2 text-[11px] text-gray-500" data-evidence="OTHER">
+            <p className="font-medium text-gray-600">Also published (no check exists for these; nothing was verified)</p>
+            <ul className="mt-0.5 space-y-0.5">
+              {otherFound.map((i) => (
+                <li key={i.channel + i.link} className="break-all">{i.channel === "EMAIL" ? "E-mail" : "Facebook"} {i.value || i.link}, {sourceText(i)}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="mt-4">
           <p className={`${label} mb-2`}>Owner</p>
           <div className="flex flex-wrap gap-1.5">

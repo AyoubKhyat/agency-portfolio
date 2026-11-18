@@ -227,6 +227,14 @@ function LeadCard({ lead, state, onImport }: { lead: TodayLead; state: ImportSta
         {state.skipped && <span role="status" className="text-[12px] text-amber-700 dark:text-amber-300">Not imported: {state.skipped}</span>}
         {state.error && <span role="alert" className="text-[12px] text-red-600">{state.error}</span>}
       </div>
+      {prospectId && typeof lead.contactsToCheck === "number" && (
+        <p role="status" data-contacts-to-check={lead.contactsToCheck}
+          className={cn("mt-2 text-[12px] font-medium", lead.contactsToCheck > 0 ? "text-amber-700 dark:text-amber-300" : "text-[var(--os-text-muted)]")}>
+          {lead.contactsToCheck > 0
+            ? `${lead.contactsToCheck} contact${lead.contactsToCheck === 1 ? "" : "s"} still to check by hand (WhatsApp or Instagram)`
+            : "No WhatsApp or Instagram contact waiting for a check"}
+        </p>
+      )}
       {prospectId && <p className="mt-2 text-[12px] text-[var(--os-text-muted)]">On the prospect page: check the contact, then draft the first message. Nothing is sent for you.</p>}
     </li>
   );
@@ -293,6 +301,8 @@ export function TodaysLeads() {
       next = { error: "Import failed" };
     }
     setImports((m) => ({ ...m, [lead.resultId]: next }));
+    // Read the list again so the new prospect's contacts-to-check count shows.
+    if (next.prospectId) await load();
   }
 
   const continueButton = () => view?.canRun && view.continuation.canContinue && (
