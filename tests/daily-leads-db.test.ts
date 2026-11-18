@@ -170,7 +170,13 @@ test("two simultaneous Continues through the real store: one round 2 row, no lea
   // Fake list and sites (no network): ok-* have a firm problem (no viewport), minor-* only SEO details.
   const html = (viewport: boolean) => `<!doctype html><html lang="fr"><head><title>Biz</title>${viewport ? `<meta name="viewport" content="width=device-width">` : ""}</head>
     <body><h1>Biz</h1><p>${"Une entreprise à Marrakech. ".repeat(40)}</p><a href="mailto:a@b.ma">Mail</a></body></html>`;
+  // Barrier: once armed, every site fetch waits until both Continues have tried to lock round 2, so the round
+  // that won the lock is still running when the other one tries (fake sites otherwise answer in a few ms).
+  let gate: Promise<void> | null = null;
+  let release = () => {};
+  let roundTwoClaims = 0;
   const fetcher = async (url: string) => {
+    if (gate) await gate;
     const u = new URL(url);
     const body = u.pathname === "/robots.txt" ? "User-agent: *\nDisallow:" : u.pathname === "/" ? html(u.hostname.startsWith("minor-")) : "";
     return { requestedUrl: url, finalUrl: url, status: body ? 200 : 404, headers: {}, body, bytes: body.length, truncated: false, ms: 300, hops: [] };
@@ -182,13 +188,28 @@ test("two simultaneous Continues through the real store: one round 2 row, no lea
     version: 1, city: "Marrakech", source: "test", licence: "test", boundary: { wikidata: "Q101625", relation: 1, name: "Marrakesh" },
     osmDataUntil: null, generatedAt: "t", sectors: {}, sharedWebsites: 0, entries,
   }) as any;
-  const base = { store: store.prismaDailyStore, dataset, loadCrm: async () => [], fetcher: fetcher as any };
+  // The real Prisma store, only observed: each round-2 lock attempt is counted after it returns.
+  const real = store.prismaDailyStore;
+  const observed = {
+    ...real,
+    claim: async (...args: Parameters<typeof real.claim>) => {
+      const result = await real.claim(...args);
+      if (args[1] === 2 && ++roundTwoClaims === 2) release();
+      return result;
+    },
+  };
+  const base = { store: observed, dataset, loadCrm: async () => [], fetcher: fetcher as any };
   const day = "2026-11-14";
 
   const r1 = await agent.runDailyLeads({ ...base, now: () => new Date("2026-11-14T06:05:00Z") });
   assert.deepEqual([r1.result, r1.leads], ["COMPLETED", 1]);
+  gate = new Promise<void>((resolve) => { release = resolve; });
+  // Safety net so a broken barrier fails the assertions below instead of hanging the job.
+  const fallback = setTimeout(() => release(), 30_000);
   const cont = { ...base, now: () => new Date("2026-11-14T06:20:00Z"), retry: true, continueRound: true, expectDay: day };
   const [a, b] = await Promise.all([agent.runDailyLeads(cont), agent.runDailyLeads(cont)]);
+  clearTimeout(fallback);
+  assert.equal(roundTwoClaims, 2, "both Continues tried to lock round 2");
   assert.deepEqual([a.result, b.result].sort(), ["ALREADY_RUNNING", "COMPLETED"], "exactly one Continue runs");
 
   const sweeps = await client.discoverySweep.findMany({ where: { provider: "DAILY_AGENT" }, orderBy: { id: "asc" } });
