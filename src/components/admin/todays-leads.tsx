@@ -147,7 +147,8 @@ function IssueList({ findings, open }: { findings: TodayLead["findings"]; open: 
   );
 }
 
-function LeadCard({ lead, state, onImport }: { lead: TodayLead; state: ImportState; onImport: () => void }) {
+/** canDraft: an owner or admin, the only people the draft itself accepts (the same flag that starts a run). */
+function LeadCard({ lead, state, onImport, canDraft = false }: { lead: TodayLead; state: ImportState; onImport: () => void; canDraft?: boolean }) {
   const [open, setOpen] = useState(false);
   const prospectId = lead.importedProspectId ?? state.prospectId;
   const site = lead.finalUrl || lead.website;
@@ -234,6 +235,15 @@ function LeadCard({ lead, state, onImport }: { lead: TodayLead; state: ImportSta
             ? `${lead.contactsToCheck} contact${lead.contactsToCheck === 1 ? "" : "s"} still to check by hand (WhatsApp or Instagram)`
             : "No WhatsApp or Instagram contact waiting for a check"}
         </p>
+      )}
+      {prospectId && (
+        // Links only: the contact checks and the draft (with all its gates) stay on the prospect page.
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px]" data-next-steps>
+          <Link href={`/admin/prospecting/${prospectId}#contact`} className="font-medium text-[var(--os-purple)] hover:underline">Check contacts</Link>
+          {canDraft && lead.hasVerifiedChannel === true && (
+            <Link href={`/admin/prospecting/${prospectId}#draft`} className="font-medium text-[var(--os-purple)] hover:underline">Draft first message</Link>
+          )}
+        </div>
       )}
       {prospectId && <p className="mt-2 text-[12px] text-[var(--os-text-muted)]">On the prospect page: check the contact, then draft the first message. Nothing is sent for you.</p>}
     </li>
@@ -359,7 +369,7 @@ export function TodaysLeads() {
         {status}
         {view.leads.length > 0 ? (
           <ul className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {view.leads.map((l) => <LeadCard key={l.resultId} lead={l} state={imports[l.resultId] ?? {}} onImport={() => void importLead(l)} />)}
+            {view.leads.map((l) => <LeadCard key={l.resultId} lead={l} state={imports[l.resultId] ?? {}} onImport={() => void importLead(l)} canDraft={view.canRun} />)}
           </ul>
         ) : r.status === "COMPLETED" && <p className="text-[14px] text-[var(--os-text)]">No business met the bar today.</p>}
         {r.status === "COMPLETED" && <div className="mt-3">{continueButton()}</div>}
@@ -401,7 +411,7 @@ export function TodaysLeads() {
       <>
         <CompletedStatus view={view} />
         <ul className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {view.leads.map((l) => <LeadCard key={l.resultId} lead={l} state={imports[l.resultId] ?? {}} onImport={() => void importLead(l)} />)}
+          {view.leads.map((l) => <LeadCard key={l.resultId} lead={l} state={imports[l.resultId] ?? {}} onImport={() => void importLead(l)} canDraft={view.canRun} />)}
         </ul>
         <div className="mt-3">{continueButton()}</div>
         <StatsLines view={view} />

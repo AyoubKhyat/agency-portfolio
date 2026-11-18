@@ -7,6 +7,8 @@
  *
  * A draft is refused when the prospect was already contacted, has no channel a person marked VERIFIED,
  * may be the same business as another prospect, or the site couldn't be read well enough to say anything.
+ * It says only confirmed problems a customer would notice (no https, not set up for phones, a missing contact
+ * option confirmed on the Contact pages), in the agency's voice ("nous", Ibda3 Digital); otherwise it's refused.
  */
 import { qualifyWebsite, matchProspects, type ProspectRow, type ProblemEvidence, type QualifyDeps, type ProspectMatch } from "@/lib/prospect-qualification";
 import { isContacted, latestSendAt } from "@/lib/prospect-stages";
@@ -14,6 +16,8 @@ import { whatsappUrl, instagramUrl, type SendChannel } from "@/lib/next-action";
 import { analyzeMessage, type Warning } from "@/lib/message-quality";
 import { repairInstagram } from "@/lib/discovery/validate";
 import { contactOpenUrl } from "@/lib/contact-check";
+import { discoverSiteContacts } from "@/lib/lead-contacts";
+import { gradeFindings, type FindingEvidence } from "@/lib/daily-leads-quality";
 
 export type DraftLanguage = "fr" | "en" | "ar";
 export const MAX_FINDINGS = 2;
@@ -76,36 +80,71 @@ export const FINDINGS: [id: string, rule: FindingRule][] = [
 
 export type UsedFinding = ProblemEvidence & { sentence: string };
 
-/** Up to two failed checks, in the order above, each with the sentence its evidence supports. */
-export function pickFindings(problems: ProblemEvidence[], language: DraftLanguage): UsedFinding[] {
+/**
+ * What a first message may say: only confirmed problems a customer would notice, in the agency's voice ("nous").
+ * FINDINGS above stays the full table that Find businesses and the Daily Lead Agent score and describe with; a
+ * message uses this narrower one. Speed (a single sample from our server) and SEO details are never in a message.
+ * E_CONTACT counts only when the Daily Leads grading confirms it (gradeFindings: FIRM after reading the Contact pages).
+ */
+export const DRAFT_FINDINGS: [id: string, rule: FindingRule][] = [
+  ["E_HTTPS", (observed) => (/^http:\/\//i.test(observed) ? {
+    fr: "le site ne s'ouvre pas en connexion sécurisée (https), et les navigateurs l'affichent comme « non sécurisé »",
+    en: "the site doesn't open over a secure connection (https), so browsers show it as \"not secure\"",
+    ar: "الموقع لا يفتح عبر اتصال آمن (https)، لذلك تعرضه المتصفحات على أنه «غير آمن»",
+  } : null)],
+  ["E_VIEWPORT", none({
+    fr: "la page n'indique pas aux téléphones comment s'afficher, elle risque donc d'apparaître en tout petit sur mobile",
+    en: "the page doesn't tell phones how to display it, so it may show up tiny on mobile",
+    ar: "الصفحة لا تحدد للهواتف طريقة عرضها، لذلك قد تظهر صغيرة جداً على الجوال",
+  })],
+  ["E_CONTACT", none({
+    fr: "nous n'avons trouvé ni sur la page d'accueil ni sur la page Contact de formulaire, de lien e-mail, de téléphone ou de WhatsApp",
+    en: "we couldn't find a form, or an email, phone or WhatsApp link, on the home page or the Contact page",
+    ar: "لم نجد في الصفحة الرئيسية ولا في صفحة الاتصال نموذج تواصل ولا رابط بريد أو هاتف أو واتساب",
+  })],
+];
+export const DRAFT_FINDING_IDS: readonly string[] = DRAFT_FINDINGS.map(([id]) => id);
+
+/** A failed check with the evidence grade the Daily Leads rules gave it. Ungraded findings never count. */
+export type GradedProblem = ProblemEvidence & { evidence?: FindingEvidence };
+
+/** Up to two confirmed (FIRM) customer-facing failures, in the order above, each with the sentence its evidence supports. */
+export function pickFindings(problems: readonly GradedProblem[], language: DraftLanguage): UsedFinding[] {
   const out: UsedFinding[] = [];
-  for (const [id, rule] of FINDINGS) {
-    const p = problems.find((e) => e.id === id);
+  for (const [id, rule] of DRAFT_FINDINGS) {
+    const p = problems.find((e) => e.id === id && e.evidence === "FIRM");
     const s = p ? rule(p.observed) : null;
-    if (p && s) out.push({ ...p, sentence: s[language] });
+    if (p && s) {
+      const { evidence: _evidence, ...plain } = p; // eslint-disable-line @typescript-eslint/no-unused-vars
+      out.push({ ...plain, sentence: s[language] });
+    }
     if (out.length === MAX_FINDINGS) break;
   }
   return out;
 }
 
-const TEXT: Record<DraftLanguage, { hello: string; intro: (d: string, n: number) => string; ask: string; team: string }> = {
+/** The agency's voice: "nous", signed by the person and Ibda3 Digital (or the team when no name is known). */
+const TEXT: Record<DraftLanguage, { hello: string; intro: (d: string, n: number) => string; askMany: string; askOne: string; sign: (first: string) => string }> = {
   fr: {
     hello: "Bonjour {name},",
-    intro: (d, n) => `En visitant la page d'accueil de ${d}, j'ai remarqué ${n > 1 ? "deux points" : "un point"} :`,
-    ask: "Ce sont des corrections simples. Voulez-vous que je vous envoie le détail ?",
-    team: "Ibda3 Digital",
+    intro: (d, n) => `En visitant la page d'accueil de ${d}, nous avons remarqué ${n > 1 ? "deux points" : "un point"} :`,
+    askMany: "Ce sont des corrections simples. Voulez-vous que nous vous envoyions le détail ?",
+    askOne: "C'est une correction simple. Voulez-vous que nous vous envoyions le détail ?",
+    sign: (first) => (first ? `${first}, Ibda3 Digital` : "L'équipe Ibda3 Digital"),
   },
   en: {
     hello: "Hello {name},",
-    intro: (d, n) => `I visited the home page of ${d} and noticed ${n > 1 ? "two things" : "one thing"}:`,
-    ask: "Both are simple to fix. Would you like me to send you the details?",
-    team: "Ibda3 Digital",
+    intro: (d, n) => `We visited the home page of ${d} and noticed ${n > 1 ? "two things" : "one thing"}:`,
+    askMany: "Both are simple to fix. Would you like us to send you the details?",
+    askOne: "It's simple to fix. Would you like us to send you the details?",
+    sign: (first) => (first ? `${first}, Ibda3 Digital` : "The Ibda3 Digital team"),
   },
   ar: {
     hello: "مرحباً {name}،",
-    intro: (d, n) => `زرت الصفحة الرئيسية لموقع ${d} ولاحظت ${n > 1 ? "نقطتين" : "نقطة واحدة"}:`,
-    ask: "تصحيحها بسيط. هل تودون أن أرسل لكم التفاصيل؟",
-    team: "Ibda3 Digital",
+    intro: (d, n) => `زرنا الصفحة الرئيسية لموقع ${d} ولاحظنا ${n > 1 ? "نقطتين" : "نقطة واحدة"}:`,
+    askMany: "تصحيحهما بسيط. هل تودون أن نرسل لكم التفاصيل؟",
+    askOne: "تصحيحها بسيط. هل تودون أن نرسل لكم التفاصيل؟",
+    sign: (first) => (first ? `${first}، Ibda3 Digital` : "فريق Ibda3 Digital"),
   },
 };
 
@@ -113,20 +152,15 @@ const TEXT: Record<DraftLanguage, { hello: string; intro: (d: string, n: number)
 export function composeDraft(input: { language: DraftLanguage; businessName: string; domain: string; findings: UsedFinding[]; senderName: string }): string {
   const t = TEXT[input.language];
   const first = input.senderName.trim().split(/\s+/)[0] ?? "";
-  const one = input.findings.length === 1;
-  const ask = !one ? t.ask
-    : input.language === "en" ? "It's simple to fix. Would you like me to send you the details?"
-    : input.language === "fr" ? "C'est une correction simple. Voulez-vous que je vous envoie le détail ?"
-    : t.ask;
   return [
     t.hello.replace("{name}", input.businessName.trim()),
     "",
     t.intro(input.domain, input.findings.length),
     ...input.findings.map((f) => `- ${f.sentence}`),
     "",
-    ask,
+    input.findings.length === 1 ? t.askOne : t.askMany,
     "",
-    first ? `${first}, ${t.team}` : t.team,
+    t.sign(first),
   ].join("\n");
 }
 
@@ -255,9 +289,14 @@ export async function draftForProspect(
   if (q.outcome !== "COMPLETE" || !q.finalUrl) {
     return { ok: false, blockers: [{ code: "SITE_NOT_READ", message: "The website couldn't be read well enough to say anything about it." }] };
   }
-  const findings = pickFindings(q.problems, input.language);
+  // Grade the findings with the Daily Leads rules. A missing contact option is confirmed only by a second read of
+  // the site's own Contact pages (robots.txt allowing), so that read happens only when that finding is there.
+  const needsSecondRead = q.problems.some((p) => p.id === "E_CONTACT");
+  const second = needsSecondRead ? await discoverSiteContacts(q.finalUrl, { fetcher: deps.fetcher }).catch(() => undefined) : undefined;
+  const graded = gradeFindings(q.problems.map((p) => ({ ...p, sentence: "" })), second);
+  const findings = pickFindings(graded, input.language);
   if (findings.length === 0) {
-    return { ok: false, blockers: [{ code: "NO_EVIDENCED_FINDING", message: "The check found nothing a business owner would care about, so there's nothing honest to write." }] };
+    return { ok: false, blockers: [{ code: "NO_EVIDENCED_FINDING", message: "No confirmed problem a customer would notice (no https, not set up for phones, or a confirmed missing contact option), so there's nothing honest to write." }] };
   }
 
   const body = composeDraft({ language: input.language, businessName: p.name, domain: host(q.finalUrl), findings, senderName: input.senderName });

@@ -262,10 +262,17 @@ test("Today: imported leads carry the contacts-to-check count; not imported or a
   db.prospects = [{ id: "p1", whatsappLink: "https://wa.me/212612345678", whatsappStatus: "UNVERIFIED", instagram: "riad.test", instagramStatus: "VERIFIED" }];
   const view = await store.getTodayLeads(day);
   assert.deepEqual(view.leads.map((l) => [l.osmId, l.contactsToCheck]), [["node/7", 1], ["node/8", null]], "one WhatsApp still to check; the other lead isn't imported");
+  assert.deepEqual(view.leads.map((l) => l.hasVerifiedChannel), [true, null], "Instagram verified from its saved handle: a draft can be tried");
+  db.prospects = [{ ...db.prospects[0], instagramStatus: "UNVERIFIED" }];
+  assert.equal((await store.getTodayLeads(day)).leads[0].hasVerifiedChannel, false, "nothing verified yet: no draft link");
+  db.prospects = [{ ...db.prospects[0], whatsappStatus: "VERIFIED", whatsappLink: "" }];
+  assert.equal((await store.getTodayLeads(day)).leads[0].hasVerifiedChannel, false, "a WhatsApp check without a saved link doesn't count (the draft's rule)");
+  db.prospects = [{ id: "p1", phone: "", whatsappLink: "https://wa.me/212612345678", whatsappStatus: "UNVERIFIED", instagram: "riad.test", instagramStatus: "VERIFIED" }];
 
   db.findManyThrows = true;
   const fallback = await store.getTodayLeads(day);
   assert.deepEqual(fallback.leads.map((l) => l.contactsToCheck), [null, null], "the leads still show without the count");
+  assert.deepEqual(fallback.leads.map((l) => l.hasVerifiedChannel), [null, null], "and without the draft link");
   db.findManyThrows = false;
 
   db.prospects = [];
