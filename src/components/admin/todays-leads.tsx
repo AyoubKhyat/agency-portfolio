@@ -91,6 +91,7 @@ function StatsLine({ run, label }: { run: TodayRun; label: string }) {
       {s.skipped.inCrm + s.skipped.possibleDuplicate > 0 && <> · {s.skipped.inCrm + s.skipped.possibleDuplicate} already in the CRM or possible duplicates</>}
       {s.skipped.shownBefore > 0 && <> · {s.skipped.shownBefore} shown on an earlier day</>}
       {(s.skipped.checkedToday ?? 0) > 0 && <> · {s.skipped.checkedToday} already checked in an earlier round today</>}
+      {(s.skipped.duplicateInRound ?? 0) > 0 && <> · {s.skipped.duplicateInRound} listed in more than one sector, checked once</>}
       {rejectedWeak(s) > 0 && <> · {rejectedWeak(s)} left out as weak (SEO-only or unconfirmed problems)</>}
       {(s.rejected?.competitor ?? 0) > 0 && <> · {s.rejected!.competitor} agenc{s.rejected!.competitor === 1 ? "y" : "ies"} like ours skipped</>}
       {s.stoppedEarly && <> · stopped early at the time limit</>}

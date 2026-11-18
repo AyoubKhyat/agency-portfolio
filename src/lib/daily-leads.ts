@@ -145,6 +145,11 @@ export type RunStats = {
     noWebsite: number; platformOnly: number; inCrm: number; possibleDuplicate: number; sameSiteInBatch: number; shownBefore: number;
     /** Checked by an earlier round of the same day: never checked twice in a day. Absent before rounds existed. */
     checkedToday?: number;
+    /**
+     * The same business (OSM id) or website already taken by another sector this round, e.g. a riad listed under
+     * Hotels and Riads: checked once. Absent before cross-sector deduplication existed.
+     */
+    duplicateInRound?: number;
   };
   noWebsiteWithContact: number;
   /** Own-site pages read for contacts, and leads candidates that turned out to be in the CRM through them. */
@@ -305,6 +310,39 @@ export function rankNoWebsite<T extends { entry: OsmEntry; sector: string }>(ent
   return [...entries].sort((a, b) => weight(b.entry) - weight(a.entry) || a.entry.name.localeCompare(b.entry.name));
 }
 
+/**
+ * Hosting where the path, not the host, tells sites apart (alice.wixsite.com/spa and alice.wixsite.com/riad are two
+ * sites). Suffix match: a subdomain of these counts too.
+ */
+const PATH_TENANT_HOSTS = ["wixsite.com", "sites.google.com", "github.io", "my.canva.site", "notion.site", "webflow.io", "blogspot.com"];
+
+/**
+ * A website's identity for the in-round duplicate check. Usually its domain (siteKey: no www, lower case), so
+ * http://www.riad.ma and https://riad.ma/fr are one site. On a shared platform (Facebook, Booking...) or
+ * path-based hosting (Wix, Google Sites...) the full path is kept, so two businesses there are never merged.
+ * Null when there is no usable site.
+ */
+export function roundSiteKey(url: string | null | undefined): string | null {
+  const key = siteKey(url);
+  if (!key) return null;
+  let u: URL;
+  try { u = new URL(/^https?:\/\//i.test(url!.trim()) ? url!.trim() : `https://${url!.trim()}`); } catch { return null; }
+  const host = u.hostname.toLowerCase().replace(/^www\./, "").replace(/\.$/, "");
+  const pathTenant = PATH_TENANT_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+  if (!key.includes("/") && !pathTenant) return key;
+  const path = u.pathname.toLowerCase().replace(/\/+$/, "");
+  return `${host}${path}`;
+}
+
+/**
+ * Safeguard: one card per business, first one kept (the lead rows and the saved details are keyed by OSM id).
+ * The in-round check already prevents a business being checked twice; this keeps a slip from ever showing twice.
+ */
+export function oneLeadPerBusiness<T extends { osmId: string }>(leads: readonly T[]): T[] {
+  const seen = new Set<string>();
+  return leads.filter((l) => (seen.has(l.osmId) ? false : (seen.add(l.osmId), true)));
+}
+
 /** Round robin across sectors, so one big sector can't use all the checks. */
 export function interleave<T>(lists: T[][], max: number): T[] {
   const out: T[] = [];
@@ -452,6 +490,12 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
     if (round > 1) stats.skipped.checkedToday = 0;
     const rejected = stats.rejected!;
     const isShown = (osmId: string, website: string | null) => shown.osmIds.has(osmId) || (!!website && shown.sites.has(siteKey(website) ?? ""));
+    // One check per business and per website in a round, whichever sectors list it (Riads sit inside Hotels and
+    // Guest houses, Wedding planners inside Event agencies, Videographers inside Photographers...). The first
+    // sector searched keeps it; a later one moves its cursor past it, so the 12 checks go to different businesses.
+    const roundIds = new Set<string>();
+    const roundSites = new Set<string>();
+    stats.skipped.duplicateInRound = 0;
 
     // 1. Search each sector from its cursor (P6C: CRM matches and possible duplicates already left out).
     type SectorWork = { sector: string; list: OsmEntry[]; from: number; to: number; end: boolean; toCheck: BatchCandidate[]; topUp: boolean };
@@ -472,6 +516,13 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
         }
         // A web/SEO/marketing agency elsewhere in the list: a competitor, so its site isn't checked.
         if (isCompetitor(c)) { rejected.competitor++; return false; }
+        const site = roundSiteKey(c.website);
+        if (roundIds.has(c.sourceId) || (site !== null && roundSites.has(site))) {
+          stats.skipped.duplicateInRound = (stats.skipped.duplicateInRound ?? 0) + 1;
+          return false;
+        }
+        roundIds.add(c.sourceId);
+        if (site !== null) roundSites.add(site);
         return true;
       });
       work.push({ sector, list, from: summary.progress.from, to: summary.progress.to, end: summary.progress.nextCursor === null, toCheck, topUp });
@@ -581,7 +632,7 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
       });
     }
     const withSite = rankWebsiteLeads(ranked).slice(0, Math.max(0, leadBudget - noSite.length)).map(websiteLead);
-    const leads = [...withSite, ...noSite];
+    const leads = oneLeadPerBusiness([...withSite, ...noSite]);
 
     // Exhausted only when it is certain: every sector searched to its end, no sector failed, nothing left to check.
     stats.exhausted = stats.sectorErrors.length === 0 && work.length === available.length && work.every((w) => w.end)
