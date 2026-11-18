@@ -27,6 +27,9 @@ export async function GET() {
 const schema = z.discriminatedUnion("action", [
   // Prepare (or, after a failure, retry) today's list now. Owner or admin only. Never repeats a completed day.
   z.object({ action: z.literal("run") }).strict(),
+  // Check up to 12 more websites for the day shown (`day`), when it has fewer than 5 leads and rounds left.
+  // Owner or admin only. A different day now (midnight passed in Casablanca) runs nothing.
+  z.object({ action: z.literal("continue"), day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).strict(),
   // Import one of today's leads through the shared import helper, which re-checks duplicates. Any team member may
   // do this (the bulk import API is owner or admin only); the candidate is built here from the stored lead.
   z.object({ action: z.literal("import"), resultId: z.string().min(1).max(64) }).strict(),
@@ -39,13 +42,15 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
-  if (parsed.data.action === "run") {
+  if (parsed.data.action === "run" || parsed.data.action === "continue") {
     if (!isAdmin(auth.session) && !(await sessionIsOwner(auth.session))) {
       return NextResponse.json({ error: "Only the owner or an admin can do this" }, { status: 403 });
     }
     try {
-      const r = await runDailyLeadsNow({ retry: true });
-      return NextResponse.json({ result: r.result, leads: r.leads, checked: r.checked, error: r.error ?? null });
+      const r = parsed.data.action === "continue"
+        ? await runDailyLeadsNow({ retry: true, continueRound: true, expectDay: parsed.data.day })
+        : await runDailyLeadsNow({ retry: true });
+      return NextResponse.json({ result: r.result, round: r.round ?? null, leads: r.leads, checked: r.checked, error: r.error ?? null });
     } catch {
       return NextResponse.json({ error: "The run failed. Try again later." }, { status: 500 });
     }

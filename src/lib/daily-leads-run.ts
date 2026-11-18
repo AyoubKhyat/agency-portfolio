@@ -17,6 +17,10 @@ export function cronAuthorized(header: string | null, secret: string | undefined
   return timingSafeEqual(h(header), h(`Bearer ${secret}`));
 }
 
-export function runDailyLeadsNow(opts: { retry: boolean }): Promise<RunReport> {
-  return runDailyLeads({ store: prismaDailyStore, dataset: loadDataset, loadCrm: loadCrmFromDb, retry: opts.retry });
+/** continueRound/expectDay: a manual Continue for that Casablanca day (never used by the cron). */
+export function runDailyLeadsNow(opts: { retry: boolean; continueRound?: boolean; expectDay?: string }): Promise<RunReport> {
+  return runDailyLeads({
+    store: prismaDailyStore, dataset: loadDataset, loadCrm: loadCrmFromDb,
+    retry: opts.retry, continueRound: opts.continueRound, expectDay: opts.expectDay,
+  });
 }

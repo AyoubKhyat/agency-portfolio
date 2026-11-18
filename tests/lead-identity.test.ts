@@ -78,9 +78,10 @@ test("a run holds the mismatched site for review with nothing attached, and labe
   let leads: DailyLead[] = [];
   let stats: RunStats | null = null;
   const store: DailyStore = {
-    claim: async (_d, now) => ({ claimed: true, startedAt: now }), lastState: async () => dl.EMPTY_STATE,
+    dayRounds: async () => [],
+    claim: async (_d, _r, now) => ({ claimed: true, startedAt: now }), lastState: async () => dl.EMPTY_STATE,
     shown: async () => ({ osmIds: new Set(), sites: new Set() }),
-    finish: async (_d, _s, o) => { if (o.status === "COMPLETED") { leads = o.leads; stats = o.stats; } },
+    finish: async (_d, _r, _s, o) => { if (o.status === "COMPLETED") { leads = o.leads; stats = o.stats; } },
   };
   await dl.runDailyLeads({
     store, loadCrm: async () => [], fetcher, now: () => new Date("2026-11-14T06:05:00Z"),

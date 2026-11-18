@@ -151,10 +151,11 @@ function memStore() {
   let saved: DailyLead[] = [];
   let stats: unknown = null;
   const store: DailyStore = {
-    claim: async (_d, now) => ({ claimed: true, startedAt: now }),
+    dayRounds: async () => [],
+    claim: async (_d, _r, now) => ({ claimed: true, startedAt: now }),
     lastState: async () => dl.EMPTY_STATE,
     shown: async () => ({ osmIds: new Set(), sites: new Set() }),
-    finish: async (_d, _s, o) => { if (o.status === "COMPLETED") { saved = o.leads; stats = o.stats; } },
+    finish: async (_d, _r, _s, o) => { if (o.status === "COMPLETED") { saved = o.leads; stats = o.stats; } },
   };
   return { store, leads: () => saved, stats: () => stats as { contactPagesRead: number; inCrmByContact: number } };
 }

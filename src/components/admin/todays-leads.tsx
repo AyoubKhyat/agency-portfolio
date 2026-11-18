@@ -7,7 +7,7 @@ import { SECTORS } from "@/lib/discovery-providers";
 import { cn } from "@/lib/utils";
 import { groupIssues, issueCopy } from "@/lib/lead-issue-copy";
 import { dayLabel, nextDay } from "@/lib/daily-leads-day";
-import type { TodayLead, TodayLeadsView } from "@/lib/daily-leads-store";
+import type { TodayLead, TodayLeadsView, TodayRun } from "@/lib/daily-leads-store";
 
 type View = TodayLeadsView & { canRun: boolean };
 type ImportState = { busy?: boolean; prospectId?: string; skipped?: string; error?: string };
@@ -21,7 +21,7 @@ const host = (url: string) => { try { return new URL(url).hostname.replace(/^www
 
 /** Sites that present themselves as a different business: nothing is attached to them, a person decides. */
 function IdentityReviewList({ view }: { view: View }) {
-  const items = view.run?.stats?.identityReview ?? [];
+  const items = view.rounds.flatMap((r) => r.stats?.identityReview ?? []);
   if (items.length === 0) return null;
   return (
     <div className="mt-3 rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4">
@@ -41,37 +41,61 @@ function IdentityReviewList({ view }: { view: View }) {
   );
 }
 
-/** A completed day: when it finished, what it found, and that the next run is tomorrow (Casablanca day). */
+/** Why no further round today, in plain words (the next list is tomorrow, Casablanca day). */
+function stopText(view: View): string {
+  const tomorrow = `The next list can be prepared tomorrow, ${dayLabel(nextDay(view.day))}.`;
+  const c = view.continuation;
+  if (c.stopReason === "TARGET_REACHED") return `Today's target of 5 is reached. ${tomorrow}`;
+  if (c.stopReason === "EXHAUSTED") return `No more businesses to check today in the Marrakech list. ${tomorrow}`;
+  if (c.stopReason === "NO_ROUNDS_LEFT") return `All ${c.maxRounds} rounds used today. ${tomorrow}`;
+  return `One run per day: the next one can be prepared tomorrow, ${dayLabel(nextDay(view.day))}.`;
+}
+
+/** The day's latest round completed: when, what the day has so far, and whether another round can run. */
 function CompletedStatus({ view }: { view: View }) {
   const n = view.leads.length;
   const done = view.run?.completedAt;
+  const c = view.continuation;
+  const rounds = c.roundsUsed > 1 || c.canContinue;
   return (
     <p role="status" className="mb-3 text-[12.5px] text-[var(--os-text)]">
       <span className="font-semibold text-emerald-700 dark:text-emerald-400">✓ Completed{done ? ` at ${time(done)}` : ""}</span>
       {done && <span className="text-[var(--os-text-muted)]"> Casablanca time</span>}
-      {" · "}{n} qualified lead{n === 1 ? "" : "s"} found
-      <span className="text-[var(--os-text-muted)]"> · One run per day: the next one can be prepared tomorrow, {dayLabel(nextDay(view.day))}.</span>
+      {" · "}{n} qualified lead{n === 1 ? "" : "s"} found{rounds && ` · round ${c.roundsUsed} of ${c.maxRounds}`}
+      <span className="text-[var(--os-text-muted)]">
+        {" · "}{c.canContinue
+          ? `Fewer than 5: ${view.canRun ? "you can check" : "an owner or admin can check"} up to 12 more websites (round ${c.roundsUsed + 1} of ${c.maxRounds}), with the same rules.`
+          : stopText(view)}
+      </span>
     </p>
   );
 }
 
-const rejectedWeak = (s: NonNullable<View["run"]>["stats"]) => (s?.rejected ? s.rejected.seoOnly + s.rejected.uncertainOnly : 0);
+const rejectedWeak = (s: TodayRun["stats"]) => (s?.rejected ? s.rejected.seoOnly + s.rejected.uncertainOnly : 0);
 
-function StatsLine({ view }: { view: View }) {
-  const s = view.run?.stats;
+/** One line per round that saved its counts; "Round n:" only once the day has more than one. */
+function StatsLines({ view }: { view: View }) {
+  const withStats = view.rounds.filter((r) => r.stats);
+  return <>{withStats.map((r) => <StatsLine key={r.round} run={r} label={view.rounds.length > 1 ? `Round ${r.round}: ` : ""} />)}</>;
+}
+
+function StatsLine({ run, label }: { run: TodayRun; label: string }) {
+  const s = run.stats;
   if (!s) return null;
   const read = s.outcomes.COMPLETE ?? 0;
   const notRead = s.checked - read;
   return (
     <p className="text-[12px] text-[var(--os-text-muted)] mt-3">
-      {s.sectors.map(sectorLabel).join(", ")} · {s.checked} website{s.checked === 1 ? "" : "s"} checked, {read} read fully
+      {label}{s.sectors.map(sectorLabel).join(", ")} · {s.checked} website{s.checked === 1 ? "" : "s"} checked, {read} read fully
       {notRead > 0 && <>, {notRead} couldn&apos;t be read completely (never counted as problems)</>}
       {s.skipped.inCrm + s.skipped.possibleDuplicate > 0 && <> · {s.skipped.inCrm + s.skipped.possibleDuplicate} already in the CRM or possible duplicates</>}
       {s.skipped.shownBefore > 0 && <> · {s.skipped.shownBefore} shown on an earlier day</>}
+      {(s.skipped.checkedToday ?? 0) > 0 && <> · {s.skipped.checkedToday} already checked in an earlier round today</>}
       {rejectedWeak(s) > 0 && <> · {rejectedWeak(s)} left out as weak (SEO-only or unconfirmed problems)</>}
       {(s.rejected?.competitor ?? 0) > 0 && <> · {s.rejected!.competitor} agenc{s.rejected!.competitor === 1 ? "y" : "ies"} like ours skipped</>}
       {s.stoppedEarly && <> · stopped early at the time limit</>}
       {s.sectorErrors.length > 0 && <> · {s.sectorErrors.length} sector{s.sectorErrors.length === 1 ? "" : "s"} couldn&apos;t be searched</>}
+      {s.exhausted && <> · every sector searched to the end</>}
     </p>
   );
 }
@@ -240,13 +264,16 @@ export function TodaysLeads() {
     return () => window.clearInterval(t);
   }, [inProgress, load]);
 
-  async function run() {
+  // run: round 1, or a retry/takeover of the day's latest round. continue: the next round of the day on screen.
+  async function run(action: "run" | "continue" = "run") {
     setRunning(true); setRunError(null);
     try {
-      const res = await fetch("/api/admin/daily-leads", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "run" }) });
+      const payload = action === "continue" ? { action, day: view?.day } : { action };
+      const res = await fetch("/api/admin/daily-leads", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
       const body = await res.json().catch(() => null);
       if (!res.ok) setRunError(body?.error ?? "The run failed.");
       else if (body?.result === "ALREADY_RUNNING") setRunError("It's already being prepared. Check again in a few minutes.");
+      else if (body?.result === "DAY_CHANGED") setRunError("Midnight has passed in Casablanca: this is a new day, so nothing more was checked for yesterday.");
     } catch {
       setRunError("The run failed.");
     }
@@ -267,8 +294,16 @@ export function TodaysLeads() {
     setImports((m) => ({ ...m, [lead.resultId]: next }));
   }
 
+  const continueButton = () => view?.canRun && view.continuation.canContinue && (
+    <button type="button" onClick={() => void run("continue")} disabled={running}
+      className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-semibold border border-[var(--os-border)] text-[var(--os-text)] hover:bg-[var(--os-hover)] disabled:opacity-60">
+      {running ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}{" "}
+      {running ? "Checking… (up to 5 minutes)" : `Continue: check up to 12 more websites (round ${view.continuation.roundsUsed + 1} of ${view.continuation.maxRounds})`}
+    </button>
+  );
+
   const runButton = (label: string) => view?.canRun && (
-    <button type="button" onClick={run} disabled={running}
+    <button type="button" onClick={() => void run()} disabled={running}
       className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-semibold border border-[var(--os-border)] text-[var(--os-text)] hover:bg-[var(--os-hover)] disabled:opacity-60">
       {running ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} {running ? "Preparing… (up to 5 minutes)" : label}
     </button>
@@ -289,6 +324,37 @@ export function TodaysLeads() {
         <div className="mt-3">{runButton("Prepare today's leads now")}</div>
         {ownerOnly}
       </div>
+    );
+  } else if (view.run.round > 1) {
+    // A later round: today's leads so far stay on screen whatever the round is doing.
+    const r = view.run;
+    const status = r.status === "COMPLETED" ? <CompletedStatus view={view} />
+      : r.status === "RUNNING" ? (
+        <div role="status" className="mb-3 text-[12.5px] text-[var(--os-text)]">
+          <p className="inline-flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Round {r.round} of {view.continuation.maxRounds} being prepared since {time(r.startedAt)} Casablanca time…</p>
+          {r.stale
+            ? <><p className="text-[12px] text-[var(--os-text-muted)] mt-1">This is taking longer than it should; the round probably stopped.</p><div className="mt-2">{runButton("Start this round again")}</div>{ownerOnly}</>
+            : <p className="text-[12px] text-[var(--os-text-muted)] mt-1">Usually done within 5 minutes. This updates by itself.</p>}
+        </div>
+      ) : (
+        <div role="alert" className="mb-3 text-[12.5px] text-[var(--os-text)]">
+          <p>Round {r.round} couldn&apos;t be completed: {r.error ?? "Unknown error."}{r.completedAt ? ` (stopped at ${time(r.completedAt)} Casablanca time)` : ""} The leads below are kept.</p>
+          <div className="mt-2">{runButton(`Try round ${r.round} again`)}</div>
+          {ownerOnly}
+        </div>
+      );
+    body = (
+      <>
+        {status}
+        {view.leads.length > 0 ? (
+          <ul className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {view.leads.map((l) => <LeadCard key={l.resultId} lead={l} state={imports[l.resultId] ?? {}} onImport={() => void importLead(l)} />)}
+          </ul>
+        ) : r.status === "COMPLETED" && <p className="text-[14px] text-[var(--os-text)]">No business met the bar today.</p>}
+        {r.status === "COMPLETED" && <div className="mt-3">{continueButton()}</div>}
+        <StatsLines view={view} />
+        <IdentityReviewList view={view} />
+      </>
     );
   } else if (view.run.status === "RUNNING") {
     body = (
@@ -314,7 +380,8 @@ export function TodaysLeads() {
         <CompletedStatus view={view} />
         <p className="text-[14px] text-[var(--os-text)]">No business met the bar today.</p>
         <p className="text-[12px] text-[var(--os-text-muted)] mt-1">A lead needs a website read completely with a problem a customer would notice, or no website in OpenStreetMap but an explicit WhatsApp or Instagram tag. Nothing was padded.</p>
-        <StatsLine view={view} />
+        <div className="mt-3">{continueButton()}</div>
+        <StatsLines view={view} />
         <IdentityReviewList view={view} />
       </div>
     );
@@ -325,7 +392,8 @@ export function TodaysLeads() {
         <ul className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {view.leads.map((l) => <LeadCard key={l.resultId} lead={l} state={imports[l.resultId] ?? {}} onImport={() => void importLead(l)} />)}
         </ul>
-        <StatsLine view={view} />
+        <div className="mt-3">{continueButton()}</div>
+        <StatsLines view={view} />
         <IdentityReviewList view={view} />
       </>
     );
@@ -335,7 +403,7 @@ export function TodaysLeads() {
     <section aria-labelledby="todays-leads" className="mt-8">
       <div className="flex flex-wrap items-end justify-between gap-2 mb-3">
         <h2 id="todays-leads" className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] inline-flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5" /> Today&apos;s leads{view?.run?.status === "COMPLETED" ? ` · ${view.leads.length}` : ""}
+          <Sparkles className="w-3.5 h-3.5" /> Today&apos;s leads{view?.run && (view.run.status === "COMPLETED" || view.leads.length > 0) ? ` · ${view.leads.length}` : ""}
         </h2>
         <p className="text-[11px] text-[var(--os-text-muted)]">Rule-based, no AI · contacts unverified · nothing is sent automatically</p>
       </div>
