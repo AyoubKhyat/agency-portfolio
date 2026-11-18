@@ -64,7 +64,7 @@ function CompletedStatus({ view }: { view: View }) {
       {" · "}{n} qualified lead{n === 1 ? "" : "s"} found{rounds && ` · round ${c.roundsUsed} of ${c.maxRounds}`}
       <span className="text-[var(--os-text-muted)]">
         {" · "}{c.canContinue
-          ? `Fewer than 5: up to 12 more websites can be checked (round ${c.roundsUsed + 1} of ${c.maxRounds}), with the same rules.`
+          ? `Fewer than 5: ${view.canRun ? "you can check" : "an owner or admin can check"} up to 12 more websites (round ${c.roundsUsed + 1} of ${c.maxRounds}), with the same rules.`
           : stopText(view)}
       </span>
     </p>

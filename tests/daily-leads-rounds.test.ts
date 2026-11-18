@@ -357,4 +357,6 @@ test("Today's card: Continue only for owner/admin while allowed, leads stay visi
     "rounds used today.", "being prepared since", "The leads below are kept.", "already checked in an earlier round today", "Midnight has passed in Casablanca"]) {
     assert.ok(card.includes(s), s);
   }
+  assert.match(card, /\$\{view\.canRun \? "you can check" : "an owner or admin can check"\} up to 12 more websites/,
+    "someone who can't run a round isn't told they can");
 });
