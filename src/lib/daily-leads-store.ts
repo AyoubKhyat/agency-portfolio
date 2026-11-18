@@ -8,6 +8,8 @@
  * The primary key is the lock: only one run can create a round, and finishing re-checks that its claim still holds.
  */
 import { prisma } from "@/lib/prisma";
+import { buildAuditNote } from "@/lib/audit-note";
+import { buildContactEvidenceNote, contactsToCheck, evidenceOf, type ContactEvidence } from "@/lib/contact-evidence";
 import {
   AGENT, AGENT_CITY, EMPTY_STATE, LostClaimError, MAX_ROUNDS, STALE_RUN_MS, continuationOf, runId, runQuery, siteIdentity,
   type AgentState, type ClaimResult, type Continuation, type DailyLead, type DailyStore, type DayRound, type Evaluated,
@@ -160,6 +162,11 @@ export type TodayLead = DailyLead & {
   resultId: string;
   importedProspectId: string | null;
   importedAt: string | null;
+  /**
+   * Imported leads: the prospect's WhatsApp and Instagram contacts no one has checked yet (null when not
+   * imported, or when the prospect couldn't be read, e.g. deleted since).
+   */
+  contactsToCheck: number | null;
 };
 
 export type TodayRun = {
@@ -206,7 +213,7 @@ export async function getTodayLeads(day: string, now = new Date()): Promise<Toda
     for (const r of sweep.results) {
       const detail = json?.leads?.[r.sourceUrl.slice(OSM_PREFIX.length)];
       if (!detail) continue;
-      own.push({ ...detail, resultId: r.id, importedProspectId: r.importedProspectId, importedAt: r.importedAt?.toISOString() ?? null });
+      own.push({ ...detail, resultId: r.id, importedProspectId: r.importedProspectId, importedAt: r.importedAt?.toISOString() ?? null, contactsToCheck: null });
     }
     // Website leads in evidence order first, then the no-website ones, as the run saved them.
     const order = Object.keys(json?.leads ?? {});
@@ -218,6 +225,20 @@ export async function getTodayLeads(day: string, now = new Date()): Promise<Toda
       stale: status === "RUNNING" && now.getTime() - sweep.startedAt.getTime() > STALE_RUN_MS,
       leads: own.length,
     });
+  }
+  // Imported leads: how many saved WhatsApp/Instagram contacts still wait for a person's check. Best effort.
+  const imported = [...new Set(leads.map((l) => l.importedProspectId).filter((x): x is string => !!x))];
+  if (imported.length > 0) {
+    try {
+      const rows = await prisma.prospect.findMany({
+        where: { id: { in: imported } },
+        select: { id: true, whatsappLink: true, whatsappStatus: true, instagram: true, instagramStatus: true },
+      });
+      const byId = new Map(rows.map((p) => [p.id, contactsToCheck(p)]));
+      for (const l of leads) if (l.importedProspectId) l.contactsToCheck = byId.get(l.importedProspectId) ?? null;
+    } catch {
+      // The leads still show without the count.
+    }
   }
   return {
     day,
@@ -240,6 +261,36 @@ export function importCandidate(l: DailyLead) {
     facebook: l.contacts.find((c) => c.channel === "FACEBOOK")?.link ?? null,
     mapsUrl: l.osmUrl,
   };
+}
+
+/**
+ * The notes a Today import saves with the new prospect, written here from the run's saved lead (never from the
+ * request): the public contact evidence, and the website findings when the site was read completely.
+ */
+export function importNotes(l: DailyLead, now = new Date()): string[] {
+  const notes = [buildContactEvidenceNote(l, now)];
+  if (l.kind === "WEBSITE" && l.outcome) {
+    const findings = (l.findings ?? []).map((f) => ({ id: f.id, observed: f.observed, sourceUrl: f.sourceUrl, fetchedAt: f.fetchedAt }));
+    const unconfirmed = new Set((l.findings ?? []).filter((f) => f.evidence === "UNCERTAIN").map((f) => f.id));
+    const audit = buildAuditNote({ outcome: l.outcome, auditedAt: l.checkedAt, finalUrl: l.finalUrl, findings }, l.website, now.getTime(), { origin: "DAILY_AGENT", unconfirmed });
+    if (audit) notes.push(audit);
+  }
+  return notes;
+}
+
+/**
+ * The public contact evidence of the Today lead a prospect was imported from, or null (not imported from Today,
+ * or a run that saved no details). Works for prospects imported before the evidence notes existed.
+ */
+export async function getProspectContactEvidence(prospectId: string): Promise<ContactEvidence | null> {
+  const row = await prisma.discoveryResult.findFirst({
+    where: { importedProspectId: prospectId, sweep: { provider: AGENT } },
+    select: { sourceUrl: true, sweep: { select: { keyword: true } } },
+    orderBy: { importedAt: "desc" },
+  });
+  if (!row?.sourceUrl.startsWith(OSM_PREFIX)) return null;
+  const lead = parseSweepJson(row.sweep?.keyword)?.leads?.[row.sourceUrl.slice(OSM_PREFIX.length)];
+  return lead ? evidenceOf(lead) : null;
 }
 
 export async function markImported(resultId: string, prospectId: string, by: { userId: string; fullName: string }) {

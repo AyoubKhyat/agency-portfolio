@@ -61,6 +61,9 @@ mock.module("@/lib/daily-leads-store", {
     markImported: async (resultId: string, prospectId: string, by: { userId: string; fullName: string }) => {
       state.marked.push({ resultId, prospectId, by: { userId: by.userId, fullName: by.fullName } }); return true;
     },
+    // The notes the route saves with the prospect; built on the server from the stored lead.
+    importNotes: (l: Record<string, unknown>) => [`Contact evidence for ${String(l.name)}`, `Website check for ${String(l.name)}`],
+    getProspectContactEvidence: async () => null,
   },
 });
 
@@ -177,6 +180,12 @@ test("Today: a sales user imports one of today's leads, attributed to them, and 
   assert.equal(p.campaignId, null, "Today can't set a campaign");
   assert.equal(p.whatsappLink, "", "no WhatsApp link without an explicit one");
   assert.deepEqual(state.marked, [{ resultId: "r1", prospectId: "new0", by: { userId: "u-sales", fullName: "User sales" } }]);
+  // The evidence notes are saved in the same write as the prospect, attributed to the importer.
+  const notes = (p.notes as { create: { content: string; authorId: string; authorName: string }[] }).create;
+  assert.deepEqual(notes, [
+    { content: "Contact evidence for Dar Today", authorId: "u-sales", authorName: "User sales" },
+    { content: "Website check for Dar Today", authorId: "u-sales", authorName: "User sales" },
+  ]);
 });
 
 test("Today: only a lead of today's list, only once", async () => {

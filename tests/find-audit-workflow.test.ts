@@ -58,6 +58,8 @@ test("the import route accepts the audit as optional and writes the note inside 
   const route = read("src/lib/prospect-import.ts"); // the import logic, shared by the import API and the Daily Lead Agent
   assert.match(route, /audit: auditSchema\.optional\(\),/);
   assert.match(route, /const auditNote = cand\.audit \? buildAuditNote\(cand\.audit, website\) : null;/);
-  assert.match(route, /prisma\.prospect\.create\(\{\s*data: \{\s*\.\.\.\(auditNote \? \{ notes: \{ create: \{ content: auditNote/);
+  // The audit note comes first among the notes, and every note is written inside the prospect's own create.
+  assert.match(route, /const noteTexts = \[\.\.\.\(auditNote \? \[auditNote\] : \[\]\), /);
+  assert.match(route, /prisma\.prospect\.create\(\{\s*data: \{\s*\.\.\.\(noteRows\.length > 0 \? \{ notes: \{ create: noteRows\.length === 1 \? noteRows\[0\] : noteRows \} \} : \{\}\),/);
   assert.doesNotMatch(route, /prospectNote\.create/, "no separate note write that could outlive a failed prospect write");
 });
