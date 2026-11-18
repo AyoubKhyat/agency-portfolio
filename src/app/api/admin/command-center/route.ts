@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireTeam } from "@/lib/authz";
 import { prisma, hasPrisma } from "@/lib/prisma";
+import { getStageByKey } from "@/lib/prospect-stages";
+
+/** Stored statuses of the shared Won stage (CLIENT / CONVERTI). */
+const WON_STATUSES = getStageByKey("WON")?.statuses ?? [];
 
 /**
  * Single CEO-grade aggregator. Everything the Command Center page needs in one
@@ -19,7 +23,9 @@ import { prisma, hasPrisma } from "@/lib/prisma";
  *   Active projects    = ClientProject not in (COMPLETED, ON_HOLD)
  *   Meetings this week = startAt within 7-day window
  *   Tasks overdue      = open tasks past their due date
- *   Conversion rate    = prospects with status CLIENT / total prospects
+ *   Prospects won      = prospects in the Won stage (CLIENT / CONVERTI) /
+ *                        total prospects, all time (shown as "Prospects won (%)")
+ *   Funnel             = all-time counts, no date window
  */
 export async function GET() {
   const auth = await requireTeam();
@@ -85,7 +91,7 @@ export async function GET() {
     prisma.meeting.count({ where: { startAt: { gte: today, lt: weekEnd } } }),
     prisma.task.count({ where: { status: { in: ["TODO", "IN_PROGRESS", "BLOCKED"] }, dueDate: { lt: today } } }),
     prisma.prospect.count(),
-    prisma.prospect.count({ where: { status: { in: ["CLIENT", "CONVERTI"] } } }),
+    prisma.prospect.count({ where: { status: { in: [...WON_STATUSES] } } }),
 
     prisma.meeting.count(),
     prisma.meeting.count({ where: { status: "COMPLETED" } }),

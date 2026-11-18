@@ -505,9 +505,7 @@ export default function OverviewPage() {
             <div>
               <h3 className="text-sm font-semibold text-[#0F172A] mb-1.5">Insights</h3>
               <div className="space-y-1.5 text-[13px] text-[#475569]">
-                {replied > 0 && contacted > 0 && (
-                  <p>Reply rate: <span className="text-emerald-600 font-medium">{((replied / contacted) * 100).toFixed(1)}%</span> — {replied} replied out of {contacted} contacted.</p>
-                )}
+                <p>Replies and contacts by sector, with send evidence: <Link href="/admin/analytics" className="text-purple-600 font-medium hover:underline">Prospecting report</Link>.</p>
                 {data?.followUpCandidates && data.followUpCandidates > 0 && (
                   <p><span className="text-amber-600 font-medium">{data.followUpCandidates}</span> prospects still marked &ldquo;Sent&rdquo; 3+ days after first contact (status only — check Today before following up).</p>
                 )}
