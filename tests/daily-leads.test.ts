@@ -57,15 +57,30 @@ function dataset(entries: OsmEntry[]): OsmDataset {
   };
 }
 
-/** Same rules as the Prisma store: the day is the lock, finish only while the claim holds. */
+/**
+ * Same rules as the Prisma store: each round of a day is a lock of its own, finish only while the claim holds.
+ * Keys: round 1 is the day itself, later rounds `${day}-r${round}` (as the Prisma ids).
+ */
 function memStore() {
-  const runs = new Map<string, { status: "RUNNING" | "COMPLETED" | "FAILED"; startedAt: Date; outcome?: RunOutcome }>();
-  const saved: { day: string; lead: DailyLead }[] = [];
+  type Run = { day: string; round: number; status: "RUNNING" | "COMPLETED" | "FAILED"; startedAt: Date; outcome?: RunOutcome };
+  const runs = new Map<string, Run>();
+  const saved: { day: string; round: number; lead: DailyLead }[] = [];
+  const key = (day: string, round: number) => (round === 1 ? day : `${day}-r${round}`);
   let finishes = 0;
   const store: DailyStore = {
-    async claim(day, now, { retry }) {
-      const r = runs.get(day);
-      if (!r) { runs.set(day, { status: "RUNNING", startedAt: now }); return { claimed: true, startedAt: now }; }
+    async dayRounds(day) {
+      return [...runs.values()].filter((r) => r.day === day).sort((a, b) => a.round - b.round).map((r) => {
+        const o = r.outcome?.status === "COMPLETED" ? r.outcome : null;
+        return {
+          round: r.round, status: r.status, startedAt: r.startedAt,
+          leads: o?.leads.length ?? 0, noWebsiteLeads: o?.leads.filter((l) => l.kind === "NO_WEBSITE").length ?? 0,
+          exhausted: o?.stats.exhausted === true, evaluated: o?.evaluated ?? { osmIds: [], sites: [] },
+        };
+      });
+    },
+    async claim(day, round, now, { retry }) {
+      const r = runs.get(key(day, round));
+      if (!r) { runs.set(key(day, round), { day, round, status: "RUNNING", startedAt: now }); return { claimed: true, startedAt: now }; }
       if (r.status === "COMPLETED") return { claimed: false, status: "COMPLETED" };
       const stale = r.status === "RUNNING" && now.getTime() - r.startedAt.getTime() > m.STALE_RUN_MS;
       if (stale || (r.status === "FAILED" && retry)) { r.status = "RUNNING"; r.startedAt = now; return { claimed: true, startedAt: now }; }
@@ -78,12 +93,12 @@ function memStore() {
     async shown() {
       return { osmIds: new Set(saved.map((s) => s.lead.osmId)), sites: new Set(saved.filter((s) => s.lead.website).map((s) => new URL(s.lead.website).hostname)) };
     },
-    async finish(day, startedAt, outcome) {
-      const r = runs.get(day);
+    async finish(day, round, startedAt, outcome) {
+      const r = runs.get(key(day, round));
       if (!r || r.status !== "RUNNING" || r.startedAt !== startedAt) throw new m.LostClaimError("lost");
       finishes++;
       r.status = outcome.status; r.outcome = outcome;
-      if (outcome.status === "COMPLETED") for (const lead of outcome.leads) saved.push({ day, lead });
+      if (outcome.status === "COMPLETED") for (const lead of outcome.leads) saved.push({ day, round, lead });
     },
   };
   return { store, runs, saved, finishes: () => finishes };
@@ -254,7 +269,7 @@ test("failures: list unreadable or CRM unreadable → FAILED with a plain reason
 test("a crashed run (still RUNNING after the limit) can be taken over; a live one can't", async () => {
   const s = memStore();
   const { fetcher } = makeFetcher();
-  await s.store.claim("2026-11-14", new Date("2026-11-14T06:00:00Z"), { retry: false });
+  await s.store.claim("2026-11-14", 1, new Date("2026-11-14T06:00:00Z"), { retry: false });
   const deps = { store: s.store, dataset: async () => dataset(bigList()), loadCrm: noCrm, fetcher };
   assert.equal((await m.runDailyLeads({ ...deps, now: at("2026-11-14T06:03:00Z") })).result, "ALREADY_RUNNING");
   assert.equal((await m.runDailyLeads({ ...deps, now: at("2026-11-14T06:30:00Z") })).result, "COMPLETED");

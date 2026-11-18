@@ -3,16 +3,38 @@
  *   DiscoverySweep  — one row per Casablanca day, id `daily-agent-YYYY-MM-DD`, provider and sector "DAILY_AGENT"
  *                     (so the legacy Prospect Discovery coverage, which reads sweeps by sector, ignores it).
  *                     `keyword` holds JSON: the sector cursors, run counts and each lead's evidence.
+ *                     Rounds 2 and 3 of a day (manual Continue) are rows of their own: `daily-agent-YYYY-MM-DD-r2`, `-r3`.
  *   DiscoveryResult — one row per lead, linked to that sweep. The AI text fields stay empty: nothing here is AI.
- * The primary key is the lock: only one run can create a day, and finishing re-checks that its claim still holds.
+ * The primary key is the lock: only one run can create a round, and finishing re-checks that its claim still holds.
  */
 import { prisma } from "@/lib/prisma";
 import {
-  AGENT, AGENT_CITY, EMPTY_STATE, LostClaimError, STALE_RUN_MS, runId, runQuery,
-  type AgentState, type ClaimResult, type DailyLead, type DailyStore, type RunOutcome, type RunStats,
+  AGENT, AGENT_CITY, EMPTY_STATE, LostClaimError, MAX_ROUNDS, STALE_RUN_MS, continuationOf, runId, runQuery,
+  type AgentState, type ClaimResult, type Continuation, type DailyLead, type DailyStore, type DayRound, type Evaluated,
+  type RunOutcome, type RunStats,
 } from "@/lib/daily-leads";
 
-type SweepJson = { state: AgentState; stats: RunStats | null; leads?: Record<string, DailyLead> };
+type SweepJson = { state: AgentState; stats: RunStats | null; leads?: Record<string, DailyLead>; evaluated?: Evaluated };
+
+/** The day's possible round ids, round 1 first. */
+const roundIds = (day: string) => Array.from({ length: MAX_ROUNDS }, (_, i) => runId(day, i + 1));
+const roundOf = (day: string, id: string) => roundIds(day).indexOf(id) + 1;
+const statusOf = (s: string): DayRound["status"] => (s === "COMPLETED" || s === "RUNNING" ? s : "FAILED");
+
+function toDayRound(day: string, row: { id: string; status: string; startedAt: Date; keyword: string | null }): DayRound {
+  const json = parseSweepJson(row.keyword);
+  const leads = Object.values(json?.leads ?? {});
+  return {
+    round: roundOf(day, row.id),
+    status: statusOf(row.status),
+    startedAt: row.startedAt,
+    leads: leads.length,
+    noWebsiteLeads: leads.filter((l) => l.kind === "NO_WEBSITE").length,
+    exhausted: json?.stats?.exhausted === true,
+    // Days saved before rounds existed have no list; their cursors already moved past what they checked.
+    evaluated: { osmIds: json?.evaluated?.osmIds ?? [], sites: json?.evaluated?.sites ?? [] },
+  };
+}
 
 export function parseSweepJson(raw: string | null | undefined): SweepJson | null {
   if (!raw) return null;
@@ -29,11 +51,19 @@ const isUniqueViolation = (e: unknown) => typeof e === "object" && e !== null &&
 const OSM_PREFIX = "https://www.openstreetmap.org/";
 
 export const prismaDailyStore: DailyStore = {
-  async claim(day, now, { retry }): Promise<ClaimResult> {
-    const id = runId(day);
+  async dayRounds(day) {
+    const rows = await prisma.discoverySweep.findMany({
+      where: { id: { in: roundIds(day) }, provider: AGENT },
+      select: { id: true, status: true, startedAt: true, keyword: true },
+    });
+    return rows.map((r) => toDayRound(day, r)).sort((a, b) => a.round - b.round);
+  },
+
+  async claim(day, round, now, { retry }): Promise<ClaimResult> {
+    const id = runId(day, round);
     try {
       await prisma.discoverySweep.create({
-        data: { id, provider: AGENT, city: AGENT_CITY, sector: AGENT, query: runQuery(day), status: "RUNNING", startedAt: now },
+        data: { id, provider: AGENT, city: AGENT_CITY, sector: AGENT, query: runQuery(day, round), status: "RUNNING", startedAt: now },
       });
       return { claimed: true, startedAt: now };
     } catch (e) {
@@ -84,10 +114,13 @@ export const prismaDailyStore: DailyStore = {
     return { osmIds, sites };
   },
 
-  async finish(day, startedAt, outcome: RunOutcome, now) {
-    const id = runId(day);
+  async finish(day, round, startedAt, outcome: RunOutcome, now) {
+    const id = runId(day, round);
     const json: SweepJson = outcome.status === "COMPLETED"
-      ? { state: outcome.state, stats: outcome.stats, leads: Object.fromEntries(outcome.leads.map((l) => [l.osmId, l])) }
+      ? {
+        state: outcome.state, stats: outcome.stats, leads: Object.fromEntries(outcome.leads.map((l) => [l.osmId, l])),
+        ...(outcome.evaluated ? { evaluated: outcome.evaluated } : {}),
+      }
       : { state: outcome.state, stats: outcome.stats };
     await prisma.$transaction(async (tx) => {
       const done = await tx.discoverySweep.updateMany({
@@ -130,50 +163,69 @@ export type TodayLead = DailyLead & {
   importedAt: string | null;
 };
 
+export type TodayRun = {
+  round: number;
+  status: "RUNNING" | "COMPLETED" | "FAILED";
+  startedAt: string;
+  completedAt: string | null;
+  error: string | null;
+  stats: RunStats | null;
+  stale: boolean;
+  /** Leads this round saved. */
+  leads: number;
+};
+
 export type TodayLeadsView = {
   day: string;
-  run: null | {
-    status: "RUNNING" | "COMPLETED" | "FAILED";
-    startedAt: string;
-    completedAt: string | null;
-    error: string | null;
-    stats: RunStats | null;
-    stale: boolean;
-  };
+  /** The day's latest round (null when nothing ran yet). */
+  run: TodayRun | null;
+  /** Every round of the day, round 1 first. */
+  rounds: TodayRun[];
+  /** Leads of every completed round, round by round, each in the order its run saved them. */
   leads: TodayLead[];
+  continuation: Continuation;
 };
 
 export async function getTodayLeads(day: string, now = new Date()): Promise<TodayLeadsView> {
-  const sweep = await prisma.discoverySweep.findUnique({
-    where: { id: runId(day) },
+  const sweeps = await prisma.discoverySweep.findMany({
+    where: { id: { in: roundIds(day) }, provider: AGENT },
     select: {
-      status: true, startedAt: true, completedAt: true, error: true, keyword: true,
+      id: true, status: true, startedAt: true, completedAt: true, error: true, keyword: true,
       results: {
         select: { id: true, sourceUrl: true, importedProspectId: true, importedAt: true },
         orderBy: { createdAt: "asc" },
       },
     },
   });
-  if (!sweep) return { day, run: null, leads: [] };
-  const json = parseSweepJson(sweep.keyword);
-  const status = sweep.status === "COMPLETED" || sweep.status === "RUNNING" ? sweep.status : "FAILED";
+  const sorted = [...sweeps].sort((a, b) => roundOf(day, a.id) - roundOf(day, b.id));
+  const rounds: TodayRun[] = [];
   const leads: TodayLead[] = [];
-  for (const r of sweep.results) {
-    const detail = json?.leads?.[r.sourceUrl.slice(OSM_PREFIX.length)];
-    if (!detail) continue;
-    leads.push({ ...detail, resultId: r.id, importedProspectId: r.importedProspectId, importedAt: r.importedAt?.toISOString() ?? null });
-  }
-  // Website leads in evidence order first, then the no-website ones, as the run saved them.
-  const order = Object.keys(json?.leads ?? {});
-  leads.sort((a, b) => order.indexOf(a.osmId) - order.indexOf(b.osmId));
-  return {
-    day,
-    run: {
-      status, startedAt: sweep.startedAt.toISOString(), completedAt: sweep.completedAt?.toISOString() ?? null,
+  for (const sweep of sorted) {
+    const json = parseSweepJson(sweep.keyword);
+    const status = statusOf(sweep.status);
+    const own: TodayLead[] = [];
+    for (const r of sweep.results) {
+      const detail = json?.leads?.[r.sourceUrl.slice(OSM_PREFIX.length)];
+      if (!detail) continue;
+      own.push({ ...detail, resultId: r.id, importedProspectId: r.importedProspectId, importedAt: r.importedAt?.toISOString() ?? null });
+    }
+    // Website leads in evidence order first, then the no-website ones, as the run saved them.
+    const order = Object.keys(json?.leads ?? {});
+    own.sort((a, b) => order.indexOf(a.osmId) - order.indexOf(b.osmId));
+    leads.push(...own);
+    rounds.push({
+      round: roundOf(day, sweep.id), status, startedAt: sweep.startedAt.toISOString(), completedAt: sweep.completedAt?.toISOString() ?? null,
       error: sweep.error, stats: json?.stats ?? null,
       stale: status === "RUNNING" && now.getTime() - sweep.startedAt.getTime() > STALE_RUN_MS,
-    },
+      leads: own.length,
+    });
+  }
+  return {
+    day,
+    run: rounds.at(-1) ?? null,
+    rounds,
     leads,
+    continuation: continuationOf(sorted.map((s) => toDayRound(day, s))),
   };
 }
 
