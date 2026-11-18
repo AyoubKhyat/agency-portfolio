@@ -294,10 +294,13 @@ test("Casablanca rollover: a Continue for yesterday after midnight runs nothing;
   const s = memStore();
   const { fetcher } = makeFetcher();
   const deps = { store: s.store, dataset: async () => dataset(hotels(40, [5, 15, 25])), loadCrm: noCrm, fetcher };
+  // Times chosen to hold under either Moroccan offset (UTC+0 or UTC+1; tz data differs between Node builds):
+  // 20:00 UTC is still the 14th, 00:30 UTC on the 15th is already the 15th.
   await m.runDailyLeads({ ...deps, now: T("20:00") });
-  const late = new Date(`${DAY}T23:30:00Z`);
+  assert.equal(m.casablancaDay(new Date(`${DAY}T20:00:00Z`)), DAY);
+  const late = new Date("2026-11-15T00:30:00Z");
   const today = m.casablancaDay(late);
-  assert.notEqual(today, DAY, "23:30 UTC is already the next day in Casablanca");
+  assert.equal(today, "2026-11-15", "past midnight in Casablanca");
   const r = await m.runDailyLeads({ ...deps, now: () => late, retry: true, continueRound: true, expectDay: DAY });
   assert.deepEqual([r.result, r.day, r.leads, r.checked], ["DAY_CHANGED", today, 0, 0]);
   assert.equal(s.runs.size, 1, "nothing claimed for either day");
