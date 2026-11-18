@@ -162,7 +162,7 @@ export default function CommandCenterPage() {
         <KPI label="Revenue won"      value={fmt(kpis.revenueWon)}      suffix="MAD" tone="purple" hint={monthChange ? `${monthChange} vs last month` : undefined} />
         <KPI label="Pipeline value"   value={fmt(kpis.pipelineValue)}   suffix="MAD" tone="blue" />
         <KPI label="Active clients"   value={String(kpis.activeClients)}              tone="emerald" hint={`${kpis.totalClients} total`} />
-        <KPI label="Conversion rate"  value={`${kpis.conversionRate}%`}                tone="amber" />
+        <KPI label="Prospects won"    value={`${kpis.conversionRate}%`}                tone="amber" hint="Won stage ÷ all prospects, all time" />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         <KPI label="Revenue forecast" value={fmt(kpis.revenueForecast)} suffix="MAD" tone="indigo" />
@@ -173,7 +173,7 @@ export default function CommandCenterPage() {
       {/* Funnel + Health */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <GlassCard padding="lg" className="lg:col-span-2">
-          <SectionHeader title="Meeting → Client funnel" subtitle="Conversion at every stage in the last 90 days." />
+          <SectionHeader title="Meeting → Client funnel" subtitle="All time." />
           <FunnelChart funnel={funnel} />
         </GlassCard>
         <GlassCard padding="lg">

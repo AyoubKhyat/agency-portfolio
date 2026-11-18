@@ -273,5 +273,5 @@ test("Reports (Phase 1): login lands on Today; Today links the Business report; 
   assert.equal(cc.match(/title="Business report"/g)?.length, 3, "loading, error and loaded states");
   const an = readFileSync(url("src/app/admin/analytics/page.tsx"), "utf8");
   assert.doesNotMatch(an, /title="Analytics"/);
-  assert.equal(an.match(/title="Prospecting report"/g)?.length, 2, "loading and loaded states");
+  assert.equal(an.match(/title="Prospecting report"/g)?.length, 3, "loading, error and loaded states");
 });

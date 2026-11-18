@@ -1,4 +1,5 @@
-import { countByStage, VERIFIED_CHANNEL_WHERE, UNVERIFIED_CHANNEL_WHERE, CONTACTED_WHERE, RECORDED_SEND_WHERE, LEGACY_SEND_WHERE, NO_RECORDED_SEND_WHERE } from "../prospect-stages";
+import { countByStage, latestSendAt, SEND_ACTION_TYPES, VERIFIED_CHANNEL_WHERE, UNVERIFIED_CHANNEL_WHERE, CONTACTED_WHERE, RECORDED_SEND_WHERE, LEGACY_SEND_WHERE, NO_RECORDED_SEND_WHERE } from "../prospect-stages";
+import { buildProspectingReport, buildProposalReport, type ReportProspect } from "../prospecting-report";
 import { LEAD_TEST_STATUS } from "../lead-status";
 import { LEAD_QUEUE_CLOCK_SQL, LEAD_QUEUE_ENQUIRIES_SQL, LEAD_QUEUE_PROSPECTS_SQL } from "../lead-queue-sql";
 import { buildLeadQueue, type EnquiryRow, type LeadQueue, type ProspectRow } from "../next-action";
@@ -58,16 +59,6 @@ export async function notifyTeam(excludeUserId: string, data: { type: string; ti
   await db().notification.createMany({
     data: users.map((u) => ({ userId: u.id, ...data })),
   });
-}
-
-// ─── Conversion Funnel ─────────────────────────────────────────
-
-export async function getConversionFunnel() {
-  const statuses = ["A_ENVOYER", "ENVOYE", "REPONDU", "MEETING", "PROPOSAL_SENT", "NEGOTIATION", "CLIENT", "LOST"];
-  const counts = await Promise.all(
-    statuses.map((s) => db().prospect.count({ where: { status: s } }))
-  );
-  return statuses.map((status, i) => ({ status, count: counts[i] }));
 }
 
 // ─── Stats ───────────────────────────────────────────────────────
@@ -198,62 +189,39 @@ export async function getLeadQueue(): Promise<LeadQueue> {
   return buildLeadQueue(prospects, enquiries, clock[0].today);
 }
 
+/**
+ * Prospecting report data. Read-only. Fetches plain rows and leaves every
+ * calculation to prospecting-report.ts, which reuses Today's definitions.
+ */
 export async function getAnalyticsData() {
-  const [
-    prospectsByStatus,
-    prospectsBySector,
-    leadsByStatus,
-    allProspects,
-    allLeads,
-  ] = await Promise.all([
-    db().prospect.groupBy({ by: ["status"], _count: true }),
-    db().prospect.groupBy({ by: ["sector"], _count: { sector: true }, orderBy: { _count: { sector: "desc" } } }),
-    db().lead.groupBy({ by: ["status"], _count: true }),
-    db().prospect.findMany({ select: { sector: true, status: true, sentAt: true, createdAt: true, hasWebsite: true, instagram: true, phone: true } }),
-    db().lead.findMany({ select: { status: true, createdAt: true } }),
+  const [prospects, proposals] = await Promise.all([
+    db().prospect.findMany({
+      select: {
+        sector: true, status: true, sentAt: true,
+        outreachMessages: { select: { sentAt: true }, orderBy: { sentAt: "desc" }, take: 1 },
+        activities: {
+          where: { actionType: { in: [...SEND_ACTION_TYPES] } },
+          select: { createdAt: true }, orderBy: { createdAt: "desc" }, take: 1,
+        },
+      },
+    }),
+    db().proposal.findMany({ select: { status: true, amount: true, currency: true } }),
   ]);
 
-  const sectorPerformance = prospectsBySector.map((s) => {
-    const sectorProspects = allProspects.filter((p) => p.sector === s.sector);
-    const total = sectorProspects.length;
-    const sent = sectorProspects.filter((p) => p.status !== "A_ENVOYER").length;
-    const replied = sectorProspects.filter((p) => p.status === "REPONDU" || p.status === "CONVERTI").length;
-    const converted = sectorProspects.filter((p) => p.status === "CONVERTI").length;
-    return {
-      sector: s.sector,
-      total,
-      sent,
-      replied,
-      converted,
-      sentRate: total > 0 ? Math.round((sent / total) * 100) : 0,
-      replyRate: sent > 0 ? Math.round((replied / sent) * 100) : 0,
-      conversionRate: sent > 0 ? Math.round((converted / sent) * 100) : 0,
-    };
-  });
+  const rows: ReportProspect[] = prospects.map((p) => ({
+    sector: p.sector,
+    status: p.status,
+    sentAt: p.sentAt,
+    lastSendAt: latestSendAt([p.outreachMessages[0]?.sentAt, p.activities[0]?.createdAt]),
+  }));
 
-  const funnel = await getConversionFunnel();
-
-  const [proposalsSent, proposalsAccepted, proposalsRejected, proposalTotal, proposalWon] = await Promise.all([
-    db().proposal.count({ where: { status: "SENT" } }),
-    db().proposal.count({ where: { status: "ACCEPTED" } }),
-    db().proposal.count({ where: { status: "REJECTED" } }),
-    db().proposal.aggregate({ _sum: { amount: true } }),
-    db().proposal.aggregate({ where: { status: "ACCEPTED" }, _sum: { amount: true } }),
-  ]);
-
-  const proposalStats = {
-    sent: proposalsSent,
-    accepted: proposalsAccepted,
-    rejected: proposalsRejected,
-    totalValue: proposalTotal._sum.amount || 0,
-    wonValue: proposalWon._sum.amount || 0,
-    avgAmount: (proposalsSent + proposalsAccepted + proposalsRejected) > 0
-      ? Math.round((proposalTotal._sum.amount || 0) / (proposalsSent + proposalsAccepted + proposalsRejected))
-      : 0,
+  return {
+    report: buildProspectingReport(rows),
+    proposals: buildProposalReport(proposals),
   };
-
-  return { prospectsByStatus, prospectsBySector, leadsByStatus, sectorPerformance, funnel, proposalStats };
 }
+
+export type AnalyticsData = Awaited<ReturnType<typeof getAnalyticsData>>;
 
 export async function getClients() {
   const [convertedProspects, qualifiedLeads] = await Promise.all([
