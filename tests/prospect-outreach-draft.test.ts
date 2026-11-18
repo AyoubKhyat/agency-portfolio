@@ -191,13 +191,57 @@ function countingDeps(routes: Record<string, string | number>) {
   return { deps: { ...deps(prospect(), [], [], routes), fetcher }, homeReads: () => urls.filter(isSecureHome).length };
 }
 
-test("a missing contact option confirmed by the second read (no Contact page) is drafted, in the agency voice", async () => {
+/** The contact sentence, as the draft writes it in each language. It must be true whether or not a Contact page exists. */
+const CONTACT_SENTENCE = {
+  fr: "nous n'avons trouvé sur la page d'accueil aucun formulaire ni lien e-mail, téléphone ou WhatsApp, ni de page Contact qui en propose",
+  en: "we couldn't find a form, or an email, phone or WhatsApp link, on the home page, nor a Contact page offering one",
+  ar: "لم نجد في الصفحة الرئيسية نموذج تواصل ولا رابط بريد أو هاتف أو واتساب، ولا صفحة اتصال توفر ذلك",
+} as const;
+/** Wording that would claim a Contact page was read: wrong when the home page links none. */
+const CLAIMS_A_CONTACT_PAGE_WAS_READ = /sur la page Contact|on the home page or the Contact page|ولا في صفحة الاتصال/;
+
+async function draftAllLanguages(routes: Record<string, string | number>) {
+  const out: Record<string, NonNullable<Awaited<ReturnType<typeof mod.draftForProspect>>>> = {};
+  for (const language of ["fr", "en", "ar"] as const) {
+    const r = await mod.draftForProspect("me", { language, senderName: "Sara Test" }, deps(prospect(), [], [], routes));
+    assert.ok(r, language);
+    out[language] = r;
+  }
+  return out as Record<"fr" | "en" | "ar", NonNullable<Awaited<ReturnType<typeof mod.draftForProspect>>>>;
+}
+
+test("no Contact page linked from the home page: confirmed, drafted, and the text claims no Contact page was read", async () => {
   const c = countingDeps({ "/robots.txt": "User-agent: *\nDisallow:", "/": noContactHome() });
   const r = await mod.draftForProspect("me", input, c.deps);
   assert.ok(r && r.ok, JSON.stringify(r));
   assert.deepEqual(r.findings.map((f) => f.id), ["E_CONTACT"]);
-  assert.match(r.body, /nous n'avons trouvé ni sur la page d'accueil ni sur la page Contact/);
   assert.equal(c.homeReads(), 2, "the home page is read a second time, for the grading");
+
+  const all = await draftAllLanguages({ "/robots.txt": "User-agent: *\nDisallow:", "/": noContactHome() });
+  for (const language of ["fr", "en", "ar"] as const) {
+    const d = all[language];
+    assert.ok(d.ok, `${language}: ${JSON.stringify(d)}`);
+    assert.ok(d.body.includes(`- ${CONTACT_SENTENCE[language]}`), `${language}: the truthful sentence`);
+    assert.doesNotMatch(d.body, CLAIMS_A_CONTACT_PAGE_WAS_READ, `${language}: never says a Contact page was checked`);
+  }
+});
+
+test("a Contact page linked, read completely and offering nothing: confirmed and drafted with the same sentence", async () => {
+  const routes = {
+    "/robots.txt": "User-agent: *\nDisallow:",
+    "/": noContactHome(`<a href="/contact">Contact</a>`),
+    // Read completely (real text, not a script shell) and no phone, e-mail, WhatsApp or form on it.
+    "/contact": `<!doctype html><html lang="fr"><head><title>Contact</title></head><body><h1>Contact</h1><p>${"Nous sommes situés dans la médina de Marrakech. ".repeat(20)}</p></body></html>`,
+  };
+  const requested: string[] = [];
+  const fr = await mod.draftForProspect("me", input, deps(prospect(), [], requested, routes));
+  assert.ok(fr && fr.ok, JSON.stringify(fr));
+  assert.deepEqual(fr.findings.map((f) => f.id), ["E_CONTACT"]);
+  assert.ok(requested.includes("/contact"), "the Contact page was actually read");
+  const all = await draftAllLanguages(routes);
+  for (const language of ["fr", "en", "ar"] as const) {
+    assert.ok(all[language].ok && all[language].body.includes(`- ${CONTACT_SENTENCE[language]}`), language);
+  }
 });
 
 test("a missing contact option that the Contact page contradicts, or that couldn't be checked, is never said", async () => {

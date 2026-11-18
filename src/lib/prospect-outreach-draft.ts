@@ -98,9 +98,10 @@ export const DRAFT_FINDINGS: [id: string, rule: FindingRule][] = [
     ar: "الصفحة لا تحدد للهواتف طريقة عرضها، لذلك قد تظهر صغيرة جداً على الجوال",
   })],
   ["E_CONTACT", none({
-    fr: "nous n'avons trouvé ni sur la page d'accueil ni sur la page Contact de formulaire, de lien e-mail, de téléphone ou de WhatsApp",
-    en: "we couldn't find a form, or an email, phone or WhatsApp link, on the home page or the Contact page",
-    ar: "لم نجد في الصفحة الرئيسية ولا في صفحة الاتصال نموذج تواصل ولا رابط بريد أو هاتف أو واتساب",
+    // True in both confirmed cases: a Contact page was read and offers nothing, or the home page links none.
+    fr: "nous n'avons trouvé sur la page d'accueil aucun formulaire ni lien e-mail, téléphone ou WhatsApp, ni de page Contact qui en propose",
+    en: "we couldn't find a form, or an email, phone or WhatsApp link, on the home page, nor a Contact page offering one",
+    ar: "لم نجد في الصفحة الرئيسية نموذج تواصل ولا رابط بريد أو هاتف أو واتساب، ولا صفحة اتصال توفر ذلك",
   })],
 ];
 export const DRAFT_FINDING_IDS: readonly string[] = DRAFT_FINDINGS.map(([id]) => id);
