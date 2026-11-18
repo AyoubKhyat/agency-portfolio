@@ -70,7 +70,8 @@ function memStore() {
       return done[0]?.outcome?.state ?? m.EMPTY_STATE;
     },
     async shown() {
-      return { osmIds: new Set(saved.map((s) => s.lead.osmId)), sites: new Set(saved.filter((s) => s.lead.website).map((s) => new URL(s.lead.website).hostname)) };
+      // As the Prisma store: website identity by siteIdentity.
+      return { osmIds: new Set(saved.map((s) => s.lead.osmId)), sites: new Set(saved.map((s) => m.siteIdentity(s.lead.website)).filter((k): k is string => !!k)) };
     },
     async finish(day, round, startedAt, outcome) {
       const r = runs.get(key(day, round));
@@ -94,19 +95,33 @@ const dupes = (ids: string[]) => ids.filter((id, i) => ids.indexOf(id) !== i);
 
 /* ── the identity key ── */
 
-test("roundSiteKey: one site whatever the spelling; shared platforms and path hosting keep businesses apart", () => {
-  const k = m.roundSiteKey;
+test("siteIdentity: one site whatever the spelling or page; path-hosted and platform businesses kept apart", () => {
+  const k = m.siteIdentity;
   assert.equal(k("http://www.Riad-X.ma/"), "riad-x.ma");
   assert.equal(k("https://riad-x.ma/fr/contact"), "riad-x.ma", "pages of one site are one site");
   assert.equal(k("riad-x.ma"), "riad-x.ma");
+  assert.equal(k("https://alice.wixsite.com/spa"), "alice.wixsite.com/spa");
   assert.notEqual(k("https://alice.wixsite.com/spa"), k("https://alice.wixsite.com/riad"), "two Wix sites of one account");
+  assert.equal(k("https://alice.wixsite.com/spa/contact"), k("https://alice.wixsite.com/spa/"), "a Wix site's pages are that site");
+  assert.equal(k("https://sites.google.com/view/dar-a/accueil"), "sites.google.com/view/dar-a");
   assert.notEqual(k("https://sites.google.com/view/dar-a"), k("https://sites.google.com/view/dar-b"), "two Google Sites");
   assert.notEqual(k("https://www.facebook.com/riad.a"), k("https://www.facebook.com/riad.b"));
-  assert.equal(k("https://alice.wixsite.com/spa/"), k("https://alice.wixsite.com/spa"), "a trailing slash is the same site");
+  assert.equal(k("https://www.facebook.com/riad.a/about"), k("https://facebook.com/riad.a"), "a page's tabs are that page");
   assert.notEqual(k("https://bob.github.io/a"), k("https://bob.github.io/b"));
+  assert.equal(k("https://my-riad.blogspot.com/2024/05/post"), "my-riad.blogspot.com", "subdomain hosting: the domain is the site");
+  assert.equal(k("https://my-spa.webflow.io/contact"), "my-spa.webflow.io");
   assert.equal(k(""), null);
   assert.equal(k(null), null);
   assert.equal(k("not a url"), null);
+});
+
+test("the CRM check keeps its own, stricter website match (siteKey): a Wix account in the CRM still blocks its other sites", async () => {
+  const { classify, siteKey } = await import("../src/lib/discovery-duplicates");
+  assert.equal(siteKey("https://alice.wixsite.com/spa"), "alice.wixsite.com", "unchanged");
+  const crm = [{ id: "c1", name: "Someone", phone: "", email: "", website: "https://alice.wixsite.com/other", instagram: "", whatsappLink: "", neighborhood: "", sector: "", whatsappStatus: "UNVERIFIED", instagramStatus: "UNVERIFIED" }];
+  const cand = { sourceId: "node/1", source: "OSM" as const, name: "Spa A", sector: "SPAS", city: "Marrakech", neighborhood: null, phone: null, whatsapp: null,
+    website: "https://alice.wixsite.com/spa", email: null, instagram: null, facebook: null, mapsUrl: null, rating: null, reviewCount: null };
+  assert.notEqual(classify(cand, crm).status, "NEW", "CRM protection is not weakened by the agent's finer identity");
 });
 
 test("oneLeadPerBusiness: a business never gets two cards; order and the first copy are kept", () => {
@@ -243,6 +258,48 @@ test("no overlap: behaviour as before, nothing counted as a duplicate", async ()
   assert.equal(r.checked, 6);
   assert.equal(done(s).stats.skipped.duplicateInRound, 0);
   assert.equal(r.leads, m.MAX_LEADS);
+});
+
+test("Wix across rounds: a site checked earlier today stays out (even via another page), the account's other site is checked", async () => {
+  // One sector; each round reads the next 10. A (round 1), A's contact page under another OSM id (round 2), B (round 3).
+  // minor-* hosts never qualify, so nothing is shown and only the same-day check is at work.
+  const filler = (from: number) => Array.from({ length: 9 }, (_, i) => e(from + i, ["SPAS"], `https://minor-f${from + i}.ma`));
+  const list = [
+    e(1, ["SPAS"], "https://minor-acct.wixsite.com/spa-a"), ...filler(100),
+    e(2, ["SPAS"], "https://minor-acct.wixsite.com/spa-a/contact"), ...filler(200),
+    e(3, ["SPAS"], "https://minor-acct.wixsite.com/riad-b"),
+  ];
+  const s = memStore();
+  const { fetcher } = makeFetcher();
+  const deps = { store: s.store, dataset: async () => dataset(list), loadCrm: noCrm, fetcher };
+  await m.runDailyLeads({ ...deps, now: at("06:05") });
+  await m.runDailyLeads({ ...deps, now: at("06:20"), retry: true, continueRound: true, expectDay: DAY });
+  await m.runDailyLeads({ ...deps, now: at("06:40"), retry: true, continueRound: true, expectDay: DAY });
+  const [r1, r2, r3] = [DAY, `${DAY}-r2`, `${DAY}-r3`].map((k) => done(s, k));
+  assert.ok(r1.evaluated!.osmIds.includes("node/1"));
+  assert.ok(r1.evaluated!.sites.includes("minor-acct.wixsite.com/spa-a"), "saved with the site root, not the account");
+  assert.ok(!r2.evaluated!.osmIds.includes("node/2"), "A's other page is the same site: not checked again today");
+  assert.equal(r2.stats.skipped.checkedToday, 1);
+  assert.ok(r3.evaluated!.osmIds.includes("node/3"), "B, another site on the same account, is checked");
+  assert.equal(r3.stats.skipped.checkedToday ?? 0, 0);
+});
+
+test("Wix across days: a shown site stays out (even via another page), the account's other site can become a lead", async () => {
+  const s = memStore();
+  const { fetcher } = makeFetcher();
+  const day1 = [e(1, ["SPAS"], "https://acct.wixsite.com/spa-a")];
+  await m.runDailyLeads({ store: s.store, dataset: async () => dataset(day1), loadCrm: noCrm, fetcher, now: at("06:05") });
+  assert.deepEqual(s.saved.map((x) => x.lead.osmId), ["node/1"]);
+
+  // Next day: A again, A's contact page under another OSM id, and B. Each in its own sector, so its own search batch
+  // (a sector's search already drops a second site of the same account within one batch, before these checks).
+  const day2 = [...day1, e(2, ["GUEST_HOUSES"], "https://acct.wixsite.com/spa-a/contact"), e(3, ["RIADS"], "https://acct.wixsite.com/riad-b")];
+  const r = await m.runDailyLeads({ store: s.store, dataset: async () => dataset(day2), loadCrm: noCrm, fetcher, now: () => new Date("2026-11-19T06:05:00Z") });
+  assert.equal(r.result, "COMPLETED");
+  const o = done(s, "2026-11-19");
+  assert.equal(o.stats.skipped.shownBefore, 2, "A by its OSM id, A's other page by its site");
+  assert.deepEqual(o.evaluated!.osmIds, ["node/3"]);
+  assert.deepEqual(s.saved.filter((x) => x.day === "2026-11-19").map((x) => x.lead.osmId), ["node/3"], "B becomes a lead");
 });
 
 test("Today's card says when a business listed in two sectors was checked once", async () => {

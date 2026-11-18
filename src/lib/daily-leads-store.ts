@@ -9,7 +9,7 @@
  */
 import { prisma } from "@/lib/prisma";
 import {
-  AGENT, AGENT_CITY, EMPTY_STATE, LostClaimError, MAX_ROUNDS, STALE_RUN_MS, continuationOf, runId, runQuery,
+  AGENT, AGENT_CITY, EMPTY_STATE, LostClaimError, MAX_ROUNDS, STALE_RUN_MS, continuationOf, runId, runQuery, siteIdentity,
   type AgentState, type ClaimResult, type Continuation, type DailyLead, type DailyStore, type DayRound, type Evaluated,
   type RunOutcome, type RunStats,
 } from "@/lib/daily-leads";
@@ -103,12 +103,11 @@ export const prismaDailyStore: DailyStore = {
       select: { sourceUrl: true, website: true },
       take: 20_000,
     });
-    const { siteKey } = await import("@/lib/discovery-duplicates");
     const osmIds = new Set<string>();
     const sites = new Set<string>();
     for (const r of rows) {
       if (r.sourceUrl.startsWith(OSM_PREFIX)) osmIds.add(r.sourceUrl.slice(OSM_PREFIX.length));
-      const k = r.website ? siteKey(r.website) : null;
+      const k = r.website ? siteIdentity(r.website) : null; // the agent's own identity, so path-hosted businesses stay apart
       if (k) sites.add(k);
     }
     return { osmIds, sites };

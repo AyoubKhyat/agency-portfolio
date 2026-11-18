@@ -311,27 +311,33 @@ export function rankNoWebsite<T extends { entry: OsmEntry; sector: string }>(ent
 }
 
 /**
- * Hosting where the path, not the host, tells sites apart (alice.wixsite.com/spa and alice.wixsite.com/riad are two
- * sites). Suffix match: a subdomain of these counts too.
+ * Hosting where the path, not the host, tells sites apart, and how many path segments name the site:
+ * alice.wixsite.com/spa, sites.google.com/view/dar-x, my.canva.site/riad-y, bob.github.io/repo.
+ * (Hosts that give each site its own subdomain, such as Blogspot or Webflow, need nothing here: the domain is the site.)
  */
-const PATH_TENANT_HOSTS = ["wixsite.com", "sites.google.com", "github.io", "my.canva.site", "notion.site", "webflow.io", "blogspot.com"];
+const PATH_TENANT_HOSTS: readonly { host: string; segments: number }[] = [
+  { host: "wixsite.com", segments: 1 }, { host: "sites.google.com", segments: 2 },
+  { host: "my.canva.site", segments: 1 }, { host: "github.io", segments: 1 },
+];
 
 /**
- * A website's identity for the in-round duplicate check. Usually its domain (siteKey: no www, lower case), so
- * http://www.riad.ma and https://riad.ma/fr are one site. On a shared platform (Facebook, Booking...) or
- * path-based hosting (Wix, Google Sites...) the full path is kept, so two businesses there are never merged.
- * Null when there is no usable site.
+ * A website's identity for the Daily Lead Agent's own repeat checks (same round, earlier rounds today, shown on an
+ * earlier day). Its domain (siteKey: no www, lower case), so http://www.riad.ma and https://riad.ma/fr are one site.
+ * On a shared platform (Facebook, Booking...: siteKey's domain + first segment) or path-based hosting (above: the
+ * site's own segments), the site root, so two businesses there are never merged while one site's pages
+ * (alice.wixsite.com/spa/contact) stay one site. Null when there is no usable site.
+ * The CRM duplicate check (discovery-duplicates classify) keeps siteKey and is not affected.
  */
-export function roundSiteKey(url: string | null | undefined): string | null {
+export function siteIdentity(url: string | null | undefined): string | null {
   const key = siteKey(url);
   if (!key) return null;
   let u: URL;
   try { u = new URL(/^https?:\/\//i.test(url!.trim()) ? url!.trim() : `https://${url!.trim()}`); } catch { return null; }
   const host = u.hostname.toLowerCase().replace(/^www\./, "").replace(/\.$/, "");
-  const pathTenant = PATH_TENANT_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
-  if (!key.includes("/") && !pathTenant) return key;
-  const path = u.pathname.toLowerCase().replace(/\/+$/, "");
-  return `${host}${path}`;
+  const tenant = PATH_TENANT_HOSTS.find((t) => host === t.host || host.endsWith(`.${t.host}`));
+  if (!tenant) return key;
+  const segments = u.pathname.toLowerCase().split("/").filter(Boolean).slice(0, tenant.segments);
+  return [host, ...segments].join("/");
 }
 
 /**
@@ -489,7 +495,7 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
     };
     if (round > 1) stats.skipped.checkedToday = 0;
     const rejected = stats.rejected!;
-    const isShown = (osmId: string, website: string | null) => shown.osmIds.has(osmId) || (!!website && shown.sites.has(siteKey(website) ?? ""));
+    const isShown = (osmId: string, website: string | null) => shown.osmIds.has(osmId) || (!!website && shown.sites.has(siteIdentity(website) ?? ""));
     // One check per business and per website in a round, whichever sectors list it (Riads sit inside Hotels and
     // Guest houses, Wedding planners inside Event agencies, Videographers inside Photographers...). The first
     // sector searched keeps it; a later one moves its cursor past it, so the 12 checks go to different businesses.
@@ -510,13 +516,13 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
       const toCheck = summary.candidates.filter((c) => {
         if (isShown(c.sourceId, c.website)) { stats.skipped.shownBefore++; return false; }
         // Checked by an earlier round today: once a day is enough, whatever the outcome was.
-        if (checkedIds.has(c.sourceId) || checkedSites.has(siteKey(c.website) ?? "")) {
+        if (checkedIds.has(c.sourceId) || checkedSites.has(siteIdentity(c.website) ?? "")) {
           stats.skipped.checkedToday = (stats.skipped.checkedToday ?? 0) + 1;
           return false;
         }
         // A web/SEO/marketing agency elsewhere in the list: a competitor, so its site isn't checked.
         if (isCompetitor(c)) { rejected.competitor++; return false; }
-        const site = roundSiteKey(c.website);
+        const site = siteIdentity(c.website);
         if (roundIds.has(c.sourceId) || (site !== null && roundSites.has(site))) {
           stats.skipped.duplicateInRound = (stats.skipped.duplicateInRound ?? 0) + 1;
           return false;
@@ -639,7 +645,7 @@ export async function runDailyLeads(deps: RunDeps): Promise<RunReport> {
       && queue.length === 0 && collected.length === 0;
     const evaluated: Evaluated = {
       osmIds: audited.map((a) => a.candidate.sourceId),
-      sites: audited.map((a) => siteKey(a.candidate.website)).filter((k): k is string => !!k),
+      sites: audited.map((a) => siteIdentity(a.candidate.website)).filter((k): k is string => !!k),
     };
 
     await deps.store.finish(day, round, claim.startedAt, { status: "COMPLETED", state: { v: 1, cursors, noSiteCursors }, stats, leads, evaluated }, now());
