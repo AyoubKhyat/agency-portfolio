@@ -10,6 +10,7 @@
 import { prisma } from "@/lib/prisma";
 import { buildAuditNote } from "@/lib/audit-note";
 import { buildContactEvidenceNote, contactsToCheck, evidenceOf, type ContactEvidence } from "@/lib/contact-evidence";
+import { verifiedChannels } from "@/lib/prospect-outreach-draft";
 import {
   AGENT, AGENT_CITY, EMPTY_STATE, LostClaimError, MAX_ROUNDS, STALE_RUN_MS, continuationOf, runId, runQuery, siteIdentity,
   type AgentState, type ClaimResult, type Continuation, type DailyLead, type DailyStore, type DayRound, type Evaluated,
@@ -167,6 +168,11 @@ export type TodayLead = DailyLead & {
    * imported, or when the prospect couldn't be read, e.g. deleted since).
    */
   contactsToCheck: number | null;
+  /**
+   * Imported leads: the prospect has a WhatsApp or Instagram contact a person marked VERIFIED from its saved link
+   * (the draft's own rule, verifiedChannels). Only a hint for the link: the draft re-checks every gate itself.
+   */
+  hasVerifiedChannel: boolean | null;
 };
 
 export type TodayRun = {
@@ -213,7 +219,7 @@ export async function getTodayLeads(day: string, now = new Date()): Promise<Toda
     for (const r of sweep.results) {
       const detail = json?.leads?.[r.sourceUrl.slice(OSM_PREFIX.length)];
       if (!detail) continue;
-      own.push({ ...detail, resultId: r.id, importedProspectId: r.importedProspectId, importedAt: r.importedAt?.toISOString() ?? null, contactsToCheck: null });
+      own.push({ ...detail, resultId: r.id, importedProspectId: r.importedProspectId, importedAt: r.importedAt?.toISOString() ?? null, contactsToCheck: null, hasVerifiedChannel: null });
     }
     // Website leads in evidence order first, then the no-website ones, as the run saved them.
     const order = Object.keys(json?.leads ?? {});
@@ -232,10 +238,15 @@ export async function getTodayLeads(day: string, now = new Date()): Promise<Toda
     try {
       const rows = await prisma.prospect.findMany({
         where: { id: { in: imported } },
-        select: { id: true, whatsappLink: true, whatsappStatus: true, instagram: true, instagramStatus: true },
+        select: { id: true, phone: true, whatsappLink: true, whatsappStatus: true, instagram: true, instagramStatus: true },
       });
-      const byId = new Map(rows.map((p) => [p.id, contactsToCheck(p)]));
-      for (const l of leads) if (l.importedProspectId) l.contactsToCheck = byId.get(l.importedProspectId) ?? null;
+      const byId = new Map(rows.map((p) => [p.id, { toCheck: contactsToCheck(p), verified: verifiedChannels(p).length > 0 }]));
+      for (const l of leads) {
+        if (!l.importedProspectId) continue;
+        const p = byId.get(l.importedProspectId);
+        l.contactsToCheck = p?.toCheck ?? null;
+        l.hasVerifiedChannel = p ? p.verified : null;
+      }
     } catch {
       // The leads still show without the count.
     }

@@ -18,39 +18,60 @@ test.before(async () => {
 });
 
 const AT = "2026-11-11T09:00:00.000Z";
-const ev = (id: string, observed: string) => ({ id, check: id, observed, sourceUrl: "https://riad-atlas.ma/", fetchedAt: AT });
+type Grade = "FIRM" | "UNCERTAIN";
+const ev = (id: string, observed: string, evidence: Grade | undefined = "FIRM") =>
+  ({ id, check: id, observed, sourceUrl: "https://riad-atlas.ma/", fetchedAt: AT, ...(evidence ? { evidence } : {}) });
 
-test("only owner-facing failures with the exact evidence shape are used, most important first, at most two", () => {
+test("only confirmed customer-facing failures: https, phone layout, and a confirmed missing contact option", () => {
   const picked = mod.pickFindings([
-    ev("E_HSTS", "Not sent"), // technical: never in a message
-    ev("E_DESCRIPTION", "None found"),
-    ev("E_RESPONSE_TIME", "4217 ms"),
+    ev("E_HSTS", "Not sent"),           // technical: never in a message
+    ev("E_DESCRIPTION", "None found"),  // SEO: never in a message
+    ev("E_TITLE", "None found"),
+    ev("E_OPEN_GRAPH", "None found"),
+    ev("E_RESPONSE_TIME", "4217 ms"),   // one speed sample: never in a message
     ev("E_VIEWPORT", "None found"),
+    ev("E_HTTPS", "http://riad-atlas.ma/"),
   ], "fr");
-  assert.deepEqual(picked.map((f) => f.id), ["E_VIEWPORT", "E_RESPONSE_TIME"]);
-  assert.match(picked[1].sentence, /environ 4,2 secondes/);
+  assert.deepEqual(picked.map((f) => f.id), ["E_HTTPS", "E_VIEWPORT"]);
+  assert.ok(picked.every((f) => !("evidence" in f)), "the grade isn't carried into the result");
+  assert.deepEqual(mod.DRAFT_FINDING_IDS, ["E_HTTPS", "E_VIEWPORT", "E_CONTACT"]);
 
+  // A missing contact option is used only when the Daily Leads grading confirmed it.
+  assert.deepEqual(mod.pickFindings([ev("E_CONTACT", "None found", "UNCERTAIN")], "fr"), []);
+  assert.deepEqual(mod.pickFindings([ev("E_CONTACT", "None found")], "fr").map((f) => f.id), ["E_CONTACT"]);
+  // Ungraded findings never count, whatever they say.
+  const { evidence: _g, ...ungraded } = ev("E_VIEWPORT", "None found"); // eslint-disable-line @typescript-eslint/no-unused-vars
+  assert.deepEqual(mod.pickFindings([ungraded], "fr"), []);
+  // Only SEO details or speed: nothing to say.
+  assert.deepEqual(mod.pickFindings([ev("E_DESCRIPTION", "None found"), ev("E_RESPONSE_TIME", "9000 ms")], "en"), []);
   // An observation that doesn't look like that check's failure is skipped, never guessed from.
-  const odd = mod.pickFindings([ev("E_RESPONSE_TIME", "slow"), ev("E_HTTPS", "https://riad-atlas.ma"), ev("E_TITLE", "\"Riad\"")], "en");
-  assert.equal(odd.length, 0);
+  assert.equal(mod.pickFindings([ev("E_HTTPS", "https://riad-atlas.ma"), ev("E_VIEWPORT", "width=device-width")], "en").length, 0);
 });
 
-test("the message: CRM business name, the domain, the evidenced points, one question; in FR, EN and AR", () => {
-  const findings = mod.pickFindings([ev("E_VIEWPORT", "None found"), ev("E_DESCRIPTION", "None found")], "fr") as UsedFinding[];
+test("agency voice in FR, EN and AR: 'nous', signed Ibda3 Digital; business name, domain, the points, one question", () => {
+  const voice: Record<"fr" | "en" | "ar", { we: RegExp[]; notI: RegExp; team: string; signed: RegExp }> = {
+    fr: { we: [/nous avons remarqué deux points :/, /Voulez-vous que nous vous envoyions le détail \?/], notI: /\bj['’]ai\b|\bje\b|\bme\b|\bmon\b/i, team: "L'équipe Ibda3 Digital", signed: /\nAyoub, Ibda3 Digital$/ },
+    en: { we: [/We visited the home page of riad-atlas\.ma and noticed two things:/, /Would you like us to send you the details\?/], notI: /\bI\b|\bme\b|\bmy\b/, team: "The Ibda3 Digital team", signed: /\nAyoub, Ibda3 Digital$/ },
+    ar: { we: [/زرنا الصفحة الرئيسية/, /ولاحظنا نقطتين/, /أن نرسل لكم/], notI: /زرت |لاحظت|أرسل لكم|لم أجد/, team: "فريق Ibda3 Digital", signed: /\nAyoub، Ibda3 Digital$/ },
+  };
   for (const language of ["fr", "en", "ar"] as const) {
-    const f = mod.pickFindings([ev("E_VIEWPORT", "None found"), ev("E_DESCRIPTION", "None found")], language);
+    const v = voice[language];
+    const f = mod.pickFindings([ev("E_VIEWPORT", "None found"), ev("E_CONTACT", "None found")], language) as UsedFinding[];
     const body = mod.composeDraft({ language, businessName: "Riad Atlas", domain: "riad-atlas.ma", findings: f, senderName: "Ayoub Khyat" });
     assert.match(body, /Riad Atlas/);
     assert.match(body, /riad-atlas\.ma/);
-    assert.match(body, /Ayoub, Ibda3 Digital$/);
+    for (const re of v.we) assert.match(body, re, `${language}: ${re}`);
+    assert.doesNotMatch(body, v.notI, `${language}: no first person singular`);
+    assert.match(body, v.signed);
     assert.equal(body.split("\n").filter((l) => l.startsWith("- ")).length, 2);
     assert.ok(!hasBlockingError(analyzeMessage(body, { name: "Riad Atlas" })), language);
+    const single = mod.composeDraft({ language, businessName: "Riad Atlas", domain: "riad-atlas.ma", findings: f.slice(0, 1), senderName: "" });
+    assert.ok(single.endsWith(`\n${v.team}`), `${language}: signed by the team when no name is known`);
+    assert.doesNotMatch(single, v.notI);
   }
-  assert.equal(findings.length, 2);
-  const single = mod.composeDraft({ language: "fr", businessName: "Riad Atlas", domain: "riad-atlas.ma", findings: findings.slice(0, 1), senderName: "" });
-  assert.match(single, /un point :/);
-  assert.match(single, /C'est une correction simple/);
-  assert.match(single, /Ibda3 Digital$/);
+  const fr = mod.composeDraft({ language: "fr", businessName: "Riad Atlas", domain: "riad-atlas.ma", findings: mod.pickFindings([ev("E_VIEWPORT", "None found")], "fr"), senderName: "" });
+  assert.match(fr, /nous avons remarqué un point :/);
+  assert.match(fr, /C'est une correction simple\. Voulez-vous que nous vous envoyions le détail \?/);
 });
 
 /* ───────────────── The whole draft, with a fake network ───────────────── */
@@ -87,11 +108,12 @@ const deps = (p: DraftProspect, crm: ProspectRow[] = [], requested: string[] = [
 });
 const input = { language: "fr" as const, senderName: "Sara Test" };
 
-test("a prospect ready for a first message gets a draft built only from failed checks", async () => {
+test("a prospect ready for a first message gets a draft built only from confirmed failed checks", async () => {
   const r = await mod.draftForProspect("me", input, deps(prospect()));
   assert.ok(r && r.ok, JSON.stringify(r));
   assert.equal(r.channel, "WHATSAPP");
-  assert.deepEqual(r.findings.map((f) => f.id), ["E_VIEWPORT", "E_DESCRIPTION"]);
+  assert.deepEqual(r.findings.map((f) => f.id), ["E_VIEWPORT"], "the missing description (SEO) is left out");
+  assert.match(r.body, /nous avons remarqué un point :/);
   assert.ok(r.findings.every((f) => f.sourceUrl.startsWith("https://riad-atlas.ma") && f.fetchedAt && f.observed));
   assert.match(r.body, /^Bonjour Riad Atlas,/);
   assert.match(r.body, /Sara, Ibda3 Digital$/);
@@ -145,6 +167,101 @@ test("no draft when the CRM can't be checked, the site can't be read, or nothing
     <body><h1>Riad</h1><p>${"Texte. ".repeat(80)}</p><a href="mailto:a@b.ma">Mail</a></body></html>`;
   const fine = await mod.draftForProspect("me", input, deps(prospect(), [], [], { "/robots.txt": "User-agent: *\nDisallow:", "/": good }));
   assert.ok(fine && !fine.ok && fine.blockers[0].code === "NO_EVIDENCED_FINDING", JSON.stringify(fine));
+
+  // SEO details only (no description, no social preview), with https, a phone layout and a contact link: blocked.
+  const seoOnly = `<!doctype html><html lang="fr"><head><title>Riad</title><meta name="viewport" content="width=device-width"></head>
+    <body><h1>Riad</h1><p>${"Texte. ".repeat(80)}</p><a href="mailto:a@b.ma">Mail</a></body></html>`;
+  const seo = await mod.draftForProspect("me", input, deps(prospect(), [], [], { "/robots.txt": "User-agent: *\nDisallow:", "/": seoOnly }));
+  assert.ok(seo && !seo.ok && seo.blockers[0].code === "NO_EVIDENCED_FINDING", JSON.stringify(seo));
+  assert.match(seo.ok ? "" : seo.blockers[0].message, /No confirmed problem a customer would notice/);
+});
+
+/* ───────────────── A missing contact option: confirmed or not ───────────────── */
+
+// A phone layout and https, but no phone, e-mail, WhatsApp or form on the home page.
+const noContactHome = (extra = "") => `<!doctype html><html lang="fr"><head><title>Riad</title><meta name="viewport" content="width=device-width"></head>
+  <body><h1>Riad Atlas</h1><p>${"Texte de présentation. ".repeat(40)}</p>${extra}</body></html>`;
+
+/** Like `deps`, but counts the secure home-page reads (the audit also tries http:// for its redirect check). */
+function countingDeps(routes: Record<string, string | number>) {
+  const urls: string[] = [];
+  const inner = net(routes);
+  const fetcher: SafeFetch = async (url, opts) => { urls.push(url); return inner(url, opts); };
+  const isSecureHome = (u: string) => { const x = new URL(u); return x.protocol === "https:" && x.pathname === "/"; };
+  return { deps: { ...deps(prospect(), [], [], routes), fetcher }, homeReads: () => urls.filter(isSecureHome).length };
+}
+
+/** The contact sentence, as the draft writes it in each language. It must be true whether or not a Contact page exists. */
+const CONTACT_SENTENCE = {
+  fr: "nous n'avons trouvé sur la page d'accueil aucun formulaire ni lien e-mail, téléphone ou WhatsApp, ni de page Contact qui en propose",
+  en: "we couldn't find a form, or an email, phone or WhatsApp link, on the home page, nor a Contact page offering one",
+  ar: "لم نجد في الصفحة الرئيسية نموذج تواصل ولا رابط بريد أو هاتف أو واتساب، ولا صفحة اتصال توفر ذلك",
+} as const;
+/** Wording that would claim a Contact page was read: wrong when the home page links none. */
+const CLAIMS_A_CONTACT_PAGE_WAS_READ = /sur la page Contact|on the home page or the Contact page|ولا في صفحة الاتصال/;
+
+async function draftAllLanguages(routes: Record<string, string | number>) {
+  const out: Record<string, NonNullable<Awaited<ReturnType<typeof mod.draftForProspect>>>> = {};
+  for (const language of ["fr", "en", "ar"] as const) {
+    const r = await mod.draftForProspect("me", { language, senderName: "Sara Test" }, deps(prospect(), [], [], routes));
+    assert.ok(r, language);
+    out[language] = r;
+  }
+  return out as Record<"fr" | "en" | "ar", NonNullable<Awaited<ReturnType<typeof mod.draftForProspect>>>>;
+}
+
+test("no Contact page linked from the home page: confirmed, drafted, and the text claims no Contact page was read", async () => {
+  const c = countingDeps({ "/robots.txt": "User-agent: *\nDisallow:", "/": noContactHome() });
+  const r = await mod.draftForProspect("me", input, c.deps);
+  assert.ok(r && r.ok, JSON.stringify(r));
+  assert.deepEqual(r.findings.map((f) => f.id), ["E_CONTACT"]);
+  assert.equal(c.homeReads(), 2, "the home page is read a second time, for the grading");
+
+  const all = await draftAllLanguages({ "/robots.txt": "User-agent: *\nDisallow:", "/": noContactHome() });
+  for (const language of ["fr", "en", "ar"] as const) {
+    const d = all[language];
+    assert.ok(d.ok, `${language}: ${JSON.stringify(d)}`);
+    assert.ok(d.body.includes(`- ${CONTACT_SENTENCE[language]}`), `${language}: the truthful sentence`);
+    assert.doesNotMatch(d.body, CLAIMS_A_CONTACT_PAGE_WAS_READ, `${language}: never says a Contact page was checked`);
+  }
+});
+
+test("a Contact page linked, read completely and offering nothing: confirmed and drafted with the same sentence", async () => {
+  const routes = {
+    "/robots.txt": "User-agent: *\nDisallow:",
+    "/": noContactHome(`<a href="/contact">Contact</a>`),
+    // Read completely (real text, not a script shell) and no phone, e-mail, WhatsApp or form on it.
+    "/contact": `<!doctype html><html lang="fr"><head><title>Contact</title></head><body><h1>Contact</h1><p>${"Nous sommes situés dans la médina de Marrakech. ".repeat(20)}</p></body></html>`,
+  };
+  const requested: string[] = [];
+  const fr = await mod.draftForProspect("me", input, deps(prospect(), [], requested, routes));
+  assert.ok(fr && fr.ok, JSON.stringify(fr));
+  assert.deepEqual(fr.findings.map((f) => f.id), ["E_CONTACT"]);
+  assert.ok(requested.includes("/contact"), "the Contact page was actually read");
+  const all = await draftAllLanguages(routes);
+  for (const language of ["fr", "en", "ar"] as const) {
+    assert.ok(all[language].ok && all[language].body.includes(`- ${CONTACT_SENTENCE[language]}`), language);
+  }
+});
+
+test("a missing contact option that the Contact page contradicts, or that couldn't be checked, is never said", async () => {
+  // The home page links a Contact page that has an e-mail link: the customer can reach them, so nothing to say.
+  const withContactPage = { "/robots.txt": "User-agent: *\nDisallow:", "/": noContactHome(`<a href="/contact">Contact</a>`),
+    "/contact": `<!doctype html><html><head><title>Contact</title></head><body><h1>Contact</h1><p>${"Écrivez-nous. ".repeat(30)}</p><a href="mailto:hello@riad-atlas.ma">hello@riad-atlas.ma</a></body></html>` };
+  const contradicted = await mod.draftForProspect("me", input, deps(prospect(), [], [], withContactPage));
+  assert.ok(contradicted && !contradicted.ok && contradicted.blockers[0].code === "NO_EVIDENCED_FINDING", JSON.stringify(contradicted));
+
+  // The Contact page can't be read (robots.txt disallows it): unconfirmed, so not said.
+  const blocked = { "/robots.txt": "User-agent: *\nDisallow: /contact", "/": noContactHome(`<a href="/contact">Contact</a>`) };
+  const unsure = await mod.draftForProspect("me", input, deps(prospect(), [], [], blocked));
+  assert.ok(unsure && !unsure.ok && unsure.blockers[0].code === "NO_EVIDENCED_FINDING", JSON.stringify(unsure));
+});
+
+test("the second read happens only when there is a missing contact option to confirm", async () => {
+  const c = countingDeps(SITE);
+  const r = await mod.draftForProspect("me", input, c.deps);
+  assert.ok(r?.ok);
+  assert.equal(c.homeReads(), 1, "PAGE has a WhatsApp link: no E_CONTACT, no second read");
 });
 
 test("unknown prospect: nothing", async () => {
@@ -166,4 +283,17 @@ test("no AI, no writes, no automatic send; owner/admin only", () => {
   assert.equal((panel.match(/recordConfirmedSend\(/g) ?? []).length, 1);
   assert.match(panel, /async function confirmSent\(\) \{\n\s+if \(!opened\) return;\n\s+const result = await recordConfirmedSend\(/);
   assert.doesNotMatch(panel, /\/outreach`/, "never posts a message record directly");
+  // The library never sends or records anything itself.
+  assert.doesNotMatch(lib, /record-send|recordConfirmedSend|method:\s*"POST"|wa\.me\/\$\{|window\.open/, "no sending from the draft code");
+});
+
+test("Today: links to the contact checks and, for an owner/admin with a verified channel, to the draft; nothing more", () => {
+  const card = read("src/components/admin/todays-leads.tsx");
+  assert.match(card, /href=\{`\/admin\/prospecting\/\$\{prospectId\}#contact`\}[^>]*>Check contacts</);
+  assert.match(card, /\{canDraft && lead\.hasVerifiedChannel === true && \(\s*<Link href=\{`\/admin\/prospecting\/\$\{prospectId\}#draft`\}[^>]*>Draft first message</);
+  assert.equal((card.match(/canDraft=\{view\.canRun\}/g) ?? []).length, 2, "both lists pass the owner/admin flag");
+  assert.doesNotMatch(card, /outreach-draft/, "the card never calls the draft API");
+  assert.match(read("src/components/admin/outreach-draft-panel.tsx"), /<div id="draft" /);
+  const store = read("src/lib/daily-leads-store.ts");
+  assert.match(store, /verified: verifiedChannels\(p\)\.length > 0/, "the same rule as the draft gate");
 });

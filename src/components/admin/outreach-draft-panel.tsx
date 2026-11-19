@@ -68,7 +68,7 @@ export function OutreachDraftPanel({ prospect, onRecorded }: { prospect: Prospec
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-4">
+    <div id="draft" className="bg-white rounded-2xl border border-gray-100 p-5 mb-4 scroll-mt-20">
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <p className="text-[13px] font-semibold text-gray-800 mr-auto">First message from the website check</p>
         {LANGS.map(([code, label]) => (
