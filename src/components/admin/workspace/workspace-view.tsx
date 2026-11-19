@@ -9,13 +9,13 @@ import {
   Globe, AtSign, Mail, Phone, MapPin, Tag,
   Sparkles, Target, Building2, AlertTriangle, Search, Lock,
   MessageSquare, Clock, StickyNote, FileText, Calendar, FileSignature,
-  HelpCircle, TrendingUp, Wand2, Download, UserCheck,
-  Mail as MailIcon, RefreshCw, Copy, Check, Eye, Save, Loader2, X,
+  HelpCircle, TrendingUp, Wand2, Download, UserCheck, Check,
 } from "lucide-react";
 import { SEGMENT_TOKENS } from "@/lib/prospect-segments";
 import { cn } from "@/lib/utils";
+import { firstMessageHref } from "@/lib/workspace/first-message";
 import type {
-  LeadWorkspace, WorkspaceContactField, WorkspacePriority, WorkspaceStage, WorkspaceSource, ProjectSize,
+  LeadWorkspace, WorkspaceContactField, WorkspacePriority, WorkspaceStage, ProjectSize,
 } from "@/lib/workspace/types";
 
 type LoadState =
@@ -125,7 +125,7 @@ function Workspace({ data }: { data: LeadWorkspace }) {
         <div className="space-y-6 min-w-0">
           <AiResearchModule data={data} />
           <OpportunityModule data={data} />
-          <OutreachModule source={data.source} id={data.id} />
+          <OutreachModule data={data} />
           <FutureModulesSection />
         </div>
 
@@ -450,319 +450,47 @@ function whyNow(priority: WorkspacePriority, label: string | null): string {
 
 /* ─────────────────────────── Outreach module ─────────────────────────── */
 
-type OutreachPhase = "loading" | "ready" | "unavailable" | "error";
-
-function OutreachModule({ source, id }: { source: WorkspaceSource; id: string }) {
-  const endpoint = `/api/admin/workspace/${source}/${id}/outreach`;
-
-  const [phase, setPhase] = useState<OutreachPhase>("loading");
-  const [errMsg, setErrMsg] = useState("");
-  const [channel, setChannel] = useState<"email" | "whatsapp">("email");
-  const [canPersist, setCanPersist] = useState(true);
-
-  const [emailSubject, setEmailSubject] = useState("");
-  const [emailBody, setEmailBody] = useState("");
-  const [waBody, setWaBody] = useState("");
-  const [emailExists, setEmailExists] = useState(false);
-  const [waExists, setWaExists] = useState(false);
-  const [saved, setSaved] = useState({ emailSubject: "", emailBody: "", waBody: "" });
-
-  const [busy, setBusy] = useState<null | "email" | "whatsapp" | "save">(null);
-  const [copied, setCopied] = useState(false);
-  const [justSaved, setJustSaved] = useState(false);
-  const [preview, setPreview] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(endpoint);
-        if (cancelled) return;
-        if (res.status === 503) { setPhase("unavailable"); return; }
-        if (!res.ok) { setErrMsg(`Failed to load (${res.status})`); setPhase("error"); return; }
-        const d = await res.json();
-        setEmailSubject(d.email.subject); setEmailBody(d.email.body);
-        setWaBody(d.whatsapp.body);
-        setEmailExists(d.email.exists); setWaExists(d.whatsapp.exists);
-        setCanPersist(d.canPersist);
-        setSaved({ emailSubject: d.email.subject, emailBody: d.email.body, waBody: d.whatsapp.body });
-        setPhase("ready");
-      } catch (e) {
-        if (!cancelled) { setErrMsg(e instanceof Error ? e.message : "Something went wrong"); setPhase("error"); }
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [endpoint]);
-
-  async function generate(ch: "email" | "whatsapp", regenerate: boolean) {
-    setBusy(ch); setErrMsg("");
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ channel: ch, regenerate }),
-      });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || "Generation failed");
-      setCanPersist(d.canPersist);
-      if (ch === "email") {
-        setEmailSubject(d.subject || ""); setEmailBody(d.body); setEmailExists(true);
-        if (d.canPersist) setSaved((p) => ({ ...p, emailSubject: d.subject || "", emailBody: d.body }));
-      } else {
-        setWaBody(d.body); setWaExists(true);
-        if (d.canPersist) setSaved((p) => ({ ...p, waBody: d.body }));
-      }
-    } catch (e) {
-      setErrMsg(e instanceof Error ? e.message : "Generation failed");
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function save() {
-    setBusy("save"); setErrMsg("");
-    try {
-      const payload = channel === "email"
-        ? { channel, subject: emailSubject, body: emailBody }
-        : { channel, body: waBody };
-      const res = await fetch(endpoint, {
-        method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const d = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(d.error || "Save failed");
-      setSaved((p) => channel === "email"
-        ? { ...p, emailSubject, emailBody }
-        : { ...p, waBody });
-      setJustSaved(true);
-      setTimeout(() => setJustSaved(false), 1600);
-    } catch (e) {
-      setErrMsg(e instanceof Error ? e.message : "Save failed");
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  function copyActive() {
-    const text = channel === "email"
-      ? (emailSubject ? `${emailSubject}\n\n${emailBody}` : emailBody)
-      : waBody;
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1400);
-    }).catch(() => {});
-  }
-
-  const exists = channel === "email" ? emailExists : waExists;
-  const hasContent = channel === "email" ? Boolean(emailSubject || emailBody) : Boolean(waBody);
-  const dirty = channel === "email"
-    ? emailSubject !== saved.emailSubject || emailBody !== saved.emailBody
-    : waBody !== saved.waBody;
-
+/**
+ * First messages are drafted on the prospect page, from a fresh check of the website and only to a contact a
+ * person marked VERIFIED. This module just points there: it calls no outreach endpoint, so it can't generate,
+ * change or save a draft. Drafts saved here earlier stay on their Discovery result, untouched.
+ */
+function OutreachModule({ data }: { data: LeadWorkspace }) {
+  const href = firstMessageHref(data);
   return (
     <ModuleShell
       id="outreach" icon={MessageSquare}
       iconClass="bg-sky-50 border-sky-100 text-sky-600"
-      title="Outreach" subtitle="Prepare the first message to this company"
+      title="Outreach" subtitle="First messages are written on the prospect page"
     >
-      {phase === "loading" && (
-        <div className="px-7 sm:px-8 pb-8 flex items-center gap-2 text-[13px] text-[var(--os-text-dim)]">
-          <Loader2 className="w-4 h-4 animate-spin" /> Loading drafts…
-        </div>
-      )}
-
-      {phase === "unavailable" && (
-        <div className="px-7 sm:px-8 pb-8 text-[13px] text-[var(--os-text-muted)]">
-          Drafts are unavailable — the database can’t be reached right now.
-        </div>
-      )}
-
-      {phase === "error" && (
-        <div className="px-7 sm:px-8 pb-8 text-[13px] text-red-600">{errMsg || "Couldn’t load outreach."}</div>
-      )}
-
-      {phase === "ready" && (
-        <div className="px-7 sm:px-8 pb-8">
-          {/* Channel toggle */}
-          <div className="inline-flex rounded-xl border border-[var(--os-border)] bg-[var(--os-surface-2)] p-1 mb-5">
-            <ChannelTab icon={MailIcon} label="Email" active={channel === "email"} onClick={() => setChannel("email")} />
-            <ChannelTab icon={MessageSquare} label="WhatsApp" active={channel === "whatsapp"} onClick={() => setChannel("whatsapp")} />
-          </div>
-
-          {!hasContent && !exists ? (
-            <EmptyDraft
-              channel={channel}
-              busy={busy === channel}
-              onGenerate={() => generate(channel, false)}
-            />
-          ) : (
-            <div className="space-y-4">
-              {channel === "email" && (
-                <div>
-                  <FieldLabel>Subject</FieldLabel>
-                  <input
-                    value={emailSubject}
-                    onChange={(e) => setEmailSubject(e.target.value)}
-                    placeholder="Email subject…"
-                    className="w-full rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)] px-3.5 py-2.5 text-[14px] text-[var(--os-text)] outline-none focus:border-[var(--os-purple)] transition-colors"
-                  />
-                </div>
-              )}
-              <div>
-                <FieldLabel>{channel === "email" ? "Body" : "Message"}</FieldLabel>
-                <textarea
-                  value={channel === "email" ? emailBody : waBody}
-                  onChange={(e) => (channel === "email" ? setEmailBody(e.target.value) : setWaBody(e.target.value))}
-                  rows={channel === "email" ? 9 : 6}
-                  placeholder="Write or generate a draft…"
-                  className="w-full rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)] px-3.5 py-3 text-[14px] leading-relaxed text-[var(--os-text)] outline-none focus:border-[var(--os-purple)] transition-colors resize-y"
-                />
-              </div>
-
-              {/* Action bar */}
-              <div className="flex flex-wrap items-center gap-2">
-                <OutreachButton
-                  onClick={() => generate(channel, true)}
-                  busy={busy === channel}
-                  icon={RefreshCw}
-                  label="Regenerate"
-                />
-                <OutreachButton onClick={copyActive} icon={copied ? Check : Copy} label={copied ? "Copied" : "Copy"} />
-                <OutreachButton onClick={() => setPreview(true)} icon={Eye} label="Preview" />
-                <div className="flex-1" />
-                <button
-                  onClick={save}
-                  disabled={!canPersist || !dirty || busy === "save"}
-                  title={!canPersist ? "This lead has no Discovery origin — drafts can’t be saved." : undefined}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12.5px] font-semibold transition-all",
-                    !canPersist || !dirty
-                      ? "bg-[var(--os-surface-2)] text-[var(--os-text-dim)] cursor-not-allowed border border-[var(--os-border)]"
-                      : "text-white bg-gradient-to-r from-[#8B00FF] to-[#C026D3] shadow-sm hover:shadow-md",
-                  )}
-                >
-                  {busy === "save" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : justSaved ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
-                  {justSaved ? "Saved" : "Save Draft"}
-                </button>
-              </div>
-
-              {!canPersist && (
-                <p className="text-[11.5px] text-[var(--os-text-dim)]">
-                  This lead has no Discovery origin, so drafts can be generated and copied but not saved.
-                </p>
-              )}
-              {errMsg && <p className="text-[12px] text-red-600">{errMsg}</p>}
+      <div className="px-7 sm:px-8 pb-8">
+        {href ? (
+          <div data-testid="outreach-prospect-link"
+            className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface-2)] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+            <div className="min-w-0 space-y-1">
+              <p className="text-[13px] leading-relaxed text-[var(--os-text)]">
+                The first message is drafted on the prospect page, from a fresh check of the website, and only to a contact someone marked verified.
+              </p>
+              <p className="text-[11.5px] text-[var(--os-text-dim)]">
+                You send it yourself from WhatsApp or Instagram, then record it there. Drafting needs an owner or admin.
+              </p>
             </div>
-          )}
-        </div>
-      )}
-
-      {preview && (
-        <OutreachPreview
-          channel={channel}
-          subject={emailSubject}
-          body={channel === "email" ? emailBody : waBody}
-          onClose={() => setPreview(false)}
-        />
-      )}
-    </ModuleShell>
-  );
-}
-
-function ChannelTab({ icon: Icon, label, active, onClick }: { icon: typeof Globe; label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12.5px] font-medium transition-colors",
-        active ? "bg-[var(--os-surface)] text-[var(--os-text)] shadow-sm border border-[var(--os-border)]" : "text-[var(--os-text-dim)]",
-      )}
-    >
-      <Icon className="w-3.5 h-3.5" />{label}
-    </button>
-  );
-}
-
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--os-text-dim)] mb-1.5">{children}</div>;
-}
-
-function EmptyDraft({ channel, busy, onGenerate }: { channel: "email" | "whatsapp"; busy: boolean; onGenerate: () => void }) {
-  return (
-    <div className="rounded-2xl border border-dashed border-[var(--os-border)] bg-[var(--os-surface-2)]/40 px-6 py-10 text-center">
-      <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-[var(--os-surface)] border border-[var(--os-border)] mb-3">
-        {channel === "email" ? <MailIcon className="w-5 h-5 text-[var(--os-text-dim)]" /> : <MessageSquare className="w-5 h-5 text-[var(--os-text-dim)]" />}
-      </div>
-      <p className="text-[13.5px] font-medium text-[var(--os-text)]">No {channel === "email" ? "email" : "WhatsApp"} draft yet</p>
-      <p className="text-[12.5px] text-[var(--os-text-muted)] mt-1 max-w-xs mx-auto leading-relaxed">
-        Generate a first draft from this company’s AI research and suggested offer.
-      </p>
-      <button
-        onClick={onGenerate}
-        disabled={busy}
-        className={cn(
-          "inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-lg text-[12.5px] font-semibold transition-all",
-          busy ? "bg-purple-100 text-purple-500 cursor-wait" : "text-white bg-gradient-to-r from-[#8B00FF] to-[#C026D3] shadow-sm hover:shadow-md",
+            <Link href={href}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-[12.5px] font-semibold text-white bg-gradient-to-r from-[#8B00FF] to-[#C026D3] shadow-sm hover:shadow-md transition-all shrink-0">
+              Draft on the prospect page <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        ) : (
+          <div data-testid="outreach-import-required"
+            className="rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5 space-y-1">
+            <p className="text-[13px] font-medium text-amber-900">Import this business as a prospect first.</p>
+            <p className="text-[12px] leading-relaxed text-amber-800">
+              Verified first messages are only drafted for a prospect, after its contacts have been checked. Nothing can be drafted from a Discovery result.
+            </p>
+          </div>
         )}
-      >
-        {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
-        {busy ? "Generating…" : "Generate draft"}
-      </button>
-    </div>
-  );
-}
-
-function OutreachButton({ onClick, icon: Icon, label, busy }: { onClick: () => void; icon: typeof Globe; label: string; busy?: boolean }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={busy}
-      className={cn(
-        "inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12.5px] font-medium border transition-colors",
-        busy
-          ? "bg-[var(--os-surface-2)] text-[var(--os-text-dim)] border-[var(--os-border)] cursor-wait"
-          : "bg-[var(--os-surface)] text-[var(--os-text-muted)] border-[var(--os-border)] hover:border-[var(--os-purple)] hover:text-[var(--os-purple)]",
-      )}
-    >
-      {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Icon className="w-3.5 h-3.5" />}
-      {label}
-    </button>
-  );
-}
-
-function OutreachPreview({ channel, subject, body, onClose }: { channel: "email" | "whatsapp"; subject: string; body: string; onClose: () => void }) {
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-2xl bg-[var(--os-surface)] border border-[var(--os-border)] shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--os-border)]">
-          <div className="flex items-center gap-2 text-[13px] font-semibold text-[var(--os-text)]">
-            {channel === "email" ? <MailIcon className="w-4 h-4 text-sky-600" /> : <MessageSquare className="w-4 h-4 text-emerald-600" />}
-            {channel === "email" ? "Email preview" : "WhatsApp preview"}
-          </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-[var(--os-text-dim)] hover:bg-[var(--os-surface-2)] transition-colors" aria-label="Close preview">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="px-5 py-4 max-h-[65vh] overflow-y-auto space-y-3">
-          {channel === "email" && subject && (
-            <div className="rounded-lg border border-[var(--os-border)] bg-[var(--os-surface-2)] px-3 py-2 text-[13.5px] font-medium text-[var(--os-text)]">
-              {subject}
-            </div>
-          )}
-          {body
-            ? <p className="text-[13.5px] leading-relaxed text-[var(--os-text-muted)] whitespace-pre-wrap">{body}</p>
-            : <p className="text-[13px] italic text-[var(--os-text-dim)]">Nothing to preview yet.</p>}
-        </div>
-        <div className="px-5 py-3 border-t border-[var(--os-border)] text-[11px] text-[var(--os-text-dim)]">
-          Preview only — nothing is sent from here.
-        </div>
       </div>
-    </div>
+    </ModuleShell>
   );
 }
 
