@@ -520,16 +520,27 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                             {prospect.neighborhood && <span className="text-[#CBD5E1]"> · </span>}
                             {prospect.neighborhood}
                           </p>
+                          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                            {/* Contacts are checked and the first message is drafted there. */}
+                            <Link
+                              href={`/admin/prospecting/${prospect.id}`}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-semibold text-[#475569] bg-white border border-[#E5E7EB] hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50 transition-colors"
+                              title="Contact checks and the first message"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              Prospect page
+                            </Link>
+                            <Link
+                              href={`/admin/workspace/prospect/${prospect.id}`}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-semibold text-[#475569] bg-white border border-[#E5E7EB] hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50 transition-colors"
+                              title="Open full workspace"
+                            >
+                              <Maximize2 className="w-3.5 h-3.5" />
+                              Open Workspace
+                            </Link>
+                          </div>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
-                          <Link
-                            href={`/admin/workspace/prospect/${prospect.id}`}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-semibold text-[#475569] bg-white border border-[#E5E7EB] hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50 transition-colors"
-                            title="Open full workspace"
-                          >
-                            <Maximize2 className="w-3.5 h-3.5" />
-                            Open Workspace
-                          </Link>
                           <button
                             onClick={onClose}
                             className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
