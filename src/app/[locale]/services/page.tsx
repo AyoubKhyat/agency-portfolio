@@ -44,7 +44,8 @@ export default function ServicesPage() {
   return (
     <>
       {/* Hero */}
-      <section className="relative bg-background py-24 md:py-32 overflow-hidden">
+      {/* Phones get a shorter hero (tighter padding, smaller h1) so the first group shows above the fold; md+ unchanged. */}
+      <section className="relative bg-background pt-10 pb-8 md:py-32 overflow-hidden">
         <div className="grid-bg" />
         <div className="glow w-[800px] h-[800px] bg-primary -top-48 -left-48 opacity-20" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -52,7 +53,7 @@ export default function ServicesPage() {
             <span className="pill">◆ {t("title")}</span>
           </div>
           <div className="hero-enter" style={{ "--enter-delay": "0.15s" } as React.CSSProperties}>
-            <h1 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[132px] leading-[0.95] tracking-tight text-foreground max-w-[1200px]">
+            <h1 className="mt-5 md:mt-8 font-serif text-[clamp(2.4rem,10vw,3rem)] leading-[1.02] md:text-8xl lg:text-[132px] md:leading-[0.95] tracking-tight text-foreground max-w-[1200px]">
               {t("hero_headline")}
             </h1>
           </div>

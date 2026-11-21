@@ -158,7 +158,7 @@ export default async function BlogPostPage({
           </p>
           <Link
             href="/contact"
-            className="mt-8 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-mono text-sm tracking-[0.12em] uppercase px-8 py-4 rounded-full transition-colors"
+            className="mt-8 inline-flex items-center gap-2 bg-primary-strong hover:brightness-90 text-white font-mono text-sm tracking-[0.12em] uppercase px-8 py-4 rounded-full transition-colors"
           >
             {t("cta_button")}
           </Link>

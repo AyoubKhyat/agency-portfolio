@@ -199,6 +199,10 @@
 @media (max-width: 760px) {
   .cards[data-count] > li:last-child:nth-child(odd) { grid-column: auto; }
 }
+/* Phones: the first group follows the (shortened) Services hero closely. */
+@media (max-width: 767px) {
+  .svcGroup:first-child { padding-top: 56px; }
+}
 
 /* A group with a single service (Growth & SEO): one wider card instead of a lone third. */
 .cards[data-count="1"] > li { grid-column: span 4; }

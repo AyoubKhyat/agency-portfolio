@@ -47,14 +47,17 @@ export default function Navbar() {
               className="hidden xl:block"
               style={{ width: "auto", height: "auto" }}
             />
-            <Image
-              src="/logo_ibda3.png"
-              alt="Ibda3 Digital"
-              width={48}
-              height={48}
-              priority
-              className="xl:hidden rounded-lg"
-            />
+            {/* Mobile: same wordmark as desktop, cropped to its content (the PNGs carry wide transparent padding). */}
+            <span className="relative block h-9 w-[150px] overflow-hidden xl:hidden">
+              <Image
+                src={dark ? "/Logo_horizontal.png" : "/logo_transparent.png"}
+                alt="Ibda3 Digital"
+                fill
+                sizes="150px"
+                priority
+                className="object-cover object-[50%_40%]"
+              />
+            </span>
           </Link>
 
           <div className="hidden xl:flex items-center gap-1">

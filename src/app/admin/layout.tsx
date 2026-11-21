@@ -363,7 +363,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         {badge > 0 && (
                           <span className={cn(
                             "ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center",
-                            active ? "bg-[var(--os-purple)] text-white" : "bg-[var(--os-purple-glow)] text-[var(--os-purple)]"
+                            active ? "bg-[var(--os-purple-strong)] text-white" : "bg-[var(--os-purple-glow)] text-[var(--os-purple)]"
                           )}>
                             {badge}
                           </span>

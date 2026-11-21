@@ -34,7 +34,7 @@ export default function BlogList({
           onClick={() => setActive(null)}
           className={`px-5 py-2 rounded-full text-sm font-mono tracking-wider transition-all ${
             active === null
-              ? "bg-primary text-white"
+              ? "bg-primary-strong text-white"
               : "border border-line text-text-muted hover:border-primary hover:text-primary"
           }`}
         >
@@ -46,7 +46,7 @@ export default function BlogList({
             onClick={() => setActive(cat)}
             className={`px-5 py-2 rounded-full text-sm font-mono tracking-wider transition-all ${
               active === cat
-                ? "bg-primary text-white"
+                ? "bg-primary-strong text-white"
                 : "border border-line text-text-muted hover:border-primary hover:text-primary"
             }`}
           >

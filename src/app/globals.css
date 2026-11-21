@@ -13,6 +13,8 @@
   --ln-soft: rgba(0, 0, 0, 0.06);
   --prim: #8B6FE0;
   --prim-dark: #7C5CFA;
+  /* Fill for small white text on primary (white on #6a4ee0 = 5.56:1; --prim fails AA) */
+  --prim-strong: #6a4ee0;
   --acc: #d4c420;
   --acc-dark: #b8a900;
   --grid-line: rgba(10, 10, 10, 0.04);
@@ -39,6 +41,7 @@
   --ln-soft: rgba(255, 255, 255, 0.06);
   --prim: #A78BFA;
   --prim-dark: #7C5CFA;
+  --prim-strong: #6a4ee0;
   --acc: #f5e642;
   --acc-dark: #d4c420;
   --grid-line: rgba(255, 255, 255, 0.04);
@@ -54,6 +57,7 @@
 @theme inline {
   --color-primary: var(--prim);
   --color-primary-dark: var(--prim-dark);
+  --color-primary-strong: var(--prim-strong);
   --color-background: var(--bg);
   --color-foreground: var(--fg);
   --color-accent: var(--acc);
@@ -119,8 +123,10 @@ body {
   --os-purple: #7C5CFA;
   --os-purple-glow: rgba(124, 92, 250, 0.12);
   --os-purple-subtle: rgba(124, 92, 250, 0.05);
-  /* Official purple -> blue brand gradient (= :root --grad-a / --grad-b) */
-  --os-grad-a: #8B6FE0;
+  /* Fill for small white text on purple (white on #6a4ee0 = 5.56:1) */
+  --os-purple-strong: #6a4ee0;
+  /* Purple -> blue brand gradient; deeper start (= public diagnostic CTA) keeps white text >= 4.5:1 */
+  --os-grad-a: #6a4ee0;
   --os-grad-b: #2563EB;
   --os-green: #10b981;
   --os-blue: #3b82f6;
@@ -145,6 +151,7 @@ body {
   --os-purple: #A78BFA;
   --os-purple-glow: rgba(167, 139, 250, 0.15);
   --os-purple-subtle: rgba(167, 139, 250, 0.08);
+  --os-purple-strong: #6a4ee0;
   /* = .dark --grad-a / --grad-b */
   --os-grad-a: #A78BFA;
   --os-grad-b: #60A5FA;

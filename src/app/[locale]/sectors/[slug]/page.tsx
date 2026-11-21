@@ -270,7 +270,7 @@ export default async function SectorPage({ params }: { params: Promise<{ slug: s
           </FadeIn>
           <FadeIn delay={0.25}>
             <div className="mt-10 flex flex-wrap gap-4">
-              <Link href="/contact" className="px-8 py-4 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors">
+              <Link href="/contact" className="px-8 py-4 bg-primary-strong text-white rounded-xl font-semibold hover:brightness-90 transition-colors">
                 Demander un devis gratuit
               </Link>
               <a href="https://wa.me/212625461645" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-8 py-4 border border-line rounded-xl text-foreground hover:border-primary/30 transition-colors">
