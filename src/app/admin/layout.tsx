@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -290,18 +291,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Brand */}
       <div className={cn("flex items-center h-14 border-b border-[var(--os-border)]", collapsed && !isMobileDrawer ? "justify-center px-2" : "px-5")}>
         {collapsed && !isMobileDrawer ? (
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#8B00FF] to-[#C026D3] flex items-center justify-center shadow-lg shadow-purple-500/20">
-            <span className="text-white text-xs font-bold">I</span>
+          <div className="relative w-8 h-8 shrink-0">
+            {/* Dark: square badge. Light: transparent "iD" mark; cover + top bias trims its empty bottom padding so the monogram sits centred */}
+            <Image src={osDark ? "/icon.png" : "/loading/mark.png"} alt="Ibda3 Digital" fill sizes="32px" priority className={osDark ? "object-contain" : "object-cover object-[50%_12%]"} />
           </div>
         ) : (
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#8B00FF] to-[#C026D3] flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/25">
-              <span className="text-white text-[11px] font-bold">I</span>
-            </div>
-            <div>
-              <div className="text-[14px] font-bold text-[var(--os-text)] leading-none tracking-tight">IBDA3</div>
-              <div className="text-[10px] text-[var(--os-text-muted)] leading-none mt-0.5 font-medium tracking-widest">OS</div>
-            </div>
+          <div className="relative h-10 w-[168px] shrink-0">
+            {/* Same theme-aware files as the public Navbar; PNGs carry wide transparent padding, so crop to the wordmark */}
+            <Image src={osDark ? "/Logo_horizontal.png" : "/logo_transparent.png"} alt="Ibda3 Digital" fill sizes="168px" priority className="object-cover object-[50%_40%]" />
           </div>
         )}
         {isMobileDrawer && (
@@ -316,7 +313,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <button
           onClick={() => { setSearchOpen(true); if (isMobileDrawer) closeMobile(); }}
           className={cn(
-            "flex items-center gap-2.5 w-full rounded-xl border border-[var(--os-border)] transition-all duration-200 text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:border-[#8B00FF]/30 hover:bg-[var(--os-hover)]",
+            "flex items-center gap-2.5 w-full rounded-xl border border-[var(--os-border)] transition-all duration-200 text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:border-[var(--os-border-hover)] hover:bg-[var(--os-hover)]",
             collapsed && !isMobileDrawer ? "justify-center h-10 w-10 mx-auto px-0" : "px-3 py-2"
           )}
         >
@@ -353,7 +350,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       "group relative flex items-center gap-2.5 rounded-xl transition-all duration-200",
                       !showLabel ? "justify-center h-10 w-10 mx-auto" : "px-3 py-2",
                       active
-                        ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20"
+                        ? "bg-[var(--os-purple-glow)] text-[var(--os-text)] [&>svg]:text-[var(--os-purple)]"
                         : section.secondary || section.collapsed
                           ? "text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]"
                           : "text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]"
@@ -366,7 +363,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         {badge > 0 && (
                           <span className={cn(
                             "ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center",
-                            active ? "bg-white/25 text-white" : "bg-purple-100 text-[#8B00FF]"
+                            active ? "bg-[var(--os-purple)] text-white" : "bg-[var(--os-purple-glow)] text-[var(--os-purple)]"
                           )}>
                             {badge}
                           </span>
@@ -374,7 +371,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       </>
                     )}
                     {!showLabel && badge > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-[#8B00FF] rounded-full border-2 border-white" />
+                      <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-[var(--os-purple)] rounded-full border-2 border-[var(--os-surface)]" />
                     )}
                   </Link>
                 );
@@ -416,7 +413,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className={cn(
                 "flex items-center gap-2.5 rounded-xl transition-all duration-200",
                 !showLabel ? "justify-center h-10 w-10 mx-auto" : "px-3 py-2",
-                active ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20" : "text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]"
+                active ? "bg-[var(--os-purple-glow)] text-[var(--os-text)] [&>svg]:text-[var(--os-purple)]" :"text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]"
               )}>
               <item.icon className={cn("shrink-0", !showLabel ? "w-[18px] h-[18px]" : "w-4 h-4")} />
               {showLabel && <span className="text-[13px] font-medium">{item.label}</span>}
@@ -456,10 +453,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className={cn("admin-os flex h-screen overflow-hidden", osDark && "os-dark")}>
-      {/* Background gradient blobs */}
-      <div className="os-gradient-blob os-gradient-blob-1" />
-      <div className="os-gradient-blob os-gradient-blob-2" />
-
       {/* Mobile header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center justify-between px-4 backdrop-blur-xl border-b border-[var(--os-border)] shadow-sm" style={{ backgroundColor: `color-mix(in srgb, var(--os-surface) 90%, transparent)` }}>
         <div className="flex items-center gap-3">
@@ -467,8 +460,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#8B00FF] to-[#C026D3] flex items-center justify-center shadow-sm shadow-purple-500/20">
-              <span className="text-white text-[9px] font-bold">I</span>
+            <div className="relative w-7 h-7 shrink-0">
+              <Image src={osDark ? "/icon.png" : "/loading/mark.png"} alt="Ibda3 Digital" fill sizes="28px" className={osDark ? "object-contain" : "object-cover object-[50%_12%]"} />
             </div>
             <span className="text-sm font-bold text-[var(--os-text)]">{SIMPLE_NAV && tab ? sectionForPath(pathname, search).label : getPageTitle(pathname)}</span>
           </div>
@@ -513,7 +506,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "spring", stiffness: 400, damping: 40 }}
-            className="lg:hidden fixed top-0 left-0 bottom-0 z-50 w-[280px] flex flex-col border-r border-[var(--os-border)] shadow-2xl shadow-purple-900/10" style={{ backgroundColor: "var(--os-surface)" }}
+            className="lg:hidden fixed top-0 left-0 bottom-0 z-50 w-[280px] flex flex-col border-r border-[var(--os-border)] shadow-2xl" style={{ backgroundColor: "var(--os-surface)" }}
           >
             {sidebarContent(true)}
           </motion.aside>
@@ -525,7 +518,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         "hidden lg:block shrink-0 py-3 pl-3 transition-all duration-200 ease-out",
         collapsed ? "w-[72px]" : "w-[240px]"
       )}>
-        <aside className="flex flex-col h-[calc(100vh-24px)] backdrop-blur-xl rounded-2xl border border-[var(--os-border)] shadow-lg shadow-purple-900/[0.03] overflow-hidden" style={{ backgroundColor: `color-mix(in srgb, var(--os-surface) 90%, transparent)` }}>
+        <aside className="flex flex-col h-[calc(100vh-24px)] rounded-2xl border border-[var(--os-border)] overflow-hidden" style={{ backgroundColor: "var(--os-surface)" }}>
           {sidebarContent(false)}
         </aside>
       </div>
