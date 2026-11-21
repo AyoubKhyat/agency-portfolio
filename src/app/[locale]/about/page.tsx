@@ -1,8 +1,13 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { FadeIn, StaggerContainer, StaggerItem } from "@/components/motion";
+import RevealController from "@/components/home-v2/RevealController";
+import { alexandria, tajawal } from "@/components/home-v2/fonts";
 import { pageMetadata } from "@/lib/site";
+import s from "./about.module.css";
+
+const ROOT_ID = "about-v2";
 
 export async function generateMetadata({
   params,
@@ -14,142 +19,123 @@ export async function generateMetadata({
   return pageMetadata({ locale, path: "/about", title: `${t("title")} — Ibda3 Digital`, description: t("subtitle") });
 }
 
+const num = (i: number) => String(i + 1).padStart(2, "0");
+
 export default function AboutPage() {
   const t = useTranslations("About");
+  const rtl = useLocale() === "ar";
 
-  const reasons = [
-    { num: "/ 01", key: "why1", en: "Truly local." },
-    { num: "/ 02", key: "why2", en: "Quality engineering." },
-    { num: "/ 03", key: "why3", en: "Always reachable." },
-    { num: "/ 04", key: "why4", en: "Fair pricing." },
-  ];
+  // The h1 breaks after the first comma (Latin "," or Arabic "،"); the rest takes the brand gradient.
+  const subtitle = t("subtitle");
+  const split = subtitle.match(/^(.*?[,،])\s*(.+)$/);
+  // Display only: the translated pill text carries a leading glyph ("★ "), not needed in a HomeV2 label.
+  const whyLabel = t("why_pill").replace(/^[★●◆]\s*/, "");
 
-  const steps = [
-    { num: "01", stepKey: "step1", accent: "primary" },
-    { num: "02", stepKey: "step2", accent: "primary" },
-    { num: "03", stepKey: "step3", accent: "accent" },
-    { num: "04", stepKey: "step4", accent: "accent" },
-  ];
+  const reasons = ["why1", "why2", "why3", "why4"];
+  const steps = ["step1", "step2", "step3", "step4"];
+  const values = ["value1", "value2", "value3", "value4"];
+
+  const secLabel = (n: string, text?: string) => (
+    <span className={s.label}>
+      <span dir="ltr" className={s.secNum}>({n})</span>
+      {text}
+    </span>
+  );
 
   return (
-    <>
-      {/* Story */}
-      <section className="relative bg-background py-24 md:py-32 overflow-hidden">
-        <div className="grid-bg" />
-        <div className="glow w-[600px] h-[600px] bg-primary -top-24 right-10 opacity-20" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeIn>
-            <span className="pill">● {t("title")}</span>
-            <h1 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.95] tracking-tight text-foreground">
-              {t("subtitle").split(",")[0]},<br />
-              <span className="text-primary italic">{t("subtitle").split(",").slice(1).join(",").trim()}</span>
-            </h1>
-          </FadeIn>
-          <FadeIn delay={0.2}>
-            <div className="mt-12 max-w-3xl">
-              <p className="text-lg text-text-muted leading-relaxed">{t("story_p1")}</p>
-              <p className="mt-4 text-lg text-text-muted leading-relaxed">{t("story_p2")}</p>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
+    <div id={ROOT_ID} dir={rtl ? "rtl" : "ltr"} className={`${s.root} ${alexandria.variable} ${tajawal.variable}`}>
+      <RevealController rootId={ROOT_ID} hiddenClass={s.jsReveal} />
 
-      {/* Why Us */}
-      <section className="relative py-20 bg-surface-2 overflow-hidden">
-        <div className="grid-bg" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-16">
-            <FadeIn>
-              <div>
-                <span className="pill">{t("why_pill")}</span>
-                <h2 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.92] tracking-tight text-foreground">
-                  {t("why_heading")}<br /><span className="text-primary italic">{t("why_heading_accent")}</span>
-                </h2>
-                <p className="mt-8 font-serif italic text-xl text-text-muted leading-relaxed max-w-md">
-                  {t("why_tagline")}
-                </p>
-              </div>
-            </FadeIn>
-
-            <StaggerContainer className="border-t border-line-soft">
-              {reasons.map((r) => (
-                <StaggerItem key={r.key}>
-                  <div className="grid grid-cols-[60px_1fr] gap-7 py-7 border-b border-line-soft items-start">
-                    <span className="font-mono text-sm text-accent tracking-[0.16em] pt-4">{r.num}</span>
-                    <div>
-                      <h3 className="font-serif text-3xl md:text-4xl text-foreground">
-                        {t(`${r.key}_title`)}. <span className="italic text-text-muted text-xl md:text-2xl ml-2">{r.en}</span>
-                      </h3>
-                      <p className="mt-2 text-text-muted leading-relaxed max-w-xl">{t(`${r.key}_desc`)}</p>
-                    </div>
-                  </div>
-                </StaggerItem>
-              ))}
-            </StaggerContainer>
+      {/* Hero + story: HomeV2 hero scaffolding (label row, serif headline, ruled body) */}
+      <section className={s.hero}>
+        <div className={s.wrap}>
+          <div className={`${s.heroTop} ${s.label} hero-enter`}>
+            <span>{t("title")}</span>
+          </div>
+          <h1 className={`${s.pageTitle} hero-enter`} style={{ "--enter-delay": "0.15s" } as CSSProperties}>
+            {split ? (
+              <>
+                {split[1]}
+                <br />
+                <span className={s.gradText}>{split[2]}</span>
+              </>
+            ) : (
+              subtitle
+            )}
+          </h1>
+          <div className={`${s.grid12} ${s.heroBody} hero-enter`} style={{ "--enter-delay": "0.3s" } as CSSProperties}>
+            <p>{t("story_p1")}</p>
+            <p>{t("story_p2")}</p>
           </div>
         </div>
       </section>
 
-      {/* Process Flow */}
-      <section className="relative py-24 bg-background overflow-hidden">
-        <div className="grid-bg" />
-        <div className="glow w-[700px] h-[700px] bg-primary top-[20%] left-[30%] opacity-15" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeIn>
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 gap-6">
-              <h2 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight text-foreground">
-                {t("process_heading")}<br /><span className="text-primary italic">{t("process_heading_accent")}</span>
-              </h2>
-              <div className="font-mono text-xs tracking-[0.14em] uppercase text-text-muted text-right leading-relaxed">
-                {t("process_tag1")}<br />
-                {t("process_tag2")}<br />
-                {t("process_tag3")}
-              </div>
-            </div>
-          </FadeIn>
-
-          <StaggerContainer className="grid md:grid-cols-4 gap-6 relative" delay={0.15}>
-            <div className="hidden md:block absolute top-7 left-0 right-0 border-t border-dashed border-line z-0" />
-            {steps.map((step) => (
-              <StaggerItem key={step.stepKey}>
-                <div className="relative flex flex-col gap-5">
-                  <div className={`relative z-10 w-14 h-14 rounded-full border flex items-center justify-center font-mono text-sm tracking-wider ${
-                    step.accent === "accent"
-                      ? "border-accent text-accent bg-background"
-                      : "border-primary text-primary bg-background"
-                  } ${step.num === "04" ? "!bg-accent !border-accent !text-white shadow-[0_0_40px_rgba(245,158,11,0.5)]" : ""}`}>
-                    {step.num}
-                  </div>
-                  <h3 className="font-serif text-3xl md:text-4xl text-foreground">{t(`${step.stepKey}_title`)}</h3>
-                  <span className="font-serif italic text-text-muted">{t(`${step.stepKey}_sub`)}</span>
-                  <p className="text-sm text-text-muted leading-relaxed">{t(`${step.stepKey}_desc`)}</p>
-                  <span className="mt-auto pt-4 border-t border-line-soft font-mono text-[11px] tracking-[0.16em] uppercase text-primary">
-                    {t(`${step.stepKey}_duration`)}
-                  </span>
+      {/* Why us */}
+      <section className={`${s.sec} ${s.plate}`}>
+        <div className={`${s.wrap} ${s.grid12}`}>
+          <div className={s.whyHead} data-reveal="">
+            {secLabel(num(0), whyLabel)}
+            <h2 className={s.disp}>
+              {t("why_heading")} <span className={s.gradText}>{t("why_heading_accent")}</span>
+            </h2>
+            <p>{t("why_tagline")}</p>
+          </div>
+          <ul className={s.reasons}>
+            {reasons.map((key, i) => (
+              <li key={key} data-reveal="">
+                <span className={s.idx} dir="ltr">{num(i)}</span>
+                <div>
+                  <h3 className={s.rowTitle}>{t(`${key}_title`)}</h3>
+                  <p>{t(`${key}_desc`)}</p>
                 </div>
-              </StaggerItem>
+              </li>
             ))}
-          </StaggerContainer>
+          </ul>
+        </div>
+      </section>
+
+      {/* Process */}
+      <section className={s.sec}>
+        <div className={s.wrap}>
+          <div className={`${s.grid12} ${s.secHead}`} data-reveal="">
+            {secLabel(num(1))}
+            <h2 className={s.disp}>
+              {t("process_heading")} <span className={s.gradText}>{t("process_heading_accent")}</span>
+            </h2>
+            <ul className={s.tags}>
+              <li>{t("process_tag1")}</li>
+              <li>{t("process_tag2")}</li>
+              <li>{t("process_tag3")}</li>
+            </ul>
+          </div>
+          <ol className={s.steps}>
+            {steps.map((key, i) => (
+              <li key={key} className={s.step} data-reveal="">
+                <span className={s.idx} dir="ltr">{num(i)}</span>
+                <h3 className={s.rowTitle}>{t(`${key}_title`)}</h3>
+                <p className={`${s.label} ${s.stepSub}`}>{t(`${key}_sub`)}</p>
+                <p>{t(`${key}_desc`)}</p>
+                <span className={s.duration}>{t(`${key}_duration`)}</span>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
       {/* Values */}
-      <section className="py-20 bg-surface-2">
-        <FadeIn className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-serif text-4xl md:text-6xl text-foreground mb-12">
-            {t("values_title")}.
-          </h2>
-          <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {["value1", "value2", "value3", "value4"].map((key) => (
-              <StaggerItem key={key}>
-                <div className="border border-line rounded-2xl p-6 bg-gradient-to-b from-primary/5 to-transparent hover:border-primary/30 transition-all">
-                  <p className="font-serif text-lg text-text-muted">{t(key)}</p>
-                </div>
-              </StaggerItem>
+      <section className={`${s.sec} ${s.plate}`}>
+        <div className={s.wrap}>
+          <div className={`${s.grid12} ${s.secHead}`} data-reveal="">
+            {secLabel(num(2))}
+            <h2 className={s.disp}>{t("values_title")}.</h2>
+          </div>
+          <ul className={s.values}>
+            {values.map((key) => (
+              <li key={key} data-reveal="">{t(key)}</li>
             ))}
-          </StaggerContainer>
-        </FadeIn>
+          </ul>
+        </div>
       </section>
-    </>
+    </div>
   );
 }
