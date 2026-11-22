@@ -97,9 +97,8 @@
 
 /* ── Form band ── */
 .main { background: var(--plate); padding-block: clamp(56px, 6.5vw, 104px); }
-.mwrap { max-width: 1280px; margin-inline: auto; padding-inline: 16px; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(20px, 2.4vw, 36px); align-items: start; }
-@media (min-width: 640px) { .mwrap { padding-inline: 24px; } }
-@media (min-width: 1024px) { .mwrap { padding-inline: 32px; } }
+/* Same column as the hero .wrap (1520px + --gut), so the cards line up with the title. */
+.mwrap { max-width: 1520px; margin-inline: auto; padding-inline: var(--gut); display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(20px, 2.4vw, 36px); align-items: start; }
 .formCard { padding: clamp(24px, 3.2vw, 48px); scroll-margin-top: 88px; }
 .fHead { display: flex; align-items: end; justify-content: space-between; gap: 8px 20px; flex-wrap: wrap; padding-bottom: 22px; margin-bottom: 26px; border-bottom: 1px solid var(--line); }
 .fHead h2 { margin: 0; font-size: clamp(1.9rem, 2.7vw, 2.7rem); }

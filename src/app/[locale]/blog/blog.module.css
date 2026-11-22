@@ -52,6 +52,56 @@
 /* ── Posts: neutral plate, no grid ── */
 .posts { background: var(--plate); padding-block: clamp(56px, 6vw, 96px); }
 
+/* ════ Blog article (blog/[slug]) — added rules only; the index rules above are unchanged ════ */
+.root {
+  --cta-grad: linear-gradient(100deg, #6a4ee0 0%, #2563eb 100%);
+  --display: "Cabinet Grotesk", var(--font-alexandria), system-ui, sans-serif;
+}
+:global(.dark) .root { --cta-grad: linear-gradient(100deg, #5b3fd6 0%, #1d4ed8 100%); }
+
+/* Label row: back link (start) and category (end), as quiet labels */
+.articleTop { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 20px; }
+.back { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); transition: color 0.3s; }
+.back:hover { color: var(--ink); }
+.backArr { width: 14px; height: 14px; flex: none; transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.1, 1); }
+.back:hover .backArr { transform: translateX(-3px); }
+.root[dir="rtl"] .backArr { transform: scaleX(-1); }
+.root[dir="rtl"] .back:hover .backArr { transform: scaleX(-1) translateX(-3px); }
+/* Long article titles: narrower measure than the 26ch page title */
+.articleTitle { max-width: 22ch; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; margin: clamp(18px, 2.2vw, 30px) 0 0; font: 500 14px/1.45 var(--body); color: var(--muted); }
+.meta span { display: inline-flex; align-items: center; gap: 7px; }
+.meta svg { width: 16px; height: 16px; flex: none; }
+
+/* Body: neutral plate, ~720px reading measure on the .wrap start edge */
+.article { background: var(--plate); padding-block: clamp(56px, 6vw, 96px); }
+.measure { max-width: 720px; }
+
+/* CTA: Services values (homepage gradient; deeper stops keep white text ≥ 4.5:1) */
+.grid12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(16px, 2vw, 32px); }
+.secNum { color: var(--ink); font-variant-numeric: tabular-nums; margin-inline-end: 0.3em; }
+.disp { font-family: var(--display); font-weight: 800; letter-spacing: -0.035em; line-height: 0.92; }
+.root[dir="rtl"] .disp { letter-spacing: 0; line-height: 1.35; font-weight: 700; }
+.flip { display: inline-block; }
+.root[dir="rtl"] .flip { transform: scaleX(-1); }
+.cta { background: var(--cta-grad); color: #fff; padding-block: clamp(72px, 8vw, 128px); }
+.cta .label { color: rgba(255, 255, 255, 0.88); }
+.cta .secNum { color: #fff; }
+.ctaTitle { margin: 18px 0 0; font-size: clamp(3rem, 8vw, 8rem); max-width: 14ch; }
+.ctaRow { margin-top: clamp(28px, 4vw, 48px); align-items: end; row-gap: 28px; }
+.ctaRow p { grid-column: 1 / span 6; margin: 0; font-size: 1.15rem; color: rgba(255, 255, 255, 0.92); max-width: 44ch; }
+.ctaRow .act { grid-column: 8 / -1; display: flex; justify-content: flex-end; }
+.pillWhite { display: inline-flex; align-items: center; gap: 10px; padding: 20px 30px; border-radius: 999px; background: #fff; color: #0b0b0f !important; font-weight: 600; font-size: 17px; transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.1, 1); }
+.pillWhite:hover { transform: translateY(-2px); }
+.root .pillWhite:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+@media (max-width: 1100px) {
+  .ctaRow p, .ctaRow .act { grid-column: 1 / -1; }
+  .ctaRow .act { justify-content: flex-start; }
+}
+@media (max-width: 760px) {
+  .pillWhite { width: 100%; justify-content: center; }
+}
+
 /* Shared chrome on this route only (same values HomeV2 uses for its own route):
    page tint, nav content and breadcrumb on the 1520px column with HomeV2's gutter,
    and a quiet sentence-case breadcrumb instead of mono caps. Keyed on .root. */
