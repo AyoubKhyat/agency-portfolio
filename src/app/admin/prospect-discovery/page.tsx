@@ -479,6 +479,7 @@ export default function ProspectDiscoveryPage() {
 
               {searchData.items.length === 0 ? (
                 <EmptyState
+                  className="[--os-text:#0F172A]"
                   icon={<Compass className="w-7 h-7" />}
                   title="No results"
                   description={searchData.provider === "OSM"
