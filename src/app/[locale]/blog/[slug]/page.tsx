@@ -1,14 +1,16 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { HiArrowLeft, HiOutlineClock, HiOutlineUser } from "react-icons/hi2";
-import { FadeIn } from "@/components/motion";
+import { alexandria, tajawal } from "@/components/home-v2/fonts";
 import { getPostBySlug, getAllPostSlugs } from "@/lib/blog";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { SITE_URL, pageMetadata } from "@/lib/site";
 import { serializeJsonLd } from "@/lib/json-ld";
 import { SAFE_MARKDOWN_OPTIONS, SAFE_MARKDOWN_COMPONENTS } from "@/lib/safe-markdown";
+import s from "../blog.module.css";
 
 const BASE_URL = SITE_URL;
 
@@ -87,6 +89,8 @@ export default async function BlogPostPage({
   if (!post) notFound();
 
   const t = await getTranslations({ locale, namespace: "Blog" });
+  const nav = await getTranslations({ locale, namespace: "Nav" });
+  const rtl = locale === "ar";
 
   return (
     <>
@@ -99,71 +103,64 @@ export default async function BlogPostPage({
         author={post.author}
       />
 
-      {/* Hero */}
-      <section className="relative bg-background py-20 md:py-28 overflow-hidden">
-        <div className="grid-bg" />
-        <div className="glow w-[600px] h-[600px] bg-primary top-0 right-0 opacity-10" />
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeIn>
-            <Link
-              href="/blog"
-              className="inline-flex items-center gap-2 font-mono text-xs tracking-[0.16em] uppercase text-primary hover:text-primary/80 transition-colors mb-8"
-            >
-              <HiArrowLeft className="w-4 h-4" />
-              {t("back_to_blog")}
-            </Link>
+      <div dir={rtl ? "rtl" : "ltr"} className={`${s.root} ${alexandria.variable} ${tajawal.variable}`}>
+        {/* Hero: blog index / Services scaffolding (label row with hairline, serif page title) */}
+        <section className={s.hero}>
+          <div className={s.wrap}>
+            <div className={`${s.heroTop} ${s.articleTop} ${s.label} hero-enter`}>
+              <Link href="/blog" className={s.back}>
+                <HiArrowLeft className={s.backArr} aria-hidden="true" />
+                {t("back_to_blog")}
+              </Link>
+              <span>{post.category}</span>
+            </div>
 
-            <span className="pill text-[11px]">{post.category}</span>
-
-            <h1 className="mt-6 font-serif text-4xl md:text-6xl lg:text-7xl leading-[0.95] tracking-tight text-foreground">
+            <h1 className={`${s.pageTitle} ${s.articleTitle} hero-enter`} style={{ "--enter-delay": "0.15s" } as CSSProperties}>
               {post.title}
             </h1>
 
-            <div className="mt-8 flex flex-wrap items-center gap-6 text-sm text-text-muted">
-              <span className="flex items-center gap-2">
-                <HiOutlineUser className="w-4 h-4" />
+            <div className={`${s.meta} hero-enter`} style={{ "--enter-delay": "0.3s" } as CSSProperties}>
+              <span>
+                <HiOutlineUser aria-hidden="true" />
                 {post.author}
               </span>
               <span>{post.date}</span>
-              <span className="flex items-center gap-1">
-                <HiOutlineClock className="w-4 h-4" />
+              <span>
+                <HiOutlineClock aria-hidden="true" />
                 {post.readTime} {t("min_read")}
               </span>
             </div>
-          </FadeIn>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* Content */}
-      <section className="relative py-16 bg-surface-2 overflow-hidden">
-        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeIn delay={0.1}>
-            <article className="prose-blog">
+        {/* Content: neutral plate, reading measure on the header's start edge */}
+        <section className={s.article}>
+          <div className={s.wrap}>
+            <article className={`prose-blog ${s.measure}`}>
               <MDXRemote source={post.content} options={SAFE_MARKDOWN_OPTIONS} components={SAFE_MARKDOWN_COMPONENTS} />
             </article>
-          </FadeIn>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* CTA */}
-      <section className="relative py-20 bg-background overflow-hidden">
-        <div className="grid-bg" />
-        <div className="glow w-[500px] h-[500px] bg-primary bottom-[-200px] right-[-100px] opacity-20" />
-        <FadeIn className="relative max-w-4xl mx-auto px-4 text-center">
-          <h2 className="font-serif text-4xl md:text-6xl text-foreground leading-[0.95]">
-            {t("cta_title")}
-          </h2>
-          <p className="mt-4 text-text-muted max-w-lg mx-auto">
-            {t("cta_desc")}
-          </p>
-          <Link
-            href="/contact"
-            className="mt-8 inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-mono text-sm tracking-[0.12em] uppercase px-8 py-4 rounded-full transition-colors"
-          >
-            {t("cta_button")}
-          </Link>
-        </FadeIn>
-      </section>
+        {/* CTA: Services purple-to-blue CTA (same markup and values) */}
+        <section className={s.cta}>
+          <div className={s.wrap}>
+            <span className={s.label}>
+              <span>{nav("contact")}</span>
+            </span>
+            <h2 className={`${s.ctaTitle} ${s.disp}`}>{t("cta_title")}</h2>
+            <div className={`${s.grid12} ${s.ctaRow}`}>
+              <p>{t("cta_desc")}</p>
+              <div className={s.act}>
+                <Link href="/contact" className={s.pillWhite}>
+                  <span>{t("cta_button")}</span>
+                  <span className={s.flip} aria-hidden="true">→</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </>
   );
 }

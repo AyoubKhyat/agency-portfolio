@@ -125,7 +125,7 @@ export default function AssistantPanel({
         <div aria-live="polite" className="space-y-3">
           {exchanges.map(({ option }, i) => (
             <div key={`${option.id}-${i}`} className="space-y-3">
-              <p className="ms-auto w-fit max-w-[85%] bg-primary text-white rounded-2xl rounded-ee-sm px-4 py-2.5 text-sm">
+              <p className="ms-auto w-fit max-w-[85%] bg-primary-strong text-white rounded-2xl rounded-ee-sm px-4 py-2.5 text-sm">
                 {label(option)}
               </p>
               {option.hasReply && (
@@ -139,7 +139,7 @@ export default function AssistantPanel({
           {pending && (
             <div className="space-y-3">
               {/* The visitor's choice lands immediately... */}
-              <p className="ms-auto w-fit max-w-[85%] bg-primary text-white rounded-2xl rounded-ee-sm px-4 py-2.5 text-sm">
+              <p className="ms-auto w-fit max-w-[85%] bg-primary-strong text-white rounded-2xl rounded-ee-sm px-4 py-2.5 text-sm">
                 {label(pending)}
               </p>
               {/* ...then the reply is composed. The dots are decorative; the

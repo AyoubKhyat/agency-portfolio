@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { preconnect } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -37,6 +37,18 @@ export default function ServicesV2({ faqItems }: { faqItems: { question: string;
   return (
     <div id={ROOT_ID} dir={rtl ? "rtl" : "ltr"} className={`${s.root} ${alexandria.variable} ${tajawal.variable}`}>
       <RevealController rootId={ROOT_ID} hiddenClass={s.jsReveal} />
+
+      {/* Hero: HomeV2's hero scaffolding (label row, then the serif headline), same gutters as home. */}
+      <section className={s.hero}>
+        <div className={s.wrap}>
+          <div className={`${s.heroTop} ${s.label} hero-enter`}>
+            <span>{t("title")}</span>
+          </div>
+          <h1 className={`${s.pageTitle} hero-enter`} style={{ "--enter-delay": "0.15s" } as CSSProperties}>
+            {t("hero_headline")}
+          </h1>
+        </div>
+      </section>
 
       {/* Service cards, by group (shared catalog). Services with a detail page link to it;
           the others link to the contact form with the service preselected. */}

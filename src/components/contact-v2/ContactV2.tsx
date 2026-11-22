@@ -53,39 +53,38 @@ export default async function ContactV2({ locale, initialService = null }: { loc
     <div id={ROOT_ID} dir={rtl ? "rtl" : "ltr"} className={`${s.root} ${alexandria.variable} ${tajawal.variable}`} data-wa-service={initialService ?? undefined}>
       <RevealController rootId={ROOT_ID} hiddenClass={s.jsReveal} />
 
-      {/* Hero: site surface, grid, glows, pill and Instrument Serif heading */}
-      <section className={`relative bg-background text-foreground overflow-hidden ${s.hero}`}>
-        <div className="grid-bg" />
-        <div className={`glow w-[500px] h-[500px] -top-36 left-[10%] ${s.blueGlow}`} />
-        <div className="glow w-[800px] h-[800px] bg-primary -bottom-72 -right-48" />
-        <div className={`relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${s.heroGrid}`}>
-          <div className={s.heroIn}>
-            <span className="pill">
-              <span className={s.flip} aria-hidden="true">→</span> {t("title")}
-            </span>
-            <h1 className={`font-serif text-6xl md:text-8xl lg:text-[140px] leading-[0.9] tracking-tight ${s.h1}`}>{t("hero_heading")}</h1>
-            <p className={`font-serif ${s.lede}`}>{h("cta_sub")}</p>
-            <div className={s.acts}>
-              <a href="#contact-form" className={`${s.btn} ${s.btnGrad}`}>
-                <span>{h("cta_form")}</span>
-                <span aria-hidden="true">↓</span>
-              </a>
-              <a href={waUrl} target="_blank" rel="noopener noreferrer" className={`${s.btn} ${s.btnLine}`} data-wa-placement="contact_hero">
-                <span className={s.waIcon}>{WA_ICON}</span>
-                <span>{h("cta_wa")}</span>
-              </a>
-            </div>
+      {/* Hero: Services/About hero scaffolding (label row, serif headline); details card beside it */}
+      <section className={s.hero}>
+        <div className={s.wrap}>
+          <div className={`${s.heroTop} ${s.heroLabel} ${s.heroIn}`}>
+            <span>{t("title")}</span>
           </div>
-          <div className={`${s.card} ${s.details} ${s.heroIn} ${s.d1}`}>
-            <h2 className={s.disp}>{t("details_title")}</h2>
-            <dl>
-              {rows.map((r) => (
-                <div key={r.label} className={s.drow}>
-                  <dt>{r.label}</dt>
-                  <dd>{r.value}</dd>
-                </div>
-              ))}
-            </dl>
+          <div className={s.heroGrid}>
+            <div className={s.heroIn}>
+              <h1 className={s.pageTitle}>{t("hero_heading")}</h1>
+              <p className={`font-serif ${s.lede}`}>{h("cta_sub")}</p>
+              <div className={s.acts}>
+                <a href="#contact-form" className={`${s.btn} ${s.btnGrad}`}>
+                  <span>{h("cta_form")}</span>
+                  <span aria-hidden="true">↓</span>
+                </a>
+                <a href={waUrl} target="_blank" rel="noopener noreferrer" className={`${s.btn} ${s.btnLine}`} data-wa-placement="contact_hero">
+                  <span className={s.waIcon}>{WA_ICON}</span>
+                  <span>{h("cta_wa")}</span>
+                </a>
+              </div>
+            </div>
+            <div className={`${s.card} ${s.details} ${s.heroIn} ${s.d1}`}>
+              <h2 className={s.disp}>{t("details_title")}</h2>
+              <dl>
+                {rows.map((r) => (
+                  <div key={r.label} className={s.drow}>
+                    <dt>{r.label}</dt>
+                    <dd>{r.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </div>
         </div>
       </section>

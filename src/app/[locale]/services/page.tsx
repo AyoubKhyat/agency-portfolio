@@ -43,22 +43,7 @@ export default function ServicesPage() {
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative bg-background py-24 md:py-32 overflow-hidden">
-        <div className="grid-bg" />
-        <div className="glow w-[800px] h-[800px] bg-primary -top-48 -left-48 opacity-20" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="hero-enter">
-            <span className="pill">◆ {t("title")}</span>
-          </div>
-          <div className="hero-enter" style={{ "--enter-delay": "0.15s" } as React.CSSProperties}>
-            <h1 className="mt-8 font-serif text-6xl md:text-8xl lg:text-[132px] leading-[0.95] tracking-tight text-foreground max-w-[1200px]">
-              {t("hero_headline")}
-            </h1>
-          </div>
-        </div>
-      </section>
-
+      {/* The hero (label row + serif h1, HomeV2 scaffolding) is rendered inside ServicesV2's .root. */}
       <ServicesV2 faqItems={faqItems} />
       <FaqJsonLd items={faqItems} />
     </>

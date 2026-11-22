@@ -1,0 +1,127 @@
+/* About page — HomeV2 design language (src/components/home-v2/home.module.css).
+   Tokens mirror HomeV2/ServicesV2 and are scoped under .root, so nothing leaks to other pages. */
+
+.root {
+  --bg: #f6f5f1;
+  --ink: #0b0b0f;
+  --muted: #5d5d66;
+  --line: rgba(11, 11, 15, 0.12);
+  --line-2: rgba(11, 11, 15, 0.22);
+  --plate: #ecebe5;
+  --card: #fbfaf7;
+  --accent: #6a4ee0; /* brand primary (strong): 5:1+ on --bg and --plate */
+  --grad: linear-gradient(100deg, #8b6fe0 0%, #2563eb 100%);
+  --display: "Cabinet Grotesk", var(--font-alexandria), system-ui, sans-serif;
+  --body: "Inter", "Tajawal", system-ui, sans-serif;
+  --gut: clamp(16px, 3.6vw, 56px);
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 16px/1.6 var(--body);
+  transition: background 0.4s, color 0.4s;
+}
+.root[dir="rtl"] { font-size: 17px; }
+:global(.dark) .root {
+  --bg: #09090b;
+  --ink: #f2f1ee;
+  --muted: #9d9da8;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-2: rgba(255, 255, 255, 0.2);
+  --plate: #121216;
+  --card: #0e0e11;
+  --accent: #a78bfa;
+  --grad: linear-gradient(100deg, #a78bfa 0%, #60a5fa 100%);
+}
+
+.root *, .root *::before, .root *::after { box-sizing: border-box; }
+
+.wrap { max-width: 1520px; margin: 0 auto; padding-inline: var(--gut); }
+.grid12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(16px, 2vw, 32px); }
+.label { font: 600 13px/1.45 var(--body); letter-spacing: 0.01em; color: var(--muted); }
+.root[dir="rtl"] .label { font-size: 13.5px; letter-spacing: 0; }
+.secNum { color: var(--ink); font-variant-numeric: tabular-nums; margin-inline-end: 0.3em; }
+.idx { font: 600 12.5px/1 var(--body); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; color: var(--muted); }
+.disp { font-family: var(--display); font-weight: 800; letter-spacing: -0.035em; line-height: 0.92; }
+.root[dir="rtl"] .disp { letter-spacing: 0; line-height: 1.35; font-weight: 700; }
+.gradText { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* ── Hero: HomeV2 .hero / .heroTop / .slogan spacing, inner-page h1 scale ── */
+.hero { padding-block: clamp(20px, 2.6vw, 34px) clamp(56px, 6vw, 96px); }
+.heroTop { padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.pageTitle { margin: clamp(22px, 3vw, 44px) 0 0; font: 400 clamp(2.75rem, 6vw, 5.5rem)/0.98 var(--font-instrument), Georgia, serif; letter-spacing: -0.025em; }
+.pageTitle .gradText { display: inline-block; font-style: italic; padding-inline-end: 0.08em; padding-bottom: 0.12em; margin-bottom: -0.12em; }
+.root[dir="rtl"] .pageTitle { font-family: var(--font-arabic), var(--font-instrument), serif; letter-spacing: 0; line-height: 1.35; }
+.root[dir="rtl"] .pageTitle .gradText { font-style: normal; }
+/* Story copy: HomeV2 .heroBody rule + .secHead p measure */
+.heroBody { margin-top: clamp(28px, 3.6vw, 52px); padding-top: clamp(22px, 2.4vw, 32px); border-top: 1px solid var(--line-2); row-gap: 16px; }
+.heroBody p { grid-column: 4 / span 6; margin: 0; color: var(--muted); font-size: 1.06rem; max-width: 60ch; }
+
+/* ── Section scaffolding (HomeV2 .sec / .secHead), section h2 capped at 4rem ── */
+.sec { padding-block: clamp(84px, 9vw, 144px); }
+.plate { background: var(--plate); }
+.secHead { align-items: start; margin-bottom: clamp(40px, 5vw, 72px); }
+.secHead .label { grid-column: 1 / span 3; padding-top: 0.9em; }
+.secHead h2 { grid-column: 4 / -1; margin: 0; font-size: clamp(2.25rem, 4.4vw, 4rem); max-width: 15ch; }
+.secHead p, .secHead ul { grid-column: 4 / span 6; margin: 20px 0 0; color: var(--muted); font-size: 1.05rem; max-width: 54ch; }
+
+/* ── Why: HomeV2 .whyStatement / .reasons layout ── */
+.whyHead { grid-column: 1 / span 5; align-self: start; position: sticky; top: 110px; }
+.whyHead h2 { margin: 14px 0 0; font-size: clamp(2.25rem, 4.4vw, 4rem); }
+.whyHead p { margin: 20px 0 0; color: var(--muted); font-size: 1.05rem; max-width: 40ch; }
+.reasons { grid-column: 7 / -1; list-style: none; margin: 0; padding: 0; }
+.reasons li { display: grid; grid-template-columns: 64px 1fr; padding: 26px 0; border-top: 1px solid var(--line-2); }
+.reasons li:last-child { border-bottom: 1px solid var(--line-2); }
+.reasons .idx { padding-top: 0.7em; }
+/* Row titles: HomeV2 .figcap h3 scale */
+.rowTitle { margin: 0 0 6px; font: 800 clamp(1.4rem, 1.9vw, 1.85rem)/1.1 var(--display); letter-spacing: -0.02em; }
+.root[dir="rtl"] .rowTitle { font-weight: 700; letter-spacing: 0; line-height: 1.4; }
+.reasons p, .step p { margin: 0; color: var(--muted); font-size: 15px; }
+
+/* ── Process: four plain columns on hairlines ── */
+.tags { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 22px; }
+.tags li { font-weight: 500; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(16px, 2vw, 32px); }
+.step { display: flex; flex-direction: column; gap: 10px; padding-top: 22px; border-top: 1px solid var(--line-2); }
+.step .rowTitle { margin: 8px 0 0; }
+.step .stepSub { margin: 0; font-size: 13px; }
+.root[dir="rtl"] .step .stepSub { font-size: 13.5px; }
+.duration { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line); font: 600 13px/1.45 var(--body); color: var(--accent); }
+
+/* ── Values ── */
+.values { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(14px, 1.6vw, 24px); }
+.values li { padding: clamp(20px, 2.2vw, 32px); background: var(--card); border: 1px solid var(--line); border-radius: 18px; font: 700 clamp(1.15rem, 1.5vw, 1.4rem)/1.25 var(--display); letter-spacing: -0.01em; }
+.root[dir="rtl"] .values li { letter-spacing: 0; line-height: 1.6; }
+
+/* Scroll reveals: content is visible unless JS runs and motion is allowed */
+.jsReveal [data-reveal] { opacity: 0; transform: translateY(26px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); }
+.jsReveal [data-reveal][data-in] { opacity: 1; transform: none; }
+
+/* Shared chrome on this route only (same values HomeV2 uses for its own route):
+   page tint, nav content and breadcrumb on the 1520px column with HomeV2's gutter,
+   and a quiet sentence-case breadcrumb instead of mono caps. Keyed on .root. */
+:global(html):has(.root) { --bg: #f6f5f1; --nav-bg: color-mix(in srgb, #f6f5f1 84%, transparent); }
+:global(html.dark):has(.root) { --bg: #09090b; --nav-bg: color-mix(in srgb, #09090b 84%, transparent); }
+:global(body):has(.root) > nav > div,
+:global(body):has(.root) > nav[aria-label="Breadcrumb"] { max-width: 1520px; padding-inline: clamp(16px, 3.6vw, 56px); }
+:global(body):has(.root) > nav[aria-label="Breadcrumb"] ol { font: 500 13px/1.45 var(--font-inter), var(--font-arabic), system-ui, sans-serif; letter-spacing: 0.01em; text-transform: none; }
+
+/* ── Responsive (HomeV2 breakpoints) ── */
+@media (max-width: 1100px) {
+  .secHead .label { grid-column: 1 / -1; padding-top: 0; margin-bottom: 14px; }
+  .secHead h2, .secHead p, .secHead ul, .heroBody p { grid-column: 1 / -1; }
+  .whyHead { grid-column: 1 / -1; position: static; }
+  .reasons { grid-column: 1 / -1; margin-top: 40px; }
+  .steps, .values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  .hero { padding-bottom: 32px; }
+  .pageTitle { font-size: clamp(2.4rem, 10vw, 3rem); line-height: 1.02; }
+}
+@media (max-width: 760px) {
+  .reasons li { grid-template-columns: 48px 1fr; }
+  .steps { grid-template-columns: minmax(0, 1fr); row-gap: 36px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .root *, .root *::before, .root *::after { animation: none !important; transition: none !important; }
+}

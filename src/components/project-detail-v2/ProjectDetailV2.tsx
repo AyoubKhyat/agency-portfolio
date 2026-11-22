@@ -129,21 +129,21 @@ export default async function ProjectDetailV2({ project, locale }: { project: Pr
     <div id={ROOT_ID} dir={rtl ? "rtl" : "ltr"} className={`${s.root} ${alexandria.variable} ${tajawal.variable}`}>
       <RevealController rootId={ROOT_ID} hiddenClass={s.jsReveal} />
 
-      {/* Hero: site surface, grid, glow and Instrument Serif title; refined hierarchy */}
-      <section className={`relative bg-background text-foreground overflow-hidden ${s.hero}`}>
-        <div className="grid-bg" />
-        <div className="glow w-[800px] h-[800px] bg-primary -top-48 -left-48 opacity-20" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Hero: Services/Portfolio inner-page scaffolding (label row with hairline, serif page title) */}
+      <section className={s.hero}>
+        <div className={s.wrap}>
           <div className={s.heroIn}>
-            <Link href="/portfolio" className={s.back}>
-              <span className={s.arr} aria-hidden="true">←</span>
-              {t("back_to_portfolio")}
-            </Link>
-            <div className={s.heroMeta}>
-              {badge(isClient)}
-              {tr.industry && <span className={s.sector}>{tr.industry}</span>}
+            <div className={s.heroTop}>
+              <Link href="/portfolio" className={s.back}>
+                <span className={s.arr} aria-hidden="true">←</span>
+                {t("back_to_portfolio")}
+              </Link>
+              <div className={s.heroMeta}>
+                {badge(isClient)}
+                {tr.industry && <span className={s.sector}>{tr.industry}</span>}
+              </div>
             </div>
-            <h1 className={`font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.95] tracking-tight ${s.h1}`}>{tr.title}</h1>
+            <h1 className={s.h1}>{tr.title}</h1>
             {tr.tagline && <p className={`font-serif ${s.tagline}`}>{tr.tagline}</p>}
             {facts.length > 0 && (
               <dl className={s.facts} style={{ "--cols": facts.length } as CSSProperties}>
@@ -164,7 +164,7 @@ export default async function ProjectDetailV2({ project, locale }: { project: Pr
           </div>
           {isRenderableProjectImage(project.image) && (
             <div className={`${s.shot} ${s.heroIn} ${s.d1}`}>
-              <Image src={project.image} alt={tr.title} fill preload fetchPriority="high" sizes="(max-width: 1280px) 100vw, 1216px" />
+              <Image src={project.image} alt={tr.title} fill preload fetchPriority="high" sizes="(max-width: 1520px) 100vw, 1408px" />
             </div>
           )}
         </div>
