@@ -57,7 +57,7 @@ export default function CityComparisonPage() {
       />
 
       {topActionable && (
-        <div className="rounded-xl border-2 border-purple-200 bg-purple-50/40 p-3 mb-4 text-[13px] text-[var(--os-text-muted)]">
+        <div className="rounded-xl border-2 border-purple-200 bg-purple-50/40 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)] p-3 mb-4 text-[13px] text-[var(--os-text-muted)]">
           <span className="font-semibold text-[var(--os-text)]">{topActionable.label}</span> has the most actionable prospects in the database
           {" "}({topActionable.actionable}). The cities below are sorted by that number.
         </div>

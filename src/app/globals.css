@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-@variant dark (&:where(.dark, .dark *));
+/* .dark = public site toggle; .os-dark = admin shell toggle (src/app/admin/layout.tsx). */
+@variant dark (&:where(.dark, .dark *, .os-dark, .os-dark *));
 
 :root {
   --bg: #fafafa;

@@ -521,7 +521,7 @@ function ScoreboardCard({ scoreboard, loading, actionableHot }: { scoreboard: Sc
   }
   const c = scoreboard.counts;
   return (
-    <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50/40 to-violet-50/40 p-4 sm:p-5">
+    <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50/40 to-violet-50/40 p-4 sm:p-5 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
       <div className="flex items-center gap-2 mb-3">
         <Crown className="w-4 h-4 text-[#8B00FF]" />
         <h2 className="text-[14px] font-semibold text-[var(--os-text)]">Today&apos;s scoreboard</h2>
@@ -558,7 +558,7 @@ function ScoreCard({ label, value, icon, subtle, highlight, pool }: { label: str
     <div className={cn(
       "rounded-xl border p-2.5",
       highlight ? "border-purple-300 bg-white shadow-sm shadow-purple-500/10"
-        : pool ? "border-rose-200 bg-gradient-to-br from-rose-50/60 to-orange-50/40"
+        : pool ? "border-rose-200 bg-gradient-to-br from-rose-50/60 to-orange-50/40 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]"
         : "border-purple-100 bg-white"
     )}>
       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium mb-1">
@@ -586,7 +586,7 @@ function CoverageBlock({ coverage, loading }: { coverage: Coverage | null; loadi
 
   return (
     <div className={cn(
-      "rounded-2xl border-2 p-4 sm:p-5",
+      "rounded-2xl border-2 p-4 sm:p-5 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]",
       needsExpansion ? "border-amber-200 bg-gradient-to-br from-amber-50/40 to-orange-50/40" : "border-emerald-200 bg-gradient-to-br from-emerald-50/40 to-teal-50/40"
     )}>
       <div className="flex items-start gap-3 mb-3">

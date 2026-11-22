@@ -624,18 +624,18 @@ function ProviderStatusBanner({ provider }: { provider: "GOOGLE" | "OSM" }) {
     );
   }
   return (
-    <div className="rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50/40 to-orange-50/40 p-4 mb-4 flex items-start gap-3">
+    <div className="rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50/40 to-orange-50/40 p-4 mb-4 flex items-start gap-3 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
       <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center shadow-md shadow-amber-500/30 shrink-0">
         <AlertCircle className="w-5 h-5 text-white" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-0.5">
-          <span className="text-[13px] font-semibold text-[#0F172A]">Google Places not connected</span>
+          <span className="text-[13px] font-semibold text-[var(--os-text)]">Google Places not connected</span>
           <span className="text-[11px] font-semibold text-amber-700 bg-white border border-amber-200 px-2 py-0.5 rounded-full">OSM only</span>
         </div>
-        <div className="text-[12px] text-[#475569]">
+        <div className="text-[12px] text-[var(--os-text-muted)]">
           Running on OpenStreetMap. Coverage in Morocco is uneven — niche sectors return 0-3 results.
-          <span className="font-medium"> Add <code className="px-1 py-0.5 bg-white rounded text-[11px] font-mono">GOOGLE_PLACES_API_KEY</code> to unlock 5–10× more businesses with ratings, reviews, and full contact data.</span>
+          <span className="font-medium"> Add <code className="px-1 py-0.5 bg-white rounded text-[11px] text-[#475569] font-mono">GOOGLE_PLACES_API_KEY</code> to unlock 5–10× more businesses with ratings, reviews, and full contact data.</span>
         </div>
         <div className="flex flex-wrap gap-3 mt-2 text-[11.5px]">
           <a href="https://console.cloud.google.com/apis/library/places-backend.googleapis.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[#7C3AED] font-medium hover:underline">
