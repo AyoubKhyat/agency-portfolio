@@ -114,7 +114,7 @@ export default function RevenueCommandCenter() {
       {/* Pipeline */}
       <div className="mt-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[15px] font-semibold text-[#0F172A] flex items-center gap-2">
+          <h2 className="text-[15px] font-semibold text-[var(--os-text)] flex items-center gap-2">
             <Banknote className="w-4 h-4 text-[#8B00FF]" /> Revenue pipeline
           </h2>
           <FilterTabs
@@ -140,7 +140,7 @@ export default function RevenueCommandCenter() {
 
       {/* Forecast */}
       <div className="mt-6">
-        <h2 className="text-[15px] font-semibold text-[#0F172A] mb-3 flex items-center gap-2">
+        <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3 flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-[#8B00FF]" /> Forecast
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -188,10 +188,10 @@ function AlertsStrip({ alerts }: { alerts: RevenueData["alerts"] }) {
           <AlertTriangle className="w-5 h-5 text-white" />
         </div>
         <div className="flex-1">
-          <div className="text-[14px] font-semibold text-[#0F172A]">
+          <div className="text-[14px] font-semibold text-[var(--os-text)]">
             {tone === "green" ? "All clear" : tone === "orange" ? "Needs attention" : "Urgent: revenue at risk"}
           </div>
-          <div className="text-[12px] text-[#475569]">
+          <div className="text-[12px] text-[var(--os-text-muted)]">
             {tone === "green" ? "No revenue alerts. Keep the cadence." : `${items.reduce((s, i) => s + i.value, 0)} item${items.reduce((s, i) => s + i.value, 0) !== 1 ? "s" : ""} need follow-up.`}
           </div>
         </div>
@@ -223,9 +223,9 @@ function CeoWidget({ top10 }: { top10: Opportunity[] }) {
       <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50/40 to-violet-50/40 p-5 mb-5">
         <div className="flex items-center gap-2 mb-2">
           <Crown className="w-4 h-4 text-[#8B00FF]" />
-          <h2 className="text-[14px] font-semibold text-[#0F172A]">CEO widget — if you only have 1 hour today</h2>
+          <h2 className="text-[14px] font-semibold text-[var(--os-text)]">CEO widget — if you only have 1 hour today</h2>
         </div>
-        <div className="text-[12px] text-[#64748B]">No active opportunities yet. Log a proposal amount on a prospect to populate this list.</div>
+        <div className="text-[12px] text-[#64748B] [.os-dark_&]:text-[var(--os-text-muted)]">No active opportunities yet. Log a proposal amount on a prospect to populate this list.</div>
       </div>
     );
   }
@@ -236,9 +236,9 @@ function CeoWidget({ top10 }: { top10: Opportunity[] }) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Crown className="w-4 h-4 text-[#8B00FF]" />
-            <h2 className="text-[14px] font-semibold text-[#0F172A]">If you only have 1 hour today — contact these first</h2>
+            <h2 className="text-[14px] font-semibold text-[var(--os-text)]">If you only have 1 hour today — contact these first</h2>
           </div>
-          <div className="text-[12px] text-[#475569]">10 prospects · <span className="font-semibold text-[#8B00FF]">{fmtMAD(totalExpected)}</span> expected revenue at current probability</div>
+          <div className="text-[12px] text-[var(--os-text-muted)]">10 prospects · <span className="font-semibold text-[#8B00FF]">{fmtMAD(totalExpected)}</span> expected revenue at current probability</div>
         </div>
       </div>
       <div className="overflow-x-auto">
@@ -253,7 +253,7 @@ function CeoWidget({ top10 }: { top10: Opportunity[] }) {
                   )}>{i + 1}</span>
                 </td>
                 <td className="px-2 py-2">
-                  <Link href={`/admin/prospecting/${o.id}`} className="text-[13px] font-semibold text-[#0F172A] hover:text-[#7C3AED]">{o.name}</Link>
+                  <Link href={`/admin/prospecting/${o.id}`} className="text-[13px] font-semibold text-[var(--os-text)] hover:text-[#7C3AED]">{o.name}</Link>
                   <div className="text-[11px] text-[#64748B]">{o.sector} · {o.city} · {STAGE_LABEL[o.stage] || o.stage}</div>
                 </td>
                 <td className="px-2 py-2 text-right hidden sm:table-cell">
@@ -323,7 +323,7 @@ function OpportunityTable({ opportunities }: { opportunities: Opportunity[] }) {
   if (opportunities.length === 0) return null;
   return (
     <div className="mt-6">
-      <h2 className="text-[15px] font-semibold text-[#0F172A] mb-3 flex items-center gap-2">
+      <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3 flex items-center gap-2">
         <Trophy className="w-4 h-4 text-[#8B00FF]" /> Top {opportunities.length} opportunities
       </h2>
       <div className="rounded-2xl border border-[var(--os-border)] bg-white overflow-hidden">
@@ -378,16 +378,16 @@ function StalledSection({ stalled }: { stalled: RevenueData["stalled"] }) {
   if (total === 0) {
     return (
       <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
-        <h2 className="text-[14px] font-semibold text-[#0F172A] flex items-center gap-2">
+        <h2 className="text-[14px] font-semibold text-[var(--os-text)] flex items-center gap-2">
           <Clock className="w-4 h-4 text-emerald-600" /> Stalled deals — none
         </h2>
-        <div className="text-[12px] text-[#475569] mt-1">Every meeting has a next step, every proposal has been followed up.</div>
+        <div className="text-[12px] text-[var(--os-text-muted)] mt-1">Every meeting has a next step, every proposal has been followed up.</div>
       </div>
     );
   }
   return (
     <div className="mt-6">
-      <h2 className="text-[15px] font-semibold text-[#0F172A] mb-3 flex items-center gap-2">
+      <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3 flex items-center gap-2">
         <Clock className="w-4 h-4 text-amber-600" /> Stalled deals ({total}) · sorted by money at risk
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -440,7 +440,7 @@ function TeamSection({ team }: { team: TeamRow[] }) {
   if (team.length === 0) return null;
   return (
     <div className="mt-6">
-      <h2 className="text-[15px] font-semibold text-[#0F172A] mb-3 flex items-center gap-2">
+      <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3 flex items-center gap-2">
         <Users className="w-4 h-4 text-[#8B00FF]" /> Team performance · this month
       </h2>
       <div className="rounded-2xl border border-[var(--os-border)] bg-white overflow-hidden">

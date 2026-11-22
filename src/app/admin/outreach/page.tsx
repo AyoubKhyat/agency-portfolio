@@ -524,7 +524,7 @@ function ScoreboardCard({ scoreboard, loading, actionableHot }: { scoreboard: Sc
     <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50/40 to-violet-50/40 p-4 sm:p-5">
       <div className="flex items-center gap-2 mb-3">
         <Crown className="w-4 h-4 text-[#8B00FF]" />
-        <h2 className="text-[14px] font-semibold text-[#0F172A]">Today&apos;s scoreboard</h2>
+        <h2 className="text-[14px] font-semibold text-[var(--os-text)]">Today&apos;s scoreboard</h2>
         <span className="ml-auto text-[11px] text-[#64748B]">all team members</span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
@@ -540,7 +540,7 @@ function ScoreboardCard({ scoreboard, loading, actionableHot }: { scoreboard: Sc
       </div>
       {scoreboard.perUser.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-[#64748B]">
-          <span className="font-semibold text-[#0F172A]">By user:</span>
+          <span className="font-semibold text-[var(--os-text)]">By user:</span>
           {scoreboard.perUser.map((u) => (
             <span key={u.userId} className="px-2 py-0.5 bg-white rounded border border-[var(--os-border)]">
               {u.name}: <span className="font-medium text-[#0F172A]">{u.messagesSent}</span> sent
@@ -597,8 +597,8 @@ function CoverageBlock({ coverage, loading }: { coverage: Coverage | null; loadi
           {needsExpansion ? <AlertTriangle className="w-5 h-5 text-white" /> : <MapPin className="w-5 h-5 text-white" />}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[14px] font-semibold text-[#0F172A]">Marrakech coverage</div>
-          <div className="text-[12px] text-[#475569] mt-0.5">{summary}</div>
+          <div className="text-[14px] font-semibold text-[var(--os-text)]">Marrakech coverage</div>
+          <div className="text-[12px] text-[var(--os-text-muted)] mt-0.5">{summary}</div>
         </div>
       </div>
 
@@ -615,10 +615,10 @@ function CoverageBlock({ coverage, loading }: { coverage: Coverage | null; loadi
       {/* City expansion recommendation */}
       {needsExpansion && (
         <div className="border-t border-amber-200/60 pt-4">
-          <div className="text-[13px] font-semibold text-[#0F172A] mb-1">
+          <div className="text-[13px] font-semibold text-[var(--os-text)] mb-1">
             Next-city recommendation
           </div>
-          <div className="text-[11.5px] text-[#475569] mb-3">
+          <div className="text-[11.5px] text-[var(--os-text-muted)] mb-3">
             Below {threshold} actionable HOTs in Marrakech. Ranked by population × business density × outreach potential.
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -654,7 +654,7 @@ function CoverageBlock({ coverage, loading }: { coverage: Coverage | null; loadi
                 {recommendations.slice(4).map((c, i) => (
                   <div key={c.key} className="flex items-center gap-2 text-[11.5px]">
                     <span className="text-[#94A3B8] tabular-nums w-5">{i + 5}.</span>
-                    <span className="font-medium text-[#0F172A]">{c.label}</span>
+                    <span className="font-medium text-[var(--os-text)]">{c.label}</span>
                     <span className="text-[#64748B]">— {c.rationale}</span>
                   </div>
                 ))}
@@ -940,7 +940,7 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
     <div className="max-w-3xl mx-auto">
       {/* Progress */}
       <div className="flex items-center justify-between mb-3 text-[11px] text-[#64748B]">
-        <span>Prospect <span className="font-bold text-[#0F172A] tabular-nums">{idx + 1}</span> of {prospects.length}</span>
+        <span>Prospect <span className="font-bold text-[var(--os-text)] tabular-nums">{idx + 1}</span> of {prospects.length}</span>
         <span>{remaining} remaining tonight</span>
       </div>
 

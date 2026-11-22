@@ -55,7 +55,7 @@ function ActionCard({
         <div className="flex items-center gap-3">
           <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", tones[tone])}>{icon}</div>
           <div>
-            <div className="text-2xl font-bold text-[#0F172A] tabular-nums">{count}</div>
+            <div className="text-2xl font-bold text-[var(--os-text)] tabular-nums">{count}</div>
             <div className="text-xs text-[#64748B]">{title}</div>
           </div>
         </div>
@@ -74,7 +74,7 @@ function RowList({ rows }: { rows: { key: string; href: string; primary: string;
       {rows.map((r) => (
         <li key={r.key}>
           <Link href={r.href} className="flex items-center justify-between gap-2 px-2 py-1.5 -mx-2 rounded-lg hover:bg-gray-50 transition-colors">
-            <span className="text-[13px] text-[#1E293B] truncate">{r.primary}</span>
+            <span className="text-[13px] text-[#1E293B] [.os-dark_&]:text-[var(--os-text)] truncate">{r.primary}</span>
             <span className="text-[11px] text-[#94A3B8] shrink-0">{r.secondary}</span>
           </Link>
         </li>
@@ -141,7 +141,7 @@ export default function TodayPage() {
         title="Today"
         subtitle={dateLabel}
         actions={
-          <Link href="/admin/command-center" className="text-xs text-[#64748B] hover:text-[#0F172A] flex items-center gap-1">
+          <Link href="/admin/command-center" className="text-xs text-[#64748B] hover:text-[var(--os-text)] flex items-center gap-1">
             Business report <ArrowRight className="w-3 h-3" />
           </Link>
         }
@@ -186,11 +186,11 @@ export default function TodayPage() {
       {/* Follow-up dates without current evidence — shown, never presented as confirmed work */}
       {unbackedTotal > 0 && (
         <Link href={fuUnbacked.overdue > 0 ? "/admin/prospecting?due=overdue&evidence=unbacked" : "/admin/prospecting?due=today&evidence=unbacked"}
-          className="mt-4 flex items-start gap-3 rounded-2xl border border-dashed border-[var(--os-border)] bg-white/40 px-5 py-4 hover:border-[#CBD5E1] hover:bg-white transition-colors">
+          className="mt-4 flex items-start gap-3 rounded-2xl border border-dashed border-[var(--os-border)] bg-[var(--os-surface)]/40 px-5 py-4 hover:border-[#CBD5E1] hover:bg-[var(--os-surface)] transition-colors">
           <History className="w-4 h-4 text-[#94A3B8] mt-0.5 shrink-0" />
           <div className="min-w-0">
-            <div className="text-[13px] text-[#475569]">
-              <span className="font-semibold text-[#0F172A] tabular-nums">{unbackedTotal}</span> historical follow-up date{unbackedTotal === 1 ? "" : "s"}
+            <div className="text-[13px] text-[var(--os-text-muted)]">
+              <span className="font-semibold text-[var(--os-text)] tabular-nums">{unbackedTotal}</span> historical follow-up date{unbackedTotal === 1 ? "" : "s"}
               {fuUnbacked.overdue > 0 && <> ({fuUnbacked.overdue} past due)</>} — not enough evidence to act on as follow-ups
             </div>
             <p className="text-[12px] text-[#94A3B8] mt-0.5">
@@ -211,12 +211,12 @@ export default function TodayPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Link href="/admin/prospecting?status=A_ENVOYER&channel=verified" className="group rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-5 hover:border-emerald-200 transition-colors">
           <div className="flex items-center gap-2 text-emerald-700 text-[13px] font-medium"><ShieldCheck className="w-4 h-4" /> Channel verified</div>
-          <div className="text-2xl font-bold text-[#0F172A] mt-1 tabular-nums">{data.readyToContact.verified}</div>
+          <div className="text-2xl font-bold text-[var(--os-text)] mt-1 tabular-nums">{data.readyToContact.verified}</div>
           <p className="text-[12px] text-[#64748B] mt-1">Not contacted yet, with a confirmed WhatsApp or Instagram.</p>
         </Link>
         <Link href="/admin/prospecting?status=A_ENVOYER&channel=unverified" className="group rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-5 hover:border-amber-200 transition-colors">
           <div className="flex items-center gap-2 text-amber-700 text-[13px] font-medium"><ShieldAlert className="w-4 h-4" /> Channel unverified</div>
-          <div className="text-2xl font-bold text-[#0F172A] mt-1 tabular-nums">{data.readyToContact.unverified}</div>
+          <div className="text-2xl font-bold text-[var(--os-text)] mt-1 tabular-nums">{data.readyToContact.unverified}</div>
           <p className="text-[12px] text-[#64748B] mt-1">Not contacted yet, and no channel confirmed. Confirm WhatsApp or Instagram before sending.</p>
         </Link>
       </div>
@@ -226,9 +226,9 @@ export default function TodayPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
         {STAGES.map((s) => (
           <Link key={s.key} href={`/admin/prospecting?status=${stageStatusParam(s)}`} title={s.hint}
-            className="rounded-xl border border-[var(--os-border)] bg-white/60 px-3 py-2.5 hover:border-[#CBD5E1] hover:bg-white transition-all">
+            className="rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)]/60 px-3 py-2.5 hover:border-[#CBD5E1] hover:bg-[var(--os-surface)] transition-all">
             <Badge variant={s.badge} size="sm" dot>{s.label}</Badge>
-            <div className="text-[18px] font-semibold text-[#0F172A] tabular-nums mt-1.5">{data.stages[s.key]}</div>
+            <div className="text-[18px] font-semibold text-[var(--os-text)] tabular-nums mt-1.5">{data.stages[s.key]}</div>
           </Link>
         ))}
       </div>
@@ -239,26 +239,26 @@ export default function TodayPage() {
       {/* 4. Outreach evidence — two separate facts, never combined */}
       <h2 className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] mt-8 mb-3">Outreach so far</h2>
       <GlassCard padding="lg">
-        <p className="text-[13px] text-[#475569]">
-          <span className="font-semibold text-[#0F172A] tabular-nums">{data.outreach.contacted}</span> prospects are marked as contacted.
+        <p className="text-[13px] text-[var(--os-text-muted)]">
+          <span className="font-semibold text-[var(--os-text)] tabular-nums">{data.outreach.contacted}</span> prospects are marked as contacted.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div>
             <div className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] mb-2">Outreach recorded</div>
             <Link href="/admin/prospecting?evidence=recorded" className="flex items-center gap-2 py-1 group">
               <Send className="w-4 h-4 text-blue-600" />
-              <span className="text-[13px] text-[#475569] group-hover:text-[#0F172A]">Send recorded</span>
-              <span className="text-[15px] font-semibold text-[#0F172A] tabular-nums ml-auto">{data.outreach.sendRecorded}</span>
+              <span className="text-[13px] text-[var(--os-text-muted)] group-hover:text-[var(--os-text)]">Send recorded</span>
+              <span className="text-[15px] font-semibold text-[var(--os-text)] tabular-nums ml-auto">{data.outreach.sendRecorded}</span>
             </Link>
             <Link href="/admin/prospecting?evidence=legacy" className="flex items-center gap-2 py-1 group">
               <History className="w-4 h-4 text-[#94A3B8]" />
-              <span className="text-[13px] text-[#475569] group-hover:text-[#0F172A]">Old send, unconfirmed</span>
-              <span className="text-[15px] font-semibold text-[#0F172A] tabular-nums ml-auto">{data.outreach.legacySendOnly}</span>
+              <span className="text-[13px] text-[var(--os-text-muted)] group-hover:text-[var(--os-text)]">Old send, unconfirmed</span>
+              <span className="text-[15px] font-semibold text-[var(--os-text)] tabular-nums ml-auto">{data.outreach.legacySendOnly}</span>
             </Link>
             <Link href="/admin/prospecting?evidence=none" className="flex items-center gap-2 py-1 group">
               <FileQuestion className="w-4 h-4 text-amber-600" />
-              <span className="text-[13px] text-[#475569] group-hover:text-[#0F172A]">No send record</span>
-              <span className="text-[15px] font-semibold text-[#0F172A] tabular-nums ml-auto">{data.outreach.noSendRecord}</span>
+              <span className="text-[13px] text-[var(--os-text-muted)] group-hover:text-[var(--os-text)]">No send record</span>
+              <span className="text-[15px] font-semibold text-[var(--os-text)] tabular-nums ml-auto">{data.outreach.noSendRecord}</span>
             </Link>
             <p className="text-[11px] text-[#94A3B8] mt-2">
               &ldquo;Send recorded&rdquo; means the app logged a send button or saved message since the 7 July 2026 cleanup. It does not confirm delivery.
@@ -269,13 +269,13 @@ export default function TodayPage() {
             <div className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] mb-2">Contact channel</div>
             <div className="flex items-center gap-2 py-1">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span className="text-[13px] text-[#475569]">Channel verified</span>
-              <span className="text-[15px] font-semibold text-[#0F172A] tabular-nums ml-auto">{data.outreach.channelVerified}</span>
+              <span className="text-[13px] text-[var(--os-text-muted)]">Channel verified</span>
+              <span className="text-[15px] font-semibold text-[var(--os-text)] tabular-nums ml-auto">{data.outreach.channelVerified}</span>
             </div>
             <div className="flex items-center gap-2 py-1">
               <ShieldAlert className="w-4 h-4 text-[#94A3B8]" />
-              <span className="text-[13px] text-[#475569]">Channel unverified</span>
-              <span className="text-[15px] font-semibold text-[#0F172A] tabular-nums ml-auto">{data.outreach.contacted - data.outreach.channelVerified}</span>
+              <span className="text-[13px] text-[var(--os-text-muted)]">Channel unverified</span>
+              <span className="text-[15px] font-semibold text-[var(--os-text)] tabular-nums ml-auto">{data.outreach.contacted - data.outreach.channelVerified}</span>
             </div>
             <p className="text-[11px] text-[#94A3B8] mt-2">
               A verified channel means a WhatsApp or Instagram was confirmed by hand. It does not show that a message was sent.

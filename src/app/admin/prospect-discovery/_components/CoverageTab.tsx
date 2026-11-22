@@ -109,8 +109,8 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
             <TrendingDown className="w-5 h-5 text-white" />
           </div>
           <div className="min-w-0">
-            <div className="text-[14px] font-semibold text-[#0F172A]">Find more prospects in low-coverage sectors</div>
-            <div className="text-[12px] text-[#475569]">
+            <div className="text-[14px] font-semibold text-[var(--os-text)]">Find more prospects in low-coverage sectors</div>
+            <div className="text-[12px] text-[var(--os-text-muted)]">
               {data.lowCoverageSectors.length === 0
                 ? "All catalogued sectors have ≥5 prospects already."
                 : `Pre-fills a sweep with the ${Math.min(12, data.lowCoverageSectors.length)} sectors most lacking prospects.`}
