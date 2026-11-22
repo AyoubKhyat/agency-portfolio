@@ -123,7 +123,7 @@ export function DashboardTab() {
 
       {/* Coaching highlights */}
       <div>
-        <h2 className="text-[15px] font-semibold text-[#0F172A] mb-3">Coaching insights</h2>
+        <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3">Coaching insights</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
           <CoachingCard
             icon={<Sparkles className="w-4 h-4" />}
@@ -178,10 +178,10 @@ export function DashboardTab() {
       {/* Leaderboard */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[15px] font-semibold text-[#0F172A]">Team performance</h2>
+          <h2 className="text-[15px] font-semibold text-[var(--os-text)]">Team performance</h2>
           {winner && (
             <span className="text-[11px] text-[#64748B]">
-              Leader: <span className="font-medium text-[#0F172A]">{winner.name}</span>
+              Leader: <span className="font-medium text-[var(--os-text)]">{winner.name}</span>
             </span>
           )}
         </div>
@@ -269,7 +269,7 @@ function VariantPerformance({ variants }: { variants: { variant: string; sent: n
   const winnerVariant = variants[0]?.variant;
   return (
     <div>
-      <h2 className="text-[15px] font-semibold text-[#0F172A] mb-3">A/B/C/D performance</h2>
+      <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3">A/B/C/D performance</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {variants.map((v) => {
           const isWinner = v.variant === winnerVariant && v.sent >= 5;
@@ -307,7 +307,7 @@ function ConversionFunnel({ funnel }: { funnel: FunnelStage[] }) {
   const max = Math.max(...funnel.map((f) => f.count), 1);
   return (
     <div>
-      <h2 className="text-[15px] font-semibold text-[#0F172A] mb-3">Conversion funnel</h2>
+      <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3">Conversion funnel</h2>
       <div className="border border-[var(--os-border)] rounded-2xl bg-white p-4 sm:p-5 space-y-2">
         {funnel.map((stage, i) => {
           const widthPct = Math.max(8, (stage.count / max) * 100);
@@ -339,7 +339,7 @@ function TemplatePerformance({ templates }: { templates: TemplateStat[] }) {
   const bottomThird = templates.length > 2 ? templates.slice(-Math.max(1, Math.floor(templates.length / 3))) : [];
   return (
     <div>
-      <h2 className="text-[15px] font-semibold text-[#0F172A] mb-3">Template performance</h2>
+      <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3">Template performance</h2>
       <div className="border border-[var(--os-border)] rounded-2xl overflow-hidden bg-white">
         <table className="w-full text-sm">
           <thead>
@@ -383,7 +383,7 @@ function ReplyReasonsBlock({ reasons, total }: { reasons: ReplyReason[]; total: 
   if (total === 0) {
     return (
       <div>
-        <h2 className="text-[15px] font-semibold text-[#0F172A] mb-3">Why prospects reply</h2>
+        <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3">Why prospects reply</h2>
         <div className="rounded-2xl border border-[var(--os-border)] bg-white p-5 text-[12px] text-[#94A3B8]">
           Tag reasons as replies come in to surface what's actually killing deals.
         </div>
@@ -392,7 +392,7 @@ function ReplyReasonsBlock({ reasons, total }: { reasons: ReplyReason[]; total: 
   }
   return (
     <div>
-      <h2 className="text-[15px] font-semibold text-[#0F172A] mb-3">Why prospects reply</h2>
+      <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3">Why prospects reply</h2>
       <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
         <div className="h-3 w-full rounded-full bg-gray-100 overflow-hidden flex">
           {reasons.map((r) => (
@@ -421,7 +421,7 @@ function ReplyReasonsBlock({ reasons, total }: { reasons: ReplyReason[]; total: 
 function MonthlySnapshot({ monthly }: { monthly: DashboardData["monthly"] }) {
   return (
     <div>
-      <h2 className="text-[15px] font-semibold text-[#0F172A] mb-3">{monthly.label} so far</h2>
+      <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3">{monthly.label} so far</h2>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4">
           <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-1.5">Messages</div>
