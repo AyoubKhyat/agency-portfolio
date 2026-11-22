@@ -1,8 +1,8 @@
 /* Project detail v2 — port of design-exploration/project-detail-v2 (approved prototype).
-   The hero keeps the site surface (Tailwind bg-background, .grid-bg, .glow); everything is scoped
-   under .root with the same tokens as Homepage / Services / Portfolio v2 (--pg / --ez instead of
-   --bg / --ease: those names are the site's own theme variables, which Tailwind's bg-background
-   reads, so redefining them here would recolour the hero). */
+   The hero uses the Services/Portfolio inner-page scaffolding (.wrap column, label row with
+   hairline, Instrument Serif page title; no grid or glow). Everything is scoped under .root with
+   the same tokens as Homepage / Services / Portfolio v2 (--pg / --ez instead of --bg / --ease:
+   those names are the site's own theme variables, so redefining them here would leak). */
 
 .root {
   --pg: #f6f5f1;
@@ -56,30 +56,32 @@
 .flip { display: inline-block; }
 .root[dir="rtl"] .flip { transform: scaleX(-1); }
 
-/* ── Hero (site surface; refined hierarchy) ── */
-.hero { padding: 40px 0 clamp(48px, 6vw, 88px); }
-@media (min-width: 768px) { .hero { padding-top: 48px; } }
-.back { display: inline-flex; align-items: center; gap: 10px; padding: 9px 16px 9px 12px; border: 1px solid var(--line-2); border-radius: 999px; font: 600 14px/1 var(--body); color: var(--color-foreground); background: color-mix(in srgb, var(--color-background) 70%, transparent); transition: border-color 0.3s; }
-.root[dir="rtl"] .back { padding: 9px 12px 9px 16px; }
-.back:hover { border-color: var(--color-foreground); }
+/* ── Hero: Services/Portfolio .hero / .heroTop / .pageTitle scaffolding (values copied) ── */
+.hero { padding-block: clamp(20px, 2.6vw, 34px) clamp(56px, 6vw, 96px); background: var(--pg); }
+.heroTop { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 20px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+/* Back link: quiet text link at label size (no pill) */
+.back { display: inline-flex; align-items: center; gap: 8px; font: 600 13px/1.45 var(--body); letter-spacing: 0.01em; color: var(--muted); transition: color 0.3s; }
+.root[dir="rtl"] .back { font-size: 13.5px; letter-spacing: 0; }
+.back:hover { color: var(--ink); }
 .arr { display: inline-block; transition: transform 0.4s var(--ez); }
 .back:hover .arr { transform: translateX(-3px); }
 .root[dir="rtl"] .arr { transform: scaleX(-1); }
 .root[dir="rtl"] .back:hover .arr { transform: scaleX(-1) translateX(-3px); }
-.heroMeta { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin-top: clamp(40px, 5vw, 64px); }
-.sector { font: 500 14px/1.4 var(--body); color: var(--color-text-muted); }
-.h1 { margin: 22px 0 0; max-width: 14ch; color: var(--color-foreground); }
-.root[dir="rtl"] .h1 { line-height: 1.2; letter-spacing: 0; }
-.tagline { margin: 22px 0 0; max-width: 34ch; font-style: italic; font-weight: 400; font-size: clamp(24px, 2.4vw, 34px); line-height: 1.3; color: var(--color-text-muted); }
+.heroMeta { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; }
+.sector { font: 500 14px/1.4 var(--body); color: var(--muted); }
+/* Page title: same scale as Services/Portfolio .pageTitle */
+.h1 { margin: clamp(22px, 3vw, 44px) 0 0; font: 400 clamp(2.75rem, 6vw, 5.5rem)/0.98 var(--font-instrument), Georgia, serif; letter-spacing: -0.025em; max-width: 26ch; text-wrap: balance; color: var(--ink); }
+.root[dir="rtl"] .h1 { font-family: var(--font-arabic), var(--font-instrument), serif; letter-spacing: 0; line-height: 1.35; }
+.tagline { margin: 22px 0 0; max-width: 34ch; font-style: italic; font-weight: 400; font-size: clamp(24px, 2.4vw, 34px); line-height: 1.3; color: var(--muted); }
 .root[dir="rtl"] .tagline { font-style: normal; font-size: clamp(19px, 1.8vw, 26px); line-height: 1.7; }
 .facts { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: 20px 32px; margin: clamp(36px, 4.4vw, 56px) 0 0; padding: 22px 0 0; border-top: 1px solid var(--line-2); }
-.facts dt { font: 600 12.5px/1.4 var(--body); color: var(--color-text-muted); letter-spacing: 0.01em; }
-.facts dd { margin: 6px 0 0; font: 500 16px/1.45 var(--body); color: var(--color-foreground); }
+.facts dt { font: 600 12.5px/1.4 var(--body); color: var(--muted); letter-spacing: 0.01em; }
+.facts dd { margin: 6px 0 0; font: 500 16px/1.45 var(--body); color: var(--ink); }
 .facts dd a { display: inline-flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--line-2); padding-bottom: 1px; transition: border-color 0.3s; }
 .facts dd a:hover { border-color: currentColor; }
 .facts dd svg { width: 13px; height: 13px; flex: none; }
 .root[dir="rtl"] .facts dd svg { transform: scaleX(-1); }
-.note { display: flex; gap: 14px; align-items: flex-start; margin: 24px 0 0; padding: 14px 18px; border: 1px dashed var(--line-2); border-radius: 14px; color: var(--color-text-muted); max-width: 760px; font-size: 15px; }
+.note { display: flex; gap: 14px; align-items: flex-start; margin: 24px 0 0; padding: 14px 18px; border: 1px dashed var(--line-2); border-radius: 14px; color: var(--muted); max-width: 760px; font-size: 15px; }
 .note p { margin: 0; }
 .note .badge { margin-top: 1px; }
 .shot { position: relative; margin: clamp(36px, 4.4vw, 56px) 0 0; border-radius: 22px; overflow: hidden; border: 1px solid var(--line); background: var(--plate); aspect-ratio: 16 / 9; box-shadow: 0 40px 80px -48px rgba(40, 30, 120, 0.45); }
@@ -100,7 +102,8 @@
 .plate { background: var(--plate); }
 .secHead { align-items: start; margin-bottom: clamp(36px, 4.4vw, 64px); }
 .secHead .label { grid-column: 1 / span 3; padding-top: 0.9em; }
-.secHead h2 { grid-column: 4 / -1; margin: 0; font-size: clamp(2.4rem, 5vw, 5rem); max-width: 16ch; }
+/* Section h2s capped at the Services inner-page scale (4rem). */
+.secHead h2 { grid-column: 4 / -1; margin: 0; font-size: clamp(2.25rem, 4.4vw, 4rem); max-width: 16ch; }
 
 /* Challenge / Solution */
 .story { align-items: start; }
@@ -134,7 +137,7 @@
 
 /* More work */
 .moreHead { display: flex; align-items: end; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; margin-bottom: clamp(28px, 3.4vw, 48px); }
-.moreHead h2 { margin: 12px 0 0; font-size: clamp(2.4rem, 5vw, 5rem); }
+.moreHead h2 { margin: 12px 0 0; font-size: clamp(2.25rem, 4.4vw, 4rem); }
 .linkU { display: inline-flex; gap: 8px; font-weight: 600; font-size: 15px; border-bottom: 2px solid var(--line-2); padding-bottom: 3px; transition: border-color 0.3s; }
 .linkU:hover { border-color: currentColor; }
 .rel { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 2vw, 32px); }
@@ -175,7 +178,20 @@
 .jsReveal [data-reveal] { opacity: 0; transform: translateY(26px); transition: opacity 0.9s var(--ez), transform 0.9s var(--ez); }
 .jsReveal [data-reveal][data-in] { opacity: 1; transform: none; }
 
+/* Shared chrome on this route only (same values HomeV2 uses for its own route):
+   page tint, nav content and breadcrumb on the 1520px column with HomeV2's gutter,
+   and a quiet sentence-case breadcrumb instead of mono caps. Keyed on .root. */
+:global(html):has(.root) { --bg: #f6f5f1; --nav-bg: color-mix(in srgb, #f6f5f1 84%, transparent); }
+:global(html.dark):has(.root) { --bg: #09090b; --nav-bg: color-mix(in srgb, #09090b 84%, transparent); }
+:global(body):has(.root) > nav > div,
+:global(body):has(.root) nav[aria-label="Breadcrumb"] { max-width: 1520px; padding-inline: clamp(16px, 3.6vw, 56px); }
+:global(body):has(.root) nav[aria-label="Breadcrumb"] ol { font: 500 13px/1.45 var(--font-inter), var(--font-arabic), system-ui, sans-serif; letter-spacing: 0.01em; text-transform: none; }
+
 /* ── Responsive ── */
+@media (max-width: 767px) {
+  .hero { padding-bottom: 32px; }
+  .h1 { font-size: clamp(2.4rem, 10vw, 3rem); line-height: 1.02; }
+}
 @media (max-width: 1100px) {
   .secHead .label { grid-column: 1 / -1; padding-top: 0; margin-bottom: 14px; }
   .secHead h2 { grid-column: 1 / -1; }

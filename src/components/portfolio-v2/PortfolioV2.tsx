@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { preconnect } from "react-dom";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
@@ -96,24 +96,23 @@ export default async function PortfolioV2({ locale }: { locale: string }) {
 
   return (
     <>
-      {/* Hero: the original headline, grid and glow; refined subtitle placement and spacing */}
-      <section className="relative bg-background pt-[72px] pb-14 md:pt-[104px] md:pb-20 overflow-hidden">
-        <div className="grid-bg" />
-        <div className="glow w-[600px] h-[600px] bg-primary -bottom-32 left-20 opacity-20" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="hero-enter">
-            <div className="flex flex-col gap-[22px] md:gap-7">
-              <h1 className="font-serif text-6xl md:text-8xl lg:text-[120px] leading-[0.95] tracking-tight text-foreground">
-                <span className="text-primary italic">{words[0]}</span><br />{words.slice(1).join(" ")}.
-              </h1>
-              <p className={`font-serif ${s.heroSub} ${rtl ? s.heroSubAr : ""}`}>{noBreakHyphens(t("subtitle"))}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <div id={ROOT_ID} dir={rtl ? "rtl" : "ltr"} className={`${s.root} ${alexandria.variable} ${tajawal.variable}`}>
         <RevealController rootId={ROOT_ID} hiddenClass={s.jsReveal} />
+
+        {/* Hero: Services/About hero scaffolding (label row, serif headline), then the serif lede */}
+        <section className={s.hero}>
+          <div className={s.wrap}>
+            <div className={`${s.heroTop} ${s.label} hero-enter`}>
+              <span>{nav("portfolio")}</span>
+            </div>
+            <h1 className={`${s.pageTitle} hero-enter`} style={{ "--enter-delay": "0.15s" } as CSSProperties}>
+              <span className={s.gradText}>{words[0]}</span>{words.length > 1 ? ` ${words.slice(1).join(" ")}` : ""}.
+            </h1>
+            <p className={`font-serif ${s.heroSub} ${rtl ? s.heroSubAr : ""} hero-enter`} style={{ "--enter-delay": "0.3s" } as CSSProperties}>
+              {noBreakHyphens(t("subtitle"))}
+            </p>
+          </div>
+        </section>
 
         <WorkFilter
           clients={clientSection}

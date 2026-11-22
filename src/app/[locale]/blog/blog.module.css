@@ -1,0 +1,121 @@
+/* Blog index — HomeV2 design language, same pattern as about.module.css.
+   Tokens mirror HomeV2/ServicesV2/About and are scoped under .root, so nothing leaks to other pages.
+   The post list (BlogList) keeps the site's Tailwind tokens, which follow dark mode on their own. */
+
+.root {
+  --bg: #f6f5f1;
+  --ink: #0b0b0f;
+  --muted: #5d5d66;
+  --line: rgba(11, 11, 15, 0.12);
+  --line-2: rgba(11, 11, 15, 0.22);
+  --plate: #ecebe5;
+  --card: #fbfaf7;
+  --grad: linear-gradient(100deg, #8b6fe0 0%, #2563eb 100%);
+  --body: "Inter", "Tajawal", system-ui, sans-serif;
+  --gut: clamp(16px, 3.6vw, 56px);
+
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 16px/1.6 var(--body);
+  transition: background 0.4s, color 0.4s;
+}
+.root[dir="rtl"] { font-size: 17px; }
+:global(.dark) .root {
+  --bg: #09090b;
+  --ink: #f2f1ee;
+  --muted: #9d9da8;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-2: rgba(255, 255, 255, 0.2);
+  --plate: #121216;
+  --card: #0e0e11;
+  --grad: linear-gradient(100deg, #a78bfa 0%, #60a5fa 100%);
+}
+
+.root *, .root *::before, .root *::after { box-sizing: border-box; }
+
+.wrap { max-width: 1520px; margin: 0 auto; padding-inline: var(--gut); }
+.label { font: 600 13px/1.45 var(--body); letter-spacing: 0.01em; color: var(--muted); }
+.root[dir="rtl"] .label { font-size: 13.5px; letter-spacing: 0; }
+.gradText { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* ── Hero: HomeV2 .hero / .heroTop / .slogan spacing, inner-page h1 scale ── */
+.hero { padding-block: clamp(20px, 2.6vw, 34px) clamp(56px, 6vw, 96px); background: var(--bg); }
+.heroTop { padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.pageTitle { margin: clamp(22px, 3vw, 44px) 0 0; font: 400 clamp(2.75rem, 6vw, 5.5rem)/0.98 var(--font-instrument), Georgia, serif; letter-spacing: -0.025em; max-width: 26ch; text-wrap: balance; }
+.pageTitle .gradText { display: inline-block; font-style: italic; padding-inline-end: 0.08em; padding-bottom: 0.12em; margin-bottom: -0.12em; }
+.root[dir="rtl"] .pageTitle { font-family: var(--font-arabic), var(--font-instrument), serif; letter-spacing: 0; line-height: 1.35; }
+.root[dir="rtl"] .pageTitle .gradText { font-style: normal; }
+/* Subtitle: Instrument Serif italic lede (Arabic upright, roomier) */
+.lede { margin: clamp(18px, 2.2vw, 30px) 0 0; max-width: 36ch; font: italic 400 clamp(22px, 2.1vw, 30px)/1.32 var(--font-instrument), Georgia, serif; color: var(--muted); }
+.root[dir="rtl"] .lede { font: 400 clamp(18px, 1.7vw, 24px)/1.75 var(--font-arabic), var(--font-instrument), serif; }
+
+/* ── Posts: neutral plate, no grid ── */
+.posts { background: var(--plate); padding-block: clamp(56px, 6vw, 96px); }
+
+/* ════ Blog article (blog/[slug]) — added rules only; the index rules above are unchanged ════ */
+.root {
+  --cta-grad: linear-gradient(100deg, #6a4ee0 0%, #2563eb 100%);
+  --display: "Cabinet Grotesk", var(--font-alexandria), system-ui, sans-serif;
+}
+:global(.dark) .root { --cta-grad: linear-gradient(100deg, #5b3fd6 0%, #1d4ed8 100%); }
+
+/* Label row: back link (start) and category (end), as quiet labels */
+.articleTop { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 20px; }
+.back { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); transition: color 0.3s; }
+.back:hover { color: var(--ink); }
+.backArr { width: 14px; height: 14px; flex: none; transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.1, 1); }
+.back:hover .backArr { transform: translateX(-3px); }
+.root[dir="rtl"] .backArr { transform: scaleX(-1); }
+.root[dir="rtl"] .back:hover .backArr { transform: scaleX(-1) translateX(-3px); }
+/* Long article titles: narrower measure than the 26ch page title */
+.articleTitle { max-width: 22ch; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; margin: clamp(18px, 2.2vw, 30px) 0 0; font: 500 14px/1.45 var(--body); color: var(--muted); }
+.meta span { display: inline-flex; align-items: center; gap: 7px; }
+.meta svg { width: 16px; height: 16px; flex: none; }
+
+/* Body: neutral plate, ~720px reading measure on the .wrap start edge */
+.article { background: var(--plate); padding-block: clamp(56px, 6vw, 96px); }
+.measure { max-width: 720px; }
+
+/* CTA: Services values (homepage gradient; deeper stops keep white text ≥ 4.5:1) */
+.grid12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(16px, 2vw, 32px); }
+.secNum { color: var(--ink); font-variant-numeric: tabular-nums; margin-inline-end: 0.3em; }
+.disp { font-family: var(--display); font-weight: 800; letter-spacing: -0.035em; line-height: 0.92; }
+.root[dir="rtl"] .disp { letter-spacing: 0; line-height: 1.35; font-weight: 700; }
+.flip { display: inline-block; }
+.root[dir="rtl"] .flip { transform: scaleX(-1); }
+.cta { background: var(--cta-grad); color: #fff; padding-block: clamp(72px, 8vw, 128px); }
+.cta .label { color: rgba(255, 255, 255, 0.88); }
+.cta .secNum { color: #fff; }
+.ctaTitle { margin: 18px 0 0; font-size: clamp(3rem, 8vw, 8rem); max-width: 14ch; }
+.ctaRow { margin-top: clamp(28px, 4vw, 48px); align-items: end; row-gap: 28px; }
+.ctaRow p { grid-column: 1 / span 6; margin: 0; font-size: 1.15rem; color: rgba(255, 255, 255, 0.92); max-width: 44ch; }
+.ctaRow .act { grid-column: 8 / -1; display: flex; justify-content: flex-end; }
+.pillWhite { display: inline-flex; align-items: center; gap: 10px; padding: 20px 30px; border-radius: 999px; background: #fff; color: #0b0b0f !important; font-weight: 600; font-size: 17px; transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.1, 1); }
+.pillWhite:hover { transform: translateY(-2px); }
+.root .pillWhite:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+@media (max-width: 1100px) {
+  .ctaRow p, .ctaRow .act { grid-column: 1 / -1; }
+  .ctaRow .act { justify-content: flex-start; }
+}
+@media (max-width: 760px) {
+  .pillWhite { width: 100%; justify-content: center; }
+}
+
+/* Shared chrome on this route only (same values HomeV2 uses for its own route):
+   page tint, nav content and breadcrumb on the 1520px column with HomeV2's gutter,
+   and a quiet sentence-case breadcrumb instead of mono caps. Keyed on .root. */
+:global(html):has(.root) { --bg: #f6f5f1; --nav-bg: color-mix(in srgb, #f6f5f1 84%, transparent); }
+:global(html.dark):has(.root) { --bg: #09090b; --nav-bg: color-mix(in srgb, #09090b 84%, transparent); }
+:global(body):has(.root) > nav > div,
+:global(body):has(.root) > nav[aria-label="Breadcrumb"] { max-width: 1520px; padding-inline: clamp(16px, 3.6vw, 56px); }
+:global(body):has(.root) > nav[aria-label="Breadcrumb"] ol { font: 500 13px/1.45 var(--font-inter), var(--font-arabic), system-ui, sans-serif; letter-spacing: 0.01em; text-transform: none; }
+
+/* ── Responsive (HomeV2 breakpoints) ── */
+@media (max-width: 767px) {
+  .hero { padding-bottom: 32px; }
+  .pageTitle { font-size: clamp(2.4rem, 10vw, 3rem); line-height: 1.02; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .root *, .root *::before, .root *::after { animation: none !important; transition: none !important; }
+}

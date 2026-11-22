@@ -1,5 +1,5 @@
-/* Contact v2 — port of design-exploration/contact-v2 (approved prototype). The hero keeps the
-   site surface (Tailwind bg-background, .grid-bg, .glow, .pill); everything is scoped under .root.
+/* Contact v2 — port of design-exploration/contact-v2 (approved prototype). The hero uses the
+   Services/About inner-page scaffolding; everything is scoped under .root.
    Tokens use --pg / --ez rather than --bg / --ease: those are the site's own theme variables. */
 
 .root {
@@ -21,6 +21,7 @@
   /* next/font family names directly: var(--font-inter) also carries "Inter Fallback" (local
      Arial), which has Arabic glyphs and would win over Tajawal. */
   --body: "Inter", "Tajawal", system-ui, sans-serif;
+  --gut: clamp(16px, 3.6vw, 56px);
   --ez: cubic-bezier(0.2, 0.7, 0.1, 1);
 
   color: var(--ink);
@@ -55,16 +56,18 @@
 .flip { display: inline-block; }
 .root[dir="rtl"] .flip { transform: scaleX(-1); }
 
-/* ── Hero ── */
-.hero { padding: 56px 0 64px; }
-@media (min-width: 768px) { .hero { padding: 72px 0 88px; } }
-.blueGlow { background: #2563eb; }
-:global(.dark) .blueGlow { background: #60a5fa; }
+/* ── Hero: Services/About scaffolding (.hero / .heroTop / .pageTitle), inner-page h1 scale ── */
+.wrap { max-width: 1520px; margin: 0 auto; padding-inline: var(--gut); }
+.hero { padding-block: clamp(20px, 2.6vw, 34px) clamp(56px, 6vw, 96px); background: var(--pg); }
+.heroTop { padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+/* Same as the Services/About .label (here .label is the form field label). */
+.heroLabel { font: 600 13px/1.45 var(--body); letter-spacing: 0.01em; color: var(--muted); }
+.root[dir="rtl"] .heroLabel { font-size: 13.5px; letter-spacing: 0; }
 .heroGrid { display: grid; gap: 36px; }
 @media (min-width: 1024px) { .heroGrid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); gap: clamp(40px, 5vw, 80px); align-items: end; } }
-.h1 { margin: 28px 0 0; max-width: 11ch; color: var(--color-foreground); }
-.root[dir="rtl"] .h1 { line-height: 1.2; letter-spacing: 0; }
-.lede { margin: 26px 0 0; max-width: 36ch; font-style: italic; font-weight: 400; font-size: clamp(22px, 2.1vw, 30px); line-height: 1.32; color: var(--color-text-muted); }
+.pageTitle { margin: clamp(22px, 3vw, 44px) 0 0; font: 400 clamp(2.75rem, 6vw, 5.5rem)/0.98 var(--font-instrument), Georgia, serif; letter-spacing: -0.025em; max-width: 26ch; text-wrap: balance; }
+.root[dir="rtl"] .pageTitle { font-family: var(--font-arabic), var(--font-instrument), serif; letter-spacing: 0; line-height: 1.35; }
+.lede { margin: 26px 0 0; max-width: 36ch; font-style: italic; font-weight: 400; font-size: clamp(22px, 2.1vw, 30px); line-height: 1.32; color: var(--muted); }
 .root[dir="rtl"] .lede { font-style: normal; font-size: clamp(18px, 1.7vw, 24px); line-height: 1.75; }
 .acts { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px; margin-top: 34px; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 26px; border-radius: 999px; font: 600 16px/1 var(--body); cursor: pointer; border: 0; transition: transform 0.3s var(--ez), box-shadow 0.3s, background 0.3s, border-color 0.3s; }
@@ -94,9 +97,8 @@
 
 /* ── Form band ── */
 .main { background: var(--plate); padding-block: clamp(56px, 6.5vw, 104px); }
-.mwrap { max-width: 1280px; margin-inline: auto; padding-inline: 16px; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(20px, 2.4vw, 36px); align-items: start; }
-@media (min-width: 640px) { .mwrap { padding-inline: 24px; } }
-@media (min-width: 1024px) { .mwrap { padding-inline: 32px; } }
+/* Same column as the hero .wrap (1520px + --gut), so the cards line up with the title. */
+.mwrap { max-width: 1520px; margin-inline: auto; padding-inline: var(--gut); display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(20px, 2.4vw, 36px); align-items: start; }
 .formCard { padding: clamp(24px, 3.2vw, 48px); scroll-margin-top: 88px; }
 .fHead { display: flex; align-items: end; justify-content: space-between; gap: 8px 20px; flex-wrap: wrap; padding-bottom: 22px; margin-bottom: 26px; border-bottom: 1px solid var(--line); }
 .fHead h2 { margin: 0; font-size: clamp(1.9rem, 2.7vw, 2.7rem); }
@@ -173,6 +175,19 @@ textarea.ctl { min-height: 150px; resize: vertical; line-height: 1.55; }
 .jsReveal [data-reveal] { opacity: 0; transform: translateY(24px); transition: opacity 0.9s var(--ez), transform 0.9s var(--ez); }
 .jsReveal [data-reveal][data-in] { opacity: 1; transform: none; }
 
+/* Shared chrome on this route only (same values HomeV2 uses for its own route):
+   page tint, nav content and breadcrumb on the 1520px column with HomeV2's gutter,
+   and a quiet sentence-case breadcrumb instead of mono caps. Keyed on .root. */
+:global(html):has(.root) { --bg: #f6f5f1; --nav-bg: color-mix(in srgb, #f6f5f1 84%, transparent); }
+:global(html.dark):has(.root) { --bg: #09090b; --nav-bg: color-mix(in srgb, #09090b 84%, transparent); }
+:global(body):has(.root) > nav > div,
+:global(body):has(.root) > nav[aria-label="Breadcrumb"] { max-width: 1520px; padding-inline: clamp(16px, 3.6vw, 56px); }
+:global(body):has(.root) > nav[aria-label="Breadcrumb"] ol { font: 500 13px/1.45 var(--font-inter), var(--font-arabic), system-ui, sans-serif; letter-spacing: 0.01em; text-transform: none; }
+
+@media (max-width: 767px) {
+  .hero { padding-bottom: 32px; }
+  .pageTitle { font-size: clamp(2.4rem, 10vw, 3rem); line-height: 1.02; }
+}
 @media (max-width: 960px) {
   .mwrap { grid-template-columns: minmax(0, 1fr); }
   .aside { position: static; }

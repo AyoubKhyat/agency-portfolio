@@ -34,7 +34,7 @@ export default function BlogList({
           onClick={() => setActive(null)}
           className={`px-5 py-2 rounded-full text-sm font-mono tracking-wider transition-all ${
             active === null
-              ? "bg-primary text-white"
+              ? "bg-primary-strong text-white"
               : "border border-line text-text-muted hover:border-primary hover:text-primary"
           }`}
         >
@@ -46,7 +46,7 @@ export default function BlogList({
             onClick={() => setActive(cat)}
             className={`px-5 py-2 rounded-full text-sm font-mono tracking-wider transition-all ${
               active === cat
-                ? "bg-primary text-white"
+                ? "bg-primary-strong text-white"
                 : "border border-line text-text-muted hover:border-primary hover:text-primary"
             }`}
           >
@@ -75,7 +75,7 @@ export default function BlogList({
                   / {String(i + 1).padStart(2, "0")}
                 </span>
                 <div>
-                  <span className="pill text-[11px] mb-3">{post.category}</span>
+                  <span className="block text-[13px] font-semibold leading-snug text-text-muted">{post.category}</span>
                   <h2 className="mt-3 font-serif text-2xl md:text-3xl text-foreground leading-snug group-hover:text-primary transition-colors">
                     {post.title}
                   </h2>
