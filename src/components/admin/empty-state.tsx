@@ -20,7 +20,7 @@ export function EmptyState({ icon, title, description, action, className }: Empt
           {icon}
         </div>
       </div>
-      <h3 className="text-[15px] font-semibold text-[#0F172A] mb-1.5">{title}</h3>
+      <h3 className="text-[15px] font-semibold text-[var(--os-text)] mb-1.5">{title}</h3>
       {description && <p className="text-[13px] text-[#64748B] mb-5 max-w-sm">{description}</p>}
       {action}
     </div>
