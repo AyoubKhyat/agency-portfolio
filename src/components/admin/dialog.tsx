@@ -19,10 +19,12 @@ import { useEffect, useId, useRef, type RefObject } from "react";
  *   (it called `preventDefault`, e.g. a suggestion list closing itself);
  * - only the top-most open dialog reacts, so a pop-up opened from a drawer
  *   closes on its own without closing the drawer.
- * On close, focus returns to the element that was focused when it opened.
+ * On close, focus returns to the element that was focused when it opened, or,
+ * if that element is gone, to the dialog still open underneath.
  */
 
-const openStack: symbol[] = [];
+type OpenDialog = { token: symbol; panel: RefObject<HTMLElement | null> };
+const openStack: OpenDialog[] = [];
 
 // Last two focused elements, so a dialog whose field takes focus on mount
 // (`autoFocus`, applied before effects run) still knows where focus came from.
@@ -91,7 +93,7 @@ export function useDialog<T extends HTMLElement = HTMLDivElement>({
   useEffect(() => {
     if (!open) return;
     const token = Symbol("dialog");
-    openStack.push(token);
+    openStack.push({ token, panel: ref });
     const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     // If a field inside the dialog already took focus, return to what had it before.
     const returnTo = active && ref.current?.contains(active) ? focusPrevious : active;
@@ -105,7 +107,7 @@ export function useDialog<T extends HTMLElement = HTMLDivElement>({
     });
 
     function onKeyDown(e: KeyboardEvent) {
-      if (openStack[openStack.length - 1] !== token) return;
+      if (openStack[openStack.length - 1]?.token !== token) return;
       const panel = ref.current;
       if (!panel) return;
 
@@ -141,9 +143,15 @@ export function useDialog<T extends HTMLElement = HTMLDivElement>({
     return () => {
       cancelAnimationFrame(frame);
       document.removeEventListener("keydown", onKeyDown);
-      const i = openStack.indexOf(token);
+      const i = openStack.findIndex((d) => d.token === token);
       if (i >= 0) openStack.splice(i, 1);
-      if (returnTo && returnTo.isConnected) returnTo.focus({ preventScroll: true });
+      if (returnTo && returnTo.isConnected) {
+        returnTo.focus({ preventScroll: true });
+      } else {
+        // The opener is gone (e.g. the drawer re-rendered after a save): keep focus
+        // in the dialog that is still open underneath, if any.
+        openStack[openStack.length - 1]?.panel.current?.focus({ preventScroll: true });
+      }
     };
   }, [open, closeOnEscape]);
 
