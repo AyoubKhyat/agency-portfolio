@@ -62,19 +62,19 @@ type TeamMember = { id: string; fullName: string; avatarInitials: string };
 const STATUSES = ["ACTIVE", "PAUSED", "ARCHIVED"];
 
 const STATUS_COLORS: Record<string, string> = {
-  ACTIVE:   "bg-emerald-50 text-emerald-700 border-emerald-100",
-  PAUSED:   "bg-amber-50 text-amber-700 border-amber-100",
-  ARCHIVED: "bg-[#F3F4F6] text-[#6B7280] border-[#E5E7EB]",
+  ACTIVE:   "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-100 os-dark:border-emerald-500/30",
+  PAUSED:   "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border-amber-100 os-dark:border-amber-500/30",
+  ARCHIVED: "bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#6B7280] os-dark:text-[var(--os-text)] border-[var(--os-border)]",
 };
 const STATUS_DOTS: Record<string, string> = {
   ACTIVE: "bg-emerald-500", PAUSED: "bg-amber-500", ARCHIVED: "bg-[#9CA3AF]",
 };
 
 const PROPOSAL_STATUS_COLOR: Record<string, string> = {
-  DRAFT:    "text-[#6B7280] bg-[#F3F4F6] border-[#E5E7EB]",
-  SENT:     "text-blue-700 bg-blue-50 border-blue-100",
-  ACCEPTED: "text-emerald-700 bg-emerald-50 border-emerald-100",
-  REJECTED: "text-red-700 bg-red-50 border-red-100",
+  DRAFT:    "text-[#6B7280] os-dark:text-[var(--os-text)] bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] border-[var(--os-border)]",
+  SENT:     "text-blue-700 os-dark:text-blue-300 bg-blue-50 os-dark:bg-blue-500/10 border-blue-100 os-dark:border-blue-500/30",
+  ACCEPTED: "text-emerald-700 os-dark:text-emerald-300 bg-emerald-50 os-dark:bg-emerald-500/10 border-emerald-100 os-dark:border-emerald-500/30",
+  REJECTED: "text-red-700 os-dark:text-red-300 bg-red-50 os-dark:bg-red-500/10 border-red-100 os-dark:border-red-500/30",
 };
 
 // Project status styling/labels come from the shared ClientProject source of
@@ -102,8 +102,8 @@ const TABS = [
 ] as const;
 
 const input =
-  "w-full h-11 px-3.5 bg-white border border-[#D1D5DB] rounded-lg text-[14px] text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
-const lbl = "block text-[13px] font-medium text-[#374151] mb-1.5";
+  "w-full h-11 px-3.5 bg-[var(--os-surface)] border border-[var(--os-border-hover)] rounded-lg text-[14px] text-[#111827] os-dark:text-[var(--os-text)] placeholder:text-[#9CA3AF] os-dark:placeholder:text-[var(--os-text-soft)] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
+const lbl = "block text-[13px] font-medium text-[#374151] os-dark:text-[var(--os-text)] mb-1.5";
 
 function relativeDate(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -159,7 +159,7 @@ export default function ClientDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-6 h-6 text-[#8B00FF] animate-spin" />
+        <Loader2 className="w-6 h-6 text-[var(--os-brand)] animate-spin" />
       </div>
     );
   }
@@ -169,17 +169,17 @@ export default function ClientDetailPage() {
     <div>
       <Link
         href="/admin/clients"
-        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#6B7280] hover:text-[#111827] mb-4"
+        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#6B7280] os-dark:text-[var(--os-text)] hover:text-[#111827] os-dark:hover:text-[var(--os-text)] mb-4"
       >
         <ChevronLeft className="w-4 h-4" /> Back to clients
       </Link>
 
       {/* Header */}
-      <div className="bg-white border border-[#E5E7EB] rounded-xl p-6 mb-6">
+      <div className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-6 mb-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-[22px] font-bold text-[#111827] tracking-tight">
+              <h1 className="text-[22px] font-bold text-[#111827] os-dark:text-[var(--os-text)] tracking-tight">
                 {client.companyName}
               </h1>
               <span className={cn(
@@ -190,7 +190,7 @@ export default function ClientDetailPage() {
                 {client.status.charAt(0) + client.status.slice(1).toLowerCase()}
               </span>
             </div>
-            <div className="flex items-center gap-3 mt-1.5 flex-wrap text-[13px] text-[#6B7280]">
+            <div className="flex items-center gap-3 mt-1.5 flex-wrap text-[13px] text-[#6B7280] os-dark:text-[var(--os-text)]">
               {client.industry && (
                 <span className="inline-flex items-center gap-1.5">
                   <Tag className="w-3.5 h-3.5" /> {client.industry}
@@ -220,7 +220,7 @@ export default function ClientDetailPage() {
               <a
                 href={client.whatsapp.startsWith("http") ? client.whatsapp : `https://wa.me/${client.whatsapp.replace(/\D/g, "")}`}
                 target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-green-50 os-dark:bg-green-500/10 text-green-600 os-dark:text-green-400 hover:bg-green-100 os-dark:hover:bg-green-500/15 transition-colors"
                 title="WhatsApp"
               >
                 <FaWhatsapp className="w-4 h-4" />
@@ -229,7 +229,7 @@ export default function ClientDetailPage() {
             {client.email && (
               <a
                 href={`mailto:${client.email}`}
-                className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 os-dark:bg-blue-500/10 text-blue-600 os-dark:text-blue-400 hover:bg-blue-100 os-dark:hover:bg-blue-500/15 transition-colors"
                 title={client.email}
               >
                 <Mail className="w-4 h-4" />
@@ -238,7 +238,7 @@ export default function ClientDetailPage() {
             {client.phone && (
               <a
                 href={`tel:${client.phone}`}
-                className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-amber-50 os-dark:bg-amber-500/10 text-amber-600 os-dark:text-amber-400 hover:bg-amber-100 os-dark:hover:bg-amber-500/15 transition-colors"
                 title={client.phone}
               >
                 <Phone className="w-4 h-4" />
@@ -248,7 +248,7 @@ export default function ClientDetailPage() {
               <a
                 href={client.website.startsWith("http") ? client.website : `https://${client.website}`}
                 target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-purple-50 os-dark:bg-purple-500/10 text-purple-600 os-dark:text-purple-400 hover:bg-purple-100 os-dark:hover:bg-purple-500/15 transition-colors"
                 title="Website"
               >
                 <Globe className="w-4 h-4" />
@@ -259,7 +259,7 @@ export default function ClientDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-[#E5E7EB] mb-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 overflow-x-auto">
+      <div className="border-b border-[var(--os-border)] mb-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 overflow-x-auto">
         <div className="flex items-center gap-1">
           {TABS.map((t) => {
             const Icon = t.icon;
@@ -272,8 +272,8 @@ export default function ClientDetailPage() {
                 className={cn(
                   "inline-flex items-center gap-1.5 px-3 py-3 text-[13px] font-medium whitespace-nowrap border-b-2 -mb-px transition-colors",
                   active
-                    ? "border-[#8B00FF] text-[#8B00FF]"
-                    : "border-transparent text-[#6B7280] hover:text-[#111827]",
+                    ? "border-[#8B00FF] text-[var(--os-brand)]"
+                    : "border-transparent text-[#6B7280] os-dark:text-[var(--os-text)] hover:text-[#111827] os-dark:hover:text-[var(--os-text)]",
                 )}
               >
                 <Icon className="w-4 h-4" />
@@ -281,7 +281,7 @@ export default function ClientDetailPage() {
                 {count > 0 && (
                   <span className={cn(
                     "text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center",
-                    active ? "bg-purple-100 text-[#8B00FF]" : "bg-[#F3F4F6] text-[#6B7280]",
+                    active ? "bg-purple-100 os-dark:bg-purple-500/15 text-[var(--os-brand)]" : "bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#6B7280] os-dark:text-[var(--os-text)]",
                   )}>
                     {count}
                   </span>
@@ -396,14 +396,14 @@ function OverviewTab({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6">
       <div className="space-y-6 min-w-0">
-        <section className="bg-white border border-[#E5E7EB] rounded-xl">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E7EB]">
-            <h2 className="text-[15px] font-semibold text-[#111827]">Client details</h2>
+        <section className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--os-border)]">
+            <h2 className="text-[15px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">Client details</h2>
             {edit ? (
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => { setEdit(false); setError(""); }}
-                  className="h-8 px-3 text-[12px] text-[#6B7280] hover:text-[#111827]"
+                  className="h-8 px-3 text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] hover:text-[#111827] os-dark:hover:text-[var(--os-text)]"
                 >
                   <X className="w-3.5 h-3.5 inline mr-1" /> Cancel
                 </button>
@@ -419,7 +419,7 @@ function OverviewTab({
             ) : (
               <button
                 onClick={() => setEdit(true)}
-                className="inline-flex items-center gap-1 h-8 px-3 text-[12px] font-medium text-[#8B00FF] hover:bg-purple-50 rounded-md"
+                className="inline-flex items-center gap-1 h-8 px-3 text-[12px] font-medium text-[var(--os-brand)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10 rounded-md"
               >
                 <Edit2 className="w-3.5 h-3.5" /> Edit
               </button>
@@ -480,16 +480,16 @@ function OverviewTab({
                     </select>
                   </div>
                 </div>
-                {error && <p className="text-[13px] text-red-700">{error}</p>}
+                {error && <p className="text-[13px] text-red-700 os-dark:text-red-300">{error}</p>}
               </div>
             ) : (
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                 <Detail label="Contact person" value={client.contactPerson} />
-                <Detail label="Email" value={client.email ? <a href={`mailto:${client.email}`} className="text-[#8B00FF] hover:underline">{client.email}</a> : null} />
+                <Detail label="Email" value={client.email ? <a href={`mailto:${client.email}`} className="text-[var(--os-brand)] hover:underline">{client.email}</a> : null} />
                 <Detail label="Phone" value={client.phone} />
                 <Detail label="WhatsApp" value={client.whatsapp} />
                 <Detail label="Website" value={client.website ? (
-                  <a href={client.website.startsWith("http") ? client.website : `https://${client.website}`} target="_blank" rel="noopener noreferrer" className="text-[#8B00FF] hover:underline inline-flex items-center gap-1">
+                  <a href={client.website.startsWith("http") ? client.website : `https://${client.website}`} target="_blank" rel="noopener noreferrer" className="text-[var(--os-brand)] hover:underline inline-flex items-center gap-1">
                     {client.website.replace(/^https?:\/\//, "")} <ExternalLink className="w-3 h-3" />
                   </a>
                 ) : null} />
@@ -498,7 +498,7 @@ function OverviewTab({
                 <Detail label="Acquisition source" value={client.acquisitionSource} />
                 <Detail label="Account manager" value={client.accountManager?.fullName ?? null} />
                 <Detail label="Original prospect" value={client.prospect ? (
-                  <Link href={`/admin/prospecting/${client.prospect.id}`} className="text-[#8B00FF] hover:underline">{client.prospect.name}</Link>
+                  <Link href={`/admin/prospecting/${client.prospect.id}`} className="text-[var(--os-brand)] hover:underline">{client.prospect.name}</Link>
                 ) : null} />
                 <Detail label="Created" value={relativeDate(client.createdAt)} />
                 <Detail label="Last update" value={relativeDate(client.updatedAt)} />
@@ -507,15 +507,15 @@ function OverviewTab({
           </div>
         </section>
 
-        <section className="bg-white border border-red-100 rounded-xl p-6 flex items-center justify-between gap-3 flex-wrap">
+        <section className="bg-[var(--os-surface)] border border-red-100 os-dark:border-red-500/30 rounded-xl p-6 flex items-center justify-between gap-3 flex-wrap">
           <div>
-            <h3 className="text-[14px] font-semibold text-[#111827]">Danger zone</h3>
-            <p className="text-[12px] text-[#6B7280] mt-0.5">Delete this client and all linked notes, activities, and tasks.</p>
+            <h3 className="text-[14px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">Danger zone</h3>
+            <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">Delete this client and all linked notes, activities, and tasks.</p>
           </div>
           <button
             type="button"
             onClick={onDelete}
-            className="inline-flex items-center gap-1.5 h-9 px-3 border border-red-200 text-red-600 rounded-lg text-[12px] font-medium hover:bg-red-50"
+            className="inline-flex items-center gap-1.5 h-9 px-3 border border-red-200 os-dark:border-red-500/30 text-red-600 os-dark:text-red-400 rounded-lg text-[12px] font-medium hover:bg-red-50 os-dark:hover:bg-red-500/10"
           >
             <Trash2 className="w-3.5 h-3.5" /> Delete client
           </button>
@@ -539,8 +539,8 @@ function OverviewTab({
 function Detail({ label, value }: { label: string; value: React.ReactNode | string | null }) {
   return (
     <div>
-      <dt className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wider mb-1">{label}</dt>
-      <dd className="text-[14px] text-[#111827]">{value || <span className="text-[#9CA3AF]">—</span>}</dd>
+      <dt className="text-[11px] font-semibold text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider mb-1">{label}</dt>
+      <dd className="text-[14px] text-[#111827] os-dark:text-[var(--os-text)]">{value || <span className="text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">—</span>}</dd>
     </div>
   );
 }
@@ -555,13 +555,13 @@ function ProjectsTab({ projects }: { projects: ClientProject[] }) {
         <Link
           key={p.id}
           href={`/admin/pipeline?project=${p.id}`}
-          className="block bg-white border border-[#E5E7EB] rounded-xl p-5 hover:border-[#D1D5DB] hover:shadow-md hover:shadow-slate-900/[0.04] transition-all"
+          className="block bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-5 hover:border-[var(--os-border-hover)] hover:shadow-md hover:shadow-slate-900/[0.04] transition-all"
         >
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div className="min-w-0">
-              <h3 className="text-[15px] font-semibold text-[#111827]">{p.name}</h3>
-              {p.description && <p className="text-[13px] text-[#6B7280] mt-1 line-clamp-2">{p.description}</p>}
-              <div className="flex items-center gap-3 mt-2 text-[12px] text-[#6B7280] flex-wrap">
+              <h3 className="text-[15px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">{p.name}</h3>
+              {p.description && <p className="text-[13px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-1 line-clamp-2">{p.description}</p>}
+              <div className="flex items-center gap-3 mt-2 text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] flex-wrap">
                 <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-semibold", clientProjectStatusPill(p.status))}>
                   {clientProjectStatusLabel(p.status)}
                 </span>
@@ -584,16 +584,16 @@ function ProposalsTab({ proposals }: { proposals: Proposal[] }) {
   return (
     <div className="space-y-3">
       {proposals.map((p) => (
-        <div key={p.id} className="bg-white border border-[#E5E7EB] rounded-xl p-5">
+        <div key={p.id} className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-5">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div className="min-w-0">
-              <h3 className="text-[15px] font-semibold text-[#111827]">{p.packageName || "Custom proposal"}</h3>
-              <p className="text-[13px] text-[#6B7280] mt-1">
+              <h3 className="text-[15px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">{p.packageName || "Custom proposal"}</h3>
+              <p className="text-[13px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-1">
                 Contact: {p.contactPerson || "—"} · Created {relativeDate(p.createdAt)}
               </p>
             </div>
             <div className="text-right shrink-0">
-              <p className="text-[16px] font-bold text-[#111827]">{formatMAD(p.amount)} {p.currency}</p>
+              <p className="text-[16px] font-bold text-[#111827] os-dark:text-[var(--os-text)]">{formatMAD(p.amount)} {p.currency}</p>
               <span className={cn(
                 "inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-semibold mt-1",
                 PROPOSAL_STATUS_COLOR[p.status] ?? PROPOSAL_STATUS_COLOR.DRAFT,
@@ -631,7 +631,7 @@ function NotesTab({ client, onUpdate, team }: { client: Client; onUpdate: (c: Cl
 
   return (
     <div className="max-w-3xl space-y-4">
-      <form onSubmit={addNote} className="bg-white border border-[#E5E7EB] rounded-xl p-5">
+      <form onSubmit={addNote} className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-5">
         <label className={lbl}>Add a note</label>
         <MentionTextarea
           value={content}
@@ -652,18 +652,18 @@ function NotesTab({ client, onUpdate, team }: { client: Client; onUpdate: (c: Cl
       </form>
 
       {client.notes.length === 0 ? (
-        <p className="text-[13px] text-[#9CA3AF] px-1">No notes yet.</p>
+        <p className="text-[13px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] px-1">No notes yet.</p>
       ) : (
         <div className="space-y-2">
           {client.notes.map((n) => (
-            <div key={n.id} className="bg-white border border-[#E5E7EB] rounded-xl p-4">
+            <div key={n.id} className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-4">
               <HighlightedMentions
                 text={n.content}
                 users={team}
-                className="text-[13px] text-[#111827] whitespace-pre-wrap leading-relaxed block"
+                className="text-[13px] text-[#111827] os-dark:text-[var(--os-text)] whitespace-pre-wrap leading-relaxed block"
               />
-              <p className="text-[11px] text-[#9CA3AF] mt-2">
-                {n.authorName && <span className="font-medium text-[#6B7280]">{n.authorName} · </span>}
+              <p className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] mt-2">
+                {n.authorName && <span className="font-medium text-[#6B7280] os-dark:text-[var(--os-text)]">{n.authorName} · </span>}
                 {relativeDate(n.createdAt)}
               </p>
             </div>
@@ -687,12 +687,12 @@ function ActivityTab({ activities }: { activities: ClientActivity[] }) {
             <span className="w-px flex-1 bg-[#E5E7EB] mt-1" />
           </div>
           <div className="flex-1 pb-3 -mt-0.5">
-            <p className="text-[13px] text-[#111827]">
+            <p className="text-[13px] text-[#111827] os-dark:text-[var(--os-text)]">
               <span className="font-semibold">{a.userName ?? "System"}</span>{" "}
               {ACTIVITY_LABEL[a.actionType] ?? a.actionType.toLowerCase().replace(/_/g, " ")}
             </p>
-            {a.details && <p className="text-[12px] text-[#6B7280] mt-0.5">{a.details}</p>}
-            <p className="text-[11px] text-[#9CA3AF] mt-0.5">{relativeDate(a.createdAt)}</p>
+            {a.details && <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">{a.details}</p>}
+            <p className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] mt-0.5">{relativeDate(a.createdAt)}</p>
           </div>
         </div>
       ))}
@@ -702,12 +702,12 @@ function ActivityTab({ activities }: { activities: ClientActivity[] }) {
 
 function PlaceholderTab({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="bg-white border border-dashed border-[#E5E7EB] rounded-xl p-10 text-center">
-      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#F3F4F6] text-[#9CA3AF] mb-3">
+    <div className="bg-[var(--os-surface)] border border-dashed border-[var(--os-border)] rounded-xl p-10 text-center">
+      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] mb-3">
         {icon}
       </div>
-      <h3 className="text-[15px] font-semibold text-[#111827]">{title}</h3>
-      <p className="text-[13px] text-[#6B7280] mt-1">{description}</p>
+      <h3 className="text-[15px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">{title}</h3>
+      <p className="text-[13px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-1">{description}</p>
     </div>
   );
 }
@@ -726,10 +726,10 @@ const MEETING_TYPE_ICON: Record<string, React.ComponentType<{ className?: string
   CALL: Phone, GOOGLE_MEET: Video, ZOOM: Video, WHATSAPP: MessageCircle, IN_PERSON: MapPin,
 };
 const MEETING_STATUS_STYLE: Record<string, string> = {
-  SCHEDULED: "bg-blue-50 text-blue-700 border-blue-100",
-  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-100",
-  CANCELLED: "bg-[#F3F4F6] text-[#6B7280] border-[#E5E7EB]",
-  NO_SHOW:   "bg-red-50 text-red-700 border-red-100",
+  SCHEDULED: "bg-blue-50 os-dark:bg-blue-500/10 text-blue-700 os-dark:text-blue-300 border-blue-100 os-dark:border-blue-500/30",
+  COMPLETED: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-100 os-dark:border-emerald-500/30",
+  CANCELLED: "bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#6B7280] os-dark:text-[var(--os-text)] border-[var(--os-border)]",
+  NO_SHOW:   "bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 border-red-100 os-dark:border-red-500/30",
 };
 
 function MeetingsTab({ clientId, companyName, refreshKey, onOpenSchedule }: { clientId: string; companyName: string; refreshKey: number; onOpenSchedule: () => void }) {
@@ -759,12 +759,12 @@ function MeetingsTab({ clientId, companyName, refreshKey, onOpenSchedule }: { cl
   if (loading) return <div className="grid gap-3">{[...Array(3)].map((_, i) => <div key={i} className="os-skeleton h-16 rounded-xl" />)}</div>;
   if (list.length === 0) {
     return (
-      <div className="bg-white border border-dashed border-[#E5E7EB] rounded-xl p-10 text-center">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-50 text-blue-600 mb-3">
+      <div className="bg-[var(--os-surface)] border border-dashed border-[var(--os-border)] rounded-xl p-10 text-center">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-50 os-dark:bg-blue-500/10 text-blue-600 os-dark:text-blue-400 mb-3">
           <CalendarDays className="w-7 h-7" />
         </div>
-        <h3 className="text-[15px] font-semibold text-[#111827]">No meetings yet</h3>
-        <p className="text-[13px] text-[#6B7280] mt-1 mb-4">Schedule your first meeting with {companyName}.</p>
+        <h3 className="text-[15px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">No meetings yet</h3>
+        <p className="text-[13px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-1 mb-4">Schedule your first meeting with {companyName}.</p>
         <button
           onClick={onOpenSchedule}
           className="inline-flex items-center gap-1.5 h-10 px-4 bg-[#8B00FF] hover:bg-[#7A00E0] text-white rounded-lg text-[13px] font-semibold"
@@ -783,39 +783,39 @@ function MeetingsTab({ clientId, companyName, refreshKey, onOpenSchedule }: { cl
         const isOpen = expanded === m.id;
         const editable = m.status === "SCHEDULED" || m.status === "COMPLETED";
         return (
-          <div key={m.id} className="bg-white border border-[#E5E7EB] rounded-xl">
+          <div key={m.id} className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl">
             <button
               type="button"
               onClick={() => setExpanded((prev) => (prev === m.id ? null : m.id))}
-              className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-[#FAFAFE]"
+              className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-[var(--os-surface-2)]"
             >
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#F3F4F6] text-[#475569] shrink-0">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[var(--os-text-muted)] shrink-0">
                 <TypeIcon className="w-4 h-4" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="text-[14px] font-medium text-[#111827] truncate">{m.title}</p>
+                  <p className="text-[14px] font-medium text-[#111827] os-dark:text-[var(--os-text)] truncate">{m.title}</p>
                   <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold shrink-0", MEETING_STATUS_STYLE[m.status] ?? MEETING_STATUS_STYLE.SCHEDULED)}>
                     {m.status.replace("_", " ")}
                   </span>
                 </div>
-                <p className="text-[12px] text-[#6B7280] mt-0.5">
+                <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">
                   {start.toLocaleString("fr-FR", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                   {m.owner ? ` · ${m.owner.fullName}` : ""}
                 </p>
               </div>
             </button>
             {isOpen && (
-              <div className="px-5 pb-5 border-t border-[#F3F4F6] pt-4 space-y-3">
+              <div className="px-5 pb-5 border-t border-[#F3F4F6] os-dark:border-[var(--os-border)] pt-4 space-y-3">
                 {m.status === "SCHEDULED" && (
                   <div className="flex gap-2 flex-wrap">
-                    <button onClick={() => patchMeeting(m.id, { status: "COMPLETED" })} className="inline-flex items-center gap-1 h-8 px-3 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 text-[12px] font-semibold hover:bg-emerald-100">
+                    <button onClick={() => patchMeeting(m.id, { status: "COMPLETED" })} className="inline-flex items-center gap-1 h-8 px-3 rounded-lg bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border border-emerald-100 os-dark:border-emerald-500/30 text-[12px] font-semibold hover:bg-emerald-100 os-dark:hover:bg-emerald-500/15">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Mark completed
                     </button>
-                    <button onClick={() => patchMeeting(m.id, { status: "NO_SHOW" })} className="inline-flex items-center gap-1 h-8 px-3 rounded-lg bg-red-50 text-red-700 border border-red-100 text-[12px] font-semibold hover:bg-red-100">
+                    <button onClick={() => patchMeeting(m.id, { status: "NO_SHOW" })} className="inline-flex items-center gap-1 h-8 px-3 rounded-lg bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 border border-red-100 os-dark:border-red-500/30 text-[12px] font-semibold hover:bg-red-100 os-dark:hover:bg-red-500/15">
                       <AlertCircle className="w-3.5 h-3.5" /> No show
                     </button>
-                    <button onClick={() => patchMeeting(m.id, { status: "CANCELLED" })} className="inline-flex items-center gap-1 h-8 px-3 rounded-lg bg-[#F3F4F6] text-[#374151] border border-[#E5E7EB] text-[12px] font-semibold hover:bg-[#E5E7EB]">
+                    <button onClick={() => patchMeeting(m.id, { status: "CANCELLED" })} className="inline-flex items-center gap-1 h-8 px-3 rounded-lg bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#374151] os-dark:text-[var(--os-text)] border border-[var(--os-border)] text-[12px] font-semibold hover:bg-[#E5E7EB]">
                       <X className="w-3.5 h-3.5" /> Cancel
                     </button>
                   </div>
@@ -844,22 +844,22 @@ function OutcomeEditor({ initialOutcome, initialNextAction, onSave }: { initialO
   return (
     <div className="space-y-3">
       <div>
-        <label className="block text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-1.5">Outcome</label>
+        <label className="block text-[11px] font-semibold text-[#6B7280] os-dark:text-[var(--os-text)] uppercase tracking-wider mb-1.5">Outcome</label>
         <textarea
           value={outcome}
           onChange={(e) => setOutcome(e.target.value)}
           rows={2}
           placeholder="What was discussed? Decisions made?"
-          className="w-full px-3 py-2 bg-white border border-[#D1D5DB] rounded-lg text-[13px] text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15"
+          className="w-full px-3 py-2 bg-[var(--os-surface)] border border-[var(--os-border-hover)] rounded-lg text-[13px] text-[#111827] os-dark:text-[var(--os-text)] placeholder:text-[#9CA3AF] os-dark:placeholder:text-[var(--os-text-soft)] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15"
         />
       </div>
       <div>
-        <label className="block text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-1.5">Next action</label>
+        <label className="block text-[11px] font-semibold text-[#6B7280] os-dark:text-[var(--os-text)] uppercase tracking-wider mb-1.5">Next action</label>
         <input
           value={nextAction}
           onChange={(e) => setNextAction(e.target.value)}
           placeholder="What's the next step? Saving this will create a follow-up task."
-          className="w-full h-10 px-3 bg-white border border-[#D1D5DB] rounded-lg text-[13px] text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15"
+          className="w-full h-10 px-3 bg-[var(--os-surface)] border border-[var(--os-border-hover)] rounded-lg text-[13px] text-[#111827] os-dark:text-[var(--os-text)] placeholder:text-[#9CA3AF] os-dark:placeholder:text-[var(--os-text-soft)] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15"
         />
       </div>
       {dirty && (
@@ -889,12 +889,12 @@ type ClientContract = {
 };
 
 const CONTRACT_STATUS_STYLE: Record<string, string> = {
-  DRAFT:             "bg-[#F3F4F6] text-[#374151] border-[#E5E7EB]",
-  PENDING_SIGNATURE: "bg-amber-50 text-amber-700 border-amber-100",
-  SIGNED:            "bg-emerald-50 text-emerald-700 border-emerald-100",
-  ACTIVE:            "bg-blue-50 text-blue-700 border-blue-100",
-  COMPLETED:         "bg-purple-50 text-purple-700 border-purple-100",
-  CANCELLED:         "bg-red-50 text-red-700 border-red-100",
+  DRAFT:             "bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#374151] os-dark:text-[var(--os-text)] border-[var(--os-border)]",
+  PENDING_SIGNATURE: "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border-amber-100 os-dark:border-amber-500/30",
+  SIGNED:            "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-100 os-dark:border-emerald-500/30",
+  ACTIVE:            "bg-blue-50 os-dark:bg-blue-500/10 text-blue-700 os-dark:text-blue-300 border-blue-100 os-dark:border-blue-500/30",
+  COMPLETED:         "bg-purple-50 os-dark:bg-purple-500/10 text-purple-700 os-dark:text-purple-300 border-purple-100 os-dark:border-purple-500/30",
+  CANCELLED:         "bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 border-red-100 os-dark:border-red-500/30",
 };
 
 const CONTRACT_NEXT: Record<string, { label: string; next: string }[]> = {
@@ -952,72 +952,72 @@ function ContractsTab({ clientId, companyName, refreshKey }: { clientId: string;
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[13px] text-[#6B7280]">
+        <p className="text-[13px] text-[#6B7280] os-dark:text-[var(--os-text)]">
           {list.length === 0 ? "No contracts yet." : `${list.length} contract${list.length > 1 ? "s" : ""}`}
         </p>
-        <button onClick={createBlank} className="inline-flex items-center gap-1.5 h-9 px-3 bg-white border border-[#D1D5DB] text-[#374151] rounded-lg text-[12px] font-medium hover:bg-[#F9FAFB]">
+        <button onClick={createBlank} className="inline-flex items-center gap-1.5 h-9 px-3 bg-[var(--os-surface)] border border-[var(--os-border-hover)] text-[#374151] os-dark:text-[var(--os-text)] rounded-lg text-[12px] font-medium hover:bg-[#F9FAFB] os-dark:hover:bg-[var(--os-surface-2)]">
           <Plus className="w-3.5 h-3.5" /> New contract
         </button>
       </div>
 
       {list.length === 0 ? (
-        <div className="bg-white border border-dashed border-[#E5E7EB] rounded-xl p-10 text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 mb-3">
+        <div className="bg-[var(--os-surface)] border border-dashed border-[var(--os-border)] rounded-xl p-10 text-center">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-600 os-dark:text-emerald-400 mb-3">
             <FileSignature className="w-7 h-7" />
           </div>
-          <h3 className="text-[15px] font-semibold text-[#111827]">No contracts yet</h3>
-          <p className="text-[13px] text-[#6B7280] mt-1">Accept a proposal to auto-generate a draft, or add one manually.</p>
+          <h3 className="text-[15px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">No contracts yet</h3>
+          <p className="text-[13px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-1">Accept a proposal to auto-generate a draft, or add one manually.</p>
         </div>
       ) : list.map((c) => {
         const opened = open === c.id;
         const nextActions = CONTRACT_NEXT[c.status] ?? [];
         return (
-          <div key={c.id} className="bg-white border border-[#E5E7EB] rounded-xl">
-            <button type="button" onClick={() => setOpen((p) => (p === c.id ? null : c.id))} className="w-full flex items-start justify-between gap-3 px-5 py-4 text-left hover:bg-[#FAFAFE]">
+          <div key={c.id} className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl">
+            <button type="button" onClick={() => setOpen((p) => (p === c.id ? null : c.id))} className="w-full flex items-start justify-between gap-3 px-5 py-4 text-left hover:bg-[var(--os-surface-2)]">
               <div className="min-w-0">
-                <p className="text-[14px] font-medium text-[#111827]">{c.title}</p>
+                <p className="text-[14px] font-medium text-[#111827] os-dark:text-[var(--os-text)]">{c.title}</p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold", CONTRACT_STATUS_STYLE[c.status] ?? CONTRACT_STATUS_STYLE.DRAFT)}>
                     {c.status.replace("_", " ")}
                   </span>
-                  <span className="text-[12px] text-[#374151] font-semibold">{formatMAD(c.amount)} {c.currency}</span>
-                  {c.endDate && <span className="text-[12px] text-[#6B7280]">Ends {new Date(c.endDate).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}</span>}
+                  <span className="text-[12px] text-[#374151] os-dark:text-[var(--os-text)] font-semibold">{formatMAD(c.amount)} {c.currency}</span>
+                  {c.endDate && <span className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)]">Ends {new Date(c.endDate).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}</span>}
                 </div>
               </div>
             </button>
             {opened && (
-              <div className="px-5 pb-5 border-t border-[#F3F4F6] pt-4 space-y-4">
+              <div className="px-5 pb-5 border-t border-[#F3F4F6] os-dark:border-[var(--os-border)] pt-4 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-1">Start date</label>
+                    <label className="block text-[11px] font-semibold text-[#6B7280] os-dark:text-[var(--os-text)] uppercase tracking-wider mb-1">Start date</label>
                     <input
                       type="date"
                       defaultValue={c.startDate ? c.startDate.slice(0, 10) : ""}
                       onBlur={(e) => updateContract(c.id, { startDate: e.target.value || null })}
-                      className="w-full h-10 px-3 bg-white border border-[#D1D5DB] rounded-lg text-[13px] text-[#111827]"
+                      className="w-full h-10 px-3 bg-[var(--os-surface)] border border-[var(--os-border-hover)] rounded-lg text-[13px] text-[#111827] os-dark:text-[var(--os-text)]"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-1">End date</label>
+                    <label className="block text-[11px] font-semibold text-[#6B7280] os-dark:text-[var(--os-text)] uppercase tracking-wider mb-1">End date</label>
                     <input
                       type="date"
                       defaultValue={c.endDate ? c.endDate.slice(0, 10) : ""}
                       onBlur={(e) => updateContract(c.id, { endDate: e.target.value || null })}
-                      className="w-full h-10 px-3 bg-white border border-[#D1D5DB] rounded-lg text-[13px] text-[#111827]"
+                      className="w-full h-10 px-3 bg-[var(--os-surface)] border border-[var(--os-border-hover)] rounded-lg text-[13px] text-[#111827] os-dark:text-[var(--os-text)]"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-1">Payment terms</label>
+                  <label className="block text-[11px] font-semibold text-[#6B7280] os-dark:text-[var(--os-text)] uppercase tracking-wider mb-1">Payment terms</label>
                   <input
                     defaultValue={c.paymentTerms}
                     onBlur={(e) => updateContract(c.id, { paymentTerms: e.target.value })}
                     placeholder="50% upfront, 50% on delivery"
-                    className="w-full h-10 px-3 bg-white border border-[#D1D5DB] rounded-lg text-[13px] text-[#111827]"
+                    className="w-full h-10 px-3 bg-[var(--os-surface)] border border-[var(--os-border-hover)] rounded-lg text-[13px] text-[#111827] os-dark:text-[var(--os-text)]"
                   />
                 </div>
                 {nextActions.length > 0 && (
-                  <div className="flex gap-2 flex-wrap pt-2 border-t border-[#F3F4F6]">
+                  <div className="flex gap-2 flex-wrap pt-2 border-t border-[#F3F4F6] os-dark:border-[var(--os-border)]">
                     {nextActions.map((a) => (
                       <button
                         key={a.next}
@@ -1028,7 +1028,7 @@ function ContractsTab({ clientId, companyName, refreshKey }: { clientId: string;
                           a.next === "SIGNED" || a.next === "ACTIVE"
                             ? "bg-emerald-600 text-white hover:bg-emerald-700"
                             : a.next === "CANCELLED"
-                              ? "bg-red-50 text-red-700 border border-red-100 hover:bg-red-100"
+                              ? "bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 border border-red-100 os-dark:border-red-500/30 hover:bg-red-100 os-dark:hover:bg-red-500/15"
                               : "bg-[#8B00FF] text-white hover:bg-[#7A00E0]",
                         )}
                       >
@@ -1059,12 +1059,12 @@ type TimelineItem = {
 };
 
 const KIND_STYLE: Record<TimelineItem["kind"], { dot: string; chip: string; icon: React.ComponentType<{ className?: string }> }> = {
-  note:     { dot: "bg-purple-500",   chip: "bg-purple-50 text-purple-700",   icon: StickyNote },
-  meeting:  { dot: "bg-blue-500",     chip: "bg-blue-50 text-blue-700",       icon: CalendarDays },
-  task:     { dot: "bg-amber-500",    chip: "bg-amber-50 text-amber-700",     icon: CheckCircle2 },
-  contract: { dot: "bg-emerald-500",  chip: "bg-emerald-50 text-emerald-700", icon: FileSignature },
-  proposal: { dot: "bg-indigo-500",   chip: "bg-indigo-50 text-indigo-700",   icon: FileText },
-  activity: { dot: "bg-[#9CA3AF]",    chip: "bg-[#F3F4F6] text-[#374151]",    icon: Activity },
+  note:     { dot: "bg-purple-500",   chip: "bg-purple-50 os-dark:bg-purple-500/10 text-purple-700 os-dark:text-purple-300",   icon: StickyNote },
+  meeting:  { dot: "bg-blue-500",     chip: "bg-blue-50 os-dark:bg-blue-500/10 text-blue-700 os-dark:text-blue-300",       icon: CalendarDays },
+  task:     { dot: "bg-amber-500",    chip: "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300",     icon: CheckCircle2 },
+  contract: { dot: "bg-emerald-500",  chip: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300", icon: FileSignature },
+  proposal: { dot: "bg-indigo-500",   chip: "bg-indigo-50 os-dark:bg-indigo-500/10 text-indigo-700 os-dark:text-indigo-300",   icon: FileText },
+  activity: { dot: "bg-[#9CA3AF]",    chip: "bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#374151] os-dark:text-[var(--os-text)]",    icon: Activity },
 };
 
 function TimelineTab({ clientId, team, refreshKey }: { clientId: string; team: TeamMember[]; refreshKey: number }) {
@@ -1100,11 +1100,11 @@ function TimelineTab({ clientId, team, refreshKey }: { clientId: string; team: T
               onClick={() => setFilter(k)}
               className={cn(
                 "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors",
-                active ? "bg-[#8B00FF] text-white" : "bg-white border border-[#E5E7EB] text-[#6B7280] hover:text-[#111827] hover:border-[#D1D5DB]",
+                active ? "bg-[#8B00FF] text-white" : "bg-[var(--os-surface)] border border-[var(--os-border)] text-[#6B7280] os-dark:text-[var(--os-text)] hover:text-[#111827] os-dark:hover:text-[var(--os-text)] hover:border-[var(--os-border-hover)]",
               )}
             >
               {label}
-              {count > 0 && <span className={cn("text-[10px] font-bold px-1 rounded", active ? "bg-white/25" : "bg-[#F3F4F6]")}>{count}</span>}
+              {count > 0 && <span className={cn("text-[10px] font-bold px-1 rounded", active ? "bg-[var(--os-surface)]/25" : "bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)]")}>{count}</span>}
             </button>
           );
         })}
@@ -1125,7 +1125,7 @@ function TimelineRow({ item, team }: { item: TimelineItem; team: TeamMember[] })
   return (
     <div className="relative">
       <div className={cn("absolute -left-6 top-2 w-3.5 h-3.5 rounded-full border-2 border-white", style.dot)} />
-      <div className="bg-white border border-[#E5E7EB] rounded-xl p-4">
+      <div className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-4">
         <TimelineBody item={item} team={team} />
       </div>
     </div>
@@ -1144,10 +1144,10 @@ function TimelineBody({ item, team }: { item: TimelineItem; team: TeamMember[] }
           <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider", style.chip)}>
             <StickyNote className="w-3 h-3" /> Note
           </span>
-          {item.authorName ? <span className="text-[12px] text-[#6B7280]">{item.authorName as string}</span> : null}
-          <span className="text-[11px] text-[#9CA3AF] ml-auto">{tsLabel}</span>
+          {item.authorName ? <span className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)]">{item.authorName as string}</span> : null}
+          <span className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] ml-auto">{tsLabel}</span>
         </div>
-        <div className="text-[13px] text-[#111827] leading-relaxed whitespace-pre-wrap">
+        <div className="text-[13px] text-[#111827] os-dark:text-[var(--os-text)] leading-relaxed whitespace-pre-wrap">
           <HighlightedMentions text={(item.content as string) ?? ""} users={team} />
         </div>
       </div>
@@ -1159,20 +1159,20 @@ function TimelineBody({ item, team }: { item: TimelineItem; team: TeamMember[] }
     const Icon = MEETING_TYPE_ICON[item.type as string] ?? Phone;
     return (
       <div className="flex items-start gap-3">
-        <Icon className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+        <Icon className="w-4 h-4 text-blue-600 os-dark:text-blue-400 mt-0.5 shrink-0" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-[13px] font-medium text-[#111827]">{item.title as string}</p>
+            <p className="text-[13px] font-medium text-[#111827] os-dark:text-[var(--os-text)]">{item.title as string}</p>
             <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border", MEETING_STATUS_STYLE[item.status as string] ?? MEETING_STATUS_STYLE.SCHEDULED)}>
               {(item.status as string).replace("_", " ")}
             </span>
-            <span className="text-[11px] text-[#9CA3AF] ml-auto">{tsLabel}</span>
+            <span className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] ml-auto">{tsLabel}</span>
           </div>
-          <p className="text-[12px] text-[#6B7280] mt-0.5">
+          <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">
             {start.toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
             {item.ownerName ? ` · ${item.ownerName}` : ""}
           </p>
-          {item.outcome ? <p className="text-[12px] text-[#374151] mt-1 italic">&ldquo;{(item.outcome as string).slice(0, 200)}&rdquo;</p> : null}
+          {item.outcome ? <p className="text-[12px] text-[#374151] os-dark:text-[var(--os-text)] mt-1 italic">&ldquo;{(item.outcome as string).slice(0, 200)}&rdquo;</p> : null}
         </div>
       </div>
     );
@@ -1181,16 +1181,16 @@ function TimelineBody({ item, team }: { item: TimelineItem; team: TeamMember[] }
   if (item.kind === "contract") {
     return (
       <div className="flex items-start gap-3">
-        <FileSignature className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+        <FileSignature className="w-4 h-4 text-emerald-600 os-dark:text-emerald-400 mt-0.5 shrink-0" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-[13px] font-medium text-[#111827]">{item.title as string}</p>
+            <p className="text-[13px] font-medium text-[#111827] os-dark:text-[var(--os-text)]">{item.title as string}</p>
             <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold", CONTRACT_STATUS_STYLE[item.status as string] ?? CONTRACT_STATUS_STYLE.DRAFT)}>
               {(item.status as string).replace("_", " ")}
             </span>
-            <span className="text-[11px] text-[#9CA3AF] ml-auto">{tsLabel}</span>
+            <span className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] ml-auto">{tsLabel}</span>
           </div>
-          <p className="text-[12px] text-[#6B7280] mt-0.5">
+          <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">
             {formatMAD(item.amount as number)} {item.currency as string}
             {item.createdByName ? ` · ${item.createdByName}` : ""}
             {item.signedDate ? ` · Signed ${new Date(item.signedDate as string).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}` : ""}
@@ -1203,16 +1203,16 @@ function TimelineBody({ item, team }: { item: TimelineItem; team: TeamMember[] }
   if (item.kind === "proposal") {
     return (
       <div className="flex items-start gap-3">
-        <FileText className="w-4 h-4 text-indigo-600 mt-0.5 shrink-0" />
+        <FileText className="w-4 h-4 text-indigo-600 os-dark:text-indigo-400 mt-0.5 shrink-0" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-[13px] font-medium text-[#111827]">{(item.packageName as string) || "Proposal"}</p>
+            <p className="text-[13px] font-medium text-[#111827] os-dark:text-[var(--os-text)]">{(item.packageName as string) || "Proposal"}</p>
             <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold", PROPOSAL_STATUS_COLOR[item.status as string] ?? PROPOSAL_STATUS_COLOR.DRAFT)}>
               {item.status as string}
             </span>
-            <span className="text-[11px] text-[#9CA3AF] ml-auto">{tsLabel}</span>
+            <span className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] ml-auto">{tsLabel}</span>
           </div>
-          <p className="text-[12px] text-[#6B7280] mt-0.5">
+          <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">
             {formatMAD(item.amount as number)} {item.currency as string}
             {item.createdByName ? ` · ${item.createdByName}` : ""}
           </p>
@@ -1225,15 +1225,15 @@ function TimelineBody({ item, team }: { item: TimelineItem; team: TeamMember[] }
     const done = (item.status as string) === "DONE";
     return (
       <div className="flex items-start gap-3">
-        <CheckCircle2 className={cn("w-4 h-4 mt-0.5 shrink-0", done ? "text-emerald-600" : "text-amber-600")} />
+        <CheckCircle2 className={cn("w-4 h-4 mt-0.5 shrink-0", done ? "text-emerald-600 os-dark:text-emerald-400" : "text-amber-600 os-dark:text-amber-400")} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className={cn("text-[13px] font-medium", done ? "text-[#6B7280] line-through" : "text-[#111827]")}>
+            <p className={cn("text-[13px] font-medium", done ? "text-[#6B7280] os-dark:text-[var(--os-text)] line-through" : "text-[#111827] os-dark:text-[var(--os-text)]")}>
               {item.title as string}
             </p>
-            <span className="text-[11px] text-[#9CA3AF] ml-auto">{tsLabel}</span>
+            <span className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] ml-auto">{tsLabel}</span>
           </div>
-          <p className="text-[12px] text-[#6B7280] mt-0.5">
+          <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">
             {item.ownerName ? `${item.ownerName} · ` : ""}
             {(item.status as string).replace("_", " ")}
             {item.dueDate ? ` · Due ${new Date(item.dueDate as string).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}` : ""}
@@ -1246,16 +1246,16 @@ function TimelineBody({ item, team }: { item: TimelineItem; team: TeamMember[] }
   // activity
   return (
     <div className="flex items-start gap-3">
-      <Activity className="w-4 h-4 text-[#6B7280] mt-0.5 shrink-0" />
+      <Activity className="w-4 h-4 text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5 shrink-0" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-[13px] text-[#374151]">
-            <span className="font-medium text-[#111827]">{(item.userName as string) ?? "System"}</span>{" "}
+          <p className="text-[13px] text-[#374151] os-dark:text-[var(--os-text)]">
+            <span className="font-medium text-[#111827] os-dark:text-[var(--os-text)]">{(item.userName as string) ?? "System"}</span>{" "}
             {((item.actionType as string) ?? "").toLowerCase().replace(/_/g, " ")}
           </p>
-          <span className="text-[11px] text-[#9CA3AF] ml-auto">{tsLabel}</span>
+          <span className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] ml-auto">{tsLabel}</span>
         </div>
-        {item.details ? <p className="text-[12px] text-[#6B7280] mt-0.5">{item.details as string}</p> : null}
+        {item.details ? <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">{item.details as string}</p> : null}
       </div>
     </div>
   );

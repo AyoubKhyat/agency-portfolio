@@ -51,10 +51,10 @@ const TYPE_LABEL: Record<string, string> = {
   CALL: "Call", GOOGLE_MEET: "Google Meet", ZOOM: "Zoom", WHATSAPP: "WhatsApp", IN_PERSON: "In person",
 };
 const STATUS_STYLES: Record<string, string> = {
-  SCHEDULED: "bg-blue-50 text-blue-700 border-blue-100",
-  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-100",
-  CANCELLED: "bg-[#F3F4F6] text-[#6B7280] border-[#E5E7EB]",
-  NO_SHOW:   "bg-red-50 text-red-700 border-red-100",
+  SCHEDULED: "bg-blue-50 os-dark:bg-blue-500/10 text-blue-700 os-dark:text-blue-300 border-blue-100 os-dark:border-blue-500/30",
+  COMPLETED: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-100 os-dark:border-emerald-500/30",
+  CANCELLED: "bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#6B7280] os-dark:text-[var(--os-text)] border-[var(--os-border)]",
+  NO_SHOW:   "bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 border-red-100 os-dark:border-red-500/30",
 };
 
 function startOfDay(d: Date) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
@@ -151,15 +151,15 @@ export default function MeetingsPage() {
         actions={
           <>
             {/* View toggle */}
-            <div className="inline-flex items-center rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-0.5">
+            <div className="inline-flex items-center rounded-lg border border-[var(--os-border)] bg-[#F9FAFB] os-dark:bg-[var(--os-surface-2)] p-0.5">
               <button
                 type="button"
                 onClick={() => setView("list")}
                 className={cn(
                   "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all",
                   view === "list"
-                    ? "bg-white text-[#0F172A] shadow-sm"
-                    : "text-[#64748B] hover:text-[#0F172A]"
+                    ? "bg-[var(--os-surface)] text-[var(--os-text)] shadow-sm"
+                    : "text-[var(--os-text-soft)] hover:text-[var(--os-text)]"
                 )}
               >
                 <List className="w-3.5 h-3.5" />
@@ -171,8 +171,8 @@ export default function MeetingsPage() {
                 className={cn(
                   "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all",
                   view === "calendar"
-                    ? "bg-white text-[#0F172A] shadow-sm"
-                    : "text-[#64748B] hover:text-[#0F172A]"
+                    ? "bg-[var(--os-surface)] text-[var(--os-text)] shadow-sm"
+                    : "text-[var(--os-text-soft)] hover:text-[var(--os-text)]"
                 )}
               >
                 <CalendarDays className="w-3.5 h-3.5" />
@@ -225,8 +225,8 @@ export default function MeetingsPage() {
             <div className="space-y-6">
               {grouped.map((g) => (
                 <section key={g.date}>
-                  <h3 className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wider mb-2 px-1">{g.day}</h3>
-                  <div className="bg-white border border-[#E5E7EB] rounded-xl divide-y divide-[#F3F4F6] overflow-hidden">
+                  <h3 className="text-[11px] font-semibold text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider mb-2 px-1">{g.day}</h3>
+                  <div className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl divide-y divide-[#F3F4F6] os-dark:divide-[var(--os-border)] overflow-hidden">
                     {g.items.map((m) => <MeetingRow key={m.id} m={m} onStatus={updateStatus} />)}
                   </div>
                 </section>
@@ -252,23 +252,23 @@ function MeetingRow({ m, onStatus }: { m: Meeting; onStatus: (m: Meeting, s: "CO
   const linkedHref = m.client ? `/admin/clients/${m.client.id}` : m.prospect ? `/admin/prospecting/${m.prospect.id}` : null;
   const linkedLabel = m.client?.companyName ?? m.prospect?.name ?? "—";
   return (
-    <div className="flex items-center gap-3 px-4 py-3 hover:bg-[#FAFAFE] group">
+    <div className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--os-surface-2)] group">
       <div className="text-center w-16 shrink-0">
-        <p className="text-[14px] font-semibold text-[#111827] leading-none">{fmtTime(start)}</p>
-        {m.endAt && <p className="text-[10px] text-[#9CA3AF] mt-1">{fmtTime(new Date(m.endAt))}</p>}
+        <p className="text-[14px] font-semibold text-[#111827] os-dark:text-[var(--os-text)] leading-none">{fmtTime(start)}</p>
+        {m.endAt && <p className="text-[10px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] mt-1">{fmtTime(new Date(m.endAt))}</p>}
       </div>
-      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#F3F4F6] text-[#475569] shrink-0">
+      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[var(--os-text-muted)] shrink-0">
         <TypeIcon className="w-4 h-4" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-medium text-[#111827] truncate">{m.title}</p>
-        <div className="flex items-center gap-2 text-[11px] text-[#6B7280] mt-0.5">
+        <p className="text-[13px] font-medium text-[#111827] os-dark:text-[var(--os-text)] truncate">{m.title}</p>
+        <div className="flex items-center gap-2 text-[11px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">
           {linkedHref ? (
-            <Link href={linkedHref} className="hover:text-[#8B00FF] truncate max-w-[200px]">
+            <Link href={linkedHref} className="hover:text-[var(--os-brand)] truncate max-w-[200px]">
               {linkedLabel}
             </Link>
           ) : (
-            <span className="text-[#9CA3AF]">{linkedLabel}</span>
+            <span className="text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">{linkedLabel}</span>
           )}
           <span>·</span>
           <span>{TYPE_LABEL[m.type] ?? m.type}</span>
@@ -280,10 +280,10 @@ function MeetingRow({ m, onStatus }: { m: Meeting; onStatus: (m: Meeting, s: "CO
       </span>
       {m.status === "SCHEDULED" && (
         <div className="hidden lg:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-          <button onClick={() => onStatus(m, "COMPLETED")} title="Mark completed" className="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50">
+          <button onClick={() => onStatus(m, "COMPLETED")} title="Mark completed" className="p-1.5 rounded-md text-emerald-600 os-dark:text-emerald-400 hover:bg-emerald-50 os-dark:hover:bg-emerald-500/10">
             <CheckCircle2 className="w-4 h-4" />
           </button>
-          <button onClick={() => onStatus(m, "NO_SHOW")} title="Mark no-show" className="p-1.5 rounded-md text-red-600 hover:bg-red-50">
+          <button onClick={() => onStatus(m, "NO_SHOW")} title="Mark no-show" className="p-1.5 rounded-md text-red-600 os-dark:text-red-400 hover:bg-red-50 os-dark:hover:bg-red-500/10">
             <XCircle className="w-4 h-4" />
           </button>
         </div>

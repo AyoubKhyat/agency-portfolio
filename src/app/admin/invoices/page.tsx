@@ -261,33 +261,33 @@ export default function InvoicesPage() {
           {/* Mobile cards */}
           <div className="md:hidden space-y-3">
             {filtered.map((inv) => (
-              <div key={inv.id} className="p-3.5 rounded-xl border border-[var(--os-border)] bg-white/80">
+              <div key={inv.id} className="p-3.5 rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)]/80">
                 <div className="flex items-start justify-between gap-2 mb-1.5">
                   <div>
-                    <span className="text-[13px] font-medium text-[#0F172A]">{inv.invoiceNumber}</span>
-                    <p className="text-[11px] text-[#475569]">{inv.clientName}</p>
+                    <span className="text-[13px] font-medium text-[var(--os-text)]">{inv.invoiceNumber}</span>
+                    <p className="text-[11px] text-[var(--os-text-muted)]">{inv.clientName}</p>
                   </div>
                   <Badge variant={STATUS_BADGE[inv.status] as "blue" | "green" | "red" | "default"} size="sm">{inv.status}</Badge>
                 </div>
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-[14px] font-semibold text-[#0F172A]">{formatMAD(inv.total)} <span className="text-[10px] text-[#9CA3AF]">{inv.currency}</span></span>
+                  <span className="text-[14px] font-semibold text-[var(--os-text)]">{formatMAD(inv.total)} <span className="text-[10px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">{inv.currency}</span></span>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => downloadPdf(inv)}
                       disabled={downloadingId === inv.id || !canDownload(inv)}
                       aria-busy={downloadingId === inv.id}
-                      className="p-1.5 rounded-lg text-[#475569] hover:text-[#8B00FF] hover:bg-purple-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#475569]"
+                      className="p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-[var(--os-brand)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--os-text-muted)]"
                       title={canDownload(inv) ? "Download PDF" : "Missing required data"}
                     >
                       {downloadingId === inv.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
                     </button>
                     {inv.status !== "PAID" && inv.status !== "CANCELLED" && (
-                      <button onClick={() => markPaid(inv.id)} className="p-1.5 rounded-lg text-[#475569] hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Mark Paid"><CheckCircle className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => markPaid(inv.id)} className="p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-emerald-600 os-dark:hover:text-emerald-400 hover:bg-emerald-50 os-dark:hover:bg-emerald-500/10 transition-colors" title="Mark Paid"><CheckCircle className="w-3.5 h-3.5" /></button>
                     )}
-                    <button onClick={() => deleteInvoice(inv.id)} className="p-1.5 rounded-lg text-[#475569] hover:text-red-600 hover:bg-red-50 transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => deleteInvoice(inv.id)} className="p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-red-600 os-dark:hover:text-red-400 hover:bg-red-50 os-dark:hover:bg-red-500/10 transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                 </div>
-                <p className="text-[10px] text-[#64748B] mt-1">Due: {relativeDate(inv.dueDate)}</p>
+                <p className="text-[10px] text-[var(--os-text-soft)] mt-1">Due: {relativeDate(inv.dueDate)}</p>
               </div>
             ))}
           </div>
@@ -297,40 +297,40 @@ export default function InvoicesPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[var(--os-border)] bg-gray-50/80">
-                    <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Invoice #</th>
-                    <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Client</th>
-                    <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Amount</th>
-                    <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Status</th>
-                    <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs hidden lg:table-cell">Due Date</th>
-                    <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs hidden lg:table-cell">Created</th>
-                    <th className="text-right px-4 py-3 text-[#475569] font-medium text-xs">Actions</th>
+                  <tr className="border-b border-[var(--os-border)] bg-gray-50/80 os-dark:bg-[var(--os-surface-2)]">
+                    <th className="text-left px-4 py-3 text-[var(--os-text-muted)] font-medium text-xs">Invoice #</th>
+                    <th className="text-left px-4 py-3 text-[var(--os-text-muted)] font-medium text-xs">Client</th>
+                    <th className="text-left px-4 py-3 text-[var(--os-text-muted)] font-medium text-xs">Amount</th>
+                    <th className="text-left px-4 py-3 text-[var(--os-text-muted)] font-medium text-xs">Status</th>
+                    <th className="text-left px-4 py-3 text-[var(--os-text-muted)] font-medium text-xs hidden lg:table-cell">Due Date</th>
+                    <th className="text-left px-4 py-3 text-[var(--os-text-muted)] font-medium text-xs hidden lg:table-cell">Created</th>
+                    <th className="text-right px-4 py-3 text-[var(--os-text-muted)] font-medium text-xs">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((inv) => (
-                    <tr key={inv.id} className="border-b border-[var(--os-border)] hover:bg-gray-50 transition-colors">
+                    <tr key={inv.id} className="border-b border-[var(--os-border)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-surface-2)] transition-colors">
                       <td className="px-4 py-3">
-                        <span className="text-[#0F172A] font-medium text-[13px]">{inv.invoiceNumber}</span>
+                        <span className="text-[var(--os-text)] font-medium text-[13px]">{inv.invoiceNumber}</span>
                       </td>
-                      <td className="px-4 py-3 text-[#475569] text-xs">{inv.clientName}</td>
+                      <td className="px-4 py-3 text-[var(--os-text-muted)] text-xs">{inv.clientName}</td>
                       <td className="px-4 py-3">
-                        <span className="text-[14px] font-semibold text-[#0F172A]">
-                          {formatMAD(inv.total)} <span className="text-[10px] font-normal text-[#9CA3AF]">{inv.currency}</span>
+                        <span className="text-[14px] font-semibold text-[var(--os-text)]">
+                          {formatMAD(inv.total)} <span className="text-[10px] font-normal text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">{inv.currency}</span>
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <Badge variant={STATUS_BADGE[inv.status] as "blue" | "green" | "red" | "default"} dot size="sm">{inv.status}</Badge>
                       </td>
-                      <td className="px-4 py-3 text-[#64748B] text-xs hidden lg:table-cell">{relativeDate(inv.dueDate)}</td>
-                      <td className="px-4 py-3 text-[#64748B] text-xs hidden lg:table-cell">{relativeDate(inv.createdAt)}</td>
+                      <td className="px-4 py-3 text-[var(--os-text-soft)] text-xs hidden lg:table-cell">{relativeDate(inv.dueDate)}</td>
+                      <td className="px-4 py-3 text-[var(--os-text-soft)] text-xs hidden lg:table-cell">{relativeDate(inv.createdAt)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => downloadPdf(inv)}
                             disabled={downloadingId === inv.id || !canDownload(inv)}
                             aria-busy={downloadingId === inv.id}
-                            className="p-1.5 rounded-lg text-[#475569] hover:text-[#8B00FF] hover:bg-purple-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#475569]"
+                            className="p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-[var(--os-brand)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--os-text-muted)]"
                             title={canDownload(inv) ? "Download PDF" : "Missing required data"}
                           >
                             {downloadingId === inv.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
@@ -338,7 +338,7 @@ export default function InvoicesPage() {
                           {inv.status !== "PAID" && inv.status !== "CANCELLED" && (
                             <button
                               onClick={() => markPaid(inv.id)}
-                              className="p-1.5 rounded-lg text-[#475569] hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                              className="p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-emerald-600 os-dark:hover:text-emerald-400 hover:bg-emerald-50 os-dark:hover:bg-emerald-500/10 transition-colors"
                               title="Mark as Paid"
                             >
                               <CheckCircle className="w-4 h-4" />
@@ -346,7 +346,7 @@ export default function InvoicesPage() {
                           )}
                           <button
                             onClick={() => deleteInvoice(inv.id)}
-                            className="p-1.5 rounded-lg text-[#475569] hover:text-red-600 hover:bg-red-50 transition-colors"
+                            className="p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-red-600 os-dark:hover:text-red-400 hover:bg-red-50 os-dark:hover:bg-red-500/10 transition-colors"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -379,8 +379,8 @@ export default function InvoicesPage() {
           className={cn(
             "fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-lg text-[13px] font-medium flex items-center gap-2 border max-w-sm",
             toast.kind === "error"
-              ? "bg-red-50 border-red-200 text-red-800"
-              : "bg-emerald-50 border-emerald-200 text-emerald-800"
+              ? "bg-red-50 os-dark:bg-red-500/10 border-red-200 os-dark:border-red-500/30 text-red-800 os-dark:text-red-300"
+              : "bg-emerald-50 os-dark:bg-emerald-500/10 border-emerald-200 os-dark:border-emerald-500/30 text-emerald-800 os-dark:text-emerald-300"
           )}
         >
           {toast.kind === "error" ? <AlertCircle className="w-4 h-4 shrink-0" /> : <CheckCircle className="w-4 h-4 shrink-0" />}
@@ -397,16 +397,16 @@ export default function InvoicesPage() {
 /* ---------- Revenue stat (custom for MAD formatting) ---------- */
 function RevenueStatCard({ value }: { value: number }) {
   return (
-    <div className="rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50 p-4 sm:p-5 shadow-sm">
+    <div className="rounded-2xl border border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50 os-dark:from-purple-500/10 to-violet-50 os-dark:to-violet-500/10 p-4 sm:p-5 shadow-sm">
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]">
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 text-[var(--os-brand)]">
           <DollarSign className="w-5 h-5" />
         </div>
       </div>
-      <div className="text-2xl sm:text-3xl font-bold tracking-tight text-[#8B00FF]">
-        {formatMAD(value)}<span className="text-[12px] sm:text-[13px] font-medium text-[#9CA3AF] ml-1.5">MAD</span>
+      <div className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--os-brand)]">
+        {formatMAD(value)}<span className="text-[12px] sm:text-[13px] font-medium text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] ml-1.5">MAD</span>
       </div>
-      <div className="text-[12px] sm:text-[13px] text-[#64748B] mt-1 font-medium">Revenue (paid)</div>
+      <div className="text-[12px] sm:text-[13px] text-[var(--os-text-soft)] mt-1 font-medium">Revenue (paid)</div>
     </div>
   );
 }
@@ -511,16 +511,16 @@ function InvoiceFormModal({
     }
   }
 
-  const inputCls = "w-full px-3 py-2 rounded-lg border border-[var(--os-border)] bg-white text-[13px] text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300 transition-all";
-  const labelCls = "block text-[12px] font-medium text-[#475569] mb-1.5";
+  const inputCls = "w-full px-3 py-2 rounded-lg border border-[var(--os-border)] bg-[var(--os-surface)] text-[13px] text-[var(--os-text)] placeholder:text-[var(--os-text-faint)] focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300 os-dark:focus:border-purple-500/30 transition-all";
+  const labelCls = "block text-[12px] font-medium text-[var(--os-text-muted)] mb-1.5";
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 sm:pt-20 px-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-      <div {...dialogProps} className="relative w-full max-w-2xl bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl shadow-purple-900/10 my-8">
+      <div {...dialogProps} className="relative w-full max-w-2xl bg-[var(--os-surface)] rounded-2xl border border-[var(--os-border)] shadow-2xl shadow-purple-900/10 my-8">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--os-border)]">
-          <h2 id={titleId} className="text-lg font-semibold text-[#0F172A]">New Invoice</h2>
-          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]">
+          <h2 id={titleId} className="text-lg font-semibold text-[var(--os-text)]">New Invoice</h2>
+          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -570,13 +570,13 @@ function InvoiceFormModal({
             <label className={labelCls}>Line Items *</label>
             <div className="space-y-2">
               {items.map((item, idx) => (
-                <div key={idx} className="flex items-start gap-2 p-3 rounded-lg border border-[var(--os-border)] bg-gray-50/50">
+                <div key={idx} className="flex items-start gap-2 p-3 rounded-lg border border-[var(--os-border)] bg-gray-50/50 os-dark:bg-[var(--os-surface-2)]">
                   <div className="flex-1 min-w-0">
                     <input
                       type="text"
                       value={item.description}
                       onChange={(e) => updateItem(idx, "description", e.target.value)}
-                      className={cn(inputCls, "bg-white")}
+                      className={cn(inputCls, "bg-[var(--os-surface)]")}
                       placeholder="Description"
                       required
                     />
@@ -587,7 +587,7 @@ function InvoiceFormModal({
                       min={1}
                       value={item.quantity}
                       onChange={(e) => updateItem(idx, "quantity", e.target.value)}
-                      className={cn(inputCls, "bg-white text-center")}
+                      className={cn(inputCls, "bg-[var(--os-surface)] text-center")}
                       placeholder="Qty"
                     />
                   </div>
@@ -598,17 +598,17 @@ function InvoiceFormModal({
                       step={0.01}
                       value={item.unitPrice || ""}
                       onChange={(e) => updateItem(idx, "unitPrice", e.target.value)}
-                      className={cn(inputCls, "bg-white text-right")}
+                      className={cn(inputCls, "bg-[var(--os-surface)] text-right")}
                       placeholder="Price"
                     />
                   </div>
-                  <div className="w-24 flex items-center justify-end text-[13px] font-medium text-[#0F172A] pt-2">
+                  <div className="w-24 flex items-center justify-end text-[13px] font-medium text-[var(--os-text)] pt-2">
                     {formatMAD(item.quantity * item.unitPrice)}
                   </div>
                   <button
                     type="button"
                     onClick={() => removeItem(idx)}
-                    className="p-1.5 mt-1 rounded-lg text-[#94A3B8] hover:text-red-500 hover:bg-red-50 transition-colors"
+                    className="p-1.5 mt-1 rounded-lg text-[var(--os-text-faint)] hover:text-red-500 hover:bg-red-50 os-dark:hover:bg-red-500/10 transition-colors"
                     disabled={items.length <= 1}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -616,36 +616,36 @@ function InvoiceFormModal({
                 </div>
               ))}
             </div>
-            <button type="button" onClick={addItem} className="mt-2 inline-flex items-center gap-1.5 text-[12px] font-medium text-[#8B00FF] hover:text-[#7C3AED] transition-colors">
+            <button type="button" onClick={addItem} className="mt-2 inline-flex items-center gap-1.5 text-[12px] font-medium text-[var(--os-brand)] hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)] transition-colors">
               <Plus className="w-3.5 h-3.5" />
               Add line item
             </button>
           </div>
 
           {/* Totals */}
-          <div className="rounded-xl border border-[var(--os-border)] bg-gray-50/50 p-4">
+          <div className="rounded-xl border border-[var(--os-border)] bg-gray-50/50 os-dark:bg-[var(--os-surface-2)] p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[12px] text-[#475569]">Subtotal</span>
-              <span className="text-[13px] font-medium text-[#0F172A]">{formatMAD(subtotal)} {currency}</span>
+              <span className="text-[12px] text-[var(--os-text-muted)]">Subtotal</span>
+              <span className="text-[13px] font-medium text-[var(--os-text)]">{formatMAD(subtotal)} {currency}</span>
             </div>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="text-[12px] text-[#475569]">TVA</span>
+                <span className="text-[12px] text-[var(--os-text-muted)]">TVA</span>
                 <input
                   type="number"
                   min={0}
                   max={100}
                   value={taxRate}
                   onChange={(e) => setTaxRate(Math.max(0, Number(e.target.value) || 0))}
-                  className="w-16 px-2 py-1 rounded border border-[var(--os-border)] bg-white text-[12px] text-center focus:outline-none focus:ring-1 focus:ring-purple-300"
+                  className="w-16 px-2 py-1 rounded border border-[var(--os-border)] bg-[var(--os-surface)] text-[12px] text-center focus:outline-none focus:ring-1 focus:ring-purple-300"
                 />
-                <span className="text-[12px] text-[#475569]">%</span>
+                <span className="text-[12px] text-[var(--os-text-muted)]">%</span>
               </div>
-              <span className="text-[13px] text-[#475569]">{formatMAD(taxAmount)} {currency}</span>
+              <span className="text-[13px] text-[var(--os-text-muted)]">{formatMAD(taxAmount)} {currency}</span>
             </div>
             <div className="border-t border-[var(--os-border)] pt-2 flex items-center justify-between">
-              <span className="text-[13px] font-semibold text-[#0F172A]">Total</span>
-              <span className="text-lg font-bold text-[#8B00FF]">{formatMAD(total)} {currency}</span>
+              <span className="text-[13px] font-semibold text-[var(--os-text)]">Total</span>
+              <span className="text-lg font-bold text-[var(--os-brand)]">{formatMAD(total)} {currency}</span>
             </div>
           </div>
 
@@ -662,7 +662,7 @@ function InvoiceFormModal({
 
           {/* Submit */}
           <div className="flex items-center justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-[13px] font-medium text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-[13px] font-medium text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)] transition-colors">
               Cancel
             </button>
             <button

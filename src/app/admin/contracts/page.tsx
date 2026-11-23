@@ -30,12 +30,12 @@ type Contract = {
 const STATUSES = ["ALL", "DRAFT", "PENDING_SIGNATURE", "SIGNED", "ACTIVE", "COMPLETED", "CANCELLED"];
 
 const STATUS_STYLE: Record<string, string> = {
-  DRAFT:             "bg-[#F3F4F6] text-[#374151] border-[#E5E7EB]",
-  PENDING_SIGNATURE: "bg-amber-50 text-amber-700 border-amber-100",
-  SIGNED:            "bg-emerald-50 text-emerald-700 border-emerald-100",
-  ACTIVE:            "bg-blue-50 text-blue-700 border-blue-100",
-  COMPLETED:         "bg-purple-50 text-purple-700 border-purple-100",
-  CANCELLED:         "bg-red-50 text-red-700 border-red-100",
+  DRAFT:             "bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#374151] os-dark:text-[var(--os-text)] border-[var(--os-border)]",
+  PENDING_SIGNATURE: "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border-amber-100 os-dark:border-amber-500/30",
+  SIGNED:            "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-100 os-dark:border-emerald-500/30",
+  ACTIVE:            "bg-blue-50 os-dark:bg-blue-500/10 text-blue-700 os-dark:text-blue-300 border-blue-100 os-dark:border-blue-500/30",
+  COMPLETED:         "bg-purple-50 os-dark:bg-purple-500/10 text-purple-700 os-dark:text-purple-300 border-purple-100 os-dark:border-purple-500/30",
+  CANCELLED:         "bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 border-red-100 os-dark:border-red-500/30",
 };
 
 function formatMAD(value: number) {
@@ -147,22 +147,22 @@ export default function ContractsPage() {
           description="Accept a proposal to auto-generate a draft, or add one from a client workspace."
         />
       ) : (
-        <div className="bg-white border border-[#E5E7EB] rounded-xl divide-y divide-[#F3F4F6] overflow-hidden">
+        <div className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl divide-y divide-[#F3F4F6] os-dark:divide-[var(--os-border)] overflow-hidden">
           {filtered.map((c) => {
             const href = c.client ? `/admin/clients/${c.client.id}` : c.prospect ? `/admin/prospecting/${c.prospect.id}` : "#";
             return (
-              <Link key={c.id} href={href} className="flex items-center gap-3 px-5 py-4 hover:bg-[#FAFAFE]">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 shrink-0">
+              <Link key={c.id} href={href} className="flex items-center gap-3 px-5 py-4 hover:bg-[var(--os-surface-2)]">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-600 os-dark:text-emerald-400 shrink-0">
                   <FileSignature className="w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-[14px] font-medium text-[#111827] truncate">{c.title}</p>
+                    <p className="text-[14px] font-medium text-[#111827] os-dark:text-[var(--os-text)] truncate">{c.title}</p>
                     <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold shrink-0", STATUS_STYLE[c.status] ?? STATUS_STYLE.DRAFT)}>
                       {c.status.replace("_", " ")}
                     </span>
                   </div>
-                  <p className="text-[12px] text-[#6B7280] mt-0.5">
+                  <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">
                     {c.client?.companyName ?? c.prospect?.name ?? "—"} · {relativeDate(c.createdAt)}
                   </p>
                 </div>
@@ -175,8 +175,8 @@ export default function ContractsPage() {
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold shrink-0 transition",
                       copiedId === c.id
-                        ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
-                        : "bg-purple-50 text-purple-600 border border-purple-200 hover:bg-purple-100"
+                        ? "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-600 os-dark:text-emerald-400 border border-emerald-200 os-dark:border-emerald-500/30"
+                        : "bg-purple-50 os-dark:bg-purple-500/10 text-purple-600 os-dark:text-purple-400 border border-purple-200 os-dark:border-purple-500/30 hover:bg-purple-100 os-dark:hover:bg-purple-500/15"
                     )}
                   >
                     {signingId === c.id ? (
@@ -194,8 +194,8 @@ export default function ContractsPage() {
                     )}
                   </button>
                 )}
-                <p className="text-[14px] font-semibold text-[#111827] shrink-0">
-                  {formatMAD(c.amount)} <span className="text-[10px] font-normal text-[#9CA3AF]">{c.currency}</span>
+                <p className="text-[14px] font-semibold text-[#111827] os-dark:text-[var(--os-text)] shrink-0">
+                  {formatMAD(c.amount)} <span className="text-[10px] font-normal text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">{c.currency}</span>
                 </p>
               </Link>
             );
@@ -208,16 +208,16 @@ export default function ContractsPage() {
 
 function SignedValueStat({ value }: { value: number }) {
   return (
-    <div className="rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50 p-4 sm:p-5 shadow-sm">
+    <div className="rounded-2xl border border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50 os-dark:from-purple-500/10 to-violet-50 os-dark:to-violet-500/10 p-4 sm:p-5 shadow-sm">
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]">
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 text-[var(--os-brand)]">
           <DollarSign className="w-5 h-5" />
         </div>
       </div>
-      <div className="text-2xl sm:text-3xl font-bold tracking-tight text-[#8B00FF]">
-        {formatMAD(value)}<span className="text-[12px] sm:text-[13px] font-medium text-[#9CA3AF] ml-1.5">MAD</span>
+      <div className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--os-brand)]">
+        {formatMAD(value)}<span className="text-[12px] sm:text-[13px] font-medium text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] ml-1.5">MAD</span>
       </div>
-      <div className="text-[12px] sm:text-[13px] text-[#64748B] mt-1 font-medium">Signed + active value</div>
+      <div className="text-[12px] sm:text-[13px] text-[var(--os-text-soft)] mt-1 font-medium">Signed + active value</div>
     </div>
   );
 }
