@@ -38,7 +38,7 @@ function Source({ url, fetchedAt }: { url: string; fetchedAt: string }) {
 function HumanStatus({ label, value }: { label: string; value: string }) {
   const verified = value === "VERIFIED";
   return (
-    <span className={`text-[11px] px-2 py-0.5 rounded-full border ${verified ? "border-emerald-300 text-emerald-700" : "border-[var(--os-border)] text-[var(--os-text-dim)]"}`}>
+    <span className={`text-[11px] px-2 py-0.5 rounded-full border ${verified ? "border-emerald-300 os-dark:border-emerald-500/30 text-emerald-700 os-dark:text-emerald-300" : "border-[var(--os-border)] text-[var(--os-text-dim)]"}`}>
       {label}: {verified ? "VERIFIED by a person" : value}
     </span>
   );
@@ -52,7 +52,7 @@ function ContactRow({ c }: { c: FoundContact }) {
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[13px] font-medium text-[var(--os-text)]">{c.channel === "WHATSAPP" ? "WhatsApp" : "Instagram"}</span>
         <span className="text-[13px] text-[var(--os-text-muted)] break-all">{c.value || c.note}</span>
-        <span className="text-[11px] px-2 py-0.5 rounded-full border border-amber-300 text-amber-700" title="The site links to it. No one has opened it yet; it may no longer exist.">
+        <span className="text-[11px] px-2 py-0.5 rounded-full border border-amber-300 os-dark:border-amber-500/30 text-amber-700 os-dark:text-amber-300" title="The site links to it. No one has opened it yet; it may no longer exist.">
           FOUND_ON_SITE · not opened
         </span>
       </div>
@@ -75,7 +75,7 @@ function MatchRow({ m }: { m: ProspectMatch }) {
         <Link href={`/admin/prospecting/${m.prospectId}`} className="text-[13px] font-medium text-[var(--os-purple)] hover:underline inline-flex items-center gap-1">
           {m.prospectName || "(no name)"} <ExternalLink className="w-3 h-3" />
         </Link>
-        <span className={`text-[11px] px-2 py-0.5 rounded-full border ${m.status === "EXISTS" ? "border-red-300 text-red-600" : "border-amber-300 text-amber-700"}`}>
+        <span className={`text-[11px] px-2 py-0.5 rounded-full border ${m.status === "EXISTS" ? "border-red-300 os-dark:border-red-500/30 text-red-600 os-dark:text-red-400" : "border-amber-300 os-dark:border-amber-500/30 text-amber-700 os-dark:text-amber-300"}`}>
           {m.status === "EXISTS" ? "Already in the CRM" : "Possible match"}
         </span>
       </div>
@@ -142,14 +142,14 @@ export default function QualifyPage() {
         <button
           type="submit"
           disabled={loading || !url.trim()}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--os-purple)] px-4 py-2.5 text-[14px] font-medium text-white disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--os-purple)] os-dark:bg-[var(--os-purple-strong)] px-4 py-2.5 text-[14px] font-medium text-white disabled:opacity-50"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
           {loading ? "Checking…" : "Check"}
         </button>
       </form>
 
-      {error && <p role="alert" className="text-[13px] text-red-600 mb-4">{error}</p>}
+      {error && <p role="alert" className="text-[13px] text-red-600 os-dark:text-red-400 mb-4">{error}</p>}
 
       {result && (
         <div className="space-y-4">
@@ -164,7 +164,7 @@ export default function QualifyPage() {
           </section>
 
           <section className={card}>
-            <h2 className={heading}><AlertTriangle className="w-4 h-4 text-red-600" /> Website problems, with proof</h2>
+            <h2 className={heading}><AlertTriangle className="w-4 h-4 text-red-600 os-dark:text-red-400" /> Website problems, with proof</h2>
             {result.problems.length === 0 ? (
               <p className={small}>No problems found in what was read.</p>
             ) : (
@@ -203,7 +203,7 @@ export default function QualifyPage() {
           <section className={card}>
             <h2 className={heading}><Users className="w-4 h-4 text-[var(--os-text-dim)]" /> Already in the CRM?</h2>
             {!result.duplicates.checked ? (
-              <p className="text-[13px] text-amber-700">Not checked: {result.duplicates.reason}.</p>
+              <p className="text-[13px] text-amber-700 os-dark:text-amber-300">Not checked: {result.duplicates.reason}.</p>
             ) : result.duplicates.matches.length === 0 ? (
               <p className={small}>No prospect shares this site, these numbers or these Instagram accounts.</p>
             ) : (

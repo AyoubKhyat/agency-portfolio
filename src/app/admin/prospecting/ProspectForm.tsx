@@ -185,7 +185,7 @@ export default function ProspectForm({ mode, initial }: { mode: "create" | "edit
                   placeholder="@drhindnadim"
                 />
               </Field>
-              <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+              <div className="rounded-xl border border-[var(--os-control-border)] bg-[var(--os-control-hover)] p-4">
                 <Toggle
                   checked={hasWebsite}
                   onChange={(v) => { setHasWebsite(v); markDirty(); }}
@@ -218,16 +218,16 @@ export default function ProspectForm({ mode, initial }: { mode: "create" | "edit
             icon={<MapPin className="w-4 h-4" />}
           >
             <div className="space-y-2.5">
-              <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-green-50 border border-green-100">
-                <FaWhatsapp className="w-4 h-4 text-green-600 shrink-0" />
-                <span className="text-[13px] text-[#0F172A] truncate">
-                  {whatsappPreview || <span className="text-[#94A3B8]">Enter phone to preview</span>}
+              <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-green-50 os-dark:bg-green-500/10 border border-green-100 os-dark:border-green-500/30">
+                <FaWhatsapp className="w-4 h-4 text-green-600 os-dark:text-green-400 shrink-0" />
+                <span className="text-[13px] text-[var(--os-text)] truncate">
+                  {whatsappPreview || <span className="text-[var(--os-text-faint)]">Enter phone to preview</span>}
                 </span>
               </div>
-              <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-pink-50 border border-pink-100">
-                <FaInstagram className="w-4 h-4 text-pink-600 shrink-0" />
-                <span className="text-[13px] text-[#0F172A] truncate">
-                  {cleanInstagram ? `instagram.com/${cleanInstagram}` : <span className="text-[#94A3B8]">No Instagram set</span>}
+              <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-pink-50 os-dark:bg-pink-500/10 border border-pink-100 os-dark:border-pink-500/30">
+                <FaInstagram className="w-4 h-4 text-pink-600 os-dark:text-pink-400 shrink-0" />
+                <span className="text-[13px] text-[var(--os-text)] truncate">
+                  {cleanInstagram ? `instagram.com/${cleanInstagram}` : <span className="text-[var(--os-text-faint)]">No Instagram set</span>}
                 </span>
               </div>
             </div>

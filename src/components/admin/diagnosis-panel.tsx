@@ -65,9 +65,9 @@ const WHY: Record<string, string> = {
 };
 
 function StatusIcon({ status }: { status: Evidence["status"] }) {
-  if (status === "pass") return <Check className="w-4 h-4 text-emerald-600 shrink-0" aria-label="Pass" />;
-  if (status === "fail") return <X className="w-4 h-4 text-red-600 shrink-0" aria-label="Fail" />;
-  return <CircleHelp className="w-4 h-4 text-[#94A3B8] shrink-0" aria-label="Unknown" />;
+  if (status === "pass") return <Check className="w-4 h-4 text-emerald-600 os-dark:text-emerald-400 shrink-0" aria-label="Pass" />;
+  if (status === "fail") return <X className="w-4 h-4 text-red-600 os-dark:text-red-400 shrink-0" aria-label="Fail" />;
+  return <CircleHelp className="w-4 h-4 text-[var(--os-text-faint)] shrink-0" aria-label="Unknown" />;
 }
 
 /** Shown on a website diagnosis enquiry. Drafts need a person's approval, and the app itself never sends. */
@@ -171,44 +171,44 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
       ) : undefined}
     >
       <div className="space-y-4">
-        {!canAct && <p className="text-[13px] text-[#64748B]">Only the owner or an admin can run checks and approve replies.</p>}
-        {!state.enabled && <p className="text-[13px] text-[#64748B]">AI Workforce is switched off.</p>}
-        {state.enabled && !state.aiEnabled && <p className="text-[13px] text-[#64748B]">AI drafting is off: a run gives the automatic checks only.</p>}
+        {!canAct && <p className="text-[13px] text-[var(--os-text-soft)]">Only the owner or an admin can run checks and approve replies.</p>}
+        {!state.enabled && <p className="text-[13px] text-[var(--os-text-soft)]">AI Workforce is switched off.</p>}
+        {state.enabled && !state.aiEnabled && <p className="text-[13px] text-[var(--os-text-soft)]">AI drafting is off: a run gives the automatic checks only.</p>}
         {state.enabled && (
-          <p className="text-[12px] text-[#94A3B8]">{state.usage.runsInWindow} of {state.usage.dailyRunCap} runs used in the last 24 hours. One run per enquiry per 24 hours.</p>
+          <p className="text-[12px] text-[var(--os-text-faint)]">{state.usage.runsInWindow} of {state.usage.dailyRunCap} runs used in the last 24 hours. One run per enquiry per 24 hours.</p>
         )}
-        {error && <p role="alert" className="text-[13px] font-medium text-red-600">{error}</p>}
-        {!run && state.enabled && !running && <p className="text-[13px] text-[#64748B]">No check has been run on this site yet.</p>}
+        {error && <p role="alert" className="text-[13px] font-medium text-red-600 os-dark:text-red-400">{error}</p>}
+        {!run && state.enabled && !running && <p className="text-[13px] text-[var(--os-text-soft)]">No check has been run on this site yet.</p>}
 
         {run && (
           <>
             {run.targetUrl === "" ? (
               // Cleared by the retention policy (src/lib/ai-workforce/retention.ts): only usage and cost remain.
-              <p className="text-[13px] text-[#64748B]">
+              <p className="text-[13px] text-[var(--os-text-soft)]">
                 This run&apos;s content was cleared after {CONTENT_RETENTION_DAYS} days. Only its status, usage and cost are kept. Started by {run.startedByName}.
               </p>
             ) : (
-              <p className="text-[13px] text-[#475569] break-all">
-                Checked <span className="font-medium text-[#0F172A]">{run.finalUrl ?? run.targetUrl}</span> for {run.startedByName}
+              <p className="text-[13px] text-[var(--os-text-muted)] break-all">
+                Checked <span className="font-medium text-[var(--os-text)]">{run.finalUrl ?? run.targetUrl}</span> for {run.startedByName}
               </p>
             )}
             {run.status === "BLOCKED" && (
-              <p role="alert" className="flex gap-2 text-[13px] text-red-700"><AlertTriangle className="w-4 h-4 shrink-0" /> This address was refused for safety and wasn&apos;t read ({run.errorCode}).</p>
+              <p role="alert" className="flex gap-2 text-[13px] text-red-700 os-dark:text-red-300"><AlertTriangle className="w-4 h-4 shrink-0" /> This address was refused for safety and wasn&apos;t read ({run.errorCode}).</p>
             )}
-            {run.errorCode && WHY[run.errorCode] && <p className="text-[13px] text-amber-700">{WHY[run.errorCode]}</p>}
+            {run.errorCode && WHY[run.errorCode] && <p className="text-[13px] text-amber-700 os-dark:text-amber-300">{WHY[run.errorCode]}</p>}
             {run.duplicateStatus === "EXISTS" && (
-              <p className="text-[13px] text-amber-700">Already in prospects: {run.duplicateReason}. Check before replying.</p>
+              <p className="text-[13px] text-amber-700 os-dark:text-amber-300">Already in prospects: {run.duplicateReason}. Check before replying.</p>
             )}
 
             {(run.findings?.length ?? 0) > 0 && (
               <div className="space-y-2.5">
-                <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-[0.06em]">Findings, each tied to the evidence below</p>
+                <p className="text-[11px] font-semibold text-[var(--os-text-faint)] uppercase tracking-[0.06em]">Findings, each tied to the evidence below</p>
                 {run.findings?.map((f, i) => (
-                  <div key={i} className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl">
-                    <p className="text-[14px] font-semibold text-[#0F172A]">{f.title}</p>
-                    <p className="text-[13px] text-[#475569] mt-1">{f.explanation}</p>
-                    <p className="text-[13px] text-[#475569] mt-1"><span className="font-medium">Next step:</span> {f.recommendation}</p>
-                    <p className="text-[12px] text-[#94A3B8] mt-1.5">
+                  <div key={i} className="p-3 bg-[var(--os-control-hover)] border border-[var(--os-control-border)] rounded-xl">
+                    <p className="text-[14px] font-semibold text-[var(--os-text)]">{f.title}</p>
+                    <p className="text-[13px] text-[var(--os-text-muted)] mt-1">{f.explanation}</p>
+                    <p className="text-[13px] text-[var(--os-text-muted)] mt-1"><span className="font-medium">Next step:</span> {f.recommendation}</p>
+                    <p className="text-[12px] text-[var(--os-text-faint)] mt-1.5">
                       Based on: {f.evidenceIds.map((id) => run.evidence.find((e) => e.id === id)?.check ?? id).join(", ")}
                     </p>
                   </div>
@@ -217,15 +217,15 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
             )}
 
             {run.evidence.length > 0 && (
-              <details className="rounded-xl border border-[#E2E8F0] p-3" open={!run.findings?.length}>
-                <summary className="cursor-pointer text-[13px] font-semibold text-[#0F172A]">
+              <details className="rounded-xl border border-[var(--os-control-border)] p-3" open={!run.findings?.length}>
+                <summary className="cursor-pointer text-[13px] font-semibold text-[var(--os-text)]">
                   Evidence: {run.evidence.length} checks, {failing} failed
                 </summary>
                 <ul className="mt-2.5 space-y-1.5">
                   {run.evidence.map((e) => (
                     <li key={e.id} className="flex items-start gap-2 text-[13px]">
                       <StatusIcon status={e.status} />
-                      <span className="min-w-0 break-words"><span className="font-medium text-[#0F172A]">{e.check}:</span> <span className="text-[#475569]">{e.observed}</span></span>
+                      <span className="min-w-0 break-words"><span className="font-medium text-[var(--os-text)]">{e.check}:</span> <span className="text-[var(--os-text-muted)]">{e.observed}</span></span>
                     </li>
                   ))}
                 </ul>
@@ -241,7 +241,7 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
                 {warnings.length > 0 && (
                   <ul className="text-[12px] space-y-0.5">
                     {warnings.map((w) => (
-                      <li key={w.kind} className={w.severity === "error" ? "text-red-600 font-medium" : "text-amber-700"}>{w.label}{w.detail ? `: ${w.detail}` : ""}</li>
+                      <li key={w.kind} className={w.severity === "error" ? "text-red-600 os-dark:text-red-400 font-medium" : "text-amber-700 os-dark:text-amber-300"}>{w.label}{w.detail ? `: ${w.detail}` : ""}</li>
                     ))}
                   </ul>
                 )}
@@ -267,10 +267,10 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
 
             {approved && (
               <div className="space-y-3">
-                <p className="text-[13px] font-medium text-emerald-700">Approved by {run.approvedByName}. Send this exact text yourself.</p>
-                <div className="rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] p-4">
-                  {run.channel === "EMAIL" && <p className="text-[13px] font-semibold text-[#0F172A] mb-2">{run.approvedSubject}</p>}
-                  <p className="text-[14px] text-[#475569] whitespace-pre-wrap leading-relaxed">{run.approvedBody}</p>
+                <p className="text-[13px] font-medium text-emerald-700 os-dark:text-emerald-300">Approved by {run.approvedByName}. Send this exact text yourself.</p>
+                <div className="rounded-xl bg-[var(--os-control-hover)] border border-[var(--os-control-border)] p-4">
+                  {run.channel === "EMAIL" && <p className="text-[13px] font-semibold text-[var(--os-text)] mb-2">{run.approvedSubject}</p>}
+                  <p className="text-[14px] text-[var(--os-text-muted)] whitespace-pre-wrap leading-relaxed">{run.approvedBody}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {sendLink ? (
@@ -284,7 +284,7 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
                       <ExternalLink className="w-4 h-4" /> Open {channelLabel}
                     </a>
                   ) : (
-                    <p className="text-[13px] text-amber-700">Too long for a link: copy it, send it yourself, then confirm.</p>
+                    <p className="text-[13px] text-amber-700 os-dark:text-amber-300">Too long for a link: copy it, send it yourself, then confirm.</p>
                   )}
                   <FormButton
                     variant="secondary"
@@ -323,10 +323,10 @@ export function DiagnosisPanel({ leadId, email, phone, fullName, onSent }: {
               </div>
             )}
 
-            {run.status === "SENT" && <p className="text-[13px] font-medium text-emerald-700">Sent by {run.sentConfirmedByName}, and added to the notes below.</p>}
-            {run.status === "DISCARDED" && <p className="text-[13px] text-[#64748B]">This draft was discarded.</p>}
+            {run.status === "SENT" && <p className="text-[13px] font-medium text-emerald-700 os-dark:text-emerald-300">Sent by {run.sentConfirmedByName}, and added to the notes below.</p>}
+            {run.status === "DISCARDED" && <p className="text-[13px] text-[var(--os-text-soft)]">This draft was discarded.</p>}
             {run.status === "EXPIRED" && (
-              <p className="text-[13px] text-[#64748B]">This run expired before it was sent, so it can no longer be edited, approved or sent. Run a new check if you still need one.</p>
+              <p className="text-[13px] text-[var(--os-text-soft)]">This run expired before it was sent, so it can no longer be edited, approved or sent. Run a new check if you still need one.</p>
             )}
           </>
         )}

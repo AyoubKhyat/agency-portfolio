@@ -68,12 +68,12 @@ export function OutreachDraftPanel({ prospect, onRecorded }: { prospect: Prospec
   }
 
   return (
-    <div id="draft" className="bg-white rounded-2xl border border-gray-100 p-5 mb-4 scroll-mt-20">
+    <div id="draft" className="bg-[var(--os-surface)] rounded-2xl border border-gray-100 os-dark:border-[var(--os-border)] p-5 mb-4 scroll-mt-20">
       <div className="flex flex-wrap items-center gap-2 mb-3">
-        <p className="text-[13px] font-semibold text-gray-800 mr-auto">First message from the website check</p>
+        <p className="text-[13px] font-semibold text-gray-800 os-dark:text-[var(--os-text)] mr-auto">First message from the website check</p>
         {LANGS.map(([code, label]) => (
           <button key={code} type="button" onClick={() => setLanguage(code)} aria-pressed={language === code}
-            className={`px-2 py-1 rounded-lg text-[12px] border ${language === code ? "border-violet-300 bg-violet-50 text-violet-700" : "border-gray-200 text-gray-500"}`}>
+            className={`px-2 py-1 rounded-lg text-[12px] border ${language === code ? "border-violet-300 os-dark:border-violet-500/30 bg-violet-50 os-dark:bg-violet-500/10 text-violet-700 os-dark:text-violet-300" : "border-gray-200 os-dark:border-[var(--os-border)] text-gray-500 os-dark:text-[var(--os-text-soft)]"}`}>
             {label}
           </button>
         ))}
@@ -82,12 +82,12 @@ export function OutreachDraftPanel({ prospect, onRecorded }: { prospect: Prospec
           {busy ? "Checking the website…" : draft ? "Check again" : "Draft from website"}
         </button>
       </div>
-      <p className="text-[11px] text-gray-400 mb-3">
+      <p className="text-[11px] text-gray-400 os-dark:text-[var(--os-text-faint)] mb-3">
         Written by code from what the check found, no AI. Only for a first message, to a contact a person marked VERIFIED. Nothing is sent from here.
       </p>
 
       {problem && (
-        <ul className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-800 space-y-1">
+        <ul className="rounded-xl border border-amber-200 os-dark:border-amber-500/30 bg-amber-50 os-dark:bg-amber-500/10 p-3 text-[12px] text-amber-800 os-dark:text-amber-300 space-y-1">
           {problem.map((m) => <li key={m}>{m}</li>)}
         </ul>
       )}
@@ -95,12 +95,12 @@ export function OutreachDraftPanel({ prospect, onRecorded }: { prospect: Prospec
       {draft && (
         <div className="space-y-3">
           <div>
-            <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">What the message says, and the proof</p>
+            <p className="text-[11px] text-gray-400 os-dark:text-[var(--os-text-faint)] uppercase tracking-wide mb-1">What the message says, and the proof</p>
             <ul className="space-y-1.5">
               {draft.findings.map((f) => (
-                <li key={f.id} className="text-[12px] text-gray-600">
-                  <span className="text-gray-800">{f.check}</span>: seen &quot;{f.observed}&quot;
-                  <span className="block text-[11px] text-gray-400 break-all">Source: {f.sourceUrl} · <span className="whitespace-nowrap">read {when(f.fetchedAt)}</span></span>
+                <li key={f.id} className="text-[12px] text-gray-600 os-dark:text-[var(--os-text-muted)]">
+                  <span className="text-gray-800 os-dark:text-[var(--os-text)]">{f.check}</span>: seen &quot;{f.observed}&quot;
+                  <span className="block text-[11px] text-gray-400 os-dark:text-[var(--os-text-faint)] break-all">Source: {f.sourceUrl} · <span className="whitespace-nowrap">read {when(f.fetchedAt)}</span></span>
                 </li>
               ))}
             </ul>
@@ -110,7 +110,7 @@ export function OutreachDraftPanel({ prospect, onRecorded }: { prospect: Prospec
             <div className="flex gap-2 text-[12px]">
               {draft.channels.map((c) => (
                 <button key={c} type="button" onClick={() => { setChannel(c); setDraft({ ...draft, channel: c }); setOpened(null); }} aria-pressed={draft.channel === c}
-                  className={`px-2 py-1 rounded-lg border ${draft.channel === c ? "border-violet-300 bg-violet-50 text-violet-700" : "border-gray-200 text-gray-500"}`}>
+                  className={`px-2 py-1 rounded-lg border ${draft.channel === c ? "border-violet-300 os-dark:border-violet-500/30 bg-violet-50 os-dark:bg-violet-500/10 text-violet-700 os-dark:text-violet-300" : "border-gray-200 os-dark:border-[var(--os-border)] text-gray-500 os-dark:text-[var(--os-text-soft)]"}`}>
                   {c === "WHATSAPP" ? "WhatsApp" : "Instagram"} (verified)
                 </button>
               ))}
@@ -118,12 +118,12 @@ export function OutreachDraftPanel({ prospect, onRecorded }: { prospect: Prospec
           )}
 
           <textarea value={body} onChange={(e) => { setBody(e.target.value); setOpened(null); }} rows={9} dir={draft.language === "ar" ? "rtl" : "ltr"}
-            aria-label="Message draft" className="w-full rounded-xl border border-gray-200 p-3 text-[13px] text-gray-800 focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
+            aria-label="Message draft" className="w-full rounded-xl border border-gray-200 os-dark:border-[var(--os-border)] p-3 text-[13px] text-gray-800 os-dark:text-[var(--os-text)] focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
 
           {warnings.length > 0 && (
             <ul className="space-y-1">
               {warnings.map((w) => (
-                <li key={w.kind} className={`text-[12px] ${w.severity === "error" ? "text-red-600" : "text-amber-700"}`}>
+                <li key={w.kind} className={`text-[12px] ${w.severity === "error" ? "text-red-600 os-dark:text-red-400" : "text-amber-700 os-dark:text-amber-300"}`}>
                   {w.label}{w.detail ? `: ${w.detail}` : ""}
                 </li>
               ))}
@@ -132,18 +132,18 @@ export function OutreachDraftPanel({ prospect, onRecorded }: { prospect: Prospec
 
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" disabled={blocked} onClick={openChannel}
-              className="px-3 py-1.5 rounded-lg border border-violet-300 text-violet-700 text-[12px] font-medium hover:bg-violet-50 disabled:opacity-40">
+              className="px-3 py-1.5 rounded-lg border border-violet-300 os-dark:border-violet-500/30 text-violet-700 os-dark:text-violet-300 text-[12px] font-medium hover:bg-violet-50 os-dark:hover:bg-violet-500/10 disabled:opacity-40">
               Copy and open {draft.channel === "WHATSAPP" ? "WhatsApp" : "Instagram"}
             </button>
             {opened && (
               <>
-                <span className="text-[12px] text-gray-600">Did you send it?</span>
+                <span className="text-[12px] text-gray-600 os-dark:text-[var(--os-text-muted)]">Did you send it?</span>
                 <button type="button" onClick={confirmSent} className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[12px] font-medium">Yes, sent</button>
-                <button type="button" onClick={() => setOpened(null)} className="text-[12px] text-gray-500 underline">Not sent</button>
+                <button type="button" onClick={() => setOpened(null)} className="text-[12px] text-gray-500 os-dark:text-[var(--os-text-soft)] underline">Not sent</button>
               </>
             )}
           </div>
-          {saveError && <p className="text-[12px] text-red-600">{saveError}</p>}
+          {saveError && <p className="text-[12px] text-red-600 os-dark:text-red-400">{saveError}</p>}
         </div>
       )}
     </div>

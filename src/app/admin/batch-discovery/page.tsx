@@ -77,7 +77,7 @@ function ResultCard({ a, rank }: { a: AuditedCandidate; rank: number }) {
       </ul>
       {a.otherProblems.length > 0 && <p className={`${small} mt-1`}>Also {a.otherProblems.length} minor technical {a.otherProblems.length === 1 ? "issue" : "issues"} ({a.otherProblems.map((p) => p.check).join(", ")}).</p>}
 
-      <p className="text-[12px] font-medium text-[var(--os-text)] mt-3">Contacts · <span className="text-amber-700">UNVERIFIED</span>, none checked yet</p>
+      <p className="text-[12px] font-medium text-[var(--os-text)] mt-3">Contacts · <span className="text-amber-700 os-dark:text-amber-300">UNVERIFIED</span>, none checked yet</p>
       <p className={small}>WhatsApp: {a.whatsapp.link ? `${a.whatsapp.link} · ` : ""}{CONFIDENCE[a.whatsapp.confidence]}</p>
       {a.whatsapp.sources.map((s) => (
         <p key={`${s.kind}${s.url}${s.link}`} className={`${small} break-all`}>
@@ -103,7 +103,7 @@ function ResultCard({ a, rank }: { a: AuditedCandidate; rank: number }) {
           className="px-3 py-1.5 rounded-lg border border-[var(--os-border)] text-[12px] font-medium text-[var(--os-text)] hover:bg-[var(--os-hover)] disabled:opacity-50">
           {imp.status === "busy" ? "Importing…" : imp.status === "done" ? "Imported" : "Import as prospect"}
         </button>
-        {imp.message && <span className={`text-[12px] ${imp.status === "done" ? "text-emerald-700" : imp.status === "error" ? "text-red-600" : "text-amber-700"}`}>{imp.message}</span>}
+        {imp.message && <span className={`text-[12px] ${imp.status === "done" ? "text-emerald-700 os-dark:text-emerald-300" : imp.status === "error" ? "text-red-600 os-dark:text-red-400" : "text-amber-700 os-dark:text-amber-300"}`}>{imp.message}</span>}
       </div>
     </li>
   );
@@ -188,7 +188,7 @@ export default function BatchDiscoveryPage() {
       <PageHeader title="Find businesses" subtitle="Marrakech businesses from a private OpenStreetMap list, not yet in the CRM, ranked by website problems a customer would notice. Each search continues where the last one stopped. Nothing is saved until you import one." />
 
       {info && !info.installed && (
-        <p className="text-[13px] text-amber-700 mb-3">
+        <p className="text-[13px] text-amber-700 os-dark:text-amber-300 mb-3">
           {info.unreadable ? "The Marrakech business list couldn't be read" : "The Marrakech business list isn't installed on this server"}, so searches return nothing.
         </p>
       )}
@@ -205,7 +205,7 @@ export default function BatchDiscoveryPage() {
             </option>
           ))}
         </select>
-        <button type="submit" disabled={!!busy || finished} className="px-4 py-2 rounded-lg bg-[var(--os-purple)] text-white text-[13px] font-medium inline-flex items-center justify-center gap-2 disabled:opacity-60">
+        <button type="submit" disabled={!!busy || finished} className="px-4 py-2 rounded-lg bg-[var(--os-purple)] os-dark:bg-[var(--os-purple-strong)] text-white text-[13px] font-medium inline-flex items-center justify-center gap-2 disabled:opacity-60">
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} {cursor ? "Find the next ones" : "Find in Marrakech"}
         </button>
       </form>
@@ -217,11 +217,11 @@ export default function BatchDiscoveryPage() {
       )}
 
       {busy && <p className={`${small} mb-3`}>{busy}</p>}
-      {error && <p className="text-[13px] text-red-600 mb-3">{error}</p>}
+      {error && <p className="text-[13px] text-red-600 os-dark:text-red-400 mb-3">{error}</p>}
 
       {summary && (
         <div className={`${card} mb-4`}>
-          {summary.sourceError && <p className="text-[13px] text-amber-700 mb-2">{summary.sourceError}</p>}
+          {summary.sourceError && <p className="text-[13px] text-amber-700 os-dark:text-amber-300 mb-2">{summary.sourceError}</p>}
           <p className="text-[13px] text-[var(--os-text)]">
             {summary.progress.total > 0 && `Businesses ${summary.progress.from + 1}–${summary.progress.to} of ${summary.progress.total} · `}
             {summary.found} looked at · {summary.skipped.inCrm} already in the CRM

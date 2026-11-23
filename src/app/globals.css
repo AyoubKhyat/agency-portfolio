@@ -2,6 +2,8 @@
 
 /* .dark = public site toggle; .os-dark = admin shell toggle (src/app/admin/layout.tsx). */
 @variant dark (&:where(.dark, .dark *, .os-dark, .os-dark *));
+/* Admin dark mode only, and never inside a panel that deliberately stays white (.os-light). */
+@custom-variant os-dark (&:where(.os-dark *):not(.os-light, .os-light *));
 
 :root {
   --bg: #fafafa;

@@ -66,9 +66,9 @@ const STEP_LABELS = {
 };
 
 const SCORE_BADGE: Record<string, string> = {
-  HIGH: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  MEDIUM: "bg-amber-50 text-amber-700 border-amber-200",
-  LOW: "bg-gray-50 text-gray-600 border-gray-200",
+  HIGH: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-200 os-dark:border-emerald-500/30",
+  MEDIUM: "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border-amber-200 os-dark:border-amber-500/30",
+  LOW: "bg-gray-50 os-dark:bg-[var(--os-surface-2)] text-gray-600 os-dark:text-[var(--os-text-muted)] border-gray-200 os-dark:border-[var(--os-border)]",
 };
 
 function renderTemplate(body: string, prospect: ProspectLite): string {
@@ -196,11 +196,11 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-4">
+    <div className="bg-[var(--os-surface)] rounded-2xl border border-gray-100 os-dark:border-[var(--os-border)] p-5 mb-4">
       <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-[#8B00FF]" />
-          <h2 className="text-[15px] font-semibold text-gray-900">Sales Playbook</h2>
+          <BookOpen className="w-4 h-4 text-[var(--os-brand)]" />
+          <h2 className="text-[15px] font-semibold text-gray-900 os-dark:text-[var(--os-text)]">Sales Playbook</h2>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {prospect.scoreLabel && (
@@ -214,12 +214,12 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
           <button
             onClick={recomputeScore}
             disabled={scoring}
-            className="text-[11px] text-[#8B00FF] hover:text-[#7C3AED] inline-flex items-center gap-1 disabled:opacity-50"
+            className="text-[11px] text-[var(--os-brand)] hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)] inline-flex items-center gap-1 disabled:opacity-50"
           >
             {scoring && <Loader2 className="w-3 h-3 animate-spin" />}
             Recompute
           </button>
-          <Link href="/admin/sales-playbook" className="text-[11px] text-[#475569] hover:text-[#8B00FF] inline-flex items-center gap-1">
+          <Link href="/admin/sales-playbook" className="text-[11px] text-[var(--os-text-muted)] hover:text-[var(--os-brand)] inline-flex items-center gap-1">
             Playbook
             <ExternalLink className="w-3 h-3" />
           </Link>
@@ -228,7 +228,7 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
 
       {/* Sequence */}
       <div className="mb-5">
-        <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-2">Outreach sequence</div>
+        <div className="text-[11px] uppercase tracking-wider text-[var(--os-text-soft)] font-medium mb-2">Outreach sequence</div>
         <div className="space-y-1.5">
           {sequence ? (Object.keys(STEP_LABELS) as Array<keyof SequenceState>).map((step) => {
             const s = sequence[step];
@@ -239,19 +239,19 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-all border",
                   s.done
-                    ? "bg-emerald-50/50 border-emerald-200 text-emerald-800"
-                    : "bg-gray-50/60 border-gray-200 text-[#475569] hover:bg-gray-100/80"
+                    ? "bg-emerald-50/50 os-dark:bg-emerald-500/10 border-emerald-200 os-dark:border-emerald-500/30 text-emerald-800 os-dark:text-emerald-300"
+                    : "bg-gray-50/60 os-dark:bg-[var(--os-surface-2)] border-gray-200 os-dark:border-[var(--os-border)] text-[var(--os-text-muted)] hover:bg-gray-100/80 os-dark:hover:bg-[var(--os-hover)]"
                 )}
               >
                 <div className={cn(
                   "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0",
-                  s.done ? "bg-emerald-600 border-emerald-600" : "border-gray-300"
+                  s.done ? "bg-emerald-600 border-emerald-600" : "border-gray-300 os-dark:border-[var(--os-border)]"
                 )}>
                   {s.done && <Check className="w-3 h-3 text-white" />}
                 </div>
                 <span className="text-[12.5px] font-medium flex-1">{STEP_LABELS[step]}</span>
                 {s.at && (
-                  <span className="text-[10.5px] text-emerald-700 font-medium tabular-nums">
+                  <span className="text-[10.5px] text-emerald-700 os-dark:text-emerald-300 font-medium tabular-nums">
                     {new Date(s.at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
                   </span>
                 )}
@@ -266,10 +266,10 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
       {/* Log outreach */}
       <div className="mb-5">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium">Outreach log</div>
+          <div className="text-[11px] uppercase tracking-wider text-[var(--os-text-soft)] font-medium">Outreach log</div>
           <button
             onClick={() => setShowLogger((v) => !v)}
-            className="text-[11px] text-[#8B00FF] hover:text-[#7C3AED] inline-flex items-center gap-1"
+            className="text-[11px] text-[var(--os-brand)] hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)] inline-flex items-center gap-1"
           >
             {showLogger ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             {showLogger ? "Hide" : "Log a message"}
@@ -277,12 +277,12 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
         </div>
 
         {showLogger && (
-          <div className="space-y-2 mb-3 p-3 rounded-xl border border-purple-200 bg-purple-50/30">
+          <div className="space-y-2 mb-3 p-3 rounded-xl border border-purple-200 os-dark:border-purple-500/30 bg-purple-50/30 os-dark:bg-purple-500/10">
             <div className="grid grid-cols-2 gap-2">
               <select
                 value={selectedTemplate}
                 onChange={(e) => onTemplateChange(e.target.value)}
-                className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--os-border)] bg-white text-[12px] text-[#0F172A] focus:outline-none"
+                className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--os-border)] bg-[var(--os-surface)] text-[12px] text-[var(--os-text)] focus:outline-none"
               >
                 <option value="">No template</option>
                 {templates.map((t) => (
@@ -292,7 +292,7 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
               <select
                 value={channel}
                 onChange={(e) => setChannel(e.target.value)}
-                className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--os-border)] bg-white text-[12px] text-[#0F172A] focus:outline-none"
+                className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--os-border)] bg-[var(--os-surface)] text-[12px] text-[var(--os-text)] focus:outline-none"
               >
                 <option value="WHATSAPP">WhatsApp</option>
                 <option value="INSTAGRAM">Instagram</option>
@@ -303,7 +303,7 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
             <textarea
               value={body}
               onChange={(e) => { setBody(e.target.value); setQualityOverride(false); }}
-              className="w-full px-2.5 py-2 rounded-lg border border-[var(--os-border)] bg-white text-[12.5px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300 h-32 font-sans resize-none"
+              className="w-full px-2.5 py-2 rounded-lg border border-[var(--os-border)] bg-[var(--os-surface)] text-[12.5px] text-[var(--os-text)] focus:outline-none focus:ring-2 focus:ring-purple-300 h-32 font-sans resize-none"
               placeholder="Paste or write the exact message you sent..."
             />
 
@@ -311,29 +311,29 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
             {qualityWarnings.length > 0 && (
               <div className={cn(
                 "rounded-lg border p-2.5",
-                hasErrors ? "border-red-200 bg-red-50/40" : "border-amber-200 bg-amber-50/40"
+                hasErrors ? "border-red-200 os-dark:border-red-500/30 bg-red-50/40 os-dark:bg-red-500/10" : "border-amber-200 os-dark:border-amber-500/30 bg-amber-50/40 os-dark:bg-amber-500/10"
               )}>
                 <div className="flex items-center gap-1.5 mb-1.5">
-                  <ShieldAlert className={cn("w-3.5 h-3.5", hasErrors ? "text-red-600" : "text-amber-600")} />
-                  <span className={cn("text-[11px] font-semibold uppercase tracking-wider", hasErrors ? "text-red-700" : "text-amber-700")}>
+                  <ShieldAlert className={cn("w-3.5 h-3.5", hasErrors ? "text-red-600 os-dark:text-red-400" : "text-amber-600 os-dark:text-amber-400")} />
+                  <span className={cn("text-[11px] font-semibold uppercase tracking-wider", hasErrors ? "text-red-700 os-dark:text-red-300" : "text-amber-700 os-dark:text-amber-300")}>
                     Quality check
                   </span>
                 </div>
                 <ul className="space-y-1">
                   {qualityWarnings.map((w) => (
-                    <li key={w.kind} className="text-[11.5px] text-[#475569] flex items-start gap-1.5">
+                    <li key={w.kind} className="text-[11.5px] text-[var(--os-text-muted)] flex items-start gap-1.5">
                       <span className={cn("w-1 h-1 rounded-full mt-1.5 shrink-0", w.severity === "error" ? "bg-red-500" : "bg-amber-500")} />
-                      <span><span className="font-medium text-[#0F172A]">{w.label}.</span> {w.detail}</span>
+                      <span><span className="font-medium text-[var(--os-text)]">{w.label}.</span> {w.detail}</span>
                     </li>
                   ))}
                 </ul>
                 {hasErrors && (
-                  <label className="flex items-center gap-2 mt-2 text-[11px] text-[#64748B] cursor-pointer">
+                  <label className="flex items-center gap-2 mt-2 text-[11px] text-[var(--os-text-soft)] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={qualityOverride}
                       onChange={(e) => setQualityOverride(e.target.checked)}
-                      className="rounded border-gray-300 text-purple-600 focus:ring-purple-300"
+                      className="rounded border-gray-300 os-dark:border-[var(--os-border)] text-purple-600 os-dark:text-purple-400 focus:ring-purple-300"
                     />
                     Log anyway — I know what I&apos;m doing
                   </label>
@@ -345,7 +345,7 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
               <button
                 onClick={() => body && navigator.clipboard.writeText(body)}
                 disabled={!body}
-                className="text-[11px] text-[#475569] hover:text-[#0F172A] inline-flex items-center gap-1 disabled:opacity-40"
+                className="text-[11px] text-[var(--os-text-muted)] hover:text-[var(--os-text)] inline-flex items-center gap-1 disabled:opacity-40"
               >
                 <Copy className="w-3 h-3" />
                 Copy
@@ -363,31 +363,31 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
         )}
 
         {messages.length === 0 ? (
-          <p className="text-[12px] text-[#94A3B8]">No outreach logged yet.</p>
+          <p className="text-[12px] text-[var(--os-text-faint)]">No outreach logged yet.</p>
         ) : (
           <div className="space-y-2">
             {messages.slice(0, 5).map((m) => (
-              <div key={m.id} className="p-2.5 rounded-lg border border-gray-100 bg-gray-50/50">
+              <div key={m.id} className="p-2.5 rounded-lg border border-gray-100 os-dark:border-[var(--os-border)] bg-gray-50/50 os-dark:bg-[var(--os-surface-2)]">
                 <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
                   <div className="flex items-center gap-2 text-[11px]">
-                    <span className="font-medium text-[#0F172A]">{m.sentByName}</span>
-                    <span className="text-[#64748B]">·</span>
-                    <span className="text-[#64748B]">{m.channel.toLowerCase()}</span>
+                    <span className="font-medium text-[var(--os-text)]">{m.sentByName}</span>
+                    <span className="text-[var(--os-text-soft)]">·</span>
+                    <span className="text-[var(--os-text-soft)]">{m.channel.toLowerCase()}</span>
                     {m.template && (
                       <>
-                        <span className="text-[#64748B]">·</span>
-                        <span className="text-[#7C3AED]">{m.template.name}</span>
+                        <span className="text-[var(--os-text-soft)]">·</span>
+                        <span className="text-[#7C3AED] os-dark:text-[var(--os-purple)]">{m.template.name}</span>
                       </>
                     )}
-                    <span className="text-[#94A3B8]">{new Date(m.sentAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</span>
+                    <span className="text-[var(--os-text-faint)]">{new Date(m.sentAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</span>
                   </div>
                   <ReplyButton message={m} onUpdate={(replied, reason) => markReplied(m.id, replied, reason)} />
                 </div>
-                <p className="text-[12px] text-[#475569] whitespace-pre-wrap line-clamp-3">{m.body}</p>
+                <p className="text-[12px] text-[var(--os-text-muted)] whitespace-pre-wrap line-clamp-3">{m.body}</p>
               </div>
             ))}
             {messages.length > 5 && (
-              <div className="text-[11px] text-[#64748B] text-center">+ {messages.length - 5} more</div>
+              <div className="text-[11px] text-[var(--os-text-soft)] text-center">+ {messages.length - 5} more</div>
             )}
           </div>
         )}
@@ -405,7 +405,7 @@ function ReplyButton({ message, onUpdate }: { message: OutreachMessage; onUpdate
     return (
       <button
         onClick={() => onUpdate(false, null)}
-        className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-50"
+        className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-emerald-100 os-dark:bg-emerald-500/15 text-emerald-700 os-dark:text-emerald-300 hover:bg-emerald-50 os-dark:hover:bg-emerald-500/10"
         title="Click to mark as not replied"
       >
         Replied{reasonLabel ? ` · ${reasonLabel}` : ""}
@@ -417,18 +417,18 @@ function ReplyButton({ message, onUpdate }: { message: OutreachMessage; onUpdate
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-gray-100 text-[#64748B] hover:bg-emerald-50 hover:text-emerald-700"
+        className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-gray-100 os-dark:bg-[var(--os-hover)] text-[var(--os-text-soft)] hover:bg-emerald-50 os-dark:hover:bg-emerald-500/10 hover:text-emerald-700 os-dark:hover:text-emerald-300"
       >
         Mark replied
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-lg border border-[var(--os-border)] bg-white shadow-lg py-1">
-          <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-[#94A3B8] font-medium">Why?</div>
+        <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-lg border border-[var(--os-border)] bg-[var(--os-surface)] shadow-lg py-1">
+          <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-[var(--os-text-faint)] font-medium">Why?</div>
           {REPLY_REASONS.map((r) => (
             <button
               key={r.value}
               onClick={() => { onUpdate(true, r.value); setOpen(false); }}
-              className="block w-full text-left px-2 py-1 text-[12px] text-[#0F172A] hover:bg-purple-50"
+              className="block w-full text-left px-2 py-1 text-[12px] text-[var(--os-text)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10"
             >
               {r.label}
             </button>
@@ -436,7 +436,7 @@ function ReplyButton({ message, onUpdate }: { message: OutreachMessage; onUpdate
           <div className="border-t border-[var(--os-border)] my-1" />
           <button
             onClick={() => { onUpdate(true, null); setOpen(false); }}
-            className="block w-full text-left px-2 py-1 text-[11px] text-[#64748B] hover:bg-gray-50"
+            className="block w-full text-left px-2 py-1 text-[11px] text-[var(--os-text-soft)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-surface-2)]"
           >
             Skip (no reason)
           </button>

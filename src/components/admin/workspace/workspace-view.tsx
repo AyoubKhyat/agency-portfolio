@@ -30,18 +30,18 @@ const CONTACT_ICONS: Record<string, typeof Globe> = {
 };
 
 const PRIORITY_TOKENS: Record<WorkspacePriority, string> = {
-  HIGH: "bg-orange-50 text-orange-700 border-orange-100",
-  MEDIUM: "bg-amber-50 text-amber-700 border-amber-100",
-  LOW: "bg-slate-100 text-slate-600 border-slate-200",
+  HIGH: "bg-orange-50 os-dark:bg-orange-500/10 text-orange-700 os-dark:text-orange-300 border-orange-100 os-dark:border-orange-500/30",
+  MEDIUM: "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border-amber-100 os-dark:border-amber-500/30",
+  LOW: "bg-slate-100 os-dark:bg-[var(--os-hover)] text-slate-600 os-dark:text-[var(--os-text-muted)] border-slate-200 os-dark:border-[var(--os-border)]",
 };
 
 const STAGE_CONFIG: Record<WorkspaceStage, { label: string; dot: string; pill: string }> = {
-  DISCOVERY: { label: "Discovery", dot: "bg-purple-500", pill: "bg-purple-50 text-purple-700 border-purple-100" },
-  QUALIFIED: { label: "Qualified", dot: "bg-blue-500", pill: "bg-blue-50 text-blue-700 border-blue-100" },
-  CONTACTED: { label: "Contacted", dot: "bg-amber-500", pill: "bg-amber-50 text-amber-700 border-amber-100" },
-  MEETING: { label: "Meeting", dot: "bg-cyan-500", pill: "bg-cyan-50 text-cyan-700 border-cyan-100" },
-  PROPOSAL: { label: "Proposal", dot: "bg-indigo-500", pill: "bg-indigo-50 text-indigo-700 border-indigo-100" },
-  CLIENT: { label: "Client", dot: "bg-emerald-500", pill: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+  DISCOVERY: { label: "Discovery", dot: "bg-purple-500", pill: "bg-purple-50 os-dark:bg-purple-500/10 text-purple-700 os-dark:text-purple-300 border-purple-100 os-dark:border-purple-500/30" },
+  QUALIFIED: { label: "Qualified", dot: "bg-blue-500", pill: "bg-blue-50 os-dark:bg-blue-500/10 text-blue-700 os-dark:text-blue-300 border-blue-100 os-dark:border-blue-500/30" },
+  CONTACTED: { label: "Contacted", dot: "bg-amber-500", pill: "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border-amber-100 os-dark:border-amber-500/30" },
+  MEETING: { label: "Meeting", dot: "bg-cyan-500", pill: "bg-cyan-50 os-dark:bg-cyan-500/10 text-cyan-700 os-dark:text-cyan-300 border-cyan-100 os-dark:border-cyan-500/30" },
+  PROPOSAL: { label: "Proposal", dot: "bg-indigo-500", pill: "bg-indigo-50 os-dark:bg-indigo-500/10 text-indigo-700 os-dark:text-indigo-300 border-indigo-100 os-dark:border-indigo-500/30" },
+  CLIENT: { label: "Client", dot: "bg-emerald-500", pill: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-100 os-dark:border-emerald-500/30" },
 };
 
 const SIZES: ProjectSize[] = ["Small", "Medium", "Large", "Enterprise"];
@@ -224,13 +224,13 @@ function CompanyMark({ name, domain }: { name: string; domain: string | null }) 
 function ContinuityBanner({ data }: { data: LeadWorkspace }) {
   if (data.source === "discovery" && data.imported) {
     return (
-      <div className="mt-6 rounded-2xl border border-purple-100 bg-gradient-to-r from-purple-50/70 to-fuchsia-50/40 px-5 py-4">
+      <div className="mt-6 rounded-2xl border border-purple-100 os-dark:border-purple-500/30 bg-gradient-to-r from-purple-50/70 os-dark:from-purple-500/10 to-fuchsia-50/40 os-dark:to-fuchsia-500/10 px-5 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
-          <div className="flex items-center gap-2 text-[13px] text-purple-900 flex-wrap">
+          <div className="flex items-center gap-2 text-[13px] text-purple-900 os-dark:text-purple-300 flex-wrap">
             <span className="font-semibold">Discovery</span>
             <ArrowRight className="w-3.5 h-3.5 text-purple-400" />
             <span className="font-semibold">Imported into Relationships</span>
-            {data.imported.importedByName && <span className="text-purple-700/70">· by {data.imported.importedByName}</span>}
+            {data.imported.importedByName && <span className="text-purple-700/70 os-dark:text-purple-300">· by {data.imported.importedByName}</span>}
           </div>
           <Link href={`/admin/workspace/prospect/${data.imported.prospectId}`}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12.5px] font-semibold text-white bg-gradient-to-r from-[#8B00FF] to-[#C026D3] shadow-sm hover:shadow-md transition-all shrink-0">
@@ -330,7 +330,7 @@ function AiResearchModule({ data }: { data: LeadWorkspace }) {
   return (
     <ModuleShell
       id="ai-research" icon={Sparkles}
-      iconClass="bg-gradient-to-br from-purple-50 to-fuchsia-50 border-purple-100 text-purple-600"
+      iconClass="bg-gradient-to-br from-purple-50 os-dark:from-purple-500/10 to-fuchsia-50 os-dark:to-fuchsia-500/10 border-purple-100 os-dark:border-purple-500/30 text-purple-600 os-dark:text-purple-400"
       title="AI Research" subtitle="What our agent understands about this company"
     >
       {ai ? (
@@ -378,16 +378,16 @@ function ResearchBlock({ index, question, body, icon: Icon }: { index: string; q
 
 function SuggestedOffer({ body }: { body: string }) {
   return (
-    <div className="relative rounded-2xl border border-purple-200/70 bg-gradient-to-br from-purple-50/80 via-white to-fuchsia-50/50 p-6 overflow-hidden">
+    <div className="relative rounded-2xl border border-purple-200/70 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50/80 os-dark:from-purple-500/10 via-white to-fuchsia-50/50 os-dark:to-fuchsia-500/10 p-6 overflow-hidden">
       <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-purple-200/20 blur-2xl" />
       <div className="relative">
         <div className="flex items-center gap-2 mb-2.5">
-          <Wand2 className="w-4 h-4 text-purple-600" />
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-purple-700">What Ibda3 Digital should propose</h3>
+          <Wand2 className="w-4 h-4 text-purple-600 os-dark:text-purple-400" />
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-purple-700 os-dark:text-purple-300">What Ibda3 Digital should propose</h3>
         </div>
         {body
-          ? <p className="text-[17px] leading-relaxed font-medium text-purple-950">{body}</p>
-          : <p className="text-[14px] text-purple-900/60 italic">No suggested offer yet.</p>}
+          ? <p className="text-[17px] leading-relaxed font-medium text-purple-950 os-dark:text-purple-300">{body}</p>
+          : <p className="text-[14px] text-purple-900/60 os-dark:text-purple-300 italic">No suggested offer yet.</p>}
       </div>
     </div>
   );
@@ -400,7 +400,7 @@ function OpportunityModule({ data }: { data: LeadWorkspace }) {
   return (
     <ModuleShell
       id="opportunity" icon={Target}
-      iconClass="bg-amber-50 border-amber-100 text-amber-600"
+      iconClass="bg-amber-50 os-dark:bg-amber-500/10 border-amber-100 os-dark:border-amber-500/30 text-amber-600 os-dark:text-amber-400"
       title="Opportunity" subtitle="Our recommendation for this company"
     >
       <div className="px-7 sm:px-8 pb-8 space-y-6">
@@ -460,7 +460,7 @@ function OutreachModule({ data }: { data: LeadWorkspace }) {
   return (
     <ModuleShell
       id="outreach" icon={MessageSquare}
-      iconClass="bg-sky-50 border-sky-100 text-sky-600"
+      iconClass="bg-sky-50 os-dark:bg-sky-500/10 border-sky-100 os-dark:border-sky-500/30 text-sky-600 os-dark:text-sky-400"
       title="Outreach" subtitle="First messages are written on the prospect page"
     >
       <div className="px-7 sm:px-8 pb-8">
@@ -482,9 +482,9 @@ function OutreachModule({ data }: { data: LeadWorkspace }) {
           </div>
         ) : (
           <div data-testid="outreach-import-required"
-            className="rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5 space-y-1">
-            <p className="text-[13px] font-medium text-amber-900">Import this business as a prospect first.</p>
-            <p className="text-[12px] leading-relaxed text-amber-800">
+            className="rounded-2xl border border-amber-200 os-dark:border-amber-500/30 bg-amber-50 os-dark:bg-amber-500/10 p-4 sm:p-5 space-y-1">
+            <p className="text-[13px] font-medium text-amber-900 os-dark:text-amber-300">Import this business as a prospect first.</p>
+            <p className="text-[12px] leading-relaxed text-amber-800 os-dark:text-amber-300">
               Verified first messages are only drafted for a prospect, after its contacts have been checked. Nothing can be drafted from a Discovery result.
             </p>
           </div>
