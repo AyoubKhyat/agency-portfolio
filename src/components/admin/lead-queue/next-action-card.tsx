@@ -186,7 +186,7 @@ export function NextActionCard({ item, position, total, busy, onAct, onOpened, c
             <span className={cn("w-1.5 h-1.5 rounded-full", style.dot)} /> {style.label}
           </span>
           <span className="text-[13px] text-[var(--os-text-muted)]">{item.detail}</span>
-          {item.meta && <span className="text-[13px] text-[var(--os-text-dim)] truncate max-w-full">· {item.meta}</span>}
+          {item.meta && <span className="text-[13px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] truncate max-w-full">· {item.meta}</span>}
         </div>
 
         <p className="flex items-start gap-2 mt-4 text-[14px] leading-relaxed text-[var(--os-text-muted)]">

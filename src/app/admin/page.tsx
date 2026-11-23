@@ -44,10 +44,10 @@ function ActionCard({
   tone: "green" | "amber" | "blue" | "purple"; empty: string; children?: React.ReactNode;
 }) {
   const tones = {
-    green:  "bg-emerald-50 text-emerald-600",
-    amber:  "bg-amber-50 text-amber-600",
-    blue:   "bg-blue-50 text-blue-600",
-    purple: "bg-purple-50 text-[#8B00FF]",
+    green:  "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-600 os-dark:text-emerald-400",
+    amber:  "bg-amber-50 os-dark:bg-amber-500/10 text-amber-600 os-dark:text-amber-400",
+    blue:   "bg-blue-50 os-dark:bg-blue-500/10 text-blue-600 os-dark:text-blue-400",
+    purple: "bg-purple-50 os-dark:bg-purple-500/10 text-[var(--os-brand)]",
   };
   return (
     <GlassCard padding="lg" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -56,14 +56,14 @@ function ActionCard({
           <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", tones[tone])}>{icon}</div>
           <div>
             <div className="text-2xl font-bold text-[var(--os-text)] tabular-nums">{count}</div>
-            <div className="text-xs text-[#64748B]">{title}</div>
+            <div className="text-xs text-[var(--os-text-soft)]">{title}</div>
           </div>
         </div>
-        <Link href={href} className="text-xs text-purple-600 hover:text-purple-700 flex items-center gap-1">
+        <Link href={href} className="text-xs text-purple-600 os-dark:text-purple-400 hover:text-purple-700 os-dark:hover:text-purple-300 flex items-center gap-1">
           Open <ArrowRight className="w-3 h-3" />
         </Link>
       </div>
-      {count === 0 ? <p className="text-[12px] text-[#9CA3AF] py-2">{empty}</p> : children}
+      {count === 0 ? <p className="text-[12px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] py-2">{empty}</p> : children}
     </GlassCard>
   );
 }
@@ -73,9 +73,9 @@ function RowList({ rows }: { rows: { key: string; href: string; primary: string;
     <ul className="space-y-0.5">
       {rows.map((r) => (
         <li key={r.key}>
-          <Link href={r.href} className="flex items-center justify-between gap-2 px-2 py-1.5 -mx-2 rounded-lg hover:bg-gray-50 transition-colors">
+          <Link href={r.href} className="flex items-center justify-between gap-2 px-2 py-1.5 -mx-2 rounded-lg hover:bg-gray-50 os-dark:hover:bg-[var(--os-surface-2)] transition-colors">
             <span className="text-[13px] text-[#1E293B] [.os-dark_&]:text-[var(--os-text)] truncate">{r.primary}</span>
-            <span className="text-[11px] text-[#94A3B8] shrink-0">{r.secondary}</span>
+            <span className="text-[11px] text-[var(--os-text-faint)] shrink-0">{r.secondary}</span>
           </Link>
         </li>
       ))}
@@ -111,7 +111,7 @@ export default function TodayPage() {
     return (
       <div>
         <PageHeader title="Today" subtitle={dateLabel} />
-        <GlassCard padding="lg"><p className="text-sm text-[#64748B]">Could not load today&apos;s summary. Refresh to try again.</p></GlassCard>
+        <GlassCard padding="lg"><p className="text-sm text-[var(--os-text-soft)]">Could not load today&apos;s summary. Refresh to try again.</p></GlassCard>
       </div>
     );
   }
@@ -141,14 +141,14 @@ export default function TodayPage() {
         title="Today"
         subtitle={dateLabel}
         actions={
-          <Link href="/admin/command-center" className="text-xs text-[#64748B] hover:text-[var(--os-text)] flex items-center gap-1">
+          <Link href="/admin/command-center" className="text-xs text-[var(--os-text-soft)] hover:text-[var(--os-text)] flex items-center gap-1">
             Business report <ArrowRight className="w-3 h-3" />
           </Link>
         }
       />
 
       {/* 1. Do these first */}
-      <h2 className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] mb-3">Do these first</h2>
+      <h2 className="text-[11px] font-bold text-[var(--os-text-faint)] uppercase tracking-[0.14em] mb-3">Do these first</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ActionCard title="Replies waiting for you" count={replyItems.length} href="/admin/lead-queue?view=replies"
           icon={<Reply className="w-5 h-5" />} tone="green" empty={queueEmpty("No replies recorded.")}>
@@ -167,7 +167,7 @@ export default function TodayPage() {
             : "No new enquiries."}>
           <RowList rows={data.enquiries.latest.map((l) => ({ key: l.id, href: `/admin/leads/${l.id}`, primary: l.fullName, secondary: shortDate(l.createdAt) }))} />
           {/* Nothing guesses which enquiries are tests; only ones marked "Internal test" by hand are left out. */}
-          <p className="text-[11px] text-[#94A3B8] mt-2">
+          <p className="text-[11px] text-[var(--os-text-faint)] mt-2">
             If one of these is an internal test, open it and set its status to &ldquo;Internal test&rdquo; to stop counting it.
             {data.enquiries.markedTest > 0 && <> {data.enquiries.markedTest} already marked as internal test{data.enquiries.markedTest === 1 ? "" : "s"} {data.enquiries.markedTest === 1 ? "is" : "are"} not counted.</>}
           </p>
@@ -186,20 +186,20 @@ export default function TodayPage() {
       {/* Follow-up dates without current evidence — shown, never presented as confirmed work */}
       {unbackedTotal > 0 && (
         <Link href={fuUnbacked.overdue > 0 ? "/admin/prospecting?due=overdue&evidence=unbacked" : "/admin/prospecting?due=today&evidence=unbacked"}
-          className="mt-4 flex items-start gap-3 rounded-2xl border border-dashed border-[var(--os-border)] bg-[var(--os-surface)]/40 px-5 py-4 hover:border-[#CBD5E1] hover:bg-[var(--os-surface)] transition-colors">
-          <History className="w-4 h-4 text-[#94A3B8] mt-0.5 shrink-0" />
+          className="mt-4 flex items-start gap-3 rounded-2xl border border-dashed border-[var(--os-border)] bg-[var(--os-surface)]/40 px-5 py-4 hover:border-[#CBD5E1] os-dark:hover:border-[var(--os-border)] hover:bg-[var(--os-surface)] transition-colors">
+          <History className="w-4 h-4 text-[var(--os-text-faint)] mt-0.5 shrink-0" />
           <div className="min-w-0">
             <div className="text-[13px] text-[var(--os-text-muted)]">
               <span className="font-semibold text-[var(--os-text)] tabular-nums">{unbackedTotal}</span> historical follow-up date{unbackedTotal === 1 ? "" : "s"}
               {fuUnbacked.overdue > 0 && <> ({fuUnbacked.overdue} past due)</>} — not enough evidence to act on as follow-ups
             </div>
-            <p className="text-[12px] text-[#94A3B8] mt-0.5">
+            <p className="text-[12px] text-[var(--os-text-faint)] mt-0.5">
               {fuUnbacked.legacy > 0 && <>{fuUnbacked.legacy} only have send records from before the 7 July 2026 cleanup, when send buttons opened unconfirmed WhatsApp links. </>}
               {unbackedNone > 0 && <>{unbackedNone} have no send record at all. </>}
               The first message may never have arrived, so treat these as prospects to re-check, not overdue follow-ups.
             </p>
           </div>
-          <ArrowRight className="w-3.5 h-3.5 text-[#94A3B8] ml-auto mt-1 shrink-0" />
+          <ArrowRight className="w-3.5 h-3.5 text-[var(--os-text-faint)] ml-auto mt-1 shrink-0" />
         </Link>
       )}
 
@@ -207,77 +207,77 @@ export default function TodayPage() {
       <TodaysLeads />
 
       {/* 2. Ready to contact */}
-      <h2 className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] mt-8 mb-3">Ready to contact</h2>
+      <h2 className="text-[11px] font-bold text-[var(--os-text-faint)] uppercase tracking-[0.14em] mt-8 mb-3">Ready to contact</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Link href="/admin/prospecting?status=A_ENVOYER&channel=verified" className="group rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-5 hover:border-emerald-200 transition-colors">
-          <div className="flex items-center gap-2 text-emerald-700 text-[13px] font-medium"><ShieldCheck className="w-4 h-4" /> Channel verified</div>
+        <Link href="/admin/prospecting?status=A_ENVOYER&channel=verified" className="group rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-5 hover:border-emerald-200 os-dark:hover:border-emerald-500/30 transition-colors">
+          <div className="flex items-center gap-2 text-emerald-700 os-dark:text-emerald-300 text-[13px] font-medium"><ShieldCheck className="w-4 h-4" /> Channel verified</div>
           <div className="text-2xl font-bold text-[var(--os-text)] mt-1 tabular-nums">{data.readyToContact.verified}</div>
-          <p className="text-[12px] text-[#64748B] mt-1">Not contacted yet, with a confirmed WhatsApp or Instagram.</p>
+          <p className="text-[12px] text-[var(--os-text-soft)] mt-1">Not contacted yet, with a confirmed WhatsApp or Instagram.</p>
         </Link>
-        <Link href="/admin/prospecting?status=A_ENVOYER&channel=unverified" className="group rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-5 hover:border-amber-200 transition-colors">
-          <div className="flex items-center gap-2 text-amber-700 text-[13px] font-medium"><ShieldAlert className="w-4 h-4" /> Channel unverified</div>
+        <Link href="/admin/prospecting?status=A_ENVOYER&channel=unverified" className="group rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-5 hover:border-amber-200 os-dark:hover:border-amber-500/30 transition-colors">
+          <div className="flex items-center gap-2 text-amber-700 os-dark:text-amber-300 text-[13px] font-medium"><ShieldAlert className="w-4 h-4" /> Channel unverified</div>
           <div className="text-2xl font-bold text-[var(--os-text)] mt-1 tabular-nums">{data.readyToContact.unverified}</div>
-          <p className="text-[12px] text-[#64748B] mt-1">Not contacted yet, and no channel confirmed. Confirm WhatsApp or Instagram before sending.</p>
+          <p className="text-[12px] text-[var(--os-text-soft)] mt-1">Not contacted yet, and no channel confirmed. Confirm WhatsApp or Instagram before sending.</p>
         </Link>
       </div>
 
       {/* 3. Where prospects are */}
-      <h2 className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] mt-8 mb-3">Where your prospects are</h2>
+      <h2 className="text-[11px] font-bold text-[var(--os-text-faint)] uppercase tracking-[0.14em] mt-8 mb-3">Where your prospects are</h2>
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
         {STAGES.map((s) => (
           <Link key={s.key} href={`/admin/prospecting?status=${stageStatusParam(s)}`} title={s.hint}
-            className="rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)]/60 px-3 py-2.5 hover:border-[#CBD5E1] hover:bg-[var(--os-surface)] transition-all">
+            className="rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)]/60 px-3 py-2.5 hover:border-[#CBD5E1] os-dark:hover:border-[var(--os-border)] hover:bg-[var(--os-surface)] transition-all">
             <Badge variant={s.badge} size="sm" dot>{s.label}</Badge>
             <div className="text-[18px] font-semibold text-[var(--os-text)] tabular-nums mt-1.5">{data.stages[s.key]}</div>
           </Link>
         ))}
       </div>
       {data.stages.other > 0 && (
-        <p className="text-[11px] text-[#94A3B8] mt-2">{data.stages.other} prospect(s) have a status outside these stages and are not counted above.</p>
+        <p className="text-[11px] text-[var(--os-text-faint)] mt-2">{data.stages.other} prospect(s) have a status outside these stages and are not counted above.</p>
       )}
 
       {/* 4. Outreach evidence — two separate facts, never combined */}
-      <h2 className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] mt-8 mb-3">Outreach so far</h2>
+      <h2 className="text-[11px] font-bold text-[var(--os-text-faint)] uppercase tracking-[0.14em] mt-8 mb-3">Outreach so far</h2>
       <GlassCard padding="lg">
         <p className="text-[13px] text-[var(--os-text-muted)]">
           <span className="font-semibold text-[var(--os-text)] tabular-nums">{data.outreach.contacted}</span> prospects are marked as contacted.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div>
-            <div className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] mb-2">Outreach recorded</div>
+            <div className="text-[10px] font-bold text-[var(--os-text-faint)] uppercase tracking-[0.14em] mb-2">Outreach recorded</div>
             <Link href="/admin/prospecting?evidence=recorded" className="flex items-center gap-2 py-1 group">
-              <Send className="w-4 h-4 text-blue-600" />
+              <Send className="w-4 h-4 text-blue-600 os-dark:text-blue-400" />
               <span className="text-[13px] text-[var(--os-text-muted)] group-hover:text-[var(--os-text)]">Send recorded</span>
               <span className="text-[15px] font-semibold text-[var(--os-text)] tabular-nums ml-auto">{data.outreach.sendRecorded}</span>
             </Link>
             <Link href="/admin/prospecting?evidence=legacy" className="flex items-center gap-2 py-1 group">
-              <History className="w-4 h-4 text-[#94A3B8]" />
+              <History className="w-4 h-4 text-[var(--os-text-faint)]" />
               <span className="text-[13px] text-[var(--os-text-muted)] group-hover:text-[var(--os-text)]">Old send, unconfirmed</span>
               <span className="text-[15px] font-semibold text-[var(--os-text)] tabular-nums ml-auto">{data.outreach.legacySendOnly}</span>
             </Link>
             <Link href="/admin/prospecting?evidence=none" className="flex items-center gap-2 py-1 group">
-              <FileQuestion className="w-4 h-4 text-amber-600" />
+              <FileQuestion className="w-4 h-4 text-amber-600 os-dark:text-amber-400" />
               <span className="text-[13px] text-[var(--os-text-muted)] group-hover:text-[var(--os-text)]">No send record</span>
               <span className="text-[15px] font-semibold text-[var(--os-text)] tabular-nums ml-auto">{data.outreach.noSendRecord}</span>
             </Link>
-            <p className="text-[11px] text-[#94A3B8] mt-2">
+            <p className="text-[11px] text-[var(--os-text-faint)] mt-2">
               &ldquo;Send recorded&rdquo; means the app logged a send button or saved message since the 7 July 2026 cleanup. It does not confirm delivery.
               &ldquo;Old send&rdquo; records predate the cleanup and are not treated as evidence.
             </p>
           </div>
           <div>
-            <div className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] mb-2">Contact channel</div>
+            <div className="text-[10px] font-bold text-[var(--os-text-faint)] uppercase tracking-[0.14em] mb-2">Contact channel</div>
             <div className="flex items-center gap-2 py-1">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <ShieldCheck className="w-4 h-4 text-emerald-600 os-dark:text-emerald-400" />
               <span className="text-[13px] text-[var(--os-text-muted)]">Channel verified</span>
               <span className="text-[15px] font-semibold text-[var(--os-text)] tabular-nums ml-auto">{data.outreach.channelVerified}</span>
             </div>
             <div className="flex items-center gap-2 py-1">
-              <ShieldAlert className="w-4 h-4 text-[#94A3B8]" />
+              <ShieldAlert className="w-4 h-4 text-[var(--os-text-faint)]" />
               <span className="text-[13px] text-[var(--os-text-muted)]">Channel unverified</span>
               <span className="text-[15px] font-semibold text-[var(--os-text)] tabular-nums ml-auto">{data.outreach.contacted - data.outreach.channelVerified}</span>
             </div>
-            <p className="text-[11px] text-[#94A3B8] mt-2">
+            <p className="text-[11px] text-[var(--os-text-faint)] mt-2">
               A verified channel means a WhatsApp or Instagram was confirmed by hand. It does not show that a message was sent.
             </p>
           </div>

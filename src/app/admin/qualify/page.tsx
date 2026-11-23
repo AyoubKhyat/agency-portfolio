@@ -19,7 +19,7 @@ const OUTCOME_TEXT: Record<QualificationResult["outcome"], string> = {
 
 const card = "rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5";
 const heading = "text-[13px] font-semibold text-[var(--os-text)] mb-3 flex items-center gap-2";
-const small = "text-[12px] text-[var(--os-text-dim)]";
+const small = "text-[12px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]";
 
 function when(iso: string) {
   const d = new Date(iso);
@@ -38,7 +38,7 @@ function Source({ url, fetchedAt }: { url: string; fetchedAt: string }) {
 function HumanStatus({ label, value }: { label: string; value: string }) {
   const verified = value === "VERIFIED";
   return (
-    <span className={`text-[11px] px-2 py-0.5 rounded-full border ${verified ? "border-emerald-300 os-dark:border-emerald-500/30 text-emerald-700 os-dark:text-emerald-300" : "border-[var(--os-border)] text-[var(--os-text-dim)]"}`}>
+    <span className={`text-[11px] px-2 py-0.5 rounded-full border ${verified ? "border-emerald-300 os-dark:border-emerald-500/30 text-emerald-700 os-dark:text-emerald-300" : "border-[var(--os-border)] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]"}`}>
       {label}: {verified ? "VERIFIED by a person" : value}
     </span>
   );
@@ -189,7 +189,7 @@ export default function QualifyPage() {
           </section>
 
           <section className={card}>
-            <h2 className={heading}><CheckCircle2 className="w-4 h-4 text-[var(--os-text-dim)]" /> WhatsApp and Instagram links on the site</h2>
+            <h2 className={heading}><CheckCircle2 className="w-4 h-4 text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]" /> WhatsApp and Instagram links on the site</h2>
             <p className={`${small} mb-3`}>
               FOUND_ON_SITE means the site links to it, nothing more. Only a person can mark a contact VERIFIED, on the prospect&apos;s page.
             </p>
@@ -201,7 +201,7 @@ export default function QualifyPage() {
           </section>
 
           <section className={card}>
-            <h2 className={heading}><Users className="w-4 h-4 text-[var(--os-text-dim)]" /> Already in the CRM?</h2>
+            <h2 className={heading}><Users className="w-4 h-4 text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]" /> Already in the CRM?</h2>
             {!result.duplicates.checked ? (
               <p className="text-[13px] text-amber-700 os-dark:text-amber-300">Not checked: {result.duplicates.reason}.</p>
             ) : result.duplicates.matches.length === 0 ? (

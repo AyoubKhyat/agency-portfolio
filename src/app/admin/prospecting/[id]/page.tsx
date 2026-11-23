@@ -170,7 +170,7 @@ export default function ProspectDetailPage() {
 
         <div className="mt-4 rounded-xl bg-violet-50/60 os-dark:bg-violet-500/10 border border-violet-100 os-dark:border-violet-500/30 p-4 flex flex-col sm:flex-row sm:items-center gap-3" data-testid="next-step">
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] uppercase tracking-wide text-violet-500 font-semibold">Next step</p>
+            <p className="text-[11px] uppercase tracking-wide text-violet-500 os-dark:text-violet-300 font-semibold">Next step</p>
             <p className="text-[15px] font-semibold text-gray-900 os-dark:text-[var(--os-text)]">{action?.label ?? "Open the details below"}</p>
             {action?.hint && <p className="text-[12.5px] text-gray-500 os-dark:text-[var(--os-text-soft)] mt-0.5">{action.hint}</p>}
           </div>

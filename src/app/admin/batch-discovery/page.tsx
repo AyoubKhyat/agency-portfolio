@@ -10,7 +10,7 @@ import type { AuditedCandidate, BatchCandidate, SearchSummary, Confidence } from
 
 const AUDIT_CHUNK = 3;
 const card = "rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5";
-const small = "text-[12px] text-[var(--os-text-dim)]";
+const small = "text-[12px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]";
 
 const CONFIDENCE: Record<Confidence, string> = {
   HIGH: "High: OpenStreetMap and the website give the same number",

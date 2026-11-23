@@ -147,7 +147,7 @@ function Breadcrumbs({ data }: { data: LeadWorkspace }) {
     ? { label: "Find businesses", href: "/admin/batch-discovery" }
     : { label: "Relationships", href: "/admin/prospecting" };
   return (
-    <nav className="flex items-center gap-1.5 text-[12.5px] text-[var(--os-text-dim)] mb-6 flex-wrap">
+    <nav className="flex items-center gap-1.5 text-[12.5px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] mb-6 flex-wrap">
       <Link href="/admin" className="hover:text-[var(--os-text)] transition-colors">Sales</Link>
       <ChevronRight className="w-3 h-3 opacity-50" />
       <Link href={section.href} className="hover:text-[var(--os-text)] transition-colors">{section.label}</Link>
@@ -175,7 +175,7 @@ function CompanyHeader({ data, domain }: { data: LeadWorkspace; domain: string |
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-[var(--os-border)] bg-[var(--os-surface)] text-[var(--os-text-muted)]">
             {data.source === "discovery"
               ? <><Sparkles className="w-3 h-3 text-[var(--os-purple)]" /> Discovery</>
-              : <><Building2 className="w-3 h-3 text-[var(--os-text-dim)]" /> Relationship</>}
+              : <><Building2 className="w-3 h-3 text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]" /> Relationship</>}
           </span>
           <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border", seg.chipBg, seg.chipText, seg.chipBorder)}>
             <span className={cn("w-1.5 h-1.5 rounded-full", seg.dot)} />
@@ -272,7 +272,7 @@ function ModuleShell({
         </div>
         <div>
           <h2 className="text-[16px] font-semibold text-[var(--os-text)]">{title}</h2>
-          <p className="text-[12px] text-[var(--os-text-dim)]">{subtitle}</p>
+          <p className="text-[12px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]">{subtitle}</p>
         </div>
       </div>
       {children}
@@ -294,9 +294,9 @@ function FutureModulesSection() {
       <div className="flex items-center justify-between gap-3 px-7 sm:px-8 pt-6 pb-5 border-b border-[var(--os-border)]">
         <div>
           <h2 className="text-[15px] font-semibold text-[var(--os-text)]">Future Modules</h2>
-          <p className="text-[12px] text-[var(--os-text-dim)]">Arriving in the next phases — each becomes its own module here.</p>
+          <p className="text-[12px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]">Arriving in the next phases — each becomes its own module here.</p>
         </div>
-        <span className="shrink-0 inline-flex items-center gap-1.5 text-[10.5px] font-medium text-[var(--os-text-dim)] px-2.5 py-1 rounded-full border border-[var(--os-border)] bg-[var(--os-surface-2)]">
+        <span className="shrink-0 inline-flex items-center gap-1.5 text-[10.5px] font-medium text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] px-2.5 py-1 rounded-full border border-[var(--os-border)] bg-[var(--os-surface-2)]">
           <Lock className="w-3 h-3" /> Coming soon
         </span>
       </div>
@@ -304,20 +304,20 @@ function FutureModulesSection() {
         {FUTURE_MODULES.map((m) => (
           <div key={m.title} className="flex items-start gap-3 rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface-2)]/40 px-4 py-3.5">
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--os-surface)] border border-[var(--os-border)] shrink-0">
-              <m.icon className="w-3.5 h-3.5 text-[var(--os-text-dim)]" />
+              <m.icon className="w-3.5 h-3.5 text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <h3 className="text-[13px] font-semibold text-[var(--os-text-muted)]">{m.title}</h3>
-                <Lock className="w-2.5 h-2.5 text-[var(--os-text-dim)] opacity-60" />
+                <Lock className="w-2.5 h-2.5 text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] opacity-60" />
               </div>
-              <p className="text-[11.5px] text-[var(--os-text-dim)] mt-0.5 leading-snug">{m.line}</p>
+              <p className="text-[11.5px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] mt-0.5 leading-snug">{m.line}</p>
             </div>
           </div>
         ))}
       </div>
       <div className="px-4 pb-4">
-        <p className="text-[11px] text-[var(--os-text-dim)] text-center">Coming in next phases</p>
+        <p className="text-[11px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] text-center">Coming in next phases</p>
       </div>
     </section>
   );
@@ -343,7 +343,7 @@ function AiResearchModule({ data }: { data: LeadWorkspace }) {
       ) : (
         <div className="px-8 py-12 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[var(--os-surface-2)] border border-[var(--os-border)] mb-3">
-            <Sparkles className="w-5 h-5 text-[var(--os-text-dim)] opacity-50" />
+            <Sparkles className="w-5 h-5 text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] opacity-50" />
           </div>
           <p className="text-[14px] font-medium text-[var(--os-text)]">No AI research on record</p>
           <p className="text-[12.5px] text-[var(--os-text-muted)] mt-1.5 max-w-sm mx-auto leading-relaxed">
@@ -360,17 +360,17 @@ function ResearchBlock({ index, question, body, icon: Icon }: { index: string; q
     <div className="flex gap-4">
       <div className="shrink-0 pt-0.5">
         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--os-surface-2)] border border-[var(--os-border)]">
-          <Icon className="w-3.5 h-3.5 text-[var(--os-text-dim)]" />
+          <Icon className="w-3.5 h-3.5 text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]" />
         </div>
       </div>
       <div className="min-w-0">
         <div className="flex items-center gap-2 mb-1.5">
-          <span className="font-mono text-[10.5px] text-[var(--os-text-dim)]">{index}</span>
+          <span className="font-mono text-[10.5px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]">{index}</span>
           <h3 className="text-[13px] font-semibold text-[var(--os-text)]">{question}</h3>
         </div>
         {body
           ? <p className="text-[14.5px] leading-relaxed text-[var(--os-text-muted)]">{body}</p>
-          : <p className="text-[13px] text-[var(--os-text-dim)] italic">Not available yet.</p>}
+          : <p className="text-[13px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] italic">Not available yet.</p>}
       </div>
     </div>
   );
@@ -412,13 +412,13 @@ function OpportunityModule({ data }: { data: LeadWorkspace }) {
             {SIZES.map((s) => (
               <span key={s} className={cn(
                 "px-3 py-1.5 rounded-lg text-[12.5px] font-medium transition-colors",
-                s === o.budget.size ? "bg-[var(--os-surface)] text-[var(--os-text)] shadow-sm border border-[var(--os-border)]" : "text-[var(--os-text-dim)]",
+                s === o.budget.size ? "bg-[var(--os-surface)] text-[var(--os-text)] shadow-sm border border-[var(--os-border)]" : "text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]",
               )}>{s}</span>
             ))}
           </div>
           <div className="mt-2.5 flex items-baseline gap-2 flex-wrap">
             <span className="font-serif text-[24px] text-[var(--os-text)] tabular-nums leading-none">{o.budget.rangeLabel}</span>
-            <span className="text-[11.5px] text-[var(--os-text-dim)]">{o.budget.basis}</span>
+            <span className="text-[11.5px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]">{o.budget.basis}</span>
           </div>
         </RecoRow>
         <RecoRow label="Recommended service">
@@ -435,7 +435,7 @@ function OpportunityModule({ data }: { data: LeadWorkspace }) {
 function RecoRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid sm:grid-cols-[160px_minmax(0,1fr)] gap-2 sm:gap-5">
-      <div className="text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--os-text-dim)] pt-1">{label}</div>
+      <div className="text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] pt-1">{label}</div>
       <div className="min-w-0">{children}</div>
     </div>
   );
@@ -471,7 +471,7 @@ function OutreachModule({ data }: { data: LeadWorkspace }) {
               <p className="text-[13px] leading-relaxed text-[var(--os-text)]">
                 The first message is drafted on the prospect page, from a fresh check of the website, and only to a contact someone marked verified.
               </p>
-              <p className="text-[11.5px] text-[var(--os-text-dim)]">
+              <p className="text-[11.5px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]">
                 You send it yourself from WhatsApp or Instagram, then record it there. Drafting needs an owner or admin.
               </p>
             </div>
@@ -500,7 +500,7 @@ function IdentityCard({ data }: { data: LeadWorkspace }) {
   return (
     <section className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] overflow-hidden">
       <div className="px-5 pt-4 pb-3 border-b border-[var(--os-border)]">
-        <h2 className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--os-text-dim)]">Company Details</h2>
+        <h2 className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]">Company Details</h2>
       </div>
 
       {/* Scores */}
@@ -514,7 +514,7 @@ function IdentityCard({ data }: { data: LeadWorkspace }) {
         {(() => {
           const visible = data.contacts.filter((c) => c.status !== "MISSING" && c.status !== "INVALID");
           if (visible.length === 0) {
-            return <div className="px-3 py-3 text-[12px] text-[var(--os-text-dim)]">No contact details yet.</div>;
+            return <div className="px-3 py-3 text-[12px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]">No contact details yet.</div>;
           }
           return visible.map((c) => <ContactRow key={c.label} contact={c} />);
         })()}
@@ -527,8 +527,8 @@ function ScoreCell({ label, value, tag }: { label: string; value: number | null;
   return (
     <div className="px-4 py-3.5 text-center">
       <div className="font-serif text-[28px] leading-none text-[var(--os-text)] tabular-nums">{value == null ? "—" : value}</div>
-      <div className="mt-1.5 text-[10px] uppercase tracking-[0.12em] text-[var(--os-text-dim)] font-medium">{label}</div>
-      {tag && <div className="mt-1 text-[9px] font-bold tracking-wider text-[var(--os-text-dim)]">{tag}</div>}
+      <div className="mt-1.5 text-[10px] uppercase tracking-[0.12em] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] font-medium">{label}</div>
+      {tag && <div className="mt-1 text-[9px] font-bold tracking-wider text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]">{tag}</div>}
     </div>
   );
 }
@@ -539,10 +539,10 @@ function ContactRow({ contact: c }: { contact: WorkspaceContactField }) {
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--os-surface-2)] transition-colors">
       <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--os-surface-2)] border border-[var(--os-border)] shrink-0">
-        <Icon className="w-3.5 h-3.5 text-[var(--os-text-dim)]" />
+        <Icon className="w-3.5 h-3.5 text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[10.5px] uppercase tracking-wide text-[var(--os-text-dim)] font-medium">{c.label}</div>
+        <div className="text-[10.5px] uppercase tracking-wide text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] font-medium">{c.label}</div>
         {c.status === "VERIFIED" && c.href ? (
           <a href={c.href} target={external ? "_blank" : undefined} rel="noreferrer"
             className="text-[13px] text-[var(--os-purple)] hover:opacity-80 transition-opacity inline-flex items-center gap-1 max-w-full">
@@ -550,11 +550,11 @@ function ContactRow({ contact: c }: { contact: WorkspaceContactField }) {
             {external ? <ExternalLink className="w-3 h-3 shrink-0 opacity-50" /> : <Check className="w-3 h-3 shrink-0 text-emerald-500" />}
           </a>
         ) : c.status === "UNAVAILABLE" ? (
-          <div className="text-[13px] text-[var(--os-text-dim)] line-through">{c.value || "Unavailable"}</div>
+          <div className="text-[13px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] line-through">{c.value || "Unavailable"}</div>
         ) : (
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-[13px] text-[var(--os-text-muted)] truncate">{c.value || "—"}</span>
-            <span className="shrink-0 text-[9px] font-medium px-1.5 py-0.5 rounded bg-[var(--os-surface-2)] border border-[var(--os-border)] text-[var(--os-text-dim)]">Unverified</span>
+            <span className="shrink-0 text-[9px] font-medium px-1.5 py-0.5 rounded bg-[var(--os-surface-2)] border border-[var(--os-border)] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]">Unverified</span>
           </div>
         )}
       </div>
@@ -566,13 +566,13 @@ function QuickActionsCard() {
   return (
     <section className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] overflow-hidden">
       <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-        <h2 className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--os-text-dim)]">Quick actions</h2>
-        <span className="text-[10px] text-[var(--os-text-dim)] inline-flex items-center gap-1"><Lock className="w-3 h-3" />Soon</span>
+        <h2 className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]">Quick actions</h2>
+        <span className="text-[10px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] inline-flex items-center gap-1"><Lock className="w-3 h-3" />Soon</span>
       </div>
       <div className="p-2 grid grid-cols-2 gap-1.5">
         {QUICK_ACTIONS.map((a) => (
           <button key={a.label} type="button" disabled
-            className="flex items-center gap-2 px-2.5 py-2 rounded-xl border border-[var(--os-border)] bg-[var(--os-surface-2)]/50 text-[var(--os-text-dim)] opacity-70 cursor-not-allowed text-left"
+            className="flex items-center gap-2 px-2.5 py-2 rounded-xl border border-[var(--os-border)] bg-[var(--os-surface-2)]/50 text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] opacity-70 cursor-not-allowed text-left"
             title="Available in a later phase">
             <a.icon className="w-3.5 h-3.5 shrink-0" />
             <span className="text-[11.5px] font-medium leading-tight">{a.label}</span>
@@ -586,12 +586,12 @@ function QuickActionsCard() {
 function ModuleIndex() {
   return (
     <section className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-1.5">
-      <div className="px-3 pt-2.5 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--os-text-dim)]">Modules</div>
+      <div className="px-3 pt-2.5 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]">Modules</div>
       {MODULES.map((m) => (
         <a key={m.id} href={m.live ? `#${m.id}` : "#future-modules"}
           className={cn(
             "flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors hover:bg-[var(--os-surface-2)]",
-            m.live ? "text-[var(--os-text-muted)]" : "text-[var(--os-text-dim)]",
+            m.live ? "text-[var(--os-text-muted)]" : "text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]",
           )}>
           <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[var(--os-surface-2)] border border-[var(--os-border)] shrink-0">
             <m.icon className="w-3 h-3" />
@@ -647,7 +647,7 @@ function EmptyState({ icon: Icon, title, hint }: { icon: typeof Globe; title: st
   return (
     <div className="max-w-md mx-auto text-center py-24">
       <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--os-surface-2)] border border-[var(--os-border)] mb-4">
-        <Icon className="w-6 h-6 text-[var(--os-text-dim)]" />
+        <Icon className="w-6 h-6 text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]" />
       </div>
       <h1 className="text-[17px] font-semibold text-[var(--os-text)]">{title}</h1>
       <p className="text-[13px] text-[var(--os-text-muted)] mt-1.5">{hint}</p>
