@@ -1,5 +1,6 @@
 "use client";
 
+import { useDialog } from "@/components/admin/dialog";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -803,6 +804,7 @@ function AttachChip({ result }: { result: AttachResult }) {
 }
 
 function AttachPicker({ open, onClose, onPick }: { open: boolean; onClose: () => void; onPick: (r: AttachResult) => void }) {
+  const { dialogProps } = useDialog({ open, onClose, label: "Attach a record" });
   const [q, setQ] = useState("");
   const [results, setResults] = useState<AttachResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -831,6 +833,7 @@ function AttachPicker({ open, onClose, onPick }: { open: boolean; onClose: () =>
           onClick={onClose}
         >
           <motion.div
+            {...dialogProps}
             onClick={(e) => e.stopPropagation()}
             initial={{ y: 8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 8, opacity: 0 }}
             className="w-full max-w-[520px] bg-white rounded-2xl border border-[#E5E7EB] shadow-2xl overflow-hidden"
@@ -844,7 +847,7 @@ function AttachPicker({ open, onClose, onPick }: { open: boolean; onClose: () =>
                 placeholder="Search prospects, clients, projects, tasks, meetings..."
                 className="flex-1 bg-transparent text-[14px] text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none"
               />
-              <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#111827]">
+              <button onClick={onClose} aria-label="Close" className="text-[#9CA3AF] hover:text-[#111827]">
                 <X className="w-4 h-4" />
               </button>
             </div>

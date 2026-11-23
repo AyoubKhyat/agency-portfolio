@@ -1,5 +1,6 @@
 "use client";
 
+import { useDialog } from "@/components/admin/dialog";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -766,13 +767,8 @@ function PreviewModal({
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState<"subject" | "body" | "message" | null>(null);
-
-  useEffect(() => {
-    if (!preview) return;
-    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [preview, onClose]);
+  // Escape, focus entry/return and Tab containment.
+  const { dialogProps, titleId } = useDialog({ open: !!preview, onClose });
 
   async function copy(key: "subject" | "body" | "message", text: string) {
     try {
@@ -798,6 +794,7 @@ function PreviewModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.2 }}
+            {...dialogProps}
             className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-[var(--os-border)] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
@@ -809,7 +806,7 @@ function PreviewModal({
                   <MessageCircle className="w-4 h-4 text-emerald-600 shrink-0" />
                 )}
                 <div className="min-w-0">
-                  <div className="text-[13px] font-semibold text-[#0F172A]">
+                  <div id={titleId} className="text-[13px] font-semibold text-[#0F172A]">
                     {preview.kind === "email" ? "Email preview" : "WhatsApp preview"}
                   </div>
                   <div className="text-[11.5px] text-[var(--os-text-muted)] truncate">

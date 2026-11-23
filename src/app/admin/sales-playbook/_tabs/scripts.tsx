@@ -1,5 +1,6 @@
 "use client";
 
+import { useDialog } from "@/components/admin/dialog";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Pencil, Trash2, X, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -171,6 +172,8 @@ function ScriptModal({
   onClose: () => void;
   onSaved: (s: Script) => void;
 }) {
+  // Mounted only while shown.
+  const { dialogProps, titleId } = useDialog({ open: true, onClose });
   const isNew = !script;
   const [category, setCategory] = useState(script?.category || "WHATSAPP");
   const [title, setTitle] = useState(script?.title || "");
@@ -210,10 +213,10 @@ function ScriptModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 sm:pt-20 px-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-xl bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
+      <div {...dialogProps} className="relative w-full max-w-xl bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--os-border)]">
-          <h2 className="text-lg font-semibold text-[#0F172A]">{isNew ? "New script" : "Edit script"}</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]">
+          <h2 id={titleId} className="text-lg font-semibold text-[#0F172A]">{isNew ? "New script" : "Edit script"}</h2>
+          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]">
             <X className="w-5 h-5" />
           </button>
         </div>

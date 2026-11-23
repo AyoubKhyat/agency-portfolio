@@ -1,5 +1,6 @@
 "use client";
 
+import { useDialog } from "@/components/admin/dialog";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Compass, Search, Target as TargetIcon, AlertCircle, CheckCircle2,
@@ -767,6 +768,8 @@ function CampaignModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  // Mounted only while shown.
+  const { dialogProps, titleId } = useDialog({ open: true, onClose });
   const today = new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" });
   const [name, setName] = useState(`${sector || "Sector"} · ${city || "City"} · ${today}`);
   const [ownerId, setOwnerId] = useState<string>("");
@@ -804,13 +807,13 @@ function CampaignModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 sm:pt-20 px-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-xl bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
+      <div {...dialogProps} className="relative w-full max-w-xl bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--os-border)]">
           <div className="flex items-center gap-2">
             <Megaphone className="w-4 h-4 text-[#8B00FF]" />
-            <h2 className="text-lg font-semibold text-[#0F172A]">New campaign</h2>
+            <h2 id={titleId} className="text-lg font-semibold text-[#0F172A]">New campaign</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"><X className="w-5 h-5" /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">

@@ -1,5 +1,6 @@
 "use client";
 
+import { useDialog } from "@/components/admin/dialog";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -665,6 +666,8 @@ function PreviewModal({
   onClose: () => void;
   onDownload: () => void;
 }) {
+  // Mounted only while shown.
+  const { dialogProps, titleId } = useDialog({ open: true, onClose });
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-sm"
@@ -672,10 +675,10 @@ function PreviewModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="os-light w-full max-w-5xl h-full max-h-[90vh] bg-white rounded-2xl shadow-xl border border-[#E2E8F0] flex flex-col overflow-hidden">
+      <div {...dialogProps} className="os-light w-full max-w-5xl h-full max-h-[90vh] bg-white rounded-2xl shadow-xl border border-[#E2E8F0] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-[#E2E8F0]">
           <div className="min-w-0">
-            <h2 className="text-[14px] font-semibold text-[#0F172A] truncate">{doc.title}</h2>
+            <h2 id={titleId} className="text-[14px] font-semibold text-[#0F172A] truncate">{doc.title}</h2>
             <p className="text-[11px] text-[#64748B] truncate">
               {doc.fileName} · {formatBytes(doc.fileSize)}
             </p>
@@ -716,6 +719,8 @@ function DeleteModal({
 }) {
   const [typed, setTyped] = useState("");
   const matches = typed.trim() === "DELETE";
+  // Mounted only while shown; Escape cancels, except while the delete is running.
+  const { dialogProps, titleId } = useDialog({ open: true, onClose: onCancel, closeOnEscape: !busy });
 
   return (
     <div
@@ -724,14 +729,14 @@ function DeleteModal({
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div className="os-light w-full max-w-md bg-white rounded-2xl shadow-xl border border-[#E2E8F0] overflow-hidden">
+      <div {...dialogProps} className="os-light w-full max-w-md bg-white rounded-2xl shadow-xl border border-[#E2E8F0] overflow-hidden">
         <div className="px-5 py-5">
           <div className="flex items-start gap-3 mb-4">
             <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-red-50 text-red-600 shrink-0">
               <AlertTriangle className="w-4.5 h-4.5" />
             </div>
             <div>
-              <h2 className="text-[15px] font-semibold text-[#0F172A]">Delete permanently?</h2>
+              <h2 id={titleId} className="text-[15px] font-semibold text-[#0F172A]">Delete permanently?</h2>
               <p className="text-[13px] text-[#64748B] mt-1">
                 <span className="font-medium text-[#0F172A]">{doc.title}</span> and its PDF will be
                 erased for good. This cannot be undone — archiving keeps the file and can be reversed.
