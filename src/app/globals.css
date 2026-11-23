@@ -333,6 +333,13 @@ body {
   border-radius: 4px;
 }
 
+/* A dialog panel takes focus only so screen readers announce it (src/components/admin/dialog.tsx);
+   it is a container, not a control, so no ring and it keeps its own corner radius. */
+[role="dialog"][tabindex="-1"]:focus-visible {
+  outline: none;
+  border-radius: revert-layer;
+}
+
 @keyframes marquee {
   from { transform: translateX(0); }
   to { transform: translateX(calc(-100% - var(--gap))); }

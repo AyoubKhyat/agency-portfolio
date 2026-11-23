@@ -6,6 +6,7 @@ import { X, FileText, Check, Package } from "lucide-react";
 import { Badge } from "@/components/admin/badge";
 import { Field, Input, Textarea, FormButton, FormError } from "@/components/admin/form";
 import { cn } from "@/lib/utils";
+import { useDialog } from "@/components/admin/dialog";
 
 type ProposalBuilderProps = {
   prospectId: string;
@@ -65,6 +66,8 @@ export function ProposalBuilder({
   onClose,
   onCreated,
 }: ProposalBuilderProps) {
+  // Mounted only while shown, so it is always open.
+  const { dialogProps, titleId } = useDialog({ open: true, onClose });
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [contactPerson, setContactPerson] = useState("");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -148,6 +151,7 @@ export function ProposalBuilder({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 40, scale: 0.97 }}
           transition={{ type: "spring", damping: 28, stiffness: 300 }}
+          {...dialogProps}
           className="os-light bg-white rounded-2xl shadow-2xl w-full max-w-[640px] max-h-[90vh] flex flex-col overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
@@ -159,7 +163,7 @@ export function ProposalBuilder({
                     <FileText className="w-4.5 h-4.5 text-[#8B00FF]" />
                   </div>
                   <div>
-                    <h2 className="text-[17px] font-bold text-[#0F172A]">Create Proposal</h2>
+                    <h2 id={titleId} className="text-[17px] font-bold text-[#0F172A]">Create Proposal</h2>
                     <div className="flex items-center gap-2 mt-0.5">
                       <p className="text-[13px] text-[#475569]">{prospectName}</p>
                       <Badge variant="default" size="sm">{sector}</Badge>
@@ -169,7 +173,9 @@ export function ProposalBuilder({
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
+                  type="button"
                   onClick={onClose}
+                  aria-label="Close"
                   className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors shrink-0"
                 >
                   <X className="w-5 h-5" />
