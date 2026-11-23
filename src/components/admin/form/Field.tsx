@@ -18,7 +18,7 @@ export function Field({ label, htmlFor, required, hint, error, className, childr
     <div className={cn("space-y-1.5", className)}>
       <label
         htmlFor={htmlFor}
-        className="block text-[12px] font-semibold text-[#475569] uppercase tracking-[0.06em]"
+        className="block text-[12px] font-semibold text-[var(--os-text-muted)] uppercase tracking-[0.06em]"
       >
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
@@ -27,7 +27,7 @@ export function Field({ label, htmlFor, required, hint, error, className, childr
       {error ? (
         <p className="text-[12px] text-red-600">{error}</p>
       ) : hint ? (
-        <p className="text-[12px] text-[#94A3B8]">{hint}</p>
+        <p className="text-[12px] text-[var(--os-text-faint)]">{hint}</p>
       ) : null}
     </div>
   );

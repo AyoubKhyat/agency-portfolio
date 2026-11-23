@@ -148,7 +148,7 @@ export function ProposalBuilder({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 40, scale: 0.97 }}
           transition={{ type: "spring", damping: 28, stiffness: 300 }}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-[640px] max-h-[90vh] flex flex-col overflow-hidden"
+          className="os-light bg-white rounded-2xl shadow-2xl w-full max-w-[640px] max-h-[90vh] flex flex-col overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="shrink-0 px-6 pt-5 pb-4 border-b border-[#E5E7EB]">

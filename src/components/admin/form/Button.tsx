@@ -22,11 +22,11 @@ const SIZES: Record<Size, string> = {
 
 const VARIANTS: Record<Variant, string> = {
   primary:
-    "bg-gradient-to-r from-[var(--os-grad-a)] to-[var(--os-grad-b)] text-white font-semibold hover:brightness-110 disabled:hover:brightness-100 disabled:opacity-60",
+    "bg-gradient-to-r from-[var(--os-btn-a)] to-[var(--os-btn-b)] text-[var(--os-on-accent)] font-semibold hover:brightness-110 disabled:hover:brightness-100 disabled:opacity-60",
   secondary:
-    "bg-white border border-[#E2E8F0] text-[#0F172A] font-medium hover:bg-[#F8FAFC] hover:border-[#CBD5E1] disabled:opacity-60",
+    "bg-[var(--os-control-bg)] border border-[var(--os-control-border)] text-[var(--os-text)] font-medium hover:bg-[var(--os-control-hover)] hover:border-[#CBD5E1] [.os-dark_&]:hover:border-[var(--os-border-hover)] disabled:opacity-60",
   ghost:
-    "bg-transparent text-[#475569] font-medium hover:text-[#0F172A] hover:bg-[#F1F5F9] disabled:opacity-60",
+    "bg-transparent text-[var(--os-text-muted)] font-medium hover:text-[var(--os-text)] hover:bg-[var(--os-hover)] disabled:opacity-60",
   danger:
     "bg-red-50 text-red-600 font-medium border border-red-100 hover:bg-red-100 disabled:opacity-60",
 };

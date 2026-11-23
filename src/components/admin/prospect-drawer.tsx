@@ -479,7 +479,7 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white border-l border-[#E5E7EB] shadow-2xl z-50 flex flex-col"
+            className="os-light fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white border-l border-[#E5E7EB] shadow-2xl z-50 flex flex-col"
           >
             {loading || !prospect ? (
               <div className="flex-1 flex items-center justify-center">

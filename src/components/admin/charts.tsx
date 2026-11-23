@@ -62,15 +62,15 @@ export function FunnelChart({ data }: { data: FunnelItem[] }) {
         return (
           <div key={item.status}>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-[#475569]">
+              <span className="text-xs font-medium text-[var(--os-text-muted)]">
                 {STATUS_LABELS[item.status] || item.status}
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-[#94A3B8]">{funnelPct}%</span>
-                <span className="text-sm font-bold text-[#0F172A]">{item.count}</span>
+                <span className="text-[10px] text-[var(--os-text-faint)]">{funnelPct}%</span>
+                <span className="text-sm font-bold text-[var(--os-text)]">{item.count}</span>
               </div>
             </div>
-            <div className="h-7 bg-gray-100 rounded-lg overflow-hidden relative">
+            <div className="h-7 bg-gray-100 [.os-dark_&]:bg-[var(--os-hover)] rounded-lg overflow-hidden relative">
               <div
                 className="h-full rounded-lg transition-all duration-1000 ease-out"
                 style={{
@@ -110,7 +110,7 @@ export function BarChart({ data, height = 180 }: { data: BarItem[]; height?: num
           const color = item.color || COLORS[i % COLORS.length];
           return (
             <div key={i} className="flex flex-col items-center gap-1 flex-1 min-w-0">
-              <span className="text-[10px] font-semibold text-[#475569]">{item.value}</span>
+              <span className="text-[10px] font-semibold text-[var(--os-text-muted)]">{item.value}</span>
               <div
                 className="rounded-t-md transition-all duration-700 ease-out w-full"
                 style={{
@@ -126,9 +126,9 @@ export function BarChart({ data, height = 180 }: { data: BarItem[]; height?: num
           );
         })}
       </div>
-      <div className="flex justify-around gap-1 px-2 mt-2 border-t border-gray-100 pt-2">
+      <div className="flex justify-around gap-1 px-2 mt-2 border-t border-gray-100 [.os-dark_&]:border-[var(--os-border)] pt-2">
         {data.map((item, i) => (
-          <span key={i} className="text-[10px] text-[#94A3B8] text-center flex-1 truncate">
+          <span key={i} className="text-[10px] text-[var(--os-text-faint)] text-center flex-1 truncate">
             {item.label}
           </span>
         ))}
@@ -164,7 +164,7 @@ export function DonutChart({ data, size = 180 }: { data: DonutItem[]; size?: num
             cy={cy}
             r={innerRadius}
             fill="none"
-            stroke="#F1F5F9"
+            stroke="var(--os-hover)"
             strokeWidth={strokeWidth}
           />
           {/* Data segments */}
@@ -199,8 +199,8 @@ export function DonutChart({ data, size = 180 }: { data: DonutItem[]; size?: num
         </svg>
         {/* Center total */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-bold text-[#0F172A]">{total}</span>
-          <span className="text-[10px] text-[#94A3B8]">Total</span>
+          <span className="text-2xl font-bold text-[var(--os-text)]">{total}</span>
+          <span className="text-[10px] text-[var(--os-text-faint)]">Total</span>
         </div>
       </div>
       {/* Legend */}
@@ -214,9 +214,9 @@ export function DonutChart({ data, size = 180 }: { data: DonutItem[]; size?: num
                 className="w-2.5 h-2.5 rounded-full shrink-0"
                 style={{ backgroundColor: color }}
               />
-              <span className="text-[11px] text-[#475569] truncate flex-1">{item.label}</span>
-              <span className="text-[11px] font-semibold text-[#0F172A]">{item.value}</span>
-              <span className="text-[10px] text-[#94A3B8]">{pct}%</span>
+              <span className="text-[11px] text-[var(--os-text-muted)] truncate flex-1">{item.label}</span>
+              <span className="text-[11px] font-semibold text-[var(--os-text)]">{item.value}</span>
+              <span className="text-[10px] text-[var(--os-text-faint)]">{pct}%</span>
             </div>
           );
         })}
@@ -304,10 +304,10 @@ export function LineChart({
               y1={y}
               x2={svgWidth - padding.right}
               y2={y}
-              stroke="#F1F5F9"
+              stroke="var(--os-hover)"
               strokeWidth="1"
             />
-            <text x={padding.left - 8} y={y + 4} textAnchor="end" className="text-[10px]" fill="#94A3B8" fontSize="10">
+            <text x={padding.left - 8} y={y + 4} textAnchor="end" className="text-[10px]" fill="var(--os-text-faint)" fontSize="10">
               {fmt(Math.round(val))}
             </text>
           </g>
@@ -340,7 +340,7 @@ export function LineChart({
             cx={p.x}
             cy={p.y}
             r="4"
-            fill="white"
+            fill="var(--os-surface)"
             stroke={color}
             strokeWidth="2"
             className="transition-all duration-500"
@@ -356,7 +356,7 @@ export function LineChart({
             x={p.x}
             y={svgHeight - 8}
             textAnchor="middle"
-            fill="#94A3B8"
+            fill="var(--os-text-faint)"
             fontSize="10"
           >
             {p.label}
@@ -384,10 +384,10 @@ export function HorizontalBarChart({ data }: { data: HBarItem[] }) {
         return (
           <div key={i}>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] text-[#475569] truncate max-w-[60%]">{item.label}</span>
-              <span className="text-[12px] font-semibold text-[#0F172A]">{item.value}</span>
+              <span className="text-[11px] text-[var(--os-text-muted)] truncate max-w-[60%]">{item.label}</span>
+              <span className="text-[12px] font-semibold text-[var(--os-text)]">{item.value}</span>
             </div>
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-2 bg-gray-100 [.os-dark_&]:bg-[var(--os-hover)] rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-800 ease-out"
                 style={{
@@ -431,21 +431,21 @@ export function PipelineFunnel({ data }: { data: FunnelItem[] }) {
                   className="w-2 h-2 rounded-full shrink-0"
                   style={{ backgroundColor: color }}
                 />
-                <span className="text-xs font-medium text-[#475569]">
+                <span className="text-xs font-medium text-[var(--os-text-muted)]">
                   {STATUS_LABELS[item.status] || item.status}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 {convRate && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-gray-100 text-[#64748B]">
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-gray-100 [.os-dark_&]:bg-[var(--os-hover)] text-[var(--os-text-soft)]">
                     {convRate}
                   </span>
                 )}
-                <span className="text-[10px] text-[#94A3B8]">{funnelPct}%</span>
-                <span className="text-sm font-bold text-[#0F172A]">{item.count}</span>
+                <span className="text-[10px] text-[var(--os-text-faint)]">{funnelPct}%</span>
+                <span className="text-sm font-bold text-[var(--os-text)]">{item.count}</span>
               </div>
             </div>
-            <div className="h-5 bg-gray-100 rounded-md overflow-hidden relative">
+            <div className="h-5 bg-gray-100 [.os-dark_&]:bg-[var(--os-hover)] rounded-md overflow-hidden relative">
               <div
                 className="h-full rounded-md transition-all duration-1000 ease-out"
                 style={{
@@ -482,7 +482,7 @@ export function TeamPerformanceChart({ data }: { data: TeamMember[] }) {
   return (
     <div className="space-y-4">
       {/* Legend */}
-      <div className="flex items-center gap-4 text-[10px] text-[#64748B]">
+      <div className="flex items-center gap-4 text-[10px] text-[var(--os-text-soft)]">
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" />
           Sent
@@ -504,7 +504,7 @@ export function TeamPerformanceChart({ data }: { data: TeamMember[] }) {
               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-[10px] font-bold text-purple-700 shrink-0">
                 {member.initials}
               </div>
-              <span className="text-[12px] font-medium text-[#1E293B] truncate">{member.name}</span>
+              <span className="text-[12px] font-medium text-[#1E293B] [.os-dark_&]:text-[var(--os-text)] truncate">{member.name}</span>
             </div>
             <div className="space-y-1.5 pl-9">
               {([
@@ -515,7 +515,7 @@ export function TeamPerformanceChart({ data }: { data: TeamMember[] }) {
                 const pct = (metric.value / maxVal) * 100;
                 return (
                   <div key={metric.label} className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="flex-1 h-1.5 bg-gray-100 [.os-dark_&]:bg-[var(--os-hover)] rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-800 ease-out"
                         style={{
@@ -527,7 +527,7 @@ export function TeamPerformanceChart({ data }: { data: TeamMember[] }) {
                         title={`${member.name} - ${metric.label}: ${metric.value}`}
                       />
                     </div>
-                    <span className="text-[10px] font-medium text-[#475569] w-5 text-right">{metric.value}</span>
+                    <span className="text-[10px] font-medium text-[var(--os-text-muted)] w-5 text-right">{metric.value}</span>
                   </div>
                 );
               })}

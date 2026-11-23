@@ -139,7 +139,7 @@ export function ScheduleMeetingModal({ open, onClose, onCreated, context, defaul
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 24, opacity: 0, scale: 0.98 }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
-            className="bg-white rounded-2xl border border-[#E5E7EB] shadow-2xl w-full max-w-[540px] max-h-[92vh] flex flex-col overflow-hidden"
+            className="os-light bg-white rounded-2xl border border-[#E5E7EB] shadow-2xl w-full max-w-[540px] max-h-[92vh] flex flex-col overflow-hidden"
           >
             <div className="px-6 pt-5 pb-4 border-b border-[#E5E7EB] flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">

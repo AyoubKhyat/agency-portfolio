@@ -36,7 +36,7 @@ export function FormCard({
   return (
     <section
       className={cn(
-        "bg-white border border-[#E2E8F0] rounded-2xl shadow-sm shadow-slate-900/[0.02]",
+        "os-light bg-white border border-[#E2E8F0] rounded-2xl shadow-sm shadow-slate-900/[0.02]",
         "transition-shadow hover:shadow-md hover:shadow-slate-900/[0.04]",
         className,
       )}
@@ -50,10 +50,10 @@ export function FormCard({
           )}
           <div className="min-w-0 flex-1">
             {title && (
-              <h3 className="text-[15px] font-semibold text-[#0F172A] leading-tight">{title}</h3>
+              <h3 className="text-[15px] font-semibold text-[var(--os-text)] leading-tight">{title}</h3>
             )}
             {subtitle && (
-              <p className="text-[13px] text-[#64748B] mt-1 leading-relaxed">{subtitle}</p>
+              <p className="text-[13px] text-[var(--os-text-soft)] mt-1 leading-relaxed">{subtitle}</p>
             )}
           </div>
           {action && <div className="shrink-0">{action}</div>}
