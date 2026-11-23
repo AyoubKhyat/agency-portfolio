@@ -14,7 +14,8 @@ import { useEffect, useId, useRef, type RefObject } from "react";
  * - the panel is announced as a modal dialog (`role="dialog"`, `aria-modal`);
  * - focus moves into the panel (to `initialFocus`, or the panel itself), unless
  *   something inside it already has focus (e.g. an `autoFocus` field);
- * - Tab and Shift+Tab stay inside the panel;
+ * - Tab and Shift+Tab stay inside the panel (focus that escapes another way,
+ *   e.g. out of an embedded iframe, is brought back);
  * - Escape calls `onClose`, unless an inner control already handled Escape
  *   (it called `preventDefault`, e.g. a suggestion list closing itself);
  * - only the top-most open dialog reacts, so a pop-up opened from a drawer
@@ -139,19 +140,38 @@ export function useDialog<T extends HTMLElement = HTMLDivElement>({
       }
     }
 
+    // Focus can leave without a Tab keydown reaching this document, e.g. tabbing out of
+    // an embedded iframe (PDF preview). Bring it back into the top-most dialog.
+    function onFocusIn(e: FocusEvent) {
+      if (openStack[openStack.length - 1]?.token !== token) return;
+      const panel = ref.current;
+      if (!panel || !(e.target instanceof Element) || panel.contains(e.target)) return;
+      // A dialog opening on top (e.g. its autoFocus field) is not an escape.
+      if (e.target.closest('[role="dialog"]')) return;
+      (focusableIn(panel)[0] ?? panel).focus({ preventScroll: true });
+    }
+
     document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("focusin", onFocusIn);
     return () => {
       cancelAnimationFrame(frame);
       document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("focusin", onFocusIn);
       const i = openStack.findIndex((d) => d.token === token);
       if (i >= 0) openStack.splice(i, 1);
-      if (returnTo && returnTo.isConnected) {
-        returnTo.focus({ preventScroll: true });
-      } else {
-        // The opener is gone (e.g. the drawer re-rendered after a save): keep focus
-        // in the dialog that is still open underneath, if any.
-        openStack[openStack.length - 1]?.panel.current?.focus({ preventScroll: true });
-      }
+      // Restore after the commit, and only if this dialog really closed: an effect re-run
+      // (React Strict Mode in development, remounts) re-registers the same panel at once,
+      // and restoring then would pull focus off an autoFocus field.
+      queueMicrotask(() => {
+        if (openStack.some((d) => d.panel === ref)) return;
+        if (returnTo && returnTo.isConnected) {
+          returnTo.focus({ preventScroll: true });
+        } else {
+          // The opener is gone (e.g. the drawer re-rendered after a save): keep focus
+          // in the dialog that is still open underneath, if any.
+          openStack[openStack.length - 1]?.panel.current?.focus({ preventScroll: true });
+        }
+      });
     };
   }, [open, closeOnEscape]);
 

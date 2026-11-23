@@ -1,5 +1,6 @@
 "use client";
 
+import { useDialog } from "@/components/admin/dialog";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -255,6 +256,8 @@ export default function PipelinePage() {
 }
 
 function CreateProjectModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  // Mounted only while shown.
+  const { dialogProps, titleId } = useDialog({ open: true, onClose });
   const [form, setForm] = useState({ name: "", clientName: "", description: "", services: "", budget: "", startDate: "", dueDate: "", priority: "MEDIUM", status: "NEW", ownerName: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -276,10 +279,10 @@ function CreateProjectModal({ onClose, onCreated }: { onClose: () => void; onCre
     <>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <motion.div initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.98 }} className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
-        <div className="w-full max-w-lg bg-white rounded-2xl border border-[#E5E7EB] shadow-xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div {...dialogProps} className="w-full max-w-lg bg-white rounded-2xl border border-[#E5E7EB] shadow-xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between p-5 border-b border-[#F1F5F9]">
-            <h2 className="text-[16px] font-semibold text-[#0F172A]">New Project</h2>
-            <button onClick={onClose} className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#475569] hover:bg-[#F1F5F9]"><X className="w-5 h-5" /></button>
+            <h2 id={titleId} className="text-[16px] font-semibold text-[#0F172A]">New Project</h2>
+            <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#475569] hover:bg-[#F1F5F9]"><X className="w-5 h-5" /></button>
           </div>
           <form onSubmit={handleSubmit} className="p-5 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

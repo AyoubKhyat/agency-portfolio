@@ -1,5 +1,6 @@
 "use client";
 
+import { useDialog } from "@/components/admin/dialog";
 import { useMemo, useRef, useState } from "react";
 import { CheckCircle2, ExternalLink, Undo2, X } from "lucide-react";
 import { Field, FormButton, FormError, Input, Select, Textarea } from "@/components/admin/form";
@@ -75,6 +76,8 @@ type Props = {
 };
 
 export function ContentPostForm({ post, defaultDate = null, onClose, onSaved }: Props) {
+  // Mounted only while shown.
+  const { dialogProps, titleId } = useDialog({ open: true, onClose });
   const [initial] = useState(() => initialState(post, defaultDate));
   const [form, setForm] = useState<FormState>(initial);
   const [saving, setSaving] = useState(false);
@@ -156,12 +159,12 @@ export function ContentPostForm({ post, defaultDate = null, onClose, onSaved }: 
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="os-light w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-[#E2E8F0] overflow-hidden">
+      <div {...dialogProps} className="os-light w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-[#E2E8F0] overflow-hidden">
         <form onSubmit={handleSubmit}>
           {/* header */}
           <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#E2E8F0]">
             <div>
-              <h2 className="text-[15px] font-semibold text-[#0F172A]">{post ? "Edit post" : "New post"}</h2>
+              <h2 id={titleId} className="text-[15px] font-semibold text-[#0F172A]">{post ? "Edit post" : "New post"}</h2>
               <p className="text-[12px] text-[#64748B] mt-0.5">
                 {post?.sourceKey ? `Imported · ${post.sourceKey}` : "Instagram content plan — publishing stays manual"}
               </p>

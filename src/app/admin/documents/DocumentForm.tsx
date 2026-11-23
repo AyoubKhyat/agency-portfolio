@@ -1,5 +1,6 @@
 "use client";
 
+import { useDialog } from "@/components/admin/dialog";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { FileText, Upload, X, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Field, FormButton, Input, Select, Textarea } from "@/components/admin/form";
@@ -54,6 +55,8 @@ type Props = {
 };
 
 export function DocumentForm({ document: doc, clients, projects, onClose, onSaved }: Props) {
+  // Mounted only while shown.
+  const { dialogProps, titleId } = useDialog<HTMLFormElement>({ open: true, onClose });
   const isEdit = Boolean(doc);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -212,13 +215,14 @@ export function DocumentForm({ document: doc, clients, projects, onClose, onSave
       }}
     >
       <form
+        {...dialogProps}
         onSubmit={handleSubmit}
         className="os-light w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-[#E2E8F0] overflow-hidden"
       >
         {/* header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#E2E8F0]">
           <div>
-            <h2 className="text-[15px] font-semibold text-[#0F172A]">
+            <h2 id={titleId} className="text-[15px] font-semibold text-[#0F172A]">
               {isEdit ? "Edit document" : "Add document"}
             </h2>
             <p className="text-[12px] text-[#64748B] mt-0.5">

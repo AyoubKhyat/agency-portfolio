@@ -1,5 +1,6 @@
 "use client";
 
+import { useDialog } from "@/components/admin/dialog";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
@@ -1184,6 +1185,8 @@ const SUGGESTED_SECTORS = [
 ];
 
 function QuickAddModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+  // Mounted only while shown.
+  const { dialogProps, titleId } = useDialog({ open: true, onClose });
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [instagram, setInstagram] = useState("");
@@ -1230,18 +1233,18 @@ function QuickAddModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 sm:pt-16 px-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
+      <div {...dialogProps} className="relative w-full max-w-lg bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
         <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--os-border)]">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8B00FF] to-[#C026D3] flex items-center justify-center shadow-md shadow-purple-500/20">
               <Plus className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h2 className="text-[15px] font-semibold text-[#0F172A]">Quick add prospect</h2>
+              <h2 id={titleId} className="text-[15px] font-semibold text-[#0F172A]">Quick add prospect</h2>
               <div className="text-[11px] text-[#64748B]">Lands in &quot;Never contacted&quot; — start messaging right after</div>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} aria-label="Close" className="p-1 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"><X className="w-4 h-4" /></button>
         </div>
 
         {saved ? (

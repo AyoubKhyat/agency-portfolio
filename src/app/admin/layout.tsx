@@ -1,5 +1,6 @@
 "use client";
 
+import { useDialog } from "@/components/admin/dialog";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -260,6 +261,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [mobileOpen]);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
+  // Phone menu: Escape, focus entry/return and Tab containment.
+  const { dialogProps: menuDialogProps } = useDialog({ open: mobileOpen, onClose: closeMobile, label: "Menu" });
 
   if (isLogin) return <>{children}</>;
 
@@ -302,7 +305,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         )}
         {isMobileDrawer && (
-          <button onClick={closeMobile} className="ml-auto p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]">
+          <button onClick={closeMobile} aria-label="Close menu" className="ml-auto p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]">
             <X className="w-5 h-5" />
           </button>
         )}
@@ -456,7 +459,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Mobile header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center justify-between px-4 backdrop-blur-xl border-b border-[var(--os-border)] shadow-sm" style={{ backgroundColor: `color-mix(in srgb, var(--os-surface) 90%, transparent)` }}>
         <div className="flex items-center gap-3">
-          <button onClick={() => setMobileOpen(true)} className="p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]">
+          <button onClick={() => setMobileOpen(true)} aria-label="Open menu" className="p-1.5 rounded-lg text-[var(--os-text-muted)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)]">
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2.5">
@@ -506,6 +509,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "spring", stiffness: 400, damping: 40 }}
+            {...menuDialogProps}
             className="lg:hidden fixed top-0 left-0 bottom-0 z-50 w-[280px] flex flex-col border-r border-[var(--os-border)] shadow-2xl" style={{ backgroundColor: "var(--os-surface)" }}
           >
             {sidebarContent(true)}
@@ -524,7 +528,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* Main content */}
-      <main className={cn("flex-1 overflow-y-auto overflow-x-hidden pt-14 lg:pt-0 relative z-[1]", SIMPLE_NAV && "pb-16 lg:pb-0")}>
+      <main className={cn("flex-1 overflow-y-auto overflow-x-hidden pt-14 lg:pt-0 relative", SIMPLE_NAV && "pb-16 lg:pb-0")}>
         <div className={cn("p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto", SIMPLE_NAV && tab?.hideTitleOnPhone && pathname === tab.href && "max-lg:[&_h1]:sr-only")}>
           <Suspense fallback={null}><SearchSync onChange={setSearch} /></Suspense>
           {SIMPLE_NAV && <SectionTabs pathname={pathname} search={search} />}
