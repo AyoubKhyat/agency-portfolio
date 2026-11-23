@@ -25,8 +25,8 @@ export function Toggle({ checked, onChange, label, description, disabled }: Togg
       )}
     >
       <div className="min-w-0">
-        <p className="text-[14px] font-medium text-[#0F172A]">{label}</p>
-        {description && <p className="text-[12px] text-[#64748B] mt-0.5">{description}</p>}
+        <p className="text-[14px] font-medium text-[var(--os-text)]">{label}</p>
+        {description && <p className="text-[12px] text-[var(--os-text-soft)] mt-0.5">{description}</p>}
       </div>
       <span
         className={cn(

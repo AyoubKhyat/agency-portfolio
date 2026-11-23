@@ -47,13 +47,13 @@ export function AdminFormLayout({
         className={cn(
           "sticky top-0 lg:top-0 z-30",
           "-mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 mb-6",
-          "bg-[#F8FAFC]/85 backdrop-blur-xl border-b border-[#E2E8F0]",
+          "bg-[#F8FAFC]/85 backdrop-blur-xl border-b border-[var(--os-control-border)] [.os-dark_&]:bg-[var(--os-bg)]/85",
         )}
       >
         {backHref && (
           <Link
             href={backHref}
-            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#64748B] hover:text-[#8B00FF] transition-colors mb-2"
+            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[var(--os-text-soft)] hover:text-[var(--os-brand)] transition-colors mb-2"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             {backLabel}
@@ -61,16 +61,16 @@ export function AdminFormLayout({
         )}
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div className="min-w-0">
-            <h1 className="text-[22px] sm:text-[24px] font-bold text-[#0F172A] tracking-tight leading-tight">
+            <h1 className="text-[22px] sm:text-[24px] font-bold text-[var(--os-text)] tracking-tight leading-tight">
               {title}
             </h1>
             {subtitle && (
-              <p className="text-[13px] text-[#64748B] mt-1 leading-relaxed">{subtitle}</p>
+              <p className="text-[13px] text-[var(--os-text-soft)] mt-1 leading-relaxed">{subtitle}</p>
             )}
           </div>
           <div className="hidden lg:flex items-center gap-2 shrink-0">
             {dirty && !saving && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-100 text-[11px] font-semibold text-amber-700">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-100 text-[11px] font-semibold text-amber-700 [.os-dark_&]:bg-[var(--os-warning-bg)] [.os-dark_&]:border-[var(--os-warning-border)] [.os-dark_&]:text-[var(--os-warning-fg)]">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 Unsaved changes
               </span>
@@ -100,7 +100,7 @@ export function AdminFormLayout({
       <div
         className={cn(
           "lg:hidden fixed bottom-0 left-0 right-0 z-30",
-          "px-4 py-3 bg-white/95 backdrop-blur-xl border-t border-[#E2E8F0] shadow-[0_-4px_16px_-4px_rgba(15,23,42,0.08)]",
+          "px-4 py-3 bg-white/95 backdrop-blur-xl border-t border-[var(--os-control-border)] [.os-dark_&]:bg-[var(--os-surface)]/95 shadow-[0_-4px_16px_-4px_rgba(15,23,42,0.08)]",
           "flex items-center gap-2",
         )}
       >

@@ -108,7 +108,10 @@ body {
 }
 
 /* ─── IBDA3 OS Admin Design System (Light Premium) ─── */
-.admin-os {
+/* Light tokens. `.os-light` re-applies them inside a container that deliberately stays
+   white in dark mode (e.g. FormCard), so token-coloured text in it stays dark-on-white. */
+.admin-os,
+.admin-os .os-light {
   --os-bg: #F7F4FF;
   --os-surface: #ffffff;
   --os-surface-2: #FAFAFE;
@@ -133,9 +136,47 @@ body {
   --os-blue: #3b82f6;
   --os-amber: #f59e0b;
   --os-red: #ef4444;
+  /* Secondary text: = --os-text-dim in light, brighter in dark (dim fails on dark cards). */
+  --os-text-soft: #64748B;
+  /* Placeholders, hints and other faint text. */
+  --os-text-faint: #94A3B8;
+  /* Form controls (inputs, selects, secondary buttons). */
+  --os-control-bg: #ffffff;
+  --os-control-border: #E2E8F0;
+  --os-control-hover: #F8FAFC;
+  /* Official brand purple for accent text and icons. */
+  --os-brand: #8B00FF;
+  /* Primary button fill: white text >= 4.5:1 in both themes. */
+  --os-btn-a: #6a4ee0;
+  --os-btn-b: #2563EB;
+  --os-on-accent: #ffffff;
+  /* Pop-ups: backdrop and panel surface. */
+  --os-overlay: rgba(15, 23, 42, 0.45);
+  --os-popover: #ffffff;
+  /* Semantic statuses: text, tinted background, border. */
+  --os-success-fg: #007A55;
+  --os-success-bg: #ECFDF5;
+  --os-success-border: #D0FAE5;
+  --os-warning-fg: #BB4D00;
+  --os-warning-bg: #FFFBEB;
+  --os-warning-border: #FEF3C6;
+  --os-danger-fg: #C10007;
+  --os-danger-bg: #FEF2F2;
+  --os-danger-border: #FFE2E2;
+  --os-info-fg: #1447E6;
+  --os-info-bg: #EFF6FF;
+  --os-info-border: #DBEAFE;
+}
+
+.admin-os {
   color: var(--os-text);
   background: var(--os-bg);
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Inherited text inside a white-in-dark container follows its light tokens. */
+:where(.admin-os .os-light) {
+  color: var(--os-text);
 }
 
 .admin-os.os-dark {
@@ -156,6 +197,29 @@ body {
   /* = .dark --grad-a / --grad-b */
   --os-grad-a: #A78BFA;
   --os-grad-b: #60A5FA;
+  --os-text-soft: #A1A1AA;
+  --os-text-faint: #7C8494;
+  --os-control-bg: #1A1A2E;
+  --os-control-border: #3A3A52;
+  --os-control-hover: #24243A;
+  --os-brand: #B98CFF;
+  /* Same fill as light: white on --os-grad-a (#A78BFA) is only 2.7:1. */
+  --os-btn-a: #6a4ee0;
+  --os-btn-b: #2563EB;
+  --os-overlay: rgba(0, 0, 0, 0.65);
+  --os-popover: #1A1A2E;
+  --os-success-fg: #5EE9B5;
+  --os-success-bg: rgba(16, 185, 129, 0.12);
+  --os-success-border: rgba(16, 185, 129, 0.3);
+  --os-warning-fg: #FFD230;
+  --os-warning-bg: rgba(245, 158, 11, 0.12);
+  --os-warning-border: rgba(245, 158, 11, 0.3);
+  --os-danger-fg: #FFA2A2;
+  --os-danger-bg: rgba(239, 68, 68, 0.12);
+  --os-danger-border: rgba(239, 68, 68, 0.3);
+  --os-info-fg: #8EC5FF;
+  --os-info-bg: rgba(59, 130, 246, 0.12);
+  --os-info-border: rgba(59, 130, 246, 0.3);
 }
 
 @keyframes os-fade-in {

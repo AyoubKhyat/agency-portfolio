@@ -51,8 +51,8 @@ export function AiControlsCard() {
           <Bot className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h2 className="text-base font-semibold text-[#0F172A]">AI Workforce</h2>
-          <p className="text-xs text-[#475569]">Website checks and reply drafts on diagnosis enquiries. Switching off takes effect at once.</p>
+          <h2 className="text-base font-semibold text-[var(--os-text)]">AI Workforce</h2>
+          <p className="text-xs text-[var(--os-text-muted)]">Website checks and reply drafts on diagnosis enquiries. Switching off takes effect at once.</p>
         </div>
       </div>
 
@@ -60,15 +60,15 @@ export function AiControlsCard() {
         <Toggle checked={c.enabled} onChange={(v) => set({ enabled: v })} label="Website checks" />
         <Toggle checked={c.aiEnabled} onChange={(v) => set({ aiEnabled: v })} disabled={!c.enabled} label={`AI drafting (${c.model})`} />
       </div>
-      {error && <p role="alert" className="text-xs font-medium text-red-600 mb-3">{error}</p>}
+      {error && <p role="alert" className="text-xs font-medium text-red-600 mb-3 [.os-dark_&]:text-[var(--os-danger-fg)]">{error}</p>}
 
       <dl className="grid grid-cols-2 gap-3 text-sm">
-        <div><dt className="text-xs text-[#94A3B8]">Runs, last 24 hours</dt><dd className="font-medium text-[#0F172A]">{c.runsInWindow} of {c.dailyRunCap}</dd></div>
-        <div><dt className="text-xs text-[#94A3B8]">AI spend this month, estimated</dt><dd className="font-medium text-[#0F172A]">{usd(c.monthSpentMicros)} of {usd(c.monthlyBudgetMicros)}</dd></div>
+        <div><dt className="text-xs text-[var(--os-text-faint)]">Runs, last 24 hours</dt><dd className="font-medium text-[var(--os-text)]">{c.runsInWindow} of {c.dailyRunCap}</dd></div>
+        <div><dt className="text-xs text-[var(--os-text-faint)]">AI spend this month, estimated</dt><dd className="font-medium text-[var(--os-text)]">{usd(c.monthSpentMicros)} of {usd(c.monthlyBudgetMicros)}</dd></div>
       </dl>
 
-      {!c.envEnabled && <p className="text-xs text-amber-700 mt-4">AI_WORKFORCE_ENABLED isn&apos;t set on this deployment, so everything stays off whatever these switches say.</p>}
-      {c.envEnabled && !c.keyPresent && <p className="text-xs text-amber-700 mt-4">AI_WORKFORCE_GROQ_API_KEY isn&apos;t set on this deployment, so runs give the automatic checks only.</p>}
+      {!c.envEnabled && <p className="text-xs text-[var(--os-warning-fg)] mt-4">AI_WORKFORCE_ENABLED isn&apos;t set on this deployment, so everything stays off whatever these switches say.</p>}
+      {c.envEnabled && !c.keyPresent && <p className="text-xs text-[var(--os-warning-fg)] mt-4">AI_WORKFORCE_GROQ_API_KEY isn&apos;t set on this deployment, so runs give the automatic checks only.</p>}
     </GlassCard>
   );
 }

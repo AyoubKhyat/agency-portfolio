@@ -156,7 +156,7 @@ export function ContentPostForm({ post, defaultDate = null, onClose, onSaved }: 
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-[#E2E8F0] overflow-hidden">
+      <div className="os-light w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-[#E2E8F0] overflow-hidden">
         <form onSubmit={handleSubmit}>
           {/* header */}
           <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#E2E8F0]">

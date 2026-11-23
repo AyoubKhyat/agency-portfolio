@@ -672,7 +672,7 @@ function PreviewModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-5xl h-full max-h-[90vh] bg-white rounded-2xl shadow-xl border border-[#E2E8F0] flex flex-col overflow-hidden">
+      <div className="os-light w-full max-w-5xl h-full max-h-[90vh] bg-white rounded-2xl shadow-xl border border-[#E2E8F0] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-[#E2E8F0]">
           <div className="min-w-0">
             <h2 className="text-[14px] font-semibold text-[#0F172A] truncate">{doc.title}</h2>
@@ -724,7 +724,7 @@ function DeleteModal({
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-[#E2E8F0] overflow-hidden">
+      <div className="os-light w-full max-w-md bg-white rounded-2xl shadow-xl border border-[#E2E8F0] overflow-hidden">
         <div className="px-5 py-5">
           <div className="flex items-start gap-3 mb-4">
             <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-red-50 text-red-600 shrink-0">

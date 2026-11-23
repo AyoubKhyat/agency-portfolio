@@ -43,8 +43,8 @@ export function StatCard({ value, label, icon, href, accent, suffix, index = 0, 
       className={cn(
         "group relative rounded-2xl border p-4 sm:p-5 transition-all duration-200 shadow-sm hover:-translate-y-0.5",
         accent
-          ? "border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50 hover:shadow-md hover:shadow-purple-500/10"
-          : "border-[var(--os-border)] bg-white hover:shadow-md hover:shadow-purple-900/[0.06]",
+          ? "border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50 hover:shadow-md hover:shadow-purple-500/10 [.os-dark_&]:border-[var(--os-purple)]/30 [.os-dark_&]:from-[var(--os-purple-subtle)] [.os-dark_&]:to-[var(--os-purple-subtle)] [.os-dark_&]:bg-[var(--os-surface)]"
+          : "border-[var(--os-border)] bg-[var(--os-surface)] hover:shadow-md hover:shadow-purple-900/[0.06]",
         href && "cursor-pointer",
         className
       )}
@@ -52,15 +52,15 @@ export function StatCard({ value, label, icon, href, accent, suffix, index = 0, 
       <div className="flex items-start justify-between mb-3">
         <div className={cn(
           "flex items-center justify-center w-9 h-9 rounded-xl",
-          accent ? "bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "bg-[#F1F5F9] text-[#475569]"
+          accent ? "bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 text-[var(--os-brand)]" : "bg-[var(--os-hover)] text-[var(--os-text-muted)]"
         )}>
           {icon}
         </div>
       </div>
-      <div className={cn("text-2xl sm:text-3xl font-bold tracking-tight", accent ? "text-[#8B00FF]" : "text-[#0F172A]")}>
+      <div className={cn("text-2xl sm:text-3xl font-bold tracking-tight", accent ? "text-[var(--os-brand)]" : "text-[var(--os-text)]")}>
         <Counter value={value} suffix={suffix} />
       </div>
-      <div className="text-[12px] sm:text-[13px] text-[#64748B] mt-1 font-medium">{label}</div>
+      <div className="text-[12px] sm:text-[13px] text-[var(--os-text-soft)] mt-1 font-medium">{label}</div>
     </motion.div>
   );
   if (href) return <Link href={href}>{card}</Link>;
