@@ -6,6 +6,7 @@ import { Calendar, X, Loader2, Phone, Video, MessageCircle, MapPin } from "lucid
 import { FaWhatsapp } from "react-icons/fa";
 import { Field, Input, Select, FormButton, FormError } from "@/components/admin/form";
 import { MentionTextarea } from "@/components/admin/mention-textarea";
+import { useDialog } from "@/components/admin/dialog";
 
 export type MeetingType = "CALL" | "GOOGLE_MEET" | "ZOOM" | "WHATSAPP" | "IN_PERSON";
 
@@ -45,6 +46,7 @@ function toLocalInput(d: Date) {
 }
 
 export function ScheduleMeetingModal({ open, onClose, onCreated, context, defaultOwnerId }: Props) {
+  const { dialogProps, titleId } = useDialog<HTMLFormElement>({ open, onClose });
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -139,6 +141,7 @@ export function ScheduleMeetingModal({ open, onClose, onCreated, context, defaul
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 24, opacity: 0, scale: 0.98 }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
+            {...dialogProps}
             className="os-light bg-white rounded-2xl border border-[#E5E7EB] shadow-2xl w-full max-w-[540px] max-h-[92vh] flex flex-col overflow-hidden"
           >
             <div className="px-6 pt-5 pb-4 border-b border-[#E5E7EB] flex items-start justify-between gap-3">
@@ -147,11 +150,11 @@ export function ScheduleMeetingModal({ open, onClose, onCreated, context, defaul
                   <Calendar className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-[16px] font-bold text-[#111827]">Schedule meeting</h2>
+                  <h2 id={titleId} className="text-[16px] font-bold text-[#111827]">Schedule meeting</h2>
                   {subjectLabel && <p className="text-[12px] text-[#6B7280] mt-0.5">{subjectLabel}</p>}
                 </div>
               </div>
-              <button type="button" onClick={onClose} className="p-1.5 rounded-lg text-[#9CA3AF] hover:text-[#111827] hover:bg-[#F3F4F6]">
+              <button type="button" onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-[#9CA3AF] hover:text-[#111827] hover:bg-[#F3F4F6]">
                 <X className="w-5 h-5" />
               </button>
             </div>

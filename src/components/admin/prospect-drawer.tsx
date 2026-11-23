@@ -34,6 +34,7 @@ import { ScheduleMeetingModal } from "@/components/admin/schedule-meeting-modal"
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ContactCheck } from "@/components/admin/contact-check";
+import { useDialog } from "@/components/admin/dialog";
 import { CONTACT_CHECK_LABELS, lastContactCheck, type ContactCheckStatus } from "@/lib/contact-check";
 import { PROSPECT_SEGMENTS, SEGMENT_LABELS, SEGMENT_HINTS, SEGMENT_TOKENS, calcRelationshipStrength, type ProspectSegment } from "@/lib/prospect-segments";
 
@@ -302,15 +303,8 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
     }
   }, [prospectId, fetchProspect]);
 
-  useEffect(() => {
-    function handleEscape(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    if (prospectId) {
-      document.addEventListener("keydown", handleEscape);
-      return () => document.removeEventListener("keydown", handleEscape);
-    }
-  }, [prospectId, onClose]);
+  // Escape, focus entry/return and Tab containment (top-most dialog only).
+  const { dialogProps } = useDialog({ open: !!prospectId, onClose, label: prospect?.name ? `Prospect: ${prospect.name}` : "Prospect details" });
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -479,6 +473,7 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            {...dialogProps}
             className="os-light fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white border-l border-[#E5E7EB] shadow-2xl z-50 flex flex-col"
           >
             {loading || !prospect ? (

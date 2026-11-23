@@ -12,6 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/admin/badge";
 import { cn } from "@/lib/utils";
+import { useDialog } from "@/components/admin/dialog";
 
 /* ---------- types ---------- */
 
@@ -149,6 +150,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
+  const { dialogProps } = useDialog({ open, onClose, label: "Search", initialFocus: inputRef });
 
   const flatItems = results ? flattenResults(results) : [];
   const totalResults = flatItems.length;
@@ -183,12 +185,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     if (!open) return;
 
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-
+      // Escape is handled by useDialog.
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedIndex((prev) => (prev < navigableCount - 1 ? prev + 1 : 0));
@@ -215,7 +212,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose, navigableCount, hasResults, selectedIndex, flatItems, navigate, showingQuickActions, query]);
+  }, [open, navigableCount, hasResults, selectedIndex, flatItems, navigate, showingQuickActions, query]);
 
   // Scroll selected into view
   useEffect(() => {
@@ -423,6 +420,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
+              {...dialogProps}
               className="w-full max-w-[600px] bg-white rounded-2xl shadow-2xl border border-[#E5E7EB] overflow-hidden pointer-events-auto"
             >
               {/* Search input */}
