@@ -54,10 +54,10 @@ const STATUS_DOT: Record<string, string> = {
   NO_SHOW: "bg-red-500",
 };
 const STATUS_STYLES: Record<string, string> = {
-  SCHEDULED: "bg-blue-50 text-blue-700 border-blue-100",
-  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-100",
-  CANCELLED: "bg-[#F3F4F6] text-[#6B7280] border-[#E5E7EB]",
-  NO_SHOW: "bg-red-50 text-red-700 border-red-100",
+  SCHEDULED: "bg-blue-50 os-dark:bg-blue-500/10 text-blue-700 os-dark:text-blue-300 border-blue-100 os-dark:border-blue-500/30",
+  COMPLETED: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-100 os-dark:border-emerald-500/30",
+  CANCELLED: "bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#6B7280] os-dark:text-[var(--os-text)] border-[var(--os-border)]",
+  NO_SHOW: "bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 border-red-100 os-dark:border-red-500/30",
 };
 
 /* ------------------------------------------------------------------ */
@@ -198,32 +198,32 @@ export function MeetingsCalendar({ onStatusChange }: MeetingsCalendarProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => goMonth(-1)}
-            className="flex items-center justify-center w-8 h-8 rounded-lg border border-[#E5E7EB] hover:bg-[#F1F5F9] text-[#475569] transition-colors"
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-[var(--os-border)] hover:bg-[var(--os-hover)] text-[var(--os-text-muted)] transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={() => goMonth(1)}
-            className="flex items-center justify-center w-8 h-8 rounded-lg border border-[#E5E7EB] hover:bg-[#F1F5F9] text-[#475569] transition-colors"
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-[var(--os-border)] hover:bg-[var(--os-hover)] text-[var(--os-text-muted)] transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
-          <h2 className="text-[15px] font-semibold text-[#0F172A] ml-2">{monthLabel}</h2>
+          <h2 className="text-[15px] font-semibold text-[var(--os-text)] ml-2">{monthLabel}</h2>
         </div>
         <button
           onClick={goToday}
-          className="text-[12px] font-medium text-[#8B00FF] hover:text-[#7A00E0] px-3 py-1.5 rounded-lg border border-purple-200 hover:bg-purple-50 transition-colors"
+          className="text-[12px] font-medium text-[var(--os-brand)] hover:text-[#7A00E0] os-dark:hover:text-[var(--os-purple)] px-3 py-1.5 rounded-lg border border-purple-200 os-dark:border-purple-500/30 hover:bg-purple-50 os-dark:hover:bg-purple-500/10 transition-colors"
         >
           Today
         </button>
       </div>
 
       {/* Calendar grid */}
-      <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl overflow-hidden shadow-sm">
         {/* Weekday header */}
-        <div className="grid grid-cols-7 border-b border-[#F3F4F6]">
+        <div className="grid grid-cols-7 border-b border-[#F3F4F6] os-dark:border-[var(--os-border)]">
           {WEEKDAYS.map((day) => (
-            <div key={day} className="py-2.5 text-center text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wider">
+            <div key={day} className="py-2.5 text-center text-[11px] font-semibold text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider">
               {day}
             </div>
           ))}
@@ -241,7 +241,7 @@ export function MeetingsCalendar({ onStatusChange }: MeetingsCalendarProps) {
           >
             {cells.map((cell, i) => {
               if (!cell) {
-                return <div key={`blank-${i}`} className="h-[88px] border-b border-r border-[#F3F4F6] bg-[#FAFAFA]" />;
+                return <div key={`blank-${i}`} className="h-[88px] border-b border-r border-[#F3F4F6] os-dark:border-[var(--os-border)] bg-[#FAFAFA] os-dark:bg-[var(--os-surface-2)]" />;
               }
 
               const key = dateKey(cell);
@@ -255,14 +255,14 @@ export function MeetingsCalendar({ onStatusChange }: MeetingsCalendarProps) {
                   key={key}
                   onClick={() => setSelectedDate(isSelected ? null : cell)}
                   className={cn(
-                    "h-[88px] border-b border-r border-[#F3F4F6] p-1.5 text-left transition-colors relative group",
+                    "h-[88px] border-b border-r border-[#F3F4F6] os-dark:border-[var(--os-border)] p-1.5 text-left transition-colors relative group",
                     isSelected
-                      ? "bg-purple-50/70 ring-1 ring-inset ring-purple-300"
+                      ? "bg-purple-50/70 os-dark:bg-purple-500/10 ring-1 ring-inset ring-purple-300"
                       : isToday
-                        ? "bg-purple-50/40"
+                        ? "bg-purple-50/40 os-dark:bg-purple-500/10"
                         : isWeekend
-                          ? "bg-[#FAFAFA] hover:bg-[#F5F3FF]/50"
-                          : "bg-white hover:bg-[#F8FAFC]",
+                          ? "bg-[#FAFAFA] os-dark:bg-[var(--os-surface-2)] hover:bg-[#F5F3FF]/50"
+                          : "bg-[var(--os-surface)] hover:bg-[var(--os-control-hover)]",
                   )}
                 >
                   {/* Day number */}
@@ -273,14 +273,14 @@ export function MeetingsCalendar({ onStatusChange }: MeetingsCalendarProps) {
                         isToday
                           ? "bg-[#8B00FF] text-white font-semibold"
                           : isSelected
-                            ? "text-[#8B00FF] font-semibold"
-                            : "text-[#374151]"
+                            ? "text-[var(--os-brand)] font-semibold"
+                            : "text-[#374151] os-dark:text-[var(--os-text)]"
                       )}
                     >
                       {cell.getDate()}
                     </span>
                     {dayMeetings.length > 0 && (
-                      <span className="text-[10px] font-medium text-[#9CA3AF]">
+                      <span className="text-[10px] font-medium text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">
                         {dayMeetings.length}
                       </span>
                     )}
@@ -293,10 +293,10 @@ export function MeetingsCalendar({ onStatusChange }: MeetingsCalendarProps) {
                         key={m.id}
                         className={cn(
                           "flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium truncate leading-tight",
-                          m.status === "SCHEDULED" && "bg-blue-50 text-blue-700",
-                          m.status === "COMPLETED" && "bg-emerald-50 text-emerald-700",
-                          m.status === "CANCELLED" && "bg-gray-100 text-gray-500",
-                          m.status === "NO_SHOW" && "bg-red-50 text-red-700",
+                          m.status === "SCHEDULED" && "bg-blue-50 os-dark:bg-blue-500/10 text-blue-700 os-dark:text-blue-300",
+                          m.status === "COMPLETED" && "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300",
+                          m.status === "CANCELLED" && "bg-gray-100 os-dark:bg-[var(--os-hover)] text-gray-500 os-dark:text-[var(--os-text-soft)]",
+                          m.status === "NO_SHOW" && "bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300",
                         )}
                       >
                         <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[m.status])} />
@@ -304,7 +304,7 @@ export function MeetingsCalendar({ onStatusChange }: MeetingsCalendarProps) {
                       </div>
                     ))}
                     {dayMeetings.length > 2 && (
-                      <div className="text-[10px] font-medium text-[#8B00FF] pl-1">
+                      <div className="text-[10px] font-medium text-[var(--os-brand)] pl-1">
                         +{dayMeetings.length - 2} more
                       </div>
                     )}
@@ -319,7 +319,7 @@ export function MeetingsCalendar({ onStatusChange }: MeetingsCalendarProps) {
       {/* Loading overlay */}
       {loading && (
         <div className="flex items-center justify-center py-4">
-          <div className="w-5 h-5 border-2 border-purple-200 border-t-[#8B00FF] rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-purple-200 os-dark:border-purple-500/30 border-t-[#8B00FF] rounded-full animate-spin" />
         </div>
       )}
 
@@ -328,7 +328,7 @@ export function MeetingsCalendar({ onStatusChange }: MeetingsCalendarProps) {
         {(["SCHEDULED", "COMPLETED", "NO_SHOW", "CANCELLED"] as const).map((s) => (
           <div key={s} className="flex items-center gap-1.5">
             <span className={cn("w-2 h-2 rounded-full", STATUS_DOT[s])} />
-            <span className="text-[11px] text-[#6B7280] capitalize">{s.replace("_", " ").toLowerCase()}</span>
+            <span className="text-[11px] text-[#6B7280] os-dark:text-[var(--os-text)] capitalize">{s.replace("_", " ").toLowerCase()}</span>
           </div>
         ))}
       </div>
@@ -341,15 +341,15 @@ export function MeetingsCalendar({ onStatusChange }: MeetingsCalendarProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
             transition={{ duration: 0.2 }}
-            className="bg-white border border-[#E5E7EB] rounded-xl shadow-sm overflow-hidden"
+            className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl shadow-sm overflow-hidden"
           >
             {/* Panel header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#F3F4F6]">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#F3F4F6] os-dark:border-[var(--os-border)]">
               <div>
-                <h3 className="text-[14px] font-semibold text-[#0F172A]">
+                <h3 className="text-[14px] font-semibold text-[var(--os-text)]">
                   {selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                 </h3>
-                <p className="text-[11px] text-[#9CA3AF] mt-0.5">
+                <p className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] mt-0.5">
                   {selectedMeetings.length === 0
                     ? "No meetings"
                     : `${selectedMeetings.length} meeting${selectedMeetings.length > 1 ? "s" : ""}`}
@@ -357,7 +357,7 @@ export function MeetingsCalendar({ onStatusChange }: MeetingsCalendarProps) {
               </div>
               <button
                 onClick={() => setSelectedDate(null)}
-                className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-[#F1F5F9] text-[#9CA3AF] hover:text-[#475569] transition-colors"
+                className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-[var(--os-hover)] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] hover:text-[var(--os-text-muted)] transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -365,7 +365,7 @@ export function MeetingsCalendar({ onStatusChange }: MeetingsCalendarProps) {
 
             {/* Meetings list */}
             {selectedMeetings.length === 0 ? (
-              <div className="px-4 py-8 text-center text-[13px] text-[#9CA3AF]">
+              <div className="px-4 py-8 text-center text-[13px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">
                 No meetings scheduled for this day
               </div>
             ) : (
@@ -381,30 +381,30 @@ export function MeetingsCalendar({ onStatusChange }: MeetingsCalendarProps) {
                   const start = new Date(m.startAt);
 
                   return (
-                    <div key={m.id} className="flex items-center gap-3 px-4 py-3 hover:bg-[#FAFAFE] group">
+                    <div key={m.id} className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--os-surface-2)] group">
                       {/* Time */}
                       <div className="text-center w-14 shrink-0">
-                        <p className="text-[14px] font-semibold text-[#111827] leading-none">{fmtTime(start)}</p>
+                        <p className="text-[14px] font-semibold text-[#111827] os-dark:text-[var(--os-text)] leading-none">{fmtTime(start)}</p>
                         {m.endAt && (
-                          <p className="text-[10px] text-[#9CA3AF] mt-1">{fmtTime(new Date(m.endAt))}</p>
+                          <p className="text-[10px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] mt-1">{fmtTime(new Date(m.endAt))}</p>
                         )}
                       </div>
 
                       {/* Type icon */}
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#F3F4F6] text-[#475569] shrink-0">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[var(--os-text-muted)] shrink-0">
                         <TypeIcon className="w-4 h-4" />
                       </div>
 
                       {/* Info */}
                       <div className="min-w-0 flex-1">
-                        <p className="text-[13px] font-medium text-[#111827] truncate">{m.title}</p>
-                        <div className="flex items-center gap-2 text-[11px] text-[#6B7280] mt-0.5">
+                        <p className="text-[13px] font-medium text-[#111827] os-dark:text-[var(--os-text)] truncate">{m.title}</p>
+                        <div className="flex items-center gap-2 text-[11px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">
                           {linkedHref ? (
-                            <Link href={linkedHref} className="hover:text-[#8B00FF] truncate max-w-[200px]">
+                            <Link href={linkedHref} className="hover:text-[var(--os-brand)] truncate max-w-[200px]">
                               {linkedLabel}
                             </Link>
                           ) : (
-                            <span className="text-[#9CA3AF]">{linkedLabel}</span>
+                            <span className="text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">{linkedLabel}</span>
                           )}
                           <span>&middot;</span>
                           <span>{TYPE_LABEL[m.type] ?? m.type}</span>
@@ -433,14 +433,14 @@ export function MeetingsCalendar({ onStatusChange }: MeetingsCalendarProps) {
                           <button
                             onClick={(e) => { e.stopPropagation(); handleStatusChange(m, "COMPLETED"); }}
                             title="Mark completed"
-                            className="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50"
+                            className="p-1.5 rounded-md text-emerald-600 os-dark:text-emerald-400 hover:bg-emerald-50 os-dark:hover:bg-emerald-500/10"
                           >
                             <CheckCircle2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); handleStatusChange(m, "NO_SHOW"); }}
                             title="Mark no-show"
-                            className="p-1.5 rounded-md text-red-600 hover:bg-red-50"
+                            className="p-1.5 rounded-md text-red-600 os-dark:text-red-400 hover:bg-red-50 os-dark:hover:bg-red-500/10"
                           >
                             <XCircle className="w-4 h-4" />
                           </button>

@@ -37,10 +37,10 @@ const PRIORITY_LABEL: Record<TaskPriority, string> = {
 };
 
 const PRIORITY_STYLE: Record<TaskPriority, string> = {
-  LOW:    "bg-[#F3F4F6] text-[#6B7280] border-[#E5E7EB]",
-  MEDIUM: "bg-blue-50 text-blue-700 border-blue-100",
-  HIGH:   "bg-amber-50 text-amber-700 border-amber-100",
-  URGENT: "bg-red-50 text-red-700 border-red-100",
+  LOW:    "bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#6B7280] os-dark:text-[var(--os-text)] border-[var(--os-border)]",
+  MEDIUM: "bg-blue-50 os-dark:bg-blue-500/10 text-blue-700 os-dark:text-blue-300 border-blue-100 os-dark:border-blue-500/30",
+  HIGH:   "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border-amber-100 os-dark:border-amber-500/30",
+  URGENT: "bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 border-red-100 os-dark:border-red-500/30",
 };
 
 const STATUS_LABEL: Record<TaskStatus, string> = {
@@ -48,17 +48,17 @@ const STATUS_LABEL: Record<TaskStatus, string> = {
 };
 
 function dueRelative(due: string | null): { label: string; color: string; overdue: boolean } {
-  if (!due) return { label: "No due date", color: "text-[#9CA3AF]", overdue: false };
+  if (!due) return { label: "No due date", color: "text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]", overdue: false };
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   const target = new Date(due);
   target.setHours(0, 0, 0, 0);
   const diff = Math.round((target.getTime() - now.getTime()) / 86_400_000);
-  if (diff < 0) return { label: `${-diff}d overdue`, color: "text-red-600", overdue: true };
-  if (diff === 0) return { label: "Today", color: "text-amber-600", overdue: false };
-  if (diff === 1) return { label: "Tomorrow", color: "text-blue-600", overdue: false };
-  if (diff < 7) return { label: `In ${diff}d`, color: "text-[#6B7280]", overdue: false };
-  return { label: new Date(due).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }), color: "text-[#6B7280]", overdue: false };
+  if (diff < 0) return { label: `${-diff}d overdue`, color: "text-red-600 os-dark:text-red-400", overdue: true };
+  if (diff === 0) return { label: "Today", color: "text-amber-600 os-dark:text-amber-400", overdue: false };
+  if (diff === 1) return { label: "Tomorrow", color: "text-blue-600 os-dark:text-blue-400", overdue: false };
+  if (diff < 7) return { label: `In ${diff}d`, color: "text-[#6B7280] os-dark:text-[var(--os-text)]", overdue: false };
+  return { label: new Date(due).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }), color: "text-[#6B7280] os-dark:text-[var(--os-text)]", overdue: false };
 }
 
 type TaskListProps = {
@@ -186,17 +186,17 @@ export function TaskList({
   }
 
   return (
-    <div className={cn("bg-white border border-[#E5E7EB] rounded-xl", className)}>
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[#E5E7EB]">
+    <div className={cn("bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl", className)}>
+      <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--os-border)]">
         <div className="flex items-center gap-2">
-          <h3 className="text-[14px] font-semibold text-[#111827]">{title}</h3>
-          <span className="text-[11px] text-[#9CA3AF] font-medium">({tasks.length})</span>
+          <h3 className="text-[14px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">{title}</h3>
+          <span className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] font-medium">({tasks.length})</span>
         </div>
         {showCreator && (
           <button
             type="button"
             onClick={() => setShowForm((s) => !s)}
-            className="inline-flex items-center gap-1 text-[12px] font-medium text-[#8B00FF] hover:text-[#7A00E0]"
+            className="inline-flex items-center gap-1 text-[12px] font-medium text-[var(--os-brand)] hover:text-[#7A00E0] os-dark:hover:text-[var(--os-purple)]"
           >
             <Plus className="w-3.5 h-3.5" /> {showForm ? "Cancel" : "Add"}
           </button>
@@ -210,20 +210,20 @@ export function TaskList({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             onSubmit={handleCreate}
-            className="px-5 py-4 border-b border-[#E5E7EB] bg-[#FAFAFE] space-y-3"
+            className="px-5 py-4 border-b border-[var(--os-border)] bg-[var(--os-surface-2)] space-y-3"
           >
             <input
               autoFocus
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="What needs to happen?"
-              className="w-full h-10 px-3 bg-white border border-[#D1D5DB] rounded-lg text-[13px] text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15"
+              className="w-full h-10 px-3 bg-[var(--os-surface)] border border-[var(--os-border-hover)] rounded-lg text-[13px] text-[#111827] os-dark:text-[var(--os-text)] placeholder:text-[#9CA3AF] os-dark:placeholder:text-[var(--os-text-soft)] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15"
             />
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <select
                 value={newPriority}
                 onChange={(e) => setNewPriority(e.target.value as TaskPriority)}
-                className="h-9 px-2 bg-white border border-[#D1D5DB] rounded-lg text-[12px] text-[#111827]"
+                className="h-9 px-2 bg-[var(--os-surface)] border border-[var(--os-border-hover)] rounded-lg text-[12px] text-[#111827] os-dark:text-[var(--os-text)]"
               >
                 <option value="LOW">Low priority</option>
                 <option value="MEDIUM">Medium priority</option>
@@ -234,12 +234,12 @@ export function TaskList({
                 type="date"
                 value={newDue}
                 onChange={(e) => setNewDue(e.target.value)}
-                className="h-9 px-2 bg-white border border-[#D1D5DB] rounded-lg text-[12px] text-[#111827]"
+                className="h-9 px-2 bg-[var(--os-surface)] border border-[var(--os-border-hover)] rounded-lg text-[12px] text-[#111827] os-dark:text-[var(--os-text)]"
               />
               <select
                 value={newOwnerId}
                 onChange={(e) => setNewOwnerId(e.target.value)}
-                className="h-9 px-2 bg-white border border-[#D1D5DB] rounded-lg text-[12px] text-[#111827]"
+                className="h-9 px-2 bg-[var(--os-surface)] border border-[var(--os-border-hover)] rounded-lg text-[12px] text-[#111827] os-dark:text-[var(--os-text)]"
               >
                 <option value="">Unassigned</option>
                 {team.map((u) => (
@@ -259,7 +259,7 @@ export function TaskList({
               <button
                 type="button"
                 onClick={() => { setShowForm(false); setNewTitle(""); }}
-                className="h-9 px-3 text-[12px] text-[#6B7280] hover:text-[#111827]"
+                className="h-9 px-3 text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] hover:text-[#111827] os-dark:hover:text-[var(--os-text)]"
               >
                 Cancel
               </button>
@@ -270,16 +270,16 @@ export function TaskList({
 
       <div>
         {loading ? (
-          <div className="px-5 py-8 text-center text-[12px] text-[#9CA3AF]">Loading tasks...</div>
+          <div className="px-5 py-8 text-center text-[12px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">Loading tasks...</div>
         ) : tasks.length === 0 ? (
-          <div className="px-5 py-8 text-center text-[12px] text-[#9CA3AF]">{emptyHint}</div>
+          <div className="px-5 py-8 text-center text-[12px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">{emptyHint}</div>
         ) : (
           <ul className="divide-y divide-[#F3F4F6]">
             {tasks.map((t) => {
               const due = dueRelative(t.dueDate);
               const done = t.status === "DONE";
               return (
-                <li key={t.id} className="group px-5 py-3 hover:bg-[#FAFAFE] transition-colors">
+                <li key={t.id} className="group px-5 py-3 hover:bg-[var(--os-surface-2)] transition-colors">
                   <div className="flex items-start gap-3">
                     <button
                       type="button"
@@ -288,13 +288,13 @@ export function TaskList({
                       aria-label={done ? "Mark as not done" : "Mark as done"}
                     >
                       {done ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 os-dark:text-emerald-400" />
                       ) : t.status === "BLOCKED" ? (
                         <AlertCircle className="w-4 h-4 text-red-500" />
                       ) : t.status === "IN_PROGRESS" ? (
                         <Clock className="w-4 h-4 text-blue-500" />
                       ) : (
-                        <Circle className="w-4 h-4 text-[#9CA3AF] hover:text-[#8B00FF]" />
+                        <Circle className="w-4 h-4 text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] hover:text-[var(--os-brand)]" />
                       )}
                     </button>
 
@@ -302,7 +302,7 @@ export function TaskList({
                       <div className="flex items-start gap-2 flex-wrap">
                         <p className={cn(
                           "text-[13px] font-medium leading-snug",
-                          done ? "text-[#9CA3AF] line-through" : "text-[#111827]",
+                          done ? "text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] line-through" : "text-[#111827] os-dark:text-[var(--os-text)]",
                         )}>
                           {t.title}
                         </p>
@@ -316,14 +316,14 @@ export function TaskList({
                         )}
                       </div>
                       {t.description && !compact && (
-                        <p className="text-[12px] text-[#6B7280] mt-0.5">{t.description}</p>
+                        <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">{t.description}</p>
                       )}
                       <div className="flex items-center gap-3 mt-1 text-[11px] flex-wrap">
                         <span className={cn("inline-flex items-center gap-1", due.color)}>
                           <CalendarDays className="w-3 h-3" /> {due.label}
                         </span>
                         {t.owner && (
-                          <span className="inline-flex items-center gap-1 text-[#6B7280]">
+                          <span className="inline-flex items-center gap-1 text-[#6B7280] os-dark:text-[var(--os-text)]">
                             <span className="flex items-center justify-center w-4 h-4 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[8px] font-bold">
                               {t.owner.avatarInitials}
                             </span>
@@ -333,7 +333,7 @@ export function TaskList({
                         {!parentId && t.parentLabel && (
                           <Link
                             href={parentHref(t.parentType, t.parentId)}
-                            className="inline-flex items-center gap-1 text-[#8B00FF] hover:underline"
+                            className="inline-flex items-center gap-1 text-[var(--os-brand)] hover:underline"
                           >
                             {t.parentLabel}
                           </Link>
@@ -346,18 +346,18 @@ export function TaskList({
                         <select
                           value={t.status}
                           onChange={(e) => changeStatus(t, e.target.value as TaskStatus)}
-                          className="h-7 pl-2 pr-6 bg-white border border-[#E5E7EB] rounded-md text-[11px] text-[#374151] appearance-none cursor-pointer"
+                          className="h-7 pl-2 pr-6 bg-[var(--os-surface)] border border-[var(--os-border)] rounded-md text-[11px] text-[#374151] os-dark:text-[var(--os-text)] appearance-none cursor-pointer"
                         >
                           {(["TODO", "IN_PROGRESS", "BLOCKED", "DONE"] as TaskStatus[]).map((s) => (
                             <option key={s} value={s}>{STATUS_LABEL[s]}</option>
                           ))}
                         </select>
-                        <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-[#9CA3AF] pointer-events-none" />
+                        <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] pointer-events-none" />
                       </div>
                       <button
                         type="button"
                         onClick={() => deleteTask(t)}
-                        className="p-1 rounded-md text-[#9CA3AF] hover:text-red-500 hover:bg-red-50"
+                        className="p-1 rounded-md text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] hover:text-red-500 hover:bg-red-50 os-dark:hover:bg-red-500/10"
                         title="Delete"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

@@ -99,7 +99,7 @@ export default function RevenueCommandCenter() {
         title="Revenue Command Center"
         subtitle={`${data.meta.activeOpportunities} active opportunities · ${data.meta.totalProspects} prospects in DB`}
         actions={
-          <button onClick={load} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[var(--os-border)] bg-white text-[#475569] hover:bg-gray-50">
+          <button onClick={load} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[var(--os-border)] bg-[var(--os-surface)] text-[var(--os-text-muted)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-surface-2)]">
             <RefreshCw className="w-3.5 h-3.5" /> Refresh
           </button>
         }
@@ -115,7 +115,7 @@ export default function RevenueCommandCenter() {
       <div className="mt-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-[15px] font-semibold text-[var(--os-text)] flex items-center gap-2">
-            <Banknote className="w-4 h-4 text-[#8B00FF]" /> Revenue pipeline
+            <Banknote className="w-4 h-4 text-[var(--os-brand)]" /> Revenue pipeline
           </h2>
           <FilterTabs
             items={[
@@ -141,7 +141,7 @@ export default function RevenueCommandCenter() {
       {/* Forecast */}
       <div className="mt-6">
         <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3 flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-[#8B00FF]" /> Forecast
+          <TrendingUp className="w-4 h-4 text-[var(--os-brand)]" /> Forecast
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <ForecastCard label="Next 7 days" forecast={data.forecast.in7} />
@@ -174,9 +174,9 @@ function AlertsStrip({ alerts }: { alerts: RevenueData["alerts"] }) {
   return (
     <div className={cn(
       "rounded-2xl border-2 p-4 mb-5 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]",
-      tone === "green" ? "border-emerald-200 bg-gradient-to-br from-emerald-50/40 to-teal-50/40" :
-      tone === "orange" ? "border-amber-200 bg-gradient-to-br from-amber-50/40 to-orange-50/40" :
-      "border-rose-300 bg-gradient-to-br from-rose-50/60 to-red-50/40"
+      tone === "green" ? "border-emerald-200 os-dark:border-emerald-500/30 bg-gradient-to-br from-emerald-50/40 os-dark:from-emerald-500/10 to-teal-50/40 os-dark:to-teal-500/10" :
+      tone === "orange" ? "border-amber-200 os-dark:border-amber-500/30 bg-gradient-to-br from-amber-50/40 os-dark:from-amber-500/10 to-orange-50/40 os-dark:to-orange-500/10" :
+      "border-rose-300 os-dark:border-rose-500/30 bg-gradient-to-br from-rose-50/60 os-dark:from-rose-500/10 to-red-50/40 os-dark:to-red-500/10"
     )}>
       <div className="flex items-center gap-3 mb-3">
         <div className={cn(
@@ -199,14 +199,14 @@ function AlertsStrip({ alerts }: { alerts: RevenueData["alerts"] }) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {items.map((it) => (
           <div key={it.label} className={cn(
-            "rounded-xl bg-white border p-2.5",
-            it.value > 0 ? (tone === "red" ? "border-rose-200" : "border-amber-200") : "border-[var(--os-border)]"
+            "rounded-xl bg-[var(--os-surface)] border p-2.5",
+            it.value > 0 ? (tone === "red" ? "border-rose-200 os-dark:border-rose-500/30" : "border-amber-200 os-dark:border-amber-500/30") : "border-[var(--os-border)]"
           )}>
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-1">
-              <span className={cn(it.value > 0 ? (tone === "red" ? "text-rose-600" : "text-amber-600") : "text-[#94A3B8]")}>{it.icon}</span>
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[var(--os-text-soft)] font-medium mb-1">
+              <span className={cn(it.value > 0 ? (tone === "red" ? "text-rose-600 os-dark:text-rose-400" : "text-amber-600 os-dark:text-amber-400") : "text-[var(--os-text-faint)]")}>{it.icon}</span>
               {it.label}
             </div>
-            <div className={cn("text-xl font-bold tabular-nums", it.value > 0 ? (tone === "red" ? "text-rose-700" : "text-amber-700") : "text-[#94A3B8]")}>
+            <div className={cn("text-xl font-bold tabular-nums", it.value > 0 ? (tone === "red" ? "text-rose-700 os-dark:text-rose-300" : "text-amber-700 os-dark:text-amber-300") : "text-[var(--os-text-faint)]")}>
               {it.value}
             </div>
           </div>
@@ -220,47 +220,47 @@ function AlertsStrip({ alerts }: { alerts: RevenueData["alerts"] }) {
 function CeoWidget({ top10 }: { top10: Opportunity[] }) {
   if (top10.length === 0) {
     return (
-      <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50/40 to-violet-50/40 p-5 mb-5 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
+      <div className="rounded-2xl border-2 border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50/40 os-dark:from-purple-500/10 to-violet-50/40 os-dark:to-violet-500/10 p-5 mb-5 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
         <div className="flex items-center gap-2 mb-2">
-          <Crown className="w-4 h-4 text-[#8B00FF]" />
+          <Crown className="w-4 h-4 text-[var(--os-brand)]" />
           <h2 className="text-[14px] font-semibold text-[var(--os-text)]">CEO widget — if you only have 1 hour today</h2>
         </div>
-        <div className="text-[12px] text-[#64748B] [.os-dark_&]:text-[var(--os-text-muted)]">No active opportunities yet. Log a proposal amount on a prospect to populate this list.</div>
+        <div className="text-[12px] text-[var(--os-text-soft)] [.os-dark_&]:text-[var(--os-text-muted)]">No active opportunities yet. Log a proposal amount on a prospect to populate this list.</div>
       </div>
     );
   }
   const totalExpected = top10.reduce((s, o) => s + o.expectedRevenue, 0);
   return (
-    <div className="rounded-2xl border-2 border-purple-300 bg-gradient-to-br from-purple-50/60 to-violet-50/40 p-5 mb-5 shadow-md shadow-purple-500/10 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
+    <div className="rounded-2xl border-2 border-purple-300 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50/60 os-dark:from-purple-500/10 to-violet-50/40 os-dark:to-violet-500/10 p-5 mb-5 shadow-md shadow-purple-500/10 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
       <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Crown className="w-4 h-4 text-[#8B00FF]" />
+            <Crown className="w-4 h-4 text-[var(--os-brand)]" />
             <h2 className="text-[14px] font-semibold text-[var(--os-text)]">If you only have 1 hour today — contact these first</h2>
           </div>
-          <div className="text-[12px] text-[var(--os-text-muted)]">10 prospects · <span className="font-semibold text-[#8B00FF]">{fmtMAD(totalExpected)}</span> expected revenue at current probability</div>
+          <div className="text-[12px] text-[var(--os-text-muted)]">10 prospects · <span className="font-semibold text-[var(--os-brand)]">{fmtMAD(totalExpected)}</span> expected revenue at current probability</div>
         </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <tbody>
             {top10.map((o, i) => (
-              <tr key={o.id} className="border-b border-purple-100 last:border-0">
+              <tr key={o.id} className="border-b border-purple-100 os-dark:border-purple-500/30 last:border-0">
                 <td className="px-2 py-2 w-8">
                   <span className={cn(
                     "inline-flex items-center justify-center w-6 h-6 rounded-lg text-[11px] font-bold",
-                    i === 0 ? "bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white" : "bg-purple-100 text-[#7C3AED]"
+                    i === 0 ? "bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white" : "bg-purple-100 os-dark:bg-purple-500/15 text-[#7C3AED] os-dark:text-[var(--os-purple)]"
                   )}>{i + 1}</span>
                 </td>
                 <td className="px-2 py-2">
-                  <Link href={`/admin/prospecting/${o.id}`} className="text-[13px] font-semibold text-[var(--os-text)] hover:text-[#7C3AED]">{o.name}</Link>
-                  <div className="text-[11px] text-[#64748B]">{o.sector} · {o.city} · {STAGE_LABEL[o.stage] || o.stage}</div>
+                  <Link href={`/admin/prospecting/${o.id}`} className="text-[13px] font-semibold text-[var(--os-text)] hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)]">{o.name}</Link>
+                  <div className="text-[11px] text-[var(--os-text-soft)]">{o.sector} · {o.city} · {STAGE_LABEL[o.stage] || o.stage}</div>
                 </td>
                 <td className="px-2 py-2 text-right hidden sm:table-cell">
-                  <div className="text-[12px] text-[#94A3B8] tabular-nums">{fmtMAD(o.proposalValue)} × {Math.round(o.probability * 100)}%</div>
+                  <div className="text-[12px] text-[var(--os-text-faint)] tabular-nums">{fmtMAD(o.proposalValue)} × {Math.round(o.probability * 100)}%</div>
                 </td>
                 <td className="px-2 py-2 text-right">
-                  <div className="text-[13px] font-bold text-[#7C3AED] tabular-nums">{fmtMAD(o.expectedRevenue)}</div>
+                  <div className="text-[13px] font-bold text-[#7C3AED] os-dark:text-[var(--os-purple)] tabular-nums">{fmtMAD(o.expectedRevenue)}</div>
                 </td>
               </tr>
             ))}
@@ -274,20 +274,20 @@ function CeoWidget({ top10 }: { top10: Opportunity[] }) {
 /* ============================================================ */
 function PipelineCard({ label, value, tone, highlight }: { label: string; value: number; tone: string; highlight?: boolean }) {
   const tones: Record<string, string> = {
-    purple: "text-purple-700 border-purple-200",
-    indigo: "text-indigo-700 border-indigo-200",
-    cyan: "text-cyan-700 border-cyan-200",
-    emerald: "text-emerald-700 border-emerald-200",
-    rose: "text-rose-700 border-rose-200",
+    purple: "text-purple-700 os-dark:text-purple-300 border-purple-200 os-dark:border-purple-500/30",
+    indigo: "text-indigo-700 os-dark:text-indigo-300 border-indigo-200 os-dark:border-indigo-500/30",
+    cyan: "text-cyan-700 os-dark:text-cyan-300 border-cyan-200 os-dark:border-cyan-500/30",
+    emerald: "text-emerald-700 os-dark:text-emerald-300 border-emerald-200 os-dark:border-emerald-500/30",
+    rose: "text-rose-700 os-dark:text-rose-300 border-rose-200 os-dark:border-rose-500/30",
   };
   return (
     <div className={cn(
-      "rounded-2xl border bg-white p-4",
+      "rounded-2xl border bg-[var(--os-surface)] p-4",
       tones[tone] || tones.purple,
       highlight && "shadow-md shadow-emerald-500/10"
     )}>
-      <div className="text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-1">{label}</div>
-      <div className={cn("text-2xl font-bold tabular-nums", tones[tone]?.split(" ")[0] || "text-[#0F172A]")}>{fmtMAD(value)}</div>
+      <div className="text-[10px] uppercase tracking-wider text-[var(--os-text-soft)] font-medium mb-1">{label}</div>
+      <div className={cn("text-2xl font-bold tabular-nums", tones[tone]?.split(" ").slice(0, 2).join(" ") || "text-[var(--os-text)]")}>{fmtMAD(value)}</div>
     </div>
   );
 }
@@ -295,10 +295,10 @@ function PipelineCard({ label, value, tone, highlight }: { label: string; value:
 /* ============================================================ */
 function ForecastCard({ label, forecast }: { label: string; forecast: Forecast }) {
   return (
-    <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4">
+    <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4">
       <div className="flex items-center justify-between mb-2">
-        <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium">{label}</div>
-        <span className="text-[10px] text-[#94A3B8]">{forecast.count} opps in window</span>
+        <div className="text-[11px] uppercase tracking-wider text-[var(--os-text-soft)] font-medium">{label}</div>
+        <span className="text-[10px] text-[var(--os-text-faint)]">{forecast.count} opps in window</span>
       </div>
       <div className="space-y-1.5">
         <ForecastRow label="Best" value={forecast.best} tone="emerald" />
@@ -309,11 +309,11 @@ function ForecastCard({ label, forecast }: { label: string; forecast: Forecast }
   );
 }
 function ForecastRow({ label, value, tone, emphasize }: { label: string; value: number; tone: string; emphasize?: boolean }) {
-  const tones: Record<string, string> = { emerald: "text-emerald-700", purple: "text-[#7C3AED]", rose: "text-rose-700" };
+  const tones: Record<string, string> = { emerald: "text-emerald-700 os-dark:text-emerald-300", purple: "text-[#7C3AED] os-dark:text-[var(--os-purple)]", rose: "text-rose-700 os-dark:text-rose-300" };
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[12px] text-[#64748B]">{label}</span>
-      <span className={cn(emphasize ? "text-[16px] font-bold" : "text-[13px] font-medium", tones[tone] || "text-[#0F172A]", "tabular-nums")}>{fmtMAD(value)}</span>
+      <span className="text-[12px] text-[var(--os-text-soft)]">{label}</span>
+      <span className={cn(emphasize ? "text-[16px] font-bold" : "text-[13px] font-medium", tones[tone] || "text-[var(--os-text)]", "tabular-nums")}>{fmtMAD(value)}</span>
     </div>
   );
 }
@@ -324,12 +324,12 @@ function OpportunityTable({ opportunities }: { opportunities: Opportunity[] }) {
   return (
     <div className="mt-6">
       <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3 flex items-center gap-2">
-        <Trophy className="w-4 h-4 text-[#8B00FF]" /> Top {opportunities.length} opportunities
+        <Trophy className="w-4 h-4 text-[var(--os-brand)]" /> Top {opportunities.length} opportunities
       </h2>
-      <div className="rounded-2xl border border-[var(--os-border)] bg-white overflow-hidden">
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] overflow-hidden">
         <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-white border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
+            <thead className="sticky top-0 bg-[var(--os-surface)] border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[var(--os-text-soft)] font-medium">
               <tr>
                 <th className="text-left px-3 py-2">Prospect</th>
                 <th className="text-left px-3 py-2 hidden md:table-cell">Sector</th>
@@ -343,25 +343,25 @@ function OpportunityTable({ opportunities }: { opportunities: Opportunity[] }) {
             </thead>
             <tbody>
               {opportunities.map((o, i) => (
-                <tr key={o.id} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60">
+                <tr key={o.id} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-surface-2)]">
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-[#94A3B8] tabular-nums w-6">{i + 1}.</span>
-                      <Link href={`/admin/prospecting/${o.id}`} className="text-[13px] font-medium text-[#0F172A] hover:text-[#7C3AED]">{o.name}</Link>
-                      {o.qualityLabel === "HOT" && <Flame className="w-3 h-3 text-rose-600" />}
+                      <span className="text-[10px] text-[var(--os-text-faint)] tabular-nums w-6">{i + 1}.</span>
+                      <Link href={`/admin/prospecting/${o.id}`} className="text-[13px] font-medium text-[var(--os-text)] hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)]">{o.name}</Link>
+                      {o.qualityLabel === "HOT" && <Flame className="w-3 h-3 text-rose-600 os-dark:text-rose-400" />}
                     </div>
                   </td>
-                  <td className="px-3 py-2 text-[12px] text-[#475569] hidden md:table-cell">{o.sector}</td>
-                  <td className="px-3 py-2 text-[12px] text-[#475569] hidden lg:table-cell">{o.city}</td>
-                  <td className="px-3 py-2 text-right text-[12px] text-[#475569] tabular-nums">{o.score ?? 0}</td>
-                  <td className="px-3 py-2 text-[12px] text-[#475569]">{STAGE_LABEL[o.stage] || o.stage}</td>
-                  <td className="px-3 py-2 text-right text-[12px] text-[#475569] tabular-nums">{fmtMAD(o.proposalValue)}</td>
+                  <td className="px-3 py-2 text-[12px] text-[var(--os-text-muted)] hidden md:table-cell">{o.sector}</td>
+                  <td className="px-3 py-2 text-[12px] text-[var(--os-text-muted)] hidden lg:table-cell">{o.city}</td>
+                  <td className="px-3 py-2 text-right text-[12px] text-[var(--os-text-muted)] tabular-nums">{o.score ?? 0}</td>
+                  <td className="px-3 py-2 text-[12px] text-[var(--os-text-muted)]">{STAGE_LABEL[o.stage] || o.stage}</td>
+                  <td className="px-3 py-2 text-right text-[12px] text-[var(--os-text-muted)] tabular-nums">{fmtMAD(o.proposalValue)}</td>
                   <td className="px-3 py-2 text-right text-[12px] tabular-nums">
-                    <span className={cn(o.probability >= 0.6 ? "text-emerald-700 font-medium" : o.probability >= 0.3 ? "text-amber-700" : "text-[#94A3B8]")}>
+                    <span className={cn(o.probability >= 0.6 ? "text-emerald-700 os-dark:text-emerald-300 font-medium" : o.probability >= 0.3 ? "text-amber-700 os-dark:text-amber-300" : "text-[var(--os-text-faint)]")}>
                       {Math.round(o.probability * 100)}%
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-right text-[13px] font-bold text-[#7C3AED] tabular-nums">{fmtMAD(o.expectedRevenue)}</td>
+                  <td className="px-3 py-2 text-right text-[13px] font-bold text-[#7C3AED] os-dark:text-[var(--os-purple)] tabular-nums">{fmtMAD(o.expectedRevenue)}</td>
                 </tr>
               ))}
             </tbody>
@@ -377,9 +377,9 @@ function StalledSection({ stalled }: { stalled: RevenueData["stalled"] }) {
   const total = stalled.meetingDoneNoProposal.length + stalled.proposalSentNoReply.length + stalled.contractSentUnsigned.length;
   if (total === 0) {
     return (
-      <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
+      <div className="mt-6 rounded-2xl border border-emerald-200 os-dark:border-emerald-500/30 bg-emerald-50/40 os-dark:bg-emerald-500/10 p-4 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
         <h2 className="text-[14px] font-semibold text-[var(--os-text)] flex items-center gap-2">
-          <Clock className="w-4 h-4 text-emerald-600" /> Stalled deals — none
+          <Clock className="w-4 h-4 text-emerald-600 os-dark:text-emerald-400" /> Stalled deals — none
         </h2>
         <div className="text-[12px] text-[var(--os-text-muted)] mt-1">Every meeting has a next step, every proposal has been followed up.</div>
       </div>
@@ -388,7 +388,7 @@ function StalledSection({ stalled }: { stalled: RevenueData["stalled"] }) {
   return (
     <div className="mt-6">
       <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3 flex items-center gap-2">
-        <Clock className="w-4 h-4 text-amber-600" /> Stalled deals ({total}) · sorted by money at risk
+        <Clock className="w-4 h-4 text-amber-600 os-dark:text-amber-400" /> Stalled deals ({total}) · sorted by money at risk
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <StalledList title="Meeting done, no proposal" items={stalled.meetingDoneNoProposal} tone="amber" />
@@ -401,34 +401,34 @@ function StalledSection({ stalled }: { stalled: RevenueData["stalled"] }) {
 
 function StalledList({ title, items, tone }: { title: string; items: StalledItem[]; tone: string }) {
   const tones: Record<string, string> = {
-    amber: "border-amber-200 bg-amber-50/40",
-    orange: "border-orange-200 bg-orange-50/40",
-    rose: "border-rose-200 bg-rose-50/40",
+    amber: "border-amber-200 os-dark:border-amber-500/30 bg-amber-50/40 os-dark:bg-amber-500/10",
+    orange: "border-orange-200 os-dark:border-orange-500/30 bg-orange-50/40 os-dark:bg-orange-500/10",
+    rose: "border-rose-200 os-dark:border-rose-500/30 bg-rose-50/40 os-dark:bg-rose-500/10",
   };
   return (
-    <div className={cn("rounded-2xl border bg-white overflow-hidden", tones[tone])}>
-      <div className="px-4 py-3 bg-white border-b border-[var(--os-border)]">
-        <div className="text-[12.5px] font-semibold text-[#0F172A]">{title}</div>
-        <div className="text-[11px] text-[#64748B]">{items.length} stalled</div>
+    <div className={cn("rounded-2xl border bg-[var(--os-surface)] overflow-hidden", tones[tone])}>
+      <div className="px-4 py-3 bg-[var(--os-surface)] border-b border-[var(--os-border)]">
+        <div className="text-[12.5px] font-semibold text-[var(--os-text)]">{title}</div>
+        <div className="text-[11px] text-[var(--os-text-soft)]">{items.length} stalled</div>
       </div>
       {items.length === 0 ? (
-        <div className="px-4 py-6 text-center text-[12px] text-[#94A3B8] bg-white">None</div>
+        <div className="px-4 py-6 text-center text-[12px] text-[var(--os-text-faint)] bg-[var(--os-surface)]">None</div>
       ) : (
-        <div className="bg-white">
+        <div className="bg-[var(--os-surface)]">
           {items.slice(0, 10).map((s) => (
             <Link
               key={s.id}
               href={s.prospectId ? `/admin/prospecting/${s.prospectId}` : "#"}
-              className="block px-4 py-2 border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60"
+              className="block px-4 py-2 border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-surface-2)]"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[13px] font-medium text-[#0F172A] truncate">{s.name}</span>
-                <span className="text-[13px] font-bold text-[#0F172A] tabular-nums shrink-0">{fmtMAD(s.amount)}</span>
+                <span className="text-[13px] font-medium text-[var(--os-text)] truncate">{s.name}</span>
+                <span className="text-[13px] font-bold text-[var(--os-text)] tabular-nums shrink-0">{fmtMAD(s.amount)}</span>
               </div>
-              <div className="text-[10px] text-[#64748B]">{s.lastEvent} · {s.daysStalled}d stalled</div>
+              <div className="text-[10px] text-[var(--os-text-soft)]">{s.lastEvent} · {s.daysStalled}d stalled</div>
             </Link>
           ))}
-          {items.length > 10 && <div className="px-4 py-2 text-[10px] text-[#94A3B8] text-center">+ {items.length - 10} more</div>}
+          {items.length > 10 && <div className="px-4 py-2 text-[10px] text-[var(--os-text-faint)] text-center">+ {items.length - 10} more</div>}
         </div>
       )}
     </div>
@@ -441,13 +441,13 @@ function TeamSection({ team }: { team: TeamRow[] }) {
   return (
     <div className="mt-6">
       <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3 flex items-center gap-2">
-        <Users className="w-4 h-4 text-[#8B00FF]" /> Team performance · this month
+        <Users className="w-4 h-4 text-[var(--os-brand)]" /> Team performance · this month
       </h2>
-      <div className="rounded-2xl border border-[var(--os-border)] bg-white overflow-hidden">
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[var(--os-border)] bg-gray-50/60 text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
+              <tr className="border-b border-[var(--os-border)] bg-gray-50/60 os-dark:bg-[var(--os-surface-2)] text-[11px] uppercase tracking-wider text-[var(--os-text-soft)] font-medium">
                 <th className="text-left px-3 py-2">Team member</th>
                 <th className="text-right px-3 py-2">Msg</th>
                 <th className="text-right px-3 py-2">Replies</th>
@@ -460,22 +460,22 @@ function TeamSection({ team }: { team: TeamRow[] }) {
             </thead>
             <tbody>
               {team.map((u, i) => (
-                <tr key={u.userId} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60">
+                <tr key={u.userId} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-surface-2)]">
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-[#94A3B8] tabular-nums w-4">{i + 1}.</span>
-                      <span className="text-[13px] font-medium text-[#0F172A]">{u.name}</span>
+                      <span className="text-[10px] text-[var(--os-text-faint)] tabular-nums w-4">{i + 1}.</span>
+                      <span className="text-[13px] font-medium text-[var(--os-text)]">{u.name}</span>
                     </div>
                   </td>
-                  <td className="px-3 py-2 text-right text-[12px] text-[#475569] tabular-nums">{u.messages}</td>
-                  <td className="px-3 py-2 text-right text-[12px] text-[#475569] tabular-nums">{u.replies}</td>
+                  <td className="px-3 py-2 text-right text-[12px] text-[var(--os-text-muted)] tabular-nums">{u.messages}</td>
+                  <td className="px-3 py-2 text-right text-[12px] text-[var(--os-text-muted)] tabular-nums">{u.replies}</td>
                   <td className="px-3 py-2 text-right text-[12px] hidden md:table-cell tabular-nums">
-                    <span className={cn(u.replyRate >= 15 ? "text-emerald-700 font-medium" : "text-[#475569]")}>{u.replyRate}%</span>
+                    <span className={cn(u.replyRate >= 15 ? "text-emerald-700 os-dark:text-emerald-300 font-medium" : "text-[var(--os-text-muted)]")}>{u.replyRate}%</span>
                   </td>
-                  <td className="px-3 py-2 text-right text-[12px] text-[#475569] tabular-nums">{u.meetings}</td>
-                  <td className="px-3 py-2 text-right text-[12px] text-[#475569] tabular-nums">{u.proposals}</td>
-                  <td className="px-3 py-2 text-right text-[12px] text-[#475569] tabular-nums">{u.contracts}</td>
-                  <td className="px-3 py-2 text-right text-[14px] font-bold text-[#7C3AED] tabular-nums">{fmtMAD(u.revenueWon)}</td>
+                  <td className="px-3 py-2 text-right text-[12px] text-[var(--os-text-muted)] tabular-nums">{u.meetings}</td>
+                  <td className="px-3 py-2 text-right text-[12px] text-[var(--os-text-muted)] tabular-nums">{u.proposals}</td>
+                  <td className="px-3 py-2 text-right text-[12px] text-[var(--os-text-muted)] tabular-nums">{u.contracts}</td>
+                  <td className="px-3 py-2 text-right text-[14px] font-bold text-[#7C3AED] os-dark:text-[var(--os-purple)] tabular-nums">{fmtMAD(u.revenueWon)}</td>
                 </tr>
               ))}
             </tbody>

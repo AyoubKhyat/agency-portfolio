@@ -10,8 +10,8 @@ type TeamMember = { id: string; fullName: string; role: string };
 const STATUSES = ["ACTIVE", "PAUSED", "ARCHIVED"];
 
 const input =
-  "w-full h-11 px-3.5 bg-white border border-[#D1D5DB] rounded-lg text-[14px] text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
-const lbl = "block text-[13px] font-medium text-[#374151] mb-1.5";
+  "w-full h-11 px-3.5 bg-[var(--os-surface)] border border-[var(--os-border-hover)] rounded-lg text-[14px] text-[#111827] os-dark:text-[var(--os-text)] placeholder:text-[#9CA3AF] os-dark:placeholder:text-[var(--os-text-soft)] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
+const lbl = "block text-[13px] font-medium text-[#374151] os-dark:text-[var(--os-text)] mb-1.5";
 
 export default function NewClientPage() {
   const router = useRouter();
@@ -79,19 +79,19 @@ export default function NewClientPage() {
     <div className="max-w-3xl mx-auto">
       <Link
         href="/admin/clients"
-        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#6B7280] hover:text-[#111827] mb-4"
+        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#6B7280] os-dark:text-[var(--os-text)] hover:text-[#111827] os-dark:hover:text-[var(--os-text)] mb-4"
       >
         <ChevronLeft className="w-4 h-4" /> Back to clients
       </Link>
 
-      <h1 className="text-[24px] font-bold text-[#111827] tracking-tight">New client</h1>
-      <p className="text-[14px] text-[#6B7280] mt-1 mb-6">
+      <h1 className="text-[24px] font-bold text-[#111827] os-dark:text-[var(--os-text)] tracking-tight">New client</h1>
+      <p className="text-[14px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-1 mb-6">
         Add a company to the agency&apos;s active accounts.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <section className="bg-white border border-[#E5E7EB] rounded-xl p-6 space-y-4">
-          <h2 className="text-[15px] font-semibold text-[#111827]">Company</h2>
+        <section className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-6 space-y-4">
+          <h2 className="text-[15px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">Company</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <label className={lbl}>Company name <span className="text-red-500">*</span></label>
@@ -125,8 +125,8 @@ export default function NewClientPage() {
           </div>
         </section>
 
-        <section className="bg-white border border-[#E5E7EB] rounded-xl p-6 space-y-4">
-          <h2 className="text-[15px] font-semibold text-[#111827]">Contact</h2>
+        <section className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-6 space-y-4">
+          <h2 className="text-[15px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">Contact</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={lbl}>Contact person</label>
@@ -168,8 +168,8 @@ export default function NewClientPage() {
           </div>
         </section>
 
-        <section className="bg-white border border-[#E5E7EB] rounded-xl p-6 space-y-4">
-          <h2 className="text-[15px] font-semibold text-[#111827]">Account</h2>
+        <section className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-6 space-y-4">
+          <h2 className="text-[15px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">Account</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={lbl}>Contract value (MAD)</label>
@@ -220,8 +220,8 @@ export default function NewClientPage() {
         </section>
 
         {error && (
-          <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-[13px] text-red-700">{error}</p>
+          <div className="px-4 py-3 bg-red-50 os-dark:bg-red-500/10 border border-red-200 os-dark:border-red-500/30 rounded-lg">
+            <p className="text-[13px] text-red-700 os-dark:text-red-300">{error}</p>
           </div>
         )}
 
@@ -237,7 +237,7 @@ export default function NewClientPage() {
           <button
             type="button"
             onClick={() => router.push("/admin/clients")}
-            className="h-11 px-5 bg-white border border-[#D1D5DB] text-[#374151] rounded-lg text-[14px] font-medium hover:bg-[#F9FAFB]"
+            className="h-11 px-5 bg-[var(--os-surface)] border border-[var(--os-border-hover)] text-[#374151] os-dark:text-[var(--os-text)] rounded-lg text-[14px] font-medium hover:bg-[#F9FAFB] os-dark:hover:bg-[var(--os-surface-2)]"
           >
             Cancel
           </button>
