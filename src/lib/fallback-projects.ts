@@ -8,6 +8,7 @@ export const FALLBACK_PROJECTS = [
   { id: "6", slug: "aylani-parfums", category: "web", url: "https://aylani-parfums.vercel.app", image: "/projects/aylani-parfums.webp", tag: "E-commerce Parfums", sortOrder: 5, status: "PUBLISHED", kind: "CLIENT" },
   { id: "7", slug: "luxury-copro", category: "web", url: "https://luxurycopro.webyms.com/", image: "/projects/luxury-copro.webp", tag: "Immobilier", sortOrder: 6, status: "PUBLISHED", kind: "CLIENT" },
   { id: "8", slug: "asrar-lalla", category: "web", url: "https://asrar-lalla.vercel.app/", image: "/projects/asrar-lalla.webp", tag: "E-commerce Beauté", sortOrder: 7, status: "PUBLISHED", kind: "CONCEPT" },
+  { id: "9", slug: "megarama", category: "web", url: "", image: "/projects/megarama.webp", tag: "Concept non officiel", sortOrder: 8, status: "PUBLISHED", kind: "CONCEPT" },
 ];
 
 export const FALLBACK_SLUGS = FALLBACK_PROJECTS.map((p) => p.slug);

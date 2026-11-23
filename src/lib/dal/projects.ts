@@ -48,6 +48,7 @@ async function getFallbackProjects(locale: string) {
     "aylani-parfums": "project12",
     "luxury-copro": "project13",
     "asrar-lalla": "project14",
+    megarama: "project15",
   };
 
   return FALLBACK_PROJECTS.map((p) => {

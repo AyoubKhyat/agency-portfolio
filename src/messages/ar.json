@@ -301,7 +301,11 @@
     "filter_concepts": "المفاهيم",
     "filter_label": "عرض",
     "cta_title": "قد يكون مشروعك هو التالي.",
-    "new_tab": "(علامة تبويب جديدة)"
+    "new_tab": "(علامة تبويب جديدة)",
+    "project15_title": "Megarama Marrakech",
+    "project15_eyebrow": "مشروع مفهوم — غير رسمي، ولا علاقة له بـ Megarama",
+    "project15_desc": "مفهوم غير رسمي لموقع سينمائي لقاعة سينما في مراكش: واجهة ثلاثية الأبعاد غامرة، حركات سينمائية مع التمرير وصفحات مخصصة لعرض الأفلام.",
+    "project15_tags": "Next.js,React,Three.js,GSAP,Tailwind CSS"
   },
   "Blog": {
     "title": "مدونتنا",
@@ -645,7 +649,28 @@
     "asrar-lalla_result2_value": "تجارة إلكترونية",
     "asrar-lalla_result2_label": "الدفع عند الاستلام وواتساب",
     "asrar-lalla_result3_value": "متجاوب",
-    "asrar-lalla_result3_label": "تسوق محسّن للجوال"
+    "asrar-lalla_result3_label": "تسوق محسّن للجوال",
+    "megarama_title": "Megarama Marrakech",
+    "megarama_tagline": "مشروع مفهوم — غير رسمي، ولا علاقة له بـ Megarama.",
+    "megarama_meta_desc": "مفهوم Megarama Marrakech: موقع سينما غير رسمي من إنجاز Ibda3 Digital بتجربة ثلاثية الأبعاد وحركات GSAP وصفحات لعرض الأفلام. لا علاقة له بـ Megarama.",
+    "megarama_industry": "السينما والترفيه (مفهوم)",
+    "megarama_challenge": "استكشاف تصميمي: كيف يمكن لموقع سينما راقية أن يكون سينمائيًا مثل الشاشة الكبيرة، بدل أن يكون مجرد قائمة بمواعيد العروض؟",
+    "megarama_solution": "صممنا مفهومًا غامرًا بمشهد ثلاثي الأبعاد وسرد قصصي مع التمرير وتصميم حركي، مع صفحة عرض خاصة بكل فيلم. هذا مفهوم غير رسمي، لم تطلبه Megarama ولا علاقة له بها.",
+    "megarama_step1_title": "الإدارة الفنية",
+    "megarama_step1_desc": "عالم بصري داكن وراقٍ بلمسات حمراء، وخطوط عرض كبيرة، وملصقات أفلام عائمة مستوحاة من تجربة قاعة السينما.",
+    "megarama_step2_title": "ثلاثي الأبعاد والحركة",
+    "megarama_step2_desc": "تجربة ثلاثية الأبعاد مبنية بـ Three.js (React Three Fiber) وحركات سينمائية مع التمرير باستخدام GSAP وFramer Motion.",
+    "megarama_step3_title": "صفحات عرض الأفلام",
+    "megarama_step3_desc": "صفحة خاصة لكل فيلم تضم الملخص والمدة واللغة والنوع، بتصميم يحافظ على الطابع السينمائي للصفحة الرئيسية.",
+    "megarama_features": "تجربة ثلاثية الأبعاد غامرة,حركات سينمائية مع التمرير,صفحات عرض الأفلام,شاشة تحميل متحركة,تصميم متجاوب",
+    "megarama_tech": "Next.js,React,Three.js,GSAP,Framer Motion,Tailwind CSS",
+    "megarama_client": "مفهوم (غير رسمي، ولا علاقة له بـ Megarama)",
+    "megarama_result1_value": "3D",
+    "megarama_result1_label": "مشهد افتتاحي غامر",
+    "megarama_result2_value": "حركة",
+    "megarama_result2_label": "حركات سينمائية مع التمرير",
+    "megarama_result3_value": "صفحات",
+    "megarama_result3_label": "صفحات عرض الأفلام"
   },
   "Assistant": {
     "greeting": "مرحبًا 👋 كيف يمكننا مساعدتك؟",

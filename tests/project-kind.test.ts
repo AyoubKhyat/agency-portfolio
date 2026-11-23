@@ -65,6 +65,7 @@ test("fallback data (no database) keeps the production classification", () => {
   assert.deepEqual(kinds, {
     "hammam-nour": "CONCEPT", goudoukh: "CONCEPT", tannour: "CONCEPT", terrene: "CLIENT",
     "victory-path": "CONCEPT", "aylani-parfums": "CLIENT", "luxury-copro": "CLIENT", "asrar-lalla": "CONCEPT",
+    megarama: "CONCEPT",
   });
 });
 
