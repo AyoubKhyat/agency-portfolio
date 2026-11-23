@@ -11,11 +11,11 @@ import { whatsappUrl, type ChannelOption, type QueueItem, type QueueKind, type S
 import { cn } from "@/lib/utils";
 
 export const KIND_STYLE: Record<QueueKind, { label: string; dot: string; chip: string }> = {
-  reply:              { label: "Reply",        dot: "bg-emerald-500", chip: "bg-emerald-500/10 text-emerald-600" },
-  reply_review:       { label: "Possible old reply", dot: "bg-amber-500",   chip: "bg-amber-500/10 text-amber-600" },
+  reply:              { label: "Reply",        dot: "bg-emerald-500", chip: "bg-emerald-500/10 text-emerald-600 os-dark:text-emerald-400" },
+  reply_review:       { label: "Possible old reply", dot: "bg-amber-500",   chip: "bg-amber-500/10 text-amber-600 os-dark:text-amber-400" },
   enquiry:            { label: "New enquiry",  dot: "bg-blue-500",    chip: "bg-blue-500/10 text-blue-500" },
   follow_up_overdue:  { label: "Overdue",      dot: "bg-red-500",     chip: "bg-red-500/10 text-red-500" },
-  follow_up_today:    { label: "Due today",    dot: "bg-amber-500",   chip: "bg-amber-500/10 text-amber-600" },
+  follow_up_today:    { label: "Due today",    dot: "bg-amber-500",   chip: "bg-amber-500/10 text-amber-600 os-dark:text-amber-400" },
   follow_up_decision: { label: "Follow-up",    dot: "bg-[#8B00FF]",   chip: "bg-[var(--os-purple-subtle)] text-[var(--os-purple)]" },
   ready:              { label: "Ready",        dot: "bg-[#2f5bff]",   chip: "bg-blue-500/10 text-blue-500" },
 };
@@ -186,7 +186,7 @@ export function NextActionCard({ item, position, total, busy, onAct, onOpened, c
             <span className={cn("w-1.5 h-1.5 rounded-full", style.dot)} /> {style.label}
           </span>
           <span className="text-[13px] text-[var(--os-text-muted)]">{item.detail}</span>
-          {item.meta && <span className="text-[13px] text-[var(--os-text-dim)] truncate max-w-full">· {item.meta}</span>}
+          {item.meta && <span className="text-[13px] text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)] truncate max-w-full">· {item.meta}</span>}
         </div>
 
         <p className="flex items-start gap-2 mt-4 text-[14px] leading-relaxed text-[var(--os-text-muted)]">

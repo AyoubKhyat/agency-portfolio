@@ -24,7 +24,7 @@ export function PageHeader({ title, subtitle, count, actions, className }: PageH
         <h1 className="text-xl sm:text-2xl font-semibold text-[var(--os-text)] tracking-tight flex items-center gap-3">
           {title}
           {typeof count === "number" && (
-            <span className="text-sm sm:text-base font-normal text-[var(--os-text-dim)]">({count})</span>
+            <span className="text-sm sm:text-base font-normal text-[var(--os-text-dim)] os-dark:text-[var(--os-text-soft)]">({count})</span>
           )}
         </h1>
         {subtitle && <p className="text-xs sm:text-sm text-[var(--os-text-muted)] mt-1">{subtitle}</p>}

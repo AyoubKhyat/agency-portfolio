@@ -175,9 +175,9 @@ function getHealthScore(p: { phone: string; instagram: string; hasWebsite: boole
   if (p.status === "CLIENT" || p.status === "CONVERTI") score += 30;
   if (p.followUpDate) score += 10;
   score = Math.min(score, 100);
-  if (score >= 60) return { score, label: "Hot", color: "bg-emerald-100 text-emerald-700" };
-  if (score >= 30) return { score, label: "Warm", color: "bg-amber-100 text-amber-700" };
-  return { score, label: "Cold", color: "bg-red-100 text-red-700" };
+  if (score >= 60) return { score, label: "Hot", color: "bg-emerald-100 os-dark:bg-emerald-500/15 text-emerald-700 os-dark:text-emerald-300" };
+  if (score >= 30) return { score, label: "Warm", color: "bg-amber-100 os-dark:bg-amber-500/15 text-amber-700 os-dark:text-amber-300" };
+  return { score, label: "Cold", color: "bg-red-100 os-dark:bg-red-500/15 text-red-700 os-dark:text-red-300" };
 }
 
 function openLink(url: string) {
@@ -200,13 +200,13 @@ function ScoreBadge({ prospect, factors }: { prospect: Prospect; factors?: strin
   const label = prospect.scoreLabel;
 
   if (score == null || !label) {
-    return <span className="text-[10px] text-[#94A3B8] italic">--</span>;
+    return <span className="text-[10px] text-[var(--os-text-faint)] italic">--</span>;
   }
 
   const colorMap: Record<string, string> = {
-    Hot: "bg-red-100 text-red-700 border-red-200",
-    Warm: "bg-orange-100 text-orange-700 border-orange-200",
-    Cold: "bg-blue-100 text-blue-700 border-blue-200",
+    Hot: "bg-red-100 os-dark:bg-red-500/15 text-red-700 os-dark:text-red-300 border-red-200 os-dark:border-red-500/30",
+    Warm: "bg-orange-100 os-dark:bg-orange-500/15 text-orange-700 os-dark:text-orange-300 border-orange-200 os-dark:border-orange-500/30",
+    Cold: "bg-blue-100 os-dark:bg-blue-500/15 text-blue-700 os-dark:text-blue-300 border-blue-200 os-dark:border-blue-500/30",
   };
 
   const dotColor: Record<string, string> = {
@@ -223,24 +223,24 @@ function ScoreBadge({ prospect, factors }: { prospect: Prospect; factors?: strin
         onClick={(e) => { e.stopPropagation(); setShowTooltip(!showTooltip); }}
         className={cn(
           "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold border transition-colors cursor-help",
-          colorMap[label] || "bg-gray-100 text-gray-600 border-gray-200"
+          colorMap[label] || "bg-gray-100 os-dark:bg-[var(--os-hover)] text-gray-600 os-dark:text-[var(--os-text-muted)] border-gray-200 os-dark:border-[var(--os-border)]"
         )}
       >
         <span className={cn("w-1.5 h-1.5 rounded-full", dotColor[label] || "bg-gray-400")} />
         {score} {label}
       </button>
       {showTooltip && factors && factors.length > 0 && (
-        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-white rounded-lg shadow-lg border border-[#E2E8F0] p-2.5 text-left">
-          <div className="text-[11px] font-semibold text-[#0F172A] mb-1.5">Score Breakdown</div>
+        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-[var(--os-surface)] rounded-lg shadow-lg border border-[var(--os-control-border)] p-2.5 text-left">
+          <div className="text-[11px] font-semibold text-[var(--os-text)] mb-1.5">Score Breakdown</div>
           <ul className="space-y-0.5">
             {factors.map((f, i) => (
-              <li key={i} className="text-[10px] text-[#475569] flex items-start gap-1">
-                <span className="text-[#94A3B8] mt-0.5">&#8226;</span>
+              <li key={i} className="text-[10px] text-[var(--os-text-muted)] flex items-start gap-1">
+                <span className="text-[var(--os-text-faint)] mt-0.5">&#8226;</span>
                 {f}
               </li>
             ))}
           </ul>
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-2 h-2 bg-white border-r border-b border-[#E2E8F0] rotate-45" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-2 h-2 bg-[var(--os-surface)] border-r border-b border-[var(--os-control-border)] rotate-45" />
         </div>
       )}
     </div>
@@ -269,7 +269,7 @@ function ChannelChip({ prospect }: { prospect: Prospect }) {
   return (
     <span title={meta.title} className={cn(
       "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium border",
-      verified ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-slate-50 text-slate-500 border-slate-200",
+      verified ? "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-100 os-dark:border-emerald-500/30" : "bg-slate-50 os-dark:bg-[var(--os-surface-2)] text-slate-500 os-dark:text-[var(--os-text-soft)] border-slate-200 os-dark:border-[var(--os-border)]",
     )}>
       {verified ? <ShieldCheck className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />}
       {meta.label}
@@ -286,7 +286,7 @@ function SendChip({ prospect }: { prospect: Prospect }) {
   return (
     <span title={meta.title} className={cn(
       "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium border",
-      confirmed ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-amber-50 text-amber-800 border-amber-100",
+      confirmed ? "bg-blue-50 os-dark:bg-blue-500/10 text-blue-700 os-dark:text-blue-300 border-blue-100 os-dark:border-blue-500/30" : "bg-amber-50 os-dark:bg-amber-500/10 text-amber-800 os-dark:text-amber-300 border-amber-100 os-dark:border-amber-500/30",
     )}>
       {confirmed ? <Send className="w-3 h-3" /> : <FileQuestion className="w-3 h-3" />}
       {meta.label}
@@ -302,7 +302,7 @@ function ReplyChip({ prospect }: { prospect: Prospect }) {
   return (
     <span title={meta.title} className={cn(
       "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium border",
-      state === "CONFIRMED" ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-slate-50 text-slate-600 border-slate-200",
+      state === "CONFIRMED" ? "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-100 os-dark:border-emerald-500/30" : "bg-slate-50 os-dark:bg-[var(--os-surface-2)] text-slate-600 os-dark:text-[var(--os-text-muted)] border-slate-200 os-dark:border-[var(--os-border)]",
     )}>
       {state === "CONFIRMED" ? <CheckCircle className="w-3 h-3" /> : <MessageCircleQuestion className="w-3 h-3" />}
       {meta.label}
@@ -606,10 +606,10 @@ function ProspectingContent() {
   function getSendStyle(p: Prospect) {
     const d = p.phone?.replace(/\D/g, "") || "";
     const land = isLandline(p.phone);
-    if (d && !land) return { color: "bg-emerald-50 text-emerald-600 hover:bg-emerald-100", icon: <FaWhatsapp className="w-3.5 h-3.5" />, label: "WA" };
-    if (p.instagram) return { color: "bg-purple-50 text-purple-600 hover:bg-purple-100", icon: <FaInstagram className="w-3.5 h-3.5" />, label: "IG" };
-    if (d && land) return { color: "bg-amber-50 text-amber-600 hover:bg-amber-100", icon: <Phone className="w-3.5 h-3.5" />, label: "Call" };
-    return { color: "bg-zinc-500/15 text-[#64748B]", icon: <Send className="w-3.5 h-3.5" />, label: "—" };
+    if (d && !land) return { color: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-600 os-dark:text-emerald-400 hover:bg-emerald-100 os-dark:hover:bg-emerald-500/15", icon: <FaWhatsapp className="w-3.5 h-3.5" />, label: "WA" };
+    if (p.instagram) return { color: "bg-purple-50 os-dark:bg-purple-500/10 text-purple-600 os-dark:text-purple-400 hover:bg-purple-100 os-dark:hover:bg-purple-500/15", icon: <FaInstagram className="w-3.5 h-3.5" />, label: "IG" };
+    if (d && land) return { color: "bg-amber-50 os-dark:bg-amber-500/10 text-amber-600 os-dark:text-amber-400 hover:bg-amber-100 os-dark:hover:bg-amber-500/15", icon: <Phone className="w-3.5 h-3.5" />, label: "Call" };
+    return { color: "bg-zinc-500/15 text-[var(--os-text-soft)]", icon: <Send className="w-3.5 h-3.5" />, label: "—" };
   }
 
   const activeStage = stageForStatusParam(statusFilter);
@@ -628,15 +628,15 @@ function ProspectingContent() {
   const activeGroup = getDisplayGroupByKey(groupFilter);
   const showGroup = (key: DisplayGroupKey | null) => navigate("ALL", sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, "ALL", channelFilter, evidenceFilter, key);
   const pill = "text-[11.5px] px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-all";
-  const pillOff = "text-[#475569] bg-white border border-[var(--os-border)] hover:bg-gray-50";
+  const pillOff = "text-[var(--os-text-muted)] bg-[var(--os-surface)] border border-[var(--os-border)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-surface-2)]";
   const pillOn = "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm";
-  const rowLabel = "text-[10px] uppercase tracking-wider text-[#94A3B8] font-bold mr-1 w-[104px] shrink-0";
+  const rowLabel = "text-[10px] uppercase tracking-wider text-[var(--os-text-faint)] font-bold mr-1 w-[104px] shrink-0";
 
   /** The one primary step for a prospect, from the lead queue's rules. Quiet text when there is nothing to do. */
   function renderNextAction(p: Prospect) {
     const a = p.summary?.nextAction;
-    if (!a) return <span className="text-[11px] text-[#94A3B8]">—</span>;
-    if (!a.actionable) return <span title={a.hint} className="text-[12px] text-[#64748B]">{a.label}</span>;
+    if (!a) return <span className="text-[11px] text-[var(--os-text-faint)]">—</span>;
+    if (!a.actionable) return <span title={a.hint} className="text-[12px] text-[var(--os-text-soft)]">{a.label}</span>;
     const primary = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:opacity-90 transition-all whitespace-nowrap";
     const onClick =
       a.key === "ready" ? () => handleFirstMessage(p)
@@ -657,7 +657,7 @@ function ProspectingContent() {
     return (
       <button type="button" title="More actions" aria-expanded={open} aria-controls={`actions-${where}-${p.id}`}
         onClick={() => setOpenMenuId(open ? null : p.id)}
-        className={cn("inline-flex p-1.5 rounded-md transition-colors", open ? "bg-gray-100 text-[#0F172A]" : "text-[#64748B] hover:text-[#0F172A] hover:bg-gray-100")}>
+        className={cn("inline-flex p-1.5 rounded-md transition-colors", open ? "bg-gray-100 os-dark:bg-[var(--os-hover)] text-[var(--os-text)]" : "text-[var(--os-text-soft)] hover:text-[var(--os-text)] hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)]")}>
         <MoreHorizontal className="w-4 h-4" />
       </button>
     );
@@ -669,16 +669,16 @@ function ProspectingContent() {
     const item = "flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors";
     return (
       <div id={`actions-${where}-${p.id}`} data-testid={`${where}-actions`} className="flex flex-wrap justify-end gap-1">
-        {digits && <button onClick={() => handleSendWA(p)} className={cn(item, "bg-emerald-50 text-emerald-600 hover:bg-emerald-100")}><FaWhatsapp className="w-3.5 h-3.5" /> WhatsApp</button>}
-        {p.instagram && <button onClick={() => handleSendIG(p)} className={cn(item, "bg-purple-50 text-purple-600 hover:bg-purple-100")}><FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "Instagram"}</button>}
-        {digits && <a href={`tel:${p.phone}`} className={cn(item, "bg-amber-50 text-amber-600 hover:bg-amber-100")} title={`Call ${p.phone}`}><Phone className="w-3.5 h-3.5" /> Call</a>}
+        {digits && <button onClick={() => handleSendWA(p)} className={cn(item, "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-600 os-dark:text-emerald-400 hover:bg-emerald-100 os-dark:hover:bg-emerald-500/15")}><FaWhatsapp className="w-3.5 h-3.5" /> WhatsApp</button>}
+        {p.instagram && <button onClick={() => handleSendIG(p)} className={cn(item, "bg-purple-50 os-dark:bg-purple-500/10 text-purple-600 os-dark:text-purple-400 hover:bg-purple-100 os-dark:hover:bg-purple-500/15")}><FaInstagram className="w-3.5 h-3.5" /> {copied === p.id ? "Copied!" : "Instagram"}</button>}
+        {digits && <a href={`tel:${p.phone}`} className={cn(item, "bg-amber-50 os-dark:bg-amber-500/10 text-amber-600 os-dark:text-amber-400 hover:bg-amber-100 os-dark:hover:bg-amber-500/15")} title={`Call ${p.phone}`}><Phone className="w-3.5 h-3.5" /> Call</a>}
         {!digits && !p.instagram && <span className="text-[11px] text-red-500 px-2" title="No contact data — audit at /admin/data-audit">no contact</span>}
-        {canFollowUp(p) && <button onClick={() => handleFollowUp(p)} className={cn(item, "bg-amber-50 text-amber-600 hover:bg-amber-100")}><Send className="w-3 h-3" /> Follow up</button>}
-        {p.status !== "REPONDU" && p.status !== "CONVERTI" && <button onClick={() => handleMarkReplied(p)} className={cn(item, "text-emerald-600 hover:bg-emerald-50")}><CheckCircle className="w-3.5 h-3.5" /> Mark replied</button>}
-        {p.status !== "PAS_DE_WHATSAPP" && <button onClick={() => handleMarkNoWhatsApp(p)} className={cn(item, "text-red-500 hover:bg-red-50")}><PhoneOff className="w-3.5 h-3.5" /> No WhatsApp</button>}
-        <Link href={`/admin/prospecting/${p.id}`} className={cn(item, "text-[#475569] hover:bg-gray-100")}><ExternalLink className="w-3.5 h-3.5" /> Open</Link>
-        <Link href={`/admin/prospecting/${p.id}/edit`} className={cn(item, "text-[#475569] hover:bg-gray-100")}><Pencil className="w-3.5 h-3.5" /> Edit</Link>
-        <button onClick={() => handleDelete(p.id, p.name)} className={cn(item, "text-[#64748B] hover:text-red-600 hover:bg-red-50")}><Trash2 className="w-3.5 h-3.5" /> Delete</button>
+        {canFollowUp(p) && <button onClick={() => handleFollowUp(p)} className={cn(item, "bg-amber-50 os-dark:bg-amber-500/10 text-amber-600 os-dark:text-amber-400 hover:bg-amber-100 os-dark:hover:bg-amber-500/15")}><Send className="w-3 h-3" /> Follow up</button>}
+        {p.status !== "REPONDU" && p.status !== "CONVERTI" && <button onClick={() => handleMarkReplied(p)} className={cn(item, "text-emerald-600 os-dark:text-emerald-400 hover:bg-emerald-50 os-dark:hover:bg-emerald-500/10")}><CheckCircle className="w-3.5 h-3.5" /> Mark replied</button>}
+        {p.status !== "PAS_DE_WHATSAPP" && <button onClick={() => handleMarkNoWhatsApp(p)} className={cn(item, "text-red-500 hover:bg-red-50 os-dark:hover:bg-red-500/10")}><PhoneOff className="w-3.5 h-3.5" /> No WhatsApp</button>}
+        <Link href={`/admin/prospecting/${p.id}`} className={cn(item, "text-[var(--os-text-muted)] hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)]")}><ExternalLink className="w-3.5 h-3.5" /> Open</Link>
+        <Link href={`/admin/prospecting/${p.id}/edit`} className={cn(item, "text-[var(--os-text-muted)] hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)]")}><Pencil className="w-3.5 h-3.5" /> Edit</Link>
+        <button onClick={() => handleDelete(p.id, p.name)} className={cn(item, "text-[var(--os-text-soft)] hover:text-red-600 os-dark:hover:text-red-400 hover:bg-red-50 os-dark:hover:bg-red-500/10")}><Trash2 className="w-3.5 h-3.5" /> Delete</button>
       </div>
     );
   }
@@ -686,9 +686,9 @@ function ProspectingContent() {
   function renderName(p: Prospect) {
     return (
       <div className="min-w-0">
-        <button onClick={() => setDrawerProspectId(p.id)} className="text-[14px] font-semibold text-[#0F172A] hover:text-[#8B00FF] transition-colors text-left">{p.name}</button>
-        {p.instagram && <span className="ml-1.5 text-[11px] text-[#64748B]">@{p.instagram.replace(/^@/, "")}</span>}
-        <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-[#64748B]">
+        <button onClick={() => setDrawerProspectId(p.id)} className="text-[14px] font-semibold text-[var(--os-text)] hover:text-[var(--os-brand)] transition-colors text-left">{p.name}</button>
+        {p.instagram && <span className="ml-1.5 text-[11px] text-[var(--os-text-soft)]">@{p.instagram.replace(/^@/, "")}</span>}
+        <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-[var(--os-text-soft)]">
           <span>{[p.sector, p.neighborhood].filter(Boolean).join(" · ")}</span>
           {p.score != null && !!p.scoreLabel && <ScoreBadge prospect={p} factors={scoreFactors[p.id]} />}
         </div>
@@ -716,7 +716,7 @@ function ProspectingContent() {
   const pagination = pages > 1 && (
     <div className="flex justify-center gap-1.5 mt-6">
       {Array.from({ length: pages }, (_, i) => i + 1).map((pg) => (
-        <button key={pg} onClick={() => navigate(statusFilter, sectorFilter, pg)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", pg === pageParam ? "bg-purple-500 text-white" : "text-[#475569] hover:bg-gray-100")}>{pg}</button>
+        <button key={pg} onClick={() => navigate(statusFilter, sectorFilter, pg)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", pg === pageParam ? "bg-purple-500 text-white" : "text-[var(--os-text-muted)] hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)]")}>{pg}</button>
       ))}
     </div>
   );
@@ -729,11 +729,11 @@ function ProspectingContent() {
         subtitle="One list. Each prospect shows its next step."
         actions={
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <div className="flex items-center bg-white border border-[var(--os-border)] rounded-lg p-0.5">
-              <button onClick={() => setView("list")} title="List" className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "text-[#475569] hover:text-[#0F172A]")}>
+            <div className="flex items-center bg-[var(--os-surface)] border border-[var(--os-border)] rounded-lg p-0.5">
+              <button onClick={() => setView("list")} title="List" className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[var(--os-brand)]" : "text-[var(--os-text-muted)] hover:text-[var(--os-text)]")}>
                 <List className="w-4 h-4" />
               </button>
-              <button onClick={() => setView("grid")} title="Cards" className={cn("p-1.5 rounded-md transition-colors", view === "grid" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "text-[#475569] hover:text-[#0F172A]")}>
+              <button onClick={() => setView("grid")} title="Cards" className={cn("p-1.5 rounded-md transition-colors", view === "grid" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[var(--os-brand)]" : "text-[var(--os-text-muted)] hover:text-[var(--os-text)]")}>
                 <LayoutGrid className="w-4 h-4" />
               </button>
             </div>
@@ -747,16 +747,16 @@ function ProspectingContent() {
 
       {/* Search */}
       <div className="relative mb-3">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--os-text-faint)]" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => handleSearchChange(e.target.value)}
           placeholder="Search by name, Instagram, phone, location..."
-          className="w-full pl-9 pr-9 py-2.5 bg-white border border-[var(--os-border)] rounded-xl text-[13px] text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all"
+          className="w-full pl-9 pr-9 py-2.5 bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl text-[13px] text-[var(--os-text)] placeholder:text-[var(--os-text-faint)] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all"
         />
         {searchQuery && (
-          <button onClick={() => { setSearchQuery(""); setDebouncedSearch(""); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#475569]">
+          <button onClick={() => { setSearchQuery(""); setDebouncedSearch(""); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--os-text-faint)] hover:text-[var(--os-text-muted)]">
             <X className="w-4 h-4" />
           </button>
         )}
@@ -776,12 +776,12 @@ function ProspectingContent() {
           type="button"
           onClick={() => showGroup("ARCHIVED")}
           title="Unreachable, closed, or an unknown status"
-          className={cn("self-end sm:ml-auto shrink-0 inline-flex items-center gap-1 text-[11.5px] hover:underline", groupFilter === "ARCHIVED" ? "text-[var(--os-purple)] font-semibold" : "text-[#94A3B8]")}
+          className={cn("self-end sm:ml-auto shrink-0 inline-flex items-center gap-1 text-[11.5px] hover:underline", groupFilter === "ARCHIVED" ? "text-[var(--os-purple)] font-semibold" : "text-[var(--os-text-faint)]")}
         >
           <Archive className="w-3.5 h-3.5" /> Archived{groupCounts ? ` (${groupCounts.ARCHIVED})` : ""}
         </button>
       </div>
-      <p className="text-[11.5px] text-[#94A3B8] mb-3 min-h-[1em]">{activeGroup?.hint ?? ""}</p>
+      <p className="text-[11.5px] text-[var(--os-text-faint)] mb-3 min-h-[1em]">{activeGroup?.hint ?? ""}</p>
 
       {/* An old status= or due= link: shown as a removable filter, with its old meaning. */}
       {(legacyStatusLabel || legacyEvidence || dueFilter === "today" || dueFilter === "overdue") && (
@@ -810,11 +810,11 @@ function ProspectingContent() {
       )}
 
       {/* More filters — every other filter, number and tool, unchanged, folded away. Opens when one is in use. */}
-      <details className="mb-5 rounded-xl border border-[var(--os-border)] bg-white/40" open={advancedCount > 0 || undefined}>
-        <summary className="cursor-pointer select-none px-3 py-2 text-[12px] font-medium text-[#475569] hover:text-[#0F172A] flex items-center gap-2">
+      <details className="mb-5 rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)]/40" open={advancedCount > 0 || undefined}>
+        <summary className="cursor-pointer select-none px-3 py-2 text-[12px] font-medium text-[var(--os-text-muted)] hover:text-[var(--os-text)] flex items-center gap-2">
           More filters
           {advancedCount > 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 text-[#7C3AED]">{advancedCount} active</span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 os-dark:bg-purple-500/15 text-[#7C3AED] os-dark:text-[var(--os-purple)]">{advancedCount} active</span>
           )}
         </summary>
         <div className="px-3 pb-3 pt-1 space-y-2">
@@ -832,22 +832,22 @@ function ProspectingContent() {
             ].map((k) => {
               const content = (
                 <>
-                  <div className="text-[10px] uppercase tracking-[0.14em] text-[#94A3B8] font-medium">{k.label}</div>
+                  <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--os-text-faint)] font-medium">{k.label}</div>
                   <div className="mt-1 flex items-baseline gap-1">
-                    <span className={cn("text-[16px] font-semibold tabular-nums", k.tone === "emerald" && "text-emerald-700", k.tone === "slate" && "text-[#0F172A]", k.tone === "amber" && "text-amber-700")}>{k.value}</span>
-                    {k.suffix && <span className="text-[10px] text-[#94A3B8] font-medium">{k.suffix}</span>}
+                    <span className={cn("text-[16px] font-semibold tabular-nums", k.tone === "emerald" && "text-emerald-700 os-dark:text-emerald-300", k.tone === "slate" && "text-[var(--os-text)]", k.tone === "amber" && "text-amber-700 os-dark:text-amber-300")}>{k.value}</span>
+                    {k.suffix && <span className="text-[10px] text-[var(--os-text-faint)] font-medium">{k.suffix}</span>}
                   </div>
                 </>
               );
               if ("due" in k && k.due) {
                 return (
                   <button key={k.label} type="button" title={k.title} onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, k.due)}
-                    className={cn("text-left rounded-xl border px-3 py-2 transition-all", dueFilter === k.due ? "bg-[#0F172A]/[0.04] border-[#0F172A]/20 ring-1 ring-[#0F172A]/10" : "bg-white/60 border-[var(--os-border)] hover:border-[#CBD5E1] hover:bg-white")}>
+                    className={cn("text-left rounded-xl border px-3 py-2 transition-all", dueFilter === k.due ? "bg-[#0F172A]/[0.04] border-[#0F172A]/20 ring-1 ring-[#0F172A]/10" : "bg-[var(--os-surface)]/60 border-[var(--os-border)] hover:border-[#CBD5E1] os-dark:hover:border-[var(--os-border)] hover:bg-[var(--os-surface)]")}>
                     {content}
                   </button>
                 );
               }
-              return <div key={k.label} className="rounded-xl border border-[var(--os-border)] bg-white/60 px-3 py-2">{content}</div>;
+              return <div key={k.label} className="rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)]/60 px-3 py-2">{content}</div>;
             })}
           </div>
 
@@ -889,7 +889,7 @@ function ProspectingContent() {
               return (
                 <button key={seg.value} onClick={() => navigate(statusFilter, sectorFilter, 1, ownerFilter, qualityFilter, seg.value)}
                   className={cn("inline-flex items-center gap-2", pill, active ? "bg-[#0F172A] text-white shadow-sm" : pillOff)}>
-                  <span className={cn("w-1.5 h-1.5 rounded-full", active ? "bg-white/70" : seg.dot)} />
+                  <span className={cn("w-1.5 h-1.5 rounded-full", active ? "bg-[var(--os-surface)]/70" : seg.dot)} />
                   {seg.label}
                 </button>
               );
@@ -925,7 +925,7 @@ function ProspectingContent() {
               <button key={item.id} onClick={() => navigate(statusFilter, sectorFilter, 1, item.id)}
                 className={cn("flex items-center gap-1.5 shrink-0", pill, ownerFilter === item.id ? pillOn : pillOff)}>
                 {item.label}
-                {item.count > 0 && <span className={cn("text-[10px] font-bold px-1 rounded-full", ownerFilter === item.id ? "bg-white/25" : "bg-[#F1F5F9]")}>{item.count}</span>}
+                {item.count > 0 && <span className={cn("text-[10px] font-bold px-1 rounded-full", ownerFilter === item.id ? "bg-[var(--os-surface)]/25" : "bg-[var(--os-hover)]")}>{item.count}</span>}
               </button>
             ))}
           </div>
@@ -945,7 +945,7 @@ function ProspectingContent() {
           </div>
 
           {advancedCount > 0 && (
-            <button type="button" onClick={() => navigate("ALL", "ALL", 1, "ALL", "ALL", "ALL", dueFilter, "ALL", "ALL", groupFilter)} className="text-[11.5px] text-[#7C3AED] hover:underline">
+            <button type="button" onClick={() => navigate("ALL", "ALL", 1, "ALL", "ALL", "ALL", dueFilter, "ALL", "ALL", groupFilter)} className="text-[11.5px] text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:underline">
               Clear filters
             </button>
           )}
@@ -961,7 +961,7 @@ function ProspectingContent() {
           {/* Mobile cards */}
           <div className="md:hidden space-y-3">
             {displayedProspects.map((p) => (
-              <div key={p.id} className="rounded-xl border border-[var(--os-border)] bg-white/80 p-3.5">{renderCard(p)}</div>
+              <div key={p.id} className="rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)]/80 p-3.5">{renderCard(p)}</div>
             ))}
           </div>
 
@@ -970,24 +970,24 @@ function ProspectingContent() {
             <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[var(--os-border)] bg-gray-50">
-                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Prospect</th>
-                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Status</th>
-                  <th className="text-left px-4 py-2.5 text-[#475569] font-medium text-[11px] uppercase tracking-wider">Next step</th>
+                <tr className="border-b border-[var(--os-border)] bg-gray-50 os-dark:bg-[var(--os-surface-2)]">
+                  <th className="text-left px-4 py-2.5 text-[var(--os-text-muted)] font-medium text-[11px] uppercase tracking-wider">Prospect</th>
+                  <th className="text-left px-4 py-2.5 text-[var(--os-text-muted)] font-medium text-[11px] uppercase tracking-wider">Status</th>
+                  <th className="text-left px-4 py-2.5 text-[var(--os-text-muted)] font-medium text-[11px] uppercase tracking-wider">Next step</th>
                   <th className="px-4 py-2.5"><span className="sr-only">More</span></th>
                 </tr>
               </thead>
               <tbody>
                 {displayedProspects.map((p) => (
                   <Fragment key={p.id}>
-                    <tr className={cn("hover:bg-gray-50 transition-colors align-top", openMenuId !== p.id && "border-b border-[var(--os-border)]")}>
+                    <tr className={cn("hover:bg-gray-50 os-dark:hover:bg-[var(--os-surface-2)] transition-colors align-top", openMenuId !== p.id && "border-b border-[var(--os-border)]")}>
                       <td className="px-4 py-3">{renderName(p)}</td>
                       <td className="px-4 py-3"><div className="flex flex-col items-start gap-1"><StageBadge prospect={p} /><div className="flex flex-wrap gap-1"><Chips prospect={p} /></div></div></td>
                       <td className="px-4 py-3">{renderNextAction(p)}</td>
                       <td className="px-4 py-3 text-right w-12">{renderMenuButton(p, "row")}</td>
                     </tr>
                     {openMenuId === p.id && (
-                      <tr className="border-b border-[var(--os-border)] bg-gray-50/60">
+                      <tr className="border-b border-[var(--os-border)] bg-gray-50/60 os-dark:bg-[var(--os-surface-2)]">
                         <td colSpan={4} className="px-4 pb-3 pt-0">{renderMenuItems(p, "row")}</td>
                       </tr>
                     )}
@@ -1005,7 +1005,7 @@ function ProspectingContent() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {displayedProspects.map((p, i) => (
               <motion.div key={p.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: i * 0.02 }}
-                className="rounded-xl border border-[var(--os-border)] bg-white/80 p-4 hover:border-[var(--os-border-hover)] transition-all">
+                className="rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)]/80 p-4 hover:border-[var(--os-border-hover)] transition-all">
                 {renderCard(p)}
               </motion.div>
             ))}

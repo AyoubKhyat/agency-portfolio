@@ -161,7 +161,7 @@ function LeadCard({ lead, state, onImport, canDraft = false }: { lead: TodayLead
         </div>
         <span className={cn(
           "text-[11px] font-medium rounded-full px-2.5 py-1 border shrink-0",
-          lead.kind === "WEBSITE" ? "border-amber-300/60 text-amber-700 dark:text-amber-300" : "border-sky-300/60 text-sky-700 dark:text-sky-300",
+          lead.kind === "WEBSITE" ? "border-amber-300/60 os-dark:border-amber-500/30 text-amber-700 dark:text-amber-300" : "border-sky-300/60 os-dark:border-sky-500/30 text-sky-700 dark:text-sky-300",
         )}>
           {lead.kind === "WEBSITE" ? `${lead.findings.length} website problem${lead.findings.length === 1 ? "" : "s"} found` : "No website listed in OpenStreetMap"}
         </span>
@@ -191,7 +191,7 @@ function LeadCard({ lead, state, onImport, canDraft = false }: { lead: TodayLead
             </span>
           </span>
         ))}
-        {lead.whatsappConfidence === "CONFLICT" && <span className="text-red-600">Different WhatsApp numbers found: check which is current</span>}
+        {lead.whatsappConfidence === "CONFLICT" && <span className="text-red-600 os-dark:text-red-400">Different WhatsApp numbers found: check which is current</span>}
         {lead.contacts.length === 0 && <span className="text-[var(--os-text-muted)]">No WhatsApp, Instagram or email link found on the site</span>}
       </div>
 
@@ -216,7 +216,7 @@ function LeadCard({ lead, state, onImport, canDraft = false }: { lead: TodayLead
           </button>
         )}
         {prospectId ? (
-          <Link href={`/admin/prospecting/${prospectId}`} className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-[13px] font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-300/60 hover:bg-[var(--os-hover)]">
+          <Link href={`/admin/prospecting/${prospectId}`} className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-[13px] font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-300/60 os-dark:border-emerald-500/30 hover:bg-[var(--os-hover)]">
             Imported · open prospect <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         ) : (
@@ -226,7 +226,7 @@ function LeadCard({ lead, state, onImport, canDraft = false }: { lead: TodayLead
           </button>
         )}
         {state.skipped && <span role="status" className="text-[12px] text-amber-700 dark:text-amber-300">Not imported: {state.skipped}</span>}
-        {state.error && <span role="alert" className="text-[12px] text-red-600">{state.error}</span>}
+        {state.error && <span role="alert" className="text-[12px] text-red-600 os-dark:text-red-400">{state.error}</span>}
       </div>
       {prospectId && typeof lead.contactsToCheck === "number" && (
         <p role="status" data-contacts-to-check={lead.contactsToCheck}
@@ -423,13 +423,13 @@ export function TodaysLeads() {
   return (
     <section aria-labelledby="todays-leads" className="mt-8">
       <div className="flex flex-wrap items-end justify-between gap-2 mb-3">
-        <h2 id="todays-leads" className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-[0.14em] inline-flex items-center gap-1.5">
+        <h2 id="todays-leads" className="text-[11px] font-bold text-[var(--os-text-faint)] uppercase tracking-[0.14em] inline-flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5" /> Today&apos;s leads{view?.run && (view.run.status === "COMPLETED" || view.leads.length > 0) ? ` · ${view.leads.length}` : ""}
         </h2>
         <p className="text-[11px] text-[var(--os-text-muted)]">Rule-based, no AI · contacts unverified · nothing is sent automatically</p>
       </div>
       {body}
-      {runError && <p role="alert" className="mt-2 text-[12px] text-red-600">{runError}</p>}
+      {runError && <p role="alert" className="mt-2 text-[12px] text-red-600 os-dark:text-red-400">{runError}</p>}
       <p className="mt-2 text-[11px] text-[var(--os-text-muted)]">Business data © OpenStreetMap contributors (ODbL).</p>
     </section>
   );
