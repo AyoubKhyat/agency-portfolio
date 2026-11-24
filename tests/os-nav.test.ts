@@ -237,7 +237,9 @@ test("outreach next-city button: Marrakech opens Find businesses, other cities k
 test("Reports (Phase 1): login lands on Today; Today links the Business report; the old dashboard stays reachable", () => {
   // Login goes to Today, not straight to a report.
   const login = readFileSync(url("src/app/admin/login/page.tsx"), "utf8");
-  assert.match(login, /if \(res\.ok\) \{ router\.push\("\/admin"\); \}/);
+  // The only redirect is to /admin, and it runs only once the API has answered OK (after the welcome animation).
+  assert.deepEqual(login.match(/router\.push\([^)]*\)/g), ['router.push("/admin")']);
+  assert.match(login, /ok = res\.ok;[\s\S]*if \(ok\) \{[^}]*router\.push\("\/admin"\)/);
   assert.doesNotMatch(login, /router\.push\("\/admin\/command-center"\)/);
 
   // Today's header points to the Business report, no longer to the old dashboard.
