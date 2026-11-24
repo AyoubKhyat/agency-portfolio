@@ -154,7 +154,7 @@ export default function AdminLoginPage() {
       </form>
 
       <p className={cn(s.footnote, s.rise)} style={{ animationDelay: "1.1s" }}>
-        Ibda3 Digital · Restricted access for team members
+        Restricted access for team members
       </p>
     </div>
   );
