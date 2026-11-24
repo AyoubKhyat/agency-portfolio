@@ -7,7 +7,7 @@ import { AlertCircle, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import s from "./login.module.css";
 
-const TITLE = "Ibda3 OS";
+const TITLE = "Ibda3 Digital";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -154,7 +154,7 @@ export default function AdminLoginPage() {
       </form>
 
       <p className={cn(s.footnote, s.rise)} style={{ animationDelay: "1.1s" }}>
-        Ibda3 Digital · Restricted access for team members
+        Restricted access for team members
       </p>
     </div>
   );
