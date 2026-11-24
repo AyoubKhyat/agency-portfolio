@@ -14,7 +14,10 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  // idle -> verifying (request in flight) -> success (API confirmed, brief welcome, then redirect)
+  const [phase, setPhase] = useState<"idle" | "verifying" | "success">("idle");
+  const inFlight = useRef(false);
+  const redirectTimer = useRef<number | undefined>(undefined);
   const [showPassword, setShowPassword] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -36,21 +39,38 @@ export default function AdminLoginPage() {
     return () => { cancelAnimationFrame(frame); window.removeEventListener("pointermove", onMove); };
   }, []);
 
+  useEffect(() => () => window.clearTimeout(redirectTimer.current), []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (inFlight.current) return; // one request at a time; stays locked after success until the redirect
+    inFlight.current = true;
     setError("");
-    setLoading(true);
-    const res = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    if (res.ok) { router.push("/admin"); } else { setError("Invalid email or password"); }
-    setLoading(false);
+    setPhase("verifying");
+    let ok = false;
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      ok = res.ok;
+    } catch {
+      ok = false; // network failure: show the normal error instead of a stuck "Verifying…"
+    }
+    if (ok) {
+      setPhase("success");
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      redirectTimer.current = window.setTimeout(() => router.push("/admin"), reduce ? 400 : 800);
+      return;
+    }
+    setError("Invalid email or password");
+    setPhase("idle");
+    inFlight.current = false;
   }
 
   return (
-    <div ref={rootRef} className={s.root}>
+    <div ref={rootRef} className={s.root} data-phase={phase}>
       {/* Decorative light, hidden from assistive technology */}
       <div className={s.scene} aria-hidden>
         <div className={s.floor} />
@@ -84,7 +104,8 @@ export default function AdminLoginPage() {
       </h1>
       <p className={cn(s.subtitle, s.rise)} style={{ animationDelay: "0.8s" }}>Your agency. One workspace.</p>
 
-      <form onSubmit={handleSubmit} className={cn(s.form, s.rise)} style={{ animationDelay: "0.95s" }}>
+      <div className={s.stage}>
+      <form onSubmit={handleSubmit} className={cn(s.form, s.rise)} style={{ animationDelay: "0.95s" }} aria-hidden={phase === "success" || undefined}>
         <div className={s.group}>
           <label htmlFor="login-email" className={s.label}>Email</label>
           <input
@@ -97,6 +118,7 @@ export default function AdminLoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            readOnly={phase !== "idle"}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? "login-error" : undefined}
             className={s.input}
@@ -115,6 +137,7 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              readOnly={phase !== "idle"}
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? "login-error" : undefined}
               className={cn(s.input, s.inputPassword)}
@@ -138,11 +161,11 @@ export default function AdminLoginPage() {
           </div>
         )}
 
-        <button type="submit" disabled={loading} aria-busy={loading || undefined} className={s.submit}>
-          {loading ? (
+        <button type="submit" disabled={phase !== "idle"} aria-busy={phase === "verifying" || undefined} className={s.submit}>
+          {phase !== "idle" ? (
             <>
               <span className={s.spinner} aria-hidden />
-              <span>Signing in…</span>
+              <span>Verifying…</span>
             </>
           ) : (
             <>
@@ -152,6 +175,21 @@ export default function AdminLoginPage() {
           )}
         </button>
       </form>
+
+      {phase === "success" && (
+        <div className={s.status} aria-hidden>
+          <span className={s.check}>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" pathLength={1} /></svg>
+          </span>
+          <span className={s.welcome}>Welcome back</span>
+        </div>
+      )}
+      </div>
+
+      {/* Single announcement point for the sign-in progress; the visual status above is aria-hidden */}
+      <p className="sr-only" role="status" aria-live="polite">
+        {phase === "verifying" ? "Verifying…" : phase === "success" ? "Welcome back" : ""}
+      </p>
 
       <p className={cn(s.footnote, s.rise)} style={{ animationDelay: "1.1s" }}>
         Restricted access for team members
