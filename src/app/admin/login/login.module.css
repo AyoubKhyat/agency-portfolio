@@ -1,0 +1,172 @@
+/* Ibda3 OS sign-in. Every rule is scoped to this page by the CSS module; nothing global.
+   --lx / --ly (-1..1) are set from the pointer for a slight parallax; they stay 0 with reduced motion. */
+
+.root {
+  --lx: 0;
+  --ly: 0;
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* min-height, not height: taller content grows the page and scrolls, never clips */
+  padding: 48px 20px 40px;
+  overflow: hidden;
+  background: #000;
+  color: #e7e9ea;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- light, floor and film (decorative, aria-hidden) ---- */
+.scene { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+
+.floor {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 38% 58% at calc(50% + var(--lx) * 6%) 46%, #2e2f35 0%, #1a1b20 36%, #0a0a0c 64%, #000 86%);
+  animation: fade 1.2s ease-out both;
+}
+
+/* soft cone of light falling onto the tile */
+.beam {
+  position: absolute; left: 50%; top: -220px; width: 640px; height: 560px; margin-left: -320px;
+  transform-origin: 50% 100%; transform: rotate(calc(var(--lx) * 10deg));
+  filter: blur(28px); mix-blend-mode: screen; animation: fade 1.6s 0.1s ease-out both;
+}
+.beam::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06) 70%, transparent);
+  clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%);
+}
+
+/* elliptical rings spreading on the "floor" under the tile (children of .drop) */
+.rings { position: absolute; left: 50%; top: calc(100% - 6px); width: 0; height: 0; z-index: -1; pointer-events: none; }
+.rings i {
+  position: absolute; left: -150px; top: -17px; width: 300px; height: 34px; border-radius: 50%;
+  border: 0.75px solid rgba(255, 255, 255, 0.32); opacity: 0;
+  animation: ring 6s cubic-bezier(0.15, 0.6, 0.3, 1) infinite;
+}
+.rings i:nth-child(2) { animation-delay: 2s; }
+.rings i:nth-child(3) { animation-delay: 4s; }
+
+/* faint brand tint in the spotlight: violet to blue, like the monogram */
+.tint {
+  position: absolute; left: 50%; top: calc(100% - 6px); width: 520px; height: 140px; margin: -70px 0 0 -260px; z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.16), rgba(37, 99, 235, 0.06) 45%, transparent 70%);
+  filter: blur(18px);
+}
+
+.vignette { position: absolute; inset: 0; background: radial-gradient(ellipse 75% 80% at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.78) 100%); }
+.grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.06; mix-blend-mode: overlay; }
+
+/* ---- the logo tile ---- */
+.drop { position: relative; width: 208px; height: 208px; flex: none; animation: land 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.tile {
+  position: relative; width: 100%; height: 100%; border-radius: 52px; display: grid; place-items: center;
+  transform: perspective(900px) rotateY(calc(var(--lx) * 10deg)) rotateX(calc(var(--ly) * -8deg));
+  background: linear-gradient(180deg, #2b2c30 0%, #131417 42%, #060607 100%);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 -12px 26px rgba(0, 0, 0, 0.75),
+    0 34px 60px -22px rgba(0, 0, 0, 0.95);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* The app icon is the iD monogram on a black disc; "lighten" drops the disc into the tile's own face. */
+.mark { position: relative; width: 58%; height: 58%; mix-blend-mode: lighten; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6)); }
+.sheen {
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; mix-blend-mode: screen;
+  background: linear-gradient(115deg, transparent 36%, rgba(255, 255, 255, 0.16) 48%, rgba(255, 255, 255, 0.04) 56%, transparent 64%);
+  background-size: 260% 100%; background-position: calc(50% - var(--lx) * 60%) 0;
+}
+
+/* ---- copy ---- */
+.heading {
+  margin: 40px 0 0; font-size: 48px; line-height: 1; letter-spacing: -0.03em; font-weight: 700; color: #fff; text-align: center;
+  font-family: var(--font-jakarta), var(--font-inter), system-ui, sans-serif;
+}
+.char { display: inline-block; animation: char 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.subtitle { margin: 14px 0 0; font-size: 17px; line-height: 1.4; color: #a1a5ab; text-align: center; }
+
+/* ---- form ---- */
+.form { width: 100%; max-width: 340px; margin-top: 32px; }
+.rise { animation: rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.group + .group { margin-top: 14px; }
+.label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: #d4d6d9; }
+.inputWrap { position: relative; }
+.input {
+  display: block; width: 100%; height: 50px; padding: 0 14px; border-radius: 12px;
+  border: 1px solid #3a3d42; background: rgba(0, 0, 0, 0.5); color: #f4f5f6; font-size: 16px;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+.input::placeholder { color: #8b9097; }
+.input:hover { border-color: #5b6068; }
+/* .class:focus-visible outranks the site-wide :focus-visible outline */
+.input:focus, .input:focus-visible {
+  outline: none; border-radius: 12px; border-color: #a78bfa; background: rgba(0, 0, 0, 0.62);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.35);
+}
+.input[aria-invalid="true"] { border-color: #f87171; }
+.input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.3); }
+.inputPassword { padding-right: 50px; }
+
+.toggle {
+  position: absolute; top: 0; right: 0; width: 50px; height: 50px; display: grid; place-items: center;
+  border: 0; border-radius: 0 12px 12px 0; background: transparent; color: #a1a5ab; cursor: pointer;
+}
+.toggle:hover { color: #fff; }
+.toggle:focus-visible { outline: 2px solid #a78bfa; outline-offset: -4px; border-radius: 10px; }
+
+.error {
+  display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; padding: 11px 14px; border-radius: 12px;
+  border: 1px solid rgba(248, 113, 113, 0.4); background: rgba(127, 29, 29, 0.35); color: #fecaca; font-size: 14px; line-height: 1.4;
+}
+
+.submit {
+  position: relative; overflow: hidden; width: 100%; height: 50px; margin-top: 20px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  border: 0; border-radius: 9999px; background: #f4f5f6; color: #0a0a0c; font-size: 16px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 10px 30px -12px rgba(139, 92, 246, 0.55);
+  transition: background-color 0.2s, transform 0.2s;
+}
+.submit:hover { background: #ffffff; }
+.submit:active { transform: translateY(1px); }
+.submit:disabled { opacity: 0.7; cursor: not-allowed; }
+.submit:focus-visible { outline: 3px solid #a78bfa; outline-offset: 3px; border-radius: 9999px; }
+/* occasional light sweep across the button */
+.submit::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; transform: skewX(-20deg);
+  background: linear-gradient(100deg, transparent, rgba(139, 92, 246, 0.28), transparent);
+  animation: shine 5s 2.4s ease-in-out infinite;
+}
+.spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(10, 10, 12, 0.25); border-top-color: #0a0a0c; animation: spin 0.8s linear infinite; }
+
+.footnote { margin: 28px 0 0; font-size: 12px; color: #8b9097; text-align: center; }
+
+@keyframes fade { from { opacity: 0; } }
+@keyframes land { from { opacity: 0; transform: translateY(-40px) scale(0.94); filter: blur(12px); } }
+@keyframes char { from { opacity: 0; transform: translateY(16px); filter: blur(10px); } }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+/* wider than tall, so the rings stay on the "floor" and never cross the heading */
+@keyframes ring { 0% { transform: scale(1, 1); opacity: 0; } 8% { opacity: 0.8; } 100% { transform: scale(4.4, 2.2); opacity: 0; } }
+@keyframes shine { 0%, 60% { left: -60%; } 100% { left: 130%; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- phones: smaller tile and type so the whole form fits at 360px ---- */
+@media (max-width: 640px) {
+  .root { padding: 40px 20px 32px; }
+  .drop { width: 128px; height: 128px; }
+  .tile { border-radius: 32px; }
+  .heading { margin-top: 28px; font-size: 38px; }
+  .subtitle { margin-top: 10px; font-size: 16px; }
+  .form { margin-top: 26px; }
+  .footnote { margin-top: 22px; }
+  .beam { width: 460px; margin-left: -230px; top: -260px; }
+  .rings i { left: -100px; width: 200px; height: 24px; top: -12px; }
+  .tint { width: 360px; margin-left: -180px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root *, .root *::before, .root *::after { animation: none !important; transition: none !important; }
+  .rings { display: none; }
+}
