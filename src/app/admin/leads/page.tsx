@@ -15,10 +15,10 @@ import { LEAD_BOARD_STATUSES, LEAD_TEST_STATUS, leadStatusLabel } from "@/lib/le
 // Board columns are the working stages; internal tests (TEST) are kept off the board but listed below.
 const COLUMNS = LEAD_BOARD_STATUSES;
 const COL_COLORS: Record<string, { border: string; bg: string; dot: string; badge: string; cardLeft: string }> = {
-  NEW: { border: "border-blue-200", bg: "bg-blue-50/50", dot: "bg-blue-600", badge: "blue", cardLeft: "border-l-blue-500" },
-  CONTACTED: { border: "border-amber-200", bg: "bg-amber-50/50", dot: "bg-amber-600", badge: "amber", cardLeft: "border-l-amber-500" },
-  QUALIFIED: { border: "border-emerald-200", bg: "bg-emerald-50/50", dot: "bg-emerald-600", badge: "green", cardLeft: "border-l-emerald-500" },
-  CLOSED: { border: "border-gray-200", bg: "bg-gray-50/50", dot: "bg-gray-400", badge: "default", cardLeft: "border-l-gray-400" },
+  NEW: { border: "border-blue-200 os-dark:border-blue-500/30", bg: "bg-blue-50/50 os-dark:bg-blue-500/10", dot: "bg-blue-600", badge: "blue", cardLeft: "border-l-blue-500" },
+  CONTACTED: { border: "border-amber-200 os-dark:border-amber-500/30", bg: "bg-amber-50/50 os-dark:bg-amber-500/10", dot: "bg-amber-600", badge: "amber", cardLeft: "border-l-amber-500" },
+  QUALIFIED: { border: "border-emerald-200 os-dark:border-emerald-500/30", bg: "bg-emerald-50/50 os-dark:bg-emerald-500/10", dot: "bg-emerald-600", badge: "green", cardLeft: "border-l-emerald-500" },
+  CLOSED: { border: "border-gray-200 os-dark:border-[var(--os-border)]", bg: "bg-gray-50/50 os-dark:bg-[var(--os-surface-2)]", dot: "bg-gray-400", badge: "default", cardLeft: "border-l-gray-400" },
 };
 
 type Lead = { id: string; fullName: string; email: string; subject: string; status: string; createdAt: string; phone?: string | null; assignedToName?: string | null };
@@ -129,11 +129,11 @@ function LeadsContent() {
         title="Leads"
         count={total}
         actions={
-          <div className="flex items-center bg-gray-50/80 border border-[var(--os-border)] rounded-lg p-0.5">
-            <button onClick={() => setView("kanban")} className={cn("p-1.5 rounded-md transition-colors", view === "kanban" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "text-[#475569] hover:text-[#1E293B]")}>
+          <div className="flex items-center bg-gray-50/80 os-dark:bg-[var(--os-surface-2)] border border-[var(--os-border)] rounded-lg p-0.5">
+            <button onClick={() => setView("kanban")} className={cn("p-1.5 rounded-md transition-colors", view === "kanban" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF] os-dark:text-[var(--os-purple)]" : "text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#1E293B] os-dark:hover:text-[var(--os-text)]")}>
               <Kanban className="w-4 h-4" />
             </button>
-            <button onClick={() => setView("list")} className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "text-[#475569] hover:text-[#1E293B]")}>
+            <button onClick={() => setView("list")} className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF] os-dark:text-[var(--os-purple)]" : "text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#1E293B] os-dark:hover:text-[var(--os-text)]")}>
               <List className="w-4 h-4" />
             </button>
           </div>
@@ -144,9 +144,9 @@ function LeadsContent() {
         <button
           type="button"
           onClick={() => { setView("list"); navigate(LEAD_TEST_STATUS); }}
-          className="mb-4 text-[12px] text-[#64748B] hover:text-[#0F172A]"
+          className="mb-4 text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)]"
         >
-          {testCount} enquir{testCount === 1 ? "y is" : "ies are"} marked as internal test{testCount === 1 ? "" : "s"} and kept off this board — <span className="text-purple-600">show them</span>
+          {testCount} enquir{testCount === 1 ? "y is" : "ies are"} marked as internal test{testCount === 1 ? "" : "s"} and kept off this board — <span className="text-purple-600 os-dark:text-purple-400">show them</span>
         </button>
       )}
 
@@ -179,9 +179,9 @@ function LeadsContent() {
                   <div className="flex items-center justify-between mb-3 px-1">
                     <div className="flex items-center gap-2">
                       <span className={cn("w-2 h-2 rounded-full", colors.dot)} />
-                      <span className="text-xs font-semibold text-[#1E293B] uppercase tracking-wide">{col}</span>
+                      <span className="text-xs font-semibold text-[#1E293B] os-dark:text-[var(--os-text)] uppercase tracking-wide">{col}</span>
                     </div>
-                    <span className="text-[10px] font-bold text-[#475569] bg-gray-100 px-1.5 py-0.5 rounded-full">{colLeads.length}</span>
+                    <span className="text-[10px] font-bold text-[#475569] os-dark:text-[var(--os-text)] bg-gray-100 os-dark:bg-[var(--os-surface-2)] px-1.5 py-0.5 rounded-full">{colLeads.length}</span>
                   </div>
 
                   {/* Cards */}
@@ -194,18 +194,18 @@ function LeadsContent() {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: dragId === lead.id ? 0.5 : 1, y: 0 }}
                         className={cn(
-                          "p-3 rounded-lg bg-white/80 border border-[var(--os-border)] border-l-[3px] hover:border-[var(--os-border-hover)] hover:bg-white/90 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing group",
+                          "p-3 rounded-lg bg-white/80 os-dark:bg-[var(--os-surface)]/80 border border-[var(--os-border)] border-l-[3px] hover:border-[var(--os-border-hover)] hover:bg-white/90 os-dark:hover:bg-[var(--os-hover)] hover:shadow-sm transition-all cursor-grab active:cursor-grabbing group",
                           colors.cardLeft
                         )}
                       >
                         <div className="flex items-start justify-between gap-2 mb-1.5">
-                          <Link href={`/admin/leads/${lead.id}`} className="text-[13px] font-medium text-[#0F172A] group-hover:text-purple-600 transition-colors truncate">
+                          <Link href={`/admin/leads/${lead.id}`} className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] group-hover:text-purple-600 os-dark:group-hover:text-purple-400 transition-colors truncate">
                             {lead.fullName}
                           </Link>
-                          <GripVertical className="w-3.5 h-3.5 text-[#CBD5E1] shrink-0" />
+                          <GripVertical className="w-3.5 h-3.5 text-[#CBD5E1] os-dark:text-[var(--os-text-faint)] shrink-0" />
                         </div>
-                        <p className="text-[11px] text-[#475569] truncate mb-2">{lead.subject}</p>
-                        <div className="flex items-center gap-2 text-[10px] text-[#64748B]">
+                        <p className="text-[11px] text-[#475569] os-dark:text-[var(--os-text)] truncate mb-2">{lead.subject}</p>
+                        <div className="flex items-center gap-2 text-[10px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
                           <Mail className="w-3 h-3" />
                           <span className="truncate">{lead.email}</span>
                           <span className="ml-auto flex items-center gap-1">
@@ -214,7 +214,7 @@ function LeadsContent() {
                           </span>
                         </div>
                         {lead.assignedToName && (
-                          <div className="flex items-center gap-1 mt-1.5 text-[10px] text-[#8B00FF]">
+                          <div className="flex items-center gap-1 mt-1.5 text-[10px] text-[#8B00FF] os-dark:text-[var(--os-purple)]">
                             <UserCheck className="w-3 h-3" />
                             <span>{lead.assignedToName}</span>
                           </div>
@@ -222,7 +222,7 @@ function LeadsContent() {
                       </motion.div>
                     ))}
                     {colLeads.length === 0 && (
-                      <div className="text-center py-8 text-[11px] text-[#64748B]">No leads</div>
+                      <div className="text-center py-8 text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">No leads</div>
                     )}
                   </div>
                 </motion.div>
@@ -249,13 +249,13 @@ function LeadsContent() {
               {/* Mobile card list */}
               <div className="md:hidden space-y-3">
                 {filteredLeads.map((lead) => (
-                  <Link key={lead.id} href={`/admin/leads/${lead.id}`} className="block p-3.5 rounded-xl border border-[var(--os-border)] bg-white/80 hover:border-[var(--os-border-hover)] transition-all">
+                  <Link key={lead.id} href={`/admin/leads/${lead.id}`} className="block p-3.5 rounded-xl border border-[var(--os-border)] bg-white/80 os-dark:bg-[var(--os-surface)]/80 hover:border-[var(--os-border-hover)] transition-all">
                     <div className="flex items-start justify-between gap-2 mb-1.5">
-                      <span className="text-[13px] font-medium text-[#0F172A] truncate">{lead.fullName}</span>
+                      <span className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] truncate">{lead.fullName}</span>
                       <Badge variant={COL_COLORS[lead.status]?.badge as "blue" | "amber" | "green" | "default" || "default"} size="sm">{leadStatusLabel(lead.status)}</Badge>
                     </div>
-                    <p className="text-[11px] text-[#475569] truncate mb-1">{lead.subject}</p>
-                    <div className="flex items-center gap-2 text-[10px] text-[#64748B]">
+                    <p className="text-[11px] text-[#475569] os-dark:text-[var(--os-text)] truncate mb-1">{lead.subject}</p>
+                    <div className="flex items-center gap-2 text-[10px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
                       <Mail className="w-3 h-3" />
                       <span className="truncate">{lead.email}</span>
                       <span className="ml-auto">{relativeDate(lead.createdAt)}</span>
@@ -269,37 +269,37 @@ function LeadsContent() {
                 <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-[var(--os-border)] bg-gray-50/80">
-                      <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Name</th>
-                      <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Email</th>
-                      <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs hidden lg:table-cell">Subject</th>
-                      <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Status</th>
-                      <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs hidden lg:table-cell">Assigned</th>
-                      <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Date</th>
+                    <tr className="border-b border-[var(--os-border)] bg-gray-50/80 os-dark:bg-[var(--os-surface-2)]">
+                      <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Name</th>
+                      <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Email</th>
+                      <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs hidden lg:table-cell">Subject</th>
+                      <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Status</th>
+                      <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs hidden lg:table-cell">Assigned</th>
+                      <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Date</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredLeads.map((lead) => (
-                      <tr key={lead.id} className="border-b border-[var(--os-border)] hover:bg-gray-50 transition-colors">
+                      <tr key={lead.id} className="border-b border-[var(--os-border)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-hover)] transition-colors">
                         <td className="px-4 py-3">
-                          <Link href={`/admin/leads/${lead.id}`} className="text-[#0F172A] font-medium hover:text-purple-600 transition-colors">{lead.fullName}</Link>
+                          <Link href={`/admin/leads/${lead.id}`} className="text-[#0F172A] os-dark:text-[var(--os-text)] font-medium hover:text-purple-600 os-dark:hover:text-purple-400 transition-colors">{lead.fullName}</Link>
                         </td>
-                        <td className="px-4 py-3 text-[#475569] text-xs">{lead.email}</td>
-                        <td className="px-4 py-3 text-[#475569] text-xs max-w-xs truncate hidden lg:table-cell">{lead.subject}</td>
+                        <td className="px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] text-xs">{lead.email}</td>
+                        <td className="px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] text-xs max-w-xs truncate hidden lg:table-cell">{lead.subject}</td>
                         <td className="px-4 py-3">
                           <Badge variant={COL_COLORS[lead.status]?.badge as "blue" | "amber" | "green" | "default" || "default"} size="sm">{leadStatusLabel(lead.status)}</Badge>
                         </td>
-                        <td className="px-4 py-3 text-[#475569] text-xs hidden lg:table-cell">
+                        <td className="px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] text-xs hidden lg:table-cell">
                           {lead.assignedToName ? (
-                            <span className="inline-flex items-center gap-1 text-[#8B00FF]">
+                            <span className="inline-flex items-center gap-1 text-[#8B00FF] os-dark:text-[var(--os-purple)]">
                               <UserCheck className="w-3 h-3" />
                               {lead.assignedToName}
                             </span>
                           ) : (
-                            <span className="text-[#94A3B8]">Unassigned</span>
+                            <span className="text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">Unassigned</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-[#64748B] text-xs">{relativeDate(lead.createdAt)}</td>
+                        <td className="px-4 py-3 text-[#64748B] os-dark:text-[var(--os-text-soft)] text-xs">{relativeDate(lead.createdAt)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -309,7 +309,7 @@ function LeadsContent() {
               {pages > 1 && (
                 <div className="flex justify-center gap-2 mt-6">
                   {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-                    <button key={p} onClick={() => navigate(statusFilter, p)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", p === pageParam ? "bg-purple-500 text-white" : "text-[#475569] hover:bg-gray-100")}>{p}</button>
+                    <button key={p} onClick={() => navigate(statusFilter, p)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", p === pageParam ? "bg-purple-500 text-white" : "text-[#475569] os-dark:text-[var(--os-text)] hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)]")}>{p}</button>
                   ))}
                 </div>
               )}

@@ -11,11 +11,11 @@ export const PROJECT_STATUSES = [
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number]["value"];
 
 const STYLES: Record<string, { text: string; bg: string; border: string; dot: string }> = {
-  DRAFT:       { text: "text-[#374151]", bg: "bg-[#F3F4F6]", border: "border-[#E5E7EB]", dot: "bg-[#9CA3AF]" },
-  IN_PROGRESS: { text: "text-[#1D4ED8]", bg: "bg-[#DBEAFE]", border: "border-[#BFDBFE]", dot: "bg-[#2563EB]" },
-  REVIEW:      { text: "text-[#B45309]", bg: "bg-[#FEF3C7]", border: "border-[#FDE68A]", dot: "bg-[#D97706]" },
-  COMPLETED:   { text: "text-[#047857]", bg: "bg-[#D1FAE5]", border: "border-[#A7F3D0]", dot: "bg-[#059669]" },
-  PUBLISHED:   { text: "text-[#7E22CE]", bg: "bg-[#F3E8FF]", border: "border-[#E9D5FF]", dot: "bg-[#8B00FF]" },
+  DRAFT:       { text: "text-[#374151] os-dark:text-[var(--os-text)]", bg: "bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)]", border: "border-[var(--os-border)]", dot: "bg-[#9CA3AF]" },
+  IN_PROGRESS: { text: "text-[#1D4ED8] os-dark:text-blue-300", bg: "bg-[#DBEAFE] os-dark:bg-blue-500/10", border: "border-[#BFDBFE] os-dark:border-blue-500/30", dot: "bg-[#2563EB]" },
+  REVIEW:      { text: "text-[#B45309] os-dark:text-amber-300", bg: "bg-[#FEF3C7] os-dark:bg-amber-500/10", border: "border-[#FDE68A] os-dark:border-amber-500/30", dot: "bg-[#D97706]" },
+  COMPLETED:   { text: "text-[#047857] os-dark:text-emerald-300", bg: "bg-[#D1FAE5]", border: "border-[#A7F3D0] os-dark:border-emerald-500/30", dot: "bg-[#059669]" },
+  PUBLISHED:   { text: "text-[#7E22CE] os-dark:text-[var(--os-purple)]", bg: "bg-[#F3E8FF] os-dark:bg-purple-500/10", border: "border-[#E9D5FF] os-dark:border-purple-500/30", dot: "bg-[#8B00FF]" },
 };
 
 const LABELS: Record<string, string> = Object.fromEntries(

@@ -34,14 +34,14 @@ type InboxData = { items: InboxItem[]; counts: Record<string, number>; view: str
 type Stats = { unanswered: number; today: number; meetingsWaiting: number; proposalsRequested: number; hotOpportunities: number };
 
 const REASON_BADGE: Record<string, { label: string; color: string }> = {
-  MEETING_REQUESTED: { label: "Wants meeting", color: "bg-purple-100 text-purple-700 border-purple-200" },
-  PROPOSAL_REQUESTED: { label: "Wants proposal", color: "bg-indigo-100 text-indigo-700 border-indigo-200" },
-  INTERESTED: { label: "Interested", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  LATER: { label: "Call later", color: "bg-amber-100 text-amber-700 border-amber-200" },
-  NOT_INTERESTED: { label: "Not interested", color: "bg-gray-100 text-[#64748B] border-gray-200" },
-  HAS_PROVIDER: { label: "Has provider", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  TOO_EXPENSIVE: { label: "Too expensive", color: "bg-orange-100 text-orange-700 border-orange-200" },
-  NO_BUDGET: { label: "No budget", color: "bg-rose-100 text-rose-700 border-rose-200" },
+  MEETING_REQUESTED: { label: "Wants meeting", color: "bg-purple-100 os-dark:bg-purple-500/15 text-purple-700 os-dark:text-purple-300 border-purple-200 os-dark:border-purple-500/30" },
+  PROPOSAL_REQUESTED: { label: "Wants proposal", color: "bg-indigo-100 os-dark:bg-indigo-500/15 text-indigo-700 os-dark:text-indigo-300 border-indigo-200 os-dark:border-indigo-500/30" },
+  INTERESTED: { label: "Interested", color: "bg-emerald-100 os-dark:bg-emerald-500/15 text-emerald-700 os-dark:text-emerald-300 border-emerald-200 os-dark:border-emerald-500/30" },
+  LATER: { label: "Call later", color: "bg-amber-100 os-dark:bg-amber-500/15 text-amber-700 os-dark:text-amber-300 border-amber-200 os-dark:border-amber-500/30" },
+  NOT_INTERESTED: { label: "Not interested", color: "bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-[#64748B] os-dark:text-[var(--os-text-soft)] border-gray-200 os-dark:border-[var(--os-border)]" },
+  HAS_PROVIDER: { label: "Has provider", color: "bg-blue-100 os-dark:bg-blue-500/15 text-blue-700 os-dark:text-blue-300 border-blue-200 os-dark:border-blue-500/30" },
+  TOO_EXPENSIVE: { label: "Too expensive", color: "bg-orange-100 os-dark:bg-orange-500/15 text-orange-700 os-dark:text-orange-300 border-orange-200 os-dark:border-orange-500/30" },
+  NO_BUDGET: { label: "No budget", color: "bg-rose-100 os-dark:bg-rose-500/15 text-rose-700 os-dark:text-rose-300 border-rose-200 os-dark:border-rose-500/30" },
 };
 
 const VIEWS = [
@@ -66,15 +66,15 @@ function relativeDate(iso: string | null): string {
 }
 
 function nextActionFor(item: InboxItem): { label: string; color: string } {
-  if (item.status === "CONVERTI" || item.status === "CLIENT") return { label: "✓ Client won", color: "text-[#7C3AED] font-semibold" };
-  if (item.status === "LOST") return { label: "✗ Lost", color: "text-[#94A3B8]" };
-  if (item.hasMeeting && item.nextMeetingAt) return { label: `Meeting ${relativeDate(item.nextMeetingAt)}`, color: "text-purple-700 font-medium" };
-  if (item.latestReplyReason === "MEETING_REQUESTED") return { label: "Book meeting", color: "text-purple-700 font-semibold" };
-  if (item.latestReplyReason === "PROPOSAL_REQUESTED") return { label: "Create proposal", color: "text-indigo-700 font-semibold" };
-  if (item.hasProposal) return { label: "Follow up on proposal", color: "text-indigo-700 font-medium" };
-  if (item.latestReplyReason === "INTERESTED") return { label: "Qualify", color: "text-emerald-700 font-medium" };
-  if (item.latestReplyReason === "LATER") return { label: "Schedule callback", color: "text-amber-700 font-medium" };
-  return { label: "Reply", color: "text-[#475569]" };
+  if (item.status === "CONVERTI" || item.status === "CLIENT") return { label: "✓ Client won", color: "text-[#7C3AED] os-dark:text-[var(--os-purple)] font-semibold" };
+  if (item.status === "LOST") return { label: "✗ Lost", color: "text-[#94A3B8] os-dark:text-[var(--os-text-soft)]" };
+  if (item.hasMeeting && item.nextMeetingAt) return { label: `Meeting ${relativeDate(item.nextMeetingAt)}`, color: "text-purple-700 os-dark:text-purple-300 font-medium" };
+  if (item.latestReplyReason === "MEETING_REQUESTED") return { label: "Book meeting", color: "text-purple-700 os-dark:text-purple-300 font-semibold" };
+  if (item.latestReplyReason === "PROPOSAL_REQUESTED") return { label: "Create proposal", color: "text-indigo-700 os-dark:text-indigo-300 font-semibold" };
+  if (item.hasProposal) return { label: "Follow up on proposal", color: "text-indigo-700 os-dark:text-indigo-300 font-medium" };
+  if (item.latestReplyReason === "INTERESTED") return { label: "Qualify", color: "text-emerald-700 os-dark:text-emerald-300 font-medium" };
+  if (item.latestReplyReason === "LATER") return { label: "Schedule callback", color: "text-amber-700 os-dark:text-amber-300 font-medium" };
+  return { label: "Reply", color: "text-[#475569] os-dark:text-[var(--os-text)]" };
 }
 
 /* ============================================================ */
@@ -130,7 +130,7 @@ export default function InboxPage() {
         title="Reply Inbox"
         subtitle="Triage incoming replies into meetings, proposals, and clients."
         actions={
-          <button onClick={() => load(view)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[var(--os-border)] bg-white text-[#475569] hover:bg-gray-50">
+          <button onClick={() => load(view)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[var(--os-border)] bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-hover)]">
             <RefreshCw className="w-3.5 h-3.5" /> Refresh
           </button>
         }
@@ -150,17 +150,17 @@ export default function InboxPage() {
           {[...Array(5)].map((_, i) => <div key={i} className="os-skeleton h-16 rounded-xl" />)}
         </div>
       ) : !data || data.items.length === 0 ? (
-        <div className="rounded-2xl border border-[var(--os-border)] bg-white p-10 text-center text-[#64748B]">
-          <InboxIcon className="w-7 h-7 text-[#94A3B8] mx-auto mb-2" />
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-10 text-center text-[#64748B] os-dark:text-[var(--os-text-soft)]">
+          <InboxIcon className="w-7 h-7 text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mx-auto mb-2" />
           <p className="text-[13px]">No replies match this view.</p>
-          <p className="text-[11px] text-[#94A3B8] mt-1">Log outreach + mark replies in the prospect detail page to populate this inbox.</p>
+          <p className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mt-1">Log outreach + mark replies in the prospect detail page to populate this inbox.</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-[var(--os-border)] bg-white overflow-hidden">
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[var(--os-border)] bg-gray-50/60 text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
+                <tr className="border-b border-[var(--os-border)] bg-gray-50/60 os-dark:bg-[var(--os-surface-2)] text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium">
                   <th className="text-left px-3 py-2">Prospect</th>
                   <th className="text-left px-3 py-2 hidden md:table-cell">Sector</th>
                   <th className="text-left px-3 py-2 hidden lg:table-cell">City</th>
@@ -178,25 +178,25 @@ export default function InboxPage() {
                   const hasPhone = !!(item.phone && item.phone.trim());
                   const hasIG = !!(item.instagram && item.instagram.trim());
                   return (
-                    <tr key={item.id} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60">
+                    <tr key={item.id} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-hover)]">
                       <td className="px-3 py-2">
-                        <Link href={`/admin/prospecting/${item.id}`} className="text-[13px] font-semibold text-[#0F172A] hover:text-[#7C3AED]">
+                        <Link href={`/admin/prospecting/${item.id}`} className="text-[13px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)]">
                           {item.name}
                         </Link>
-                        <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-[#94A3B8]">
-                          {item.qualityLabel === "HOT" && <span className="text-rose-600 font-bold"><Flame className="w-2.5 h-2.5 inline -mt-0.5" /> HOT</span>}
+                        <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">
+                          {item.qualityLabel === "HOT" && <span className="text-rose-600 os-dark:text-rose-400 font-bold"><Flame className="w-2.5 h-2.5 inline -mt-0.5" /> HOT</span>}
                           {item.score !== null && <span>· score {item.score}</span>}
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-[12px] text-[#475569] hidden md:table-cell">{item.sector}</td>
-                      <td className="px-3 py-2 text-[12px] text-[#475569] hidden lg:table-cell">{item.city}</td>
-                      <td className="px-3 py-2 text-[12px] text-[#475569]">{relativeDate(item.latestReplyAt)}</td>
+                      <td className="px-3 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)] hidden md:table-cell">{item.sector}</td>
+                      <td className="px-3 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)] hidden lg:table-cell">{item.city}</td>
+                      <td className="px-3 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)]">{relativeDate(item.latestReplyAt)}</td>
                       <td className="px-3 py-2">
                         {reason
                           ? <span className={cn("text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded border", reason.color)}>{reason.label}</span>
-                          : <span className="text-[10px] text-[#94A3B8]">untagged</span>}
+                          : <span className="text-[10px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">untagged</span>}
                       </td>
-                      <td className="px-3 py-2 text-[12px] text-[#475569] hidden lg:table-cell">{item.owner?.fullName || <span className="text-[#CBD5E1]">unassigned</span>}</td>
+                      <td className="px-3 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)] hidden lg:table-cell">{item.owner?.fullName || <span className="text-[#CBD5E1] os-dark:text-[var(--os-text-faint)]">unassigned</span>}</td>
                       <td className={cn("px-3 py-2 text-[12px] hidden md:table-cell", next.color)}>{next.label}</td>
                       <td className="px-3 py-2 text-right">
                         <div className="inline-flex items-center gap-1">
@@ -204,7 +204,7 @@ export default function InboxPage() {
                             <a
                               href={item.whatsappLink || `https://wa.me/${item.phone.replace(/\D/g, "")}`}
                               target="_blank" rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                              className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md text-[11px] font-medium bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 hover:bg-emerald-100 os-dark:hover:bg-emerald-500/15"
                               title="Open WhatsApp"
                             ><FaWhatsapp className="w-3 h-3" /></a>
                           )}
@@ -212,30 +212,30 @@ export default function InboxPage() {
                             <a
                               href={`https://instagram.com/${item.instagram.replace(/^@/, "")}`}
                               target="_blank" rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-[#7C3AED] hover:bg-purple-100"
+                              className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md text-[11px] font-medium bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:bg-purple-100 os-dark:hover:bg-purple-500/15"
                               title="Open Instagram"
                             ><FaInstagram className="w-3 h-3" /></a>
                           )}
                           {hasPhone && (
-                            <a href={`tel:${item.phone}`} className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 hover:bg-amber-100" title={`Call ${item.phone}`}>
+                            <a href={`tel:${item.phone}`} className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md text-[11px] font-medium bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 hover:bg-amber-100 os-dark:hover:bg-amber-500/15" title={`Call ${item.phone}`}>
                               <PhoneIcon className="w-3 h-3" />
                             </a>
                           )}
                           <div className="w-px h-4 bg-[var(--os-border)] mx-0.5" />
-                          <button onClick={() => setMeetingFor(item)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-purple-700 hover:bg-purple-100" title="Book meeting">
+                          <button onClick={() => setMeetingFor(item)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 os-dark:bg-purple-500/10 text-purple-700 os-dark:text-purple-300 hover:bg-purple-100 os-dark:hover:bg-purple-500/15" title="Book meeting">
                             <CalendarCheck className="w-3 h-3" /> Meet
                           </button>
-                          <button onClick={() => setCallbackFor(item)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 hover:bg-amber-100" title="Schedule callback">
+                          <button onClick={() => setCallbackFor(item)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 hover:bg-amber-100 os-dark:hover:bg-amber-500/15" title="Schedule callback">
                             <Clock className="w-3 h-3" /> Callback
                           </button>
-                          <Link href={`/admin/proposals/new?prospectId=${item.id}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100" title="Create proposal">
+                          <Link href={`/admin/proposals/new?prospectId=${item.id}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-indigo-50 os-dark:bg-indigo-500/10 text-indigo-700 os-dark:text-indigo-300 hover:bg-indigo-100 os-dark:hover:bg-indigo-500/15" title="Create proposal">
                             <FileSignature className="w-3 h-3" /> Proposal
                           </Link>
                           <div className="w-px h-4 bg-[var(--os-border)] mx-0.5" />
                           <button onClick={() => markWon(item)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm hover:shadow" title="Mark won">
                             <Trophy className="w-3 h-3" /> Won
                           </button>
-                          <button onClick={() => markLost(item)} className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md text-[11px] font-medium text-[#94A3B8] hover:text-rose-600 hover:bg-rose-50" title="Mark lost">
+                          <button onClick={() => markLost(item)} className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md text-[11px] font-medium text-[#94A3B8] os-dark:text-[var(--os-text-soft)] hover:text-rose-600 os-dark:hover:text-rose-400 hover:bg-rose-50 os-dark:hover:bg-rose-500/10" title="Mark lost">
                             <XCircle className="w-3 h-3" />
                           </button>
                         </div>
@@ -275,19 +275,19 @@ function StatCards({ stats, loading }: { stats: Stats | null; loading: boolean }
 
 function Card({ label, value, icon, tone, subtle, highlight }: { label: string; value: number; icon: React.ReactNode; tone: string; subtle?: string; highlight?: boolean }) {
   const tones: Record<string, string> = {
-    rose: "border-rose-200 bg-rose-50/40 text-rose-700",
-    emerald: "border-emerald-200 bg-emerald-50/40 text-emerald-700",
-    purple: "border-purple-200 bg-purple-50/40 text-purple-700",
-    indigo: "border-indigo-200 bg-indigo-50/40 text-indigo-700",
-    orange: "border-orange-200 bg-orange-50/40 text-orange-700",
+    rose: "border-rose-200 os-dark:border-rose-500/30 bg-rose-50/40 os-dark:bg-rose-500/10 text-rose-700 os-dark:text-rose-300",
+    emerald: "border-emerald-200 os-dark:border-emerald-500/30 bg-emerald-50/40 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300",
+    purple: "border-purple-200 os-dark:border-purple-500/30 bg-purple-50/40 os-dark:bg-purple-500/10 text-purple-700 os-dark:text-purple-300",
+    indigo: "border-indigo-200 os-dark:border-indigo-500/30 bg-indigo-50/40 os-dark:bg-indigo-500/10 text-indigo-700 os-dark:text-indigo-300",
+    orange: "border-orange-200 os-dark:border-orange-500/30 bg-orange-50/40 os-dark:bg-orange-500/10 text-orange-700 os-dark:text-orange-300",
   };
   return (
     <div className={cn("rounded-xl border p-3", tones[tone] || tones.rose, highlight && "shadow-md")}>
       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium mb-1">
         {icon} <span>{label}</span>
       </div>
-      <div className="text-2xl sm:text-3xl font-bold tabular-nums text-[#0F172A]">{value}</div>
-      {subtle && <div className="text-[10px] text-[#64748B]">{subtle}</div>}
+      <div className="text-2xl sm:text-3xl font-bold tabular-nums text-[#0F172A] os-dark:text-[var(--os-text)]">{value}</div>
+      {subtle && <div className="text-[10px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">{subtle}</div>}
     </div>
   );
 }
@@ -346,7 +346,7 @@ function BookMeetingModal({ item, onClose, onCreated }: { item: InboxItem; onClo
       <Field label="Notes (optional)">
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className={cn(INPUT, "h-20 resize-none")} placeholder="What's the agenda?" />
       </Field>
-      {error && <div className="text-[12px] text-red-600">{error}</div>}
+      {error && <div className="text-[12px] text-red-600 os-dark:text-red-400">{error}</div>}
       <ModalButtons onClose={onClose} saving={saving} submitLabel="Book meeting" />
     </form>
   </Modal>;
@@ -372,7 +372,7 @@ function CallbackModal({ item, onClose, onSaved }: { item: InboxItem; onClose: (
 
   return <Modal title="Schedule callback" onClose={onClose}>
     <form onSubmit={submit} className="space-y-3">
-      <div className="text-[12px] text-[#475569]">Set a follow-up date for <span className="font-semibold text-[#0F172A]">{item.name}</span>.</div>
+      <div className="text-[12px] text-[#475569] os-dark:text-[var(--os-text)]">Set a follow-up date for <span className="font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{item.name}</span>.</div>
       <Field label="Callback date">
         <input type="date" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)} className={INPUT} required />
       </Field>
@@ -381,12 +381,12 @@ function CallbackModal({ item, onClose, onSaved }: { item: InboxItem; onClose: (
   </Modal>;
 }
 
-const INPUT = "w-full px-3 py-2 rounded-lg border border-[var(--os-border)] bg-white text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300";
+const INPUT = "w-full px-3 py-2 rounded-lg border border-[var(--os-border)] bg-[var(--os-surface)] text-[13px] text-[#0F172A] os-dark:text-[var(--os-text)] focus:outline-none focus:ring-2 focus:ring-purple-300 os-dark:focus:ring-purple-500/40";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-1">{label}</label>
+      <label className="block text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1">{label}</label>
       {children}
     </div>
   );
@@ -397,10 +397,10 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   const { dialogProps, titleId } = useDialog({ open: true, onClose });
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 sm:pt-20 px-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-      <div {...dialogProps} className="relative w-full max-w-md bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
+      <div {...dialogProps} className="relative w-full max-w-md bg-[var(--os-surface)] rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
         <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--os-border)]">
-          <h2 id={titleId} className="text-[15px] font-semibold text-[#0F172A]">{title}</h2>
-          <button onClick={onClose} aria-label="Close" className="p-1 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"><X className="w-4 h-4" /></button>
+          <h2 id={titleId} className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{title}</h2>
+          <button onClick={onClose} aria-label="Close" className="p-1 rounded-lg text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-5">{children}</div>
       </div>
@@ -411,7 +411,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 function ModalButtons({ onClose, saving, submitLabel }: { onClose: () => void; saving: boolean; submitLabel: string }) {
   return (
     <div className="flex justify-end gap-2 pt-1">
-      <button type="button" onClick={onClose} className="px-3 py-2 rounded-xl text-[13px] font-medium text-[#475569] hover:bg-[#F1F5F9]">Cancel</button>
+      <button type="button" onClick={onClose} className="px-3 py-2 rounded-xl text-[13px] font-medium text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]">Cancel</button>
       <button type="submit" disabled={saving} className={cn(
         "inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium text-white shadow-md",
         saving ? "bg-gray-400" : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:shadow-lg"
