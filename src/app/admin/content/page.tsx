@@ -275,10 +275,10 @@ export default function ContentPlannerPage() {
           <ul className="divide-y divide-[var(--os-border)]">
             {todos.slice(0, 8).map((p) => (
               <li key={p.id}>
-                <button onClick={() => openEdit(p)} className="w-full flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1 py-2 text-left hover:bg-[#F8FAFC] rounded-lg px-2 -mx-2">
+                <button onClick={() => openEdit(p)} className="w-full flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1 py-2 text-left hover:bg-[#F8FAFC] os-dark:hover:bg-[var(--os-hover)] rounded-lg px-2 -mx-2">
                   <span className="text-[12px] text-[var(--os-text-muted)] w-28 shrink-0">{formatWhen(p.plannedAt)}</span>
                   <span className="text-[13px] font-medium text-[var(--os-text)] truncate min-w-0 flex-1">{p.title}</span>
-                  <span className="text-[12.5px] text-[#475569] truncate basis-full sm:basis-auto sm:max-w-[45%]">→ {p.nextAction}</span>
+                  <span className="text-[12.5px] text-[#475569] os-dark:text-[var(--os-text)] truncate basis-full sm:basis-auto sm:max-w-[45%]">→ {p.nextAction}</span>
                   {p.overdue && <Badge variant="red" dot>Overdue</Badge>}
                 </button>
               </li>
@@ -292,13 +292,13 @@ export default function ContentPlannerPage() {
       <div className="flex flex-col gap-3 mb-4">
         <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
           <div className="relative flex-1 min-w-0">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 os-dark:text-[var(--os-text-soft)]" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search title, caption, hook, hashtags…"
-              className="w-full h-11 pl-9 pr-4 text-sm bg-white border border-[var(--os-border)] rounded-xl text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-purple-300 focus:ring-2 focus:ring-purple-100 transition-all"
+              className="w-full h-11 pl-9 pr-4 text-sm bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl text-gray-800 os-dark:text-[var(--os-text)] placeholder:text-gray-400 os-dark:placeholder:text-[var(--os-text-soft)] focus:outline-none focus:border-purple-300 os-dark:focus:border-purple-500/30 focus:ring-2 focus:ring-purple-100 os-dark:focus:ring-purple-500/40 transition-all"
             />
           </div>
           <div className="flex gap-2">
@@ -306,7 +306,7 @@ export default function ContentPlannerPage() {
               <option value="ALL">All formats</option>
               {CONTENT_FORMATS.map((f) => <option key={f} value={f}>{CONTENT_FORMAT_LABELS[f]}</option>)}
             </Select>
-            <div className="flex rounded-xl border border-[var(--os-border)] bg-white p-1 shrink-0" role="group" aria-label="View">
+            <div className="flex rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)] p-1 shrink-0" role="group" aria-label="View">
               {([["calendar", CalendarDays, "Calendar"], ["list", List, "List"]] as const).map(([v, Icon, label]) => (
                 <button
                   key={v}
@@ -315,7 +315,7 @@ export default function ContentPlannerPage() {
                   aria-label={label}
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 rounded-lg text-[12.5px] font-medium transition-colors",
-                    view === v ? "bg-purple-50 text-[#7C3AED]" : "text-[#475569] hover:bg-[#F1F5F9]",
+                    view === v ? "bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)]" : "text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]",
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -331,7 +331,7 @@ export default function ContentPlannerPage() {
             onClick={toggleArchived}
             className={cn(
               "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
-              showArchived ? "bg-amber-50 text-amber-800 border-amber-200" : "text-[#475569] border-transparent hover:bg-[#F1F5F9]",
+              showArchived ? "bg-amber-50 os-dark:bg-amber-500/10 text-amber-800 os-dark:text-amber-300 border-amber-200 os-dark:border-amber-500/30" : "text-[#475569] os-dark:text-[var(--os-text)] border-transparent hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]",
             )}
           >
             <Archive className="w-3.5 h-3.5" />
@@ -363,13 +363,13 @@ export default function ContentPlannerPage() {
             <FormButton variant="secondary" size="sm" icon={<ChevronLeft className="w-4 h-4" />} onClick={() => changeStart(shiftDay(start, -WINDOW_DAYS))}>
               30 days
             </FormButton>
-            <label className="inline-flex items-center gap-2 text-[12.5px] text-[#475569]">
+            <label className="inline-flex items-center gap-2 text-[12.5px] text-[#475569] os-dark:text-[var(--os-text)]">
               Day 1
               <input
                 type="date"
                 value={start}
                 onChange={(e) => changeStart(e.target.value)}
-                className="h-9 px-3 bg-white border border-[var(--os-border)] rounded-lg text-[13px] text-gray-800 focus:outline-none focus:border-purple-300"
+                className="h-9 px-3 bg-[var(--os-surface)] border border-[var(--os-border)] rounded-lg text-[13px] text-gray-800 os-dark:text-[var(--os-text)] focus:outline-none focus:border-purple-300 os-dark:focus:border-purple-500/30"
               />
             </label>
             <FormButton variant="secondary" size="sm" onClick={() => changeStart(shiftDay(start, WINDOW_DAYS))}>
@@ -388,12 +388,12 @@ export default function ContentPlannerPage() {
                 <div
                   key={day}
                   className={cn(
-                    "min-h-[112px] rounded-xl border bg-white p-2 flex flex-col",
-                    day === today ? "border-purple-300 ring-1 ring-purple-200" : "border-[var(--os-border)]",
+                    "min-h-[112px] rounded-xl border bg-[var(--os-surface)] p-2 flex flex-col",
+                    day === today ? "border-purple-300 os-dark:border-purple-500/30 ring-1 ring-purple-200 os-dark:ring-purple-500/40" : "border-[var(--os-border)]",
                   )}
                 >
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] font-semibold text-[#7C3AED]">Day {i + 1}</span>
+                    <span className="text-[11px] font-semibold text-[#7C3AED] os-dark:text-[var(--os-purple)]">Day {i + 1}</span>
                     <span className="text-[11px] text-[var(--os-text-muted)]">{formatDay(day)}</span>
                   </div>
                   <div className="space-y-1 flex-1">
@@ -401,7 +401,7 @@ export default function ContentPlannerPage() {
                   </div>
                   <button
                     onClick={() => openNew(day)}
-                    className="mt-1 self-start inline-flex items-center gap-1 text-[11px] text-[#94A3B8] hover:text-[#7C3AED]"
+                    className="mt-1 self-start inline-flex items-center gap-1 text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)]"
                     aria-label={`Add a post on ${formatDay(day)}`}
                   >
                     <Plus className="w-3 h-3" /> Add
@@ -434,33 +434,33 @@ export default function ContentPlannerPage() {
           }
         />
       ) : (
-        <div className="rounded-2xl border border-[var(--os-border)] bg-white divide-y divide-[var(--os-border)]">
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] divide-y divide-[var(--os-border)]">
           {filtered.map((p) => {
             const Icon = FORMAT_ICON[p.format];
             return (
               <div key={p.id} className="flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1.5 px-4 py-3">
                 <span className="text-[12px] text-[var(--os-text-muted)] w-28 shrink-0">{formatWhen(p.plannedAt)}</span>
-                <span className="inline-flex items-center gap-1.5 text-[12px] text-[#475569] w-24 shrink-0">
+                <span className="inline-flex items-center gap-1.5 text-[12px] text-[#475569] os-dark:text-[var(--os-text)] w-24 shrink-0">
                   <Icon className="w-4 h-4" /> {CONTENT_FORMAT_LABELS[p.format]}
                 </span>
-                <button onClick={() => openEdit(p)} className="text-[13px] font-medium text-[var(--os-text)] hover:text-[#7C3AED] text-left truncate min-w-0 flex-1 order-first basis-full sm:order-none sm:basis-0">
+                <button onClick={() => openEdit(p)} className="text-[13px] font-medium text-[var(--os-text)] hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)] text-left truncate min-w-0 flex-1 order-first basis-full sm:order-none sm:basis-0">
                   {p.title}
                 </button>
                 {p.nextAction && p.status !== "PUBLISHED" && (
-                  <span className="text-[12px] text-[#475569] truncate sm:max-w-[30%]">→ {p.nextAction}</span>
+                  <span className="text-[12px] text-[#475569] os-dark:text-[var(--os-text)] truncate sm:max-w-[30%]">→ {p.nextAction}</span>
                 )}
                 {p.sourceKey && p.notes.includes(PUBLISHED_CONFIRMATION_NOTE) && p.status !== "PUBLISHED" && (
                   <Badge variant="amber"><AlertTriangle className="w-3 h-3" /> Confirm publication</Badge>
                 )}
                 <Badge variant={STATUS_BADGE[p.status]} dot>{CONTENT_STATUS_LABELS[p.status]}</Badge>
                 <div className="flex items-center gap-1 shrink-0">
-                  <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg text-[#64748B] hover:bg-[#F1F5F9]" aria-label="Edit">
+                  <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]" aria-label="Edit">
                     <Pencil className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setArchived(p, !p.archivedAt)}
                     disabled={busyId === p.id}
-                    className="p-1.5 rounded-lg text-[#64748B] hover:bg-[#F1F5F9] disabled:opacity-50"
+                    className="p-1.5 rounded-lg text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)] disabled:opacity-50"
                     aria-label={p.archivedAt ? "Restore" : "Archive"}
                   >
                     {p.archivedAt ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
@@ -487,7 +487,7 @@ export default function ContentPlannerPage() {
           role="status"
           className={cn(
             "fixed bottom-6 right-6 z-[60] px-4 py-3 rounded-xl shadow-lg text-[13px] font-medium",
-            toast.kind === "error" ? "bg-red-600 text-white" : "bg-[#0F172A] text-white",
+            toast.kind === "error" ? "bg-red-600 text-white" : "bg-[#0F172A] os-dark:bg-[var(--os-surface-3)] os-dark:ring-1 os-dark:ring-[var(--os-border-hover)] text-white",
           )}
         >
           {toast.msg}
@@ -502,11 +502,11 @@ function PostChip({ post, onClick }: { post: ContentPostDTO; onClick: () => void
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#F8FAFC] hover:bg-purple-50 text-left"
+      className="w-full flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#F8FAFC] os-dark:bg-[var(--os-surface-2)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10 text-left"
       title={`${CONTENT_FORMAT_LABELS[post.format]} · ${CONTENT_STATUS_LABELS[post.status]}`}
     >
-      <Icon className="w-3.5 h-3.5 text-[#64748B] shrink-0" />
-      <span className="text-[12px] text-[#0F172A] truncate flex-1">{post.title}</span>
+      <Icon className="w-3.5 h-3.5 text-[#64748B] os-dark:text-[var(--os-text-soft)] shrink-0" />
+      <span className="text-[12px] text-[#0F172A] os-dark:text-[var(--os-text)] truncate flex-1">{post.title}</span>
       <Badge variant={STATUS_BADGE[post.status]} className="px-1.5 text-[10px]">{CONTENT_STATUS_LABELS[post.status]}</Badge>
     </button>
   );
