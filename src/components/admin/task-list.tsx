@@ -274,7 +274,7 @@ export function TaskList({
         ) : tasks.length === 0 ? (
           <div className="px-5 py-8 text-center text-[12px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">{emptyHint}</div>
         ) : (
-          <ul className="divide-y divide-[#F3F4F6]">
+          <ul className="divide-y divide-[#F3F4F6] os-dark:divide-[var(--os-border)]">
             {tasks.map((t) => {
               const due = dueRelative(t.dueDate);
               const done = t.status === "DONE";

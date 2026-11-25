@@ -14,10 +14,10 @@ const LANE_PAD = 8; // top/bottom padding inside a lane
 const LANE_LABEL_W = 180; // left label column width
 
 const STATUS_COLOR: Record<TaskStatus, { bg: string; border: string; text: string }> = {
-  TODO:        { bg: "bg-gray-200",     border: "border-gray-300",    text: "text-gray-700" },
-  IN_PROGRESS: { bg: "bg-blue-200",     border: "border-blue-400",    text: "text-blue-800" },
-  BLOCKED:     { bg: "bg-purple-200",   border: "border-purple-400",  text: "text-purple-800" },
-  DONE:        { bg: "bg-emerald-200",  border: "border-emerald-400", text: "text-emerald-800" },
+  TODO:        { bg: "bg-gray-200 os-dark:bg-[var(--os-hover)]",     border: "border-gray-300 os-dark:border-[var(--os-border-hover)]",    text: "text-gray-700 os-dark:text-[var(--os-text)]" },
+  IN_PROGRESS: { bg: "bg-blue-200 os-dark:bg-blue-500/20",     border: "border-blue-400 os-dark:border-blue-500/50",    text: "text-blue-800 os-dark:text-blue-300" },
+  BLOCKED:     { bg: "bg-purple-200 os-dark:bg-purple-500/20",   border: "border-purple-400 os-dark:border-purple-500/50",  text: "text-purple-800 os-dark:text-purple-300" },
+  DONE:        { bg: "bg-emerald-200 os-dark:bg-emerald-500/20",  border: "border-emerald-400 os-dark:border-emerald-500/50", text: "text-emerald-800 os-dark:text-emerald-300" },
 };
 
 const STATUS_LABEL: Record<TaskStatus, string> = {
@@ -168,7 +168,7 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
 
   if (loading) {
     return (
-      <div className="bg-white border border-[#E5E7EB] rounded-xl px-5 py-12 text-center text-[12px] text-[#9CA3AF]">
+      <div className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl px-5 py-12 text-center text-[12px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">
         Loading timeline...
       </div>
     );
@@ -176,47 +176,47 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
 
   if (tasks.length === 0) {
     return (
-      <div className="bg-white border border-[#E5E7EB] rounded-xl px-5 py-12 text-center text-[12px] text-[#9CA3AF]">
+      <div className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl px-5 py-12 text-center text-[12px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">
         No tasks to display on the timeline.
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden relative">
+    <div className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl overflow-hidden relative">
       {/* ── legend ── */}
-      <div className="flex items-center gap-4 px-5 py-2.5 border-b border-[#E5E7EB] bg-[#FAFAFE]">
-        <span className="text-[11px] font-medium text-[#6B7280]">Status:</span>
+      <div className="flex items-center gap-4 px-5 py-2.5 border-b border-[var(--os-border)] bg-[var(--os-surface-2)]">
+        <span className="text-[11px] font-medium text-[#6B7280] os-dark:text-[var(--os-text)]">Status:</span>
         {(["TODO", "IN_PROGRESS", "BLOCKED", "DONE"] as TaskStatus[]).map((s) => (
           <span key={s} className="inline-flex items-center gap-1.5 text-[11px]">
             <span className={cn("w-3 h-3 rounded-sm border", STATUS_COLOR[s].bg, STATUS_COLOR[s].border)} />
-            <span className="text-[#374151]">{STATUS_LABEL[s]}</span>
+            <span className="text-[#374151] os-dark:text-[var(--os-text)]">{STATUS_LABEL[s]}</span>
           </span>
         ))}
         <span className="inline-flex items-center gap-1.5 text-[11px] ml-auto">
           <span className="w-0.5 h-3 bg-red-500 rounded-full" />
-          <span className="text-[#374151]">Today</span>
+          <span className="text-[#374151] os-dark:text-[var(--os-text)]">Today</span>
         </span>
       </div>
 
       <div className="flex">
         {/* ── fixed left column (lane labels) ── */}
-        <div className="shrink-0 border-r border-[#E5E7EB] bg-[#FAFAFE] z-10" style={{ width: LANE_LABEL_W }}>
+        <div className="shrink-0 border-r border-[var(--os-border)] bg-[var(--os-surface-2)] z-10" style={{ width: LANE_LABEL_W }}>
           {/* header spacer */}
-          <div className="border-b border-[#E5E7EB]" style={{ height: HEADER_H }} />
+          <div className="border-b border-[var(--os-border)]" style={{ height: HEADER_H }} />
           {/* lane labels */}
           {lanes.map((lane, li) => {
             const laneH = lane.tasks.length * ROW_H + LANE_PAD * 2;
             return (
               <div
                 key={li}
-                className={cn("flex items-start gap-2 px-3 pt-2 border-b border-[#F3F4F6]")}
+                className={cn("flex items-start gap-2 px-3 pt-2 border-b border-[#F3F4F6] os-dark:border-[var(--os-border)]")}
                 style={{ height: laneH }}
               >
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[9px] font-bold shrink-0 mt-0.5">
                   {lane.initials}
                 </span>
-                <span className="text-[12px] font-medium text-[#111827] truncate leading-7">
+                <span className="text-[12px] font-medium text-[#111827] os-dark:text-[var(--os-text)] truncate leading-7">
                   {lane.label}
                 </span>
               </div>
@@ -228,7 +228,7 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
         <div ref={scrollRef} className="overflow-x-auto flex-1 relative">
           <div style={{ width: gridWidth, minHeight: "100%" }} className="relative">
             {/* ── date header ── */}
-            <div className="sticky top-0 z-20 bg-white border-b border-[#E5E7EB]" style={{ height: HEADER_H }}>
+            <div className="sticky top-0 z-20 bg-[var(--os-surface)] border-b border-[var(--os-border)]" style={{ height: HEADER_H }}>
               {/* month row */}
               <div className="flex" style={{ height: 24 }}>
                 {(() => {
@@ -246,7 +246,7 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
                   return months.map((m, i) => (
                     <div
                       key={i}
-                      className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider flex items-center px-1 border-r border-[#F3F4F6]"
+                      className="text-[10px] font-semibold text-[#6B7280] os-dark:text-[var(--os-text)] uppercase tracking-wider flex items-center px-1 border-r border-[#F3F4F6] os-dark:border-[var(--os-border)]"
                       style={{ width: m.span * COL_W, left: m.startIdx * COL_W }}
                     >
                       {m.label}
@@ -263,10 +263,10 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
                     <div
                       key={i}
                       className={cn(
-                        "flex flex-col items-center justify-center border-r border-[#F3F4F6] text-[10px]",
-                        isToday && "bg-red-50 font-bold text-red-600",
-                        wknd && !isToday && "text-[#C4C9D2]",
-                        !wknd && !isToday && "text-[#6B7280]",
+                        "flex flex-col items-center justify-center border-r border-[#F3F4F6] os-dark:border-[var(--os-border)] text-[10px]",
+                        isToday && "bg-red-50 os-dark:bg-red-500/10 font-bold text-red-600 os-dark:text-red-400",
+                        wknd && !isToday && "text-[#C4C9D2] os-dark:text-[var(--os-text-faint)]",
+                        !wknd && !isToday && "text-[#6B7280] os-dark:text-[var(--os-text)]",
                       )}
                       style={{ width: COL_W }}
                     >
@@ -284,7 +284,7 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
               return (
                 <div
                   key={li}
-                  className="relative border-b border-[#F3F4F6]"
+                  className="relative border-b border-[#F3F4F6] os-dark:border-[var(--os-border)]"
                   style={{ height: laneH }}
                 >
                   {/* weekend shading columns */}
@@ -293,7 +293,7 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
                     return (
                       <div
                         key={`wknd-${i}`}
-                        className="absolute top-0 bottom-0 bg-gray-50/60"
+                        className="absolute top-0 bottom-0 bg-gray-50/60 os-dark:bg-[var(--os-surface-2)]"
                         style={{ left: i * COL_W, width: COL_W }}
                       />
                     );
@@ -303,7 +303,7 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
                   {days.map((_, i) => (
                     <div
                       key={`vline-${i}`}
-                      className="absolute top-0 bottom-0 border-r border-[#F3F4F6]"
+                      className="absolute top-0 bottom-0 border-r border-[#F3F4F6] os-dark:border-[var(--os-border)]"
                       style={{ left: (i + 1) * COL_W }}
                     />
                   ))}
@@ -371,19 +371,19 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
       {popup && (
         <div
           data-task-popup
-          className="fixed z-50 bg-white rounded-xl shadow-xl border border-[#E5E7EB] p-4 min-w-[280px] max-w-[340px]"
+          className="fixed z-50 bg-[var(--os-surface)] rounded-xl shadow-xl border border-[var(--os-border)] p-4 min-w-[280px] max-w-[340px]"
           style={{
             left: Math.min(popup.x - 140, window.innerWidth - 360),
             top: Math.min(popup.y, window.innerHeight - 260),
           }}
         >
           <div className="flex items-start justify-between gap-2 mb-3">
-            <h4 className="text-[14px] font-semibold text-[#111827] leading-snug">
+            <h4 className="text-[14px] font-semibold text-[#111827] os-dark:text-[var(--os-text)] leading-snug">
               {popup.task.title}
             </h4>
             <button
               onClick={() => setPopup(null)}
-              className="shrink-0 p-0.5 rounded-md hover:bg-[#F3F4F6] text-[#9CA3AF] hover:text-[#374151]"
+              className="shrink-0 p-0.5 rounded-md hover:bg-[#F3F4F6] os-dark:hover:bg-[var(--os-hover)] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] hover:text-[#374151] os-dark:hover:text-[var(--os-text)]"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -392,14 +392,14 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
           </div>
 
           {popup.task.description && (
-            <p className="text-[12px] text-[#6B7280] mb-3 leading-relaxed">
+            <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mb-3 leading-relaxed">
               {popup.task.description}
             </p>
           )}
 
           <div className="space-y-2 text-[12px]">
             <div className="flex items-center justify-between">
-              <span className="text-[#9CA3AF]">Status</span>
+              <span className="text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">Status</span>
               <span className={cn(
                 "px-2 py-0.5 rounded-md border text-[11px] font-medium",
                 STATUS_COLOR[popup.task.status as TaskStatus]?.bg,
@@ -410,15 +410,15 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[#9CA3AF]">Priority</span>
-              <span className="text-[#374151] font-medium">
+              <span className="text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">Priority</span>
+              <span className="text-[#374151] os-dark:text-[var(--os-text)] font-medium">
                 {PRIORITY_LABEL[popup.task.priority] || popup.task.priority}
               </span>
             </div>
             {popup.task.owner && (
               <div className="flex items-center justify-between">
-                <span className="text-[#9CA3AF]">Assignee</span>
-                <span className="inline-flex items-center gap-1.5 text-[#374151] font-medium">
+                <span className="text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">Assignee</span>
+                <span className="inline-flex items-center gap-1.5 text-[#374151] os-dark:text-[var(--os-text)] font-medium">
                   <span className="flex items-center justify-center w-4 h-4 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[7px] font-bold">
                     {popup.task.owner.avatarInitials}
                   </span>
@@ -427,15 +427,15 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-[#9CA3AF]">Created</span>
-              <span className="text-[#374151]">{fmtFullDate(new Date(popup.task.createdAt))}</span>
+              <span className="text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">Created</span>
+              <span className="text-[#374151] os-dark:text-[var(--os-text)]">{fmtFullDate(new Date(popup.task.createdAt))}</span>
             </div>
             {popup.task.dueDate && (
               <div className="flex items-center justify-between">
-                <span className="text-[#9CA3AF]">Due date</span>
+                <span className="text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">Due date</span>
                 <span className={cn(
                   "font-medium",
-                  new Date(popup.task.dueDate) < today ? "text-red-600" : "text-[#374151]"
+                  new Date(popup.task.dueDate) < today ? "text-red-600 os-dark:text-red-400" : "text-[#374151] os-dark:text-[var(--os-text)]"
                 )}>
                   {fmtFullDate(new Date(popup.task.dueDate))}
                 </span>
@@ -443,8 +443,8 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
             )}
             {popup.task.parentLabel && (
               <div className="flex items-center justify-between">
-                <span className="text-[#9CA3AF]">Related to</span>
-                <span className="text-[#8B00FF] font-medium">{popup.task.parentLabel}</span>
+                <span className="text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">Related to</span>
+                <span className="text-[#8B00FF] os-dark:text-[var(--os-purple)] font-medium">{popup.task.parentLabel}</span>
               </div>
             )}
           </div>

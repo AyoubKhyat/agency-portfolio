@@ -92,7 +92,7 @@ export default function LeadDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-purple-200 border-t-[#8B00FF] rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-purple-200 os-dark:border-purple-500/30 border-t-[#8B00FF] rounded-full animate-spin" />
       </div>
     );
   }
@@ -104,14 +104,14 @@ export default function LeadDetailPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <Link
         href="/admin/leads"
-        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#64748B] hover:text-[#8B00FF] transition-colors"
+        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-[#8B00FF] os-dark:hover:text-[var(--os-purple)] transition-colors"
       >
         <ChevronLeft className="w-4 h-4" /> Back to leads
       </Link>
 
       <div>
-        <h1 className="text-[24px] font-bold text-[#0F172A] tracking-tight">{lead.fullName}</h1>
-        <p className="text-[13px] text-[#64748B] mt-1">
+        <h1 className="text-[24px] font-bold text-[#0F172A] os-dark:text-[var(--os-text)] tracking-tight">{lead.fullName}</h1>
+        <p className="text-[13px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-1">
           Received {created.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
         </p>
       </div>
@@ -132,35 +132,35 @@ export default function LeadDetailPage() {
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
           <div>
-            <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-[0.06em] mb-1.5">Email</p>
-            <a href={`mailto:${lead.email}`} className="text-[14px] text-[#8B00FF] hover:underline break-all">
+            <p className="text-[11px] font-semibold text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-[0.06em] mb-1.5">Email</p>
+            <a href={`mailto:${lead.email}`} className="text-[14px] text-[#8B00FF] os-dark:text-[var(--os-purple)] hover:underline break-all">
               {lead.email}
             </a>
           </div>
           {lead.phone && (
             <div>
-              <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-[0.06em] mb-1.5">Phone</p>
-              <a href={`tel:${lead.phone}`} className="text-[14px] text-[#0F172A] hover:text-[#8B00FF] inline-flex items-center gap-1.5">
+              <p className="text-[11px] font-semibold text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-[0.06em] mb-1.5">Phone</p>
+              <a href={`tel:${lead.phone}`} className="text-[14px] text-[#0F172A] os-dark:text-[var(--os-text)] hover:text-[#8B00FF] os-dark:hover:text-[var(--os-purple)] inline-flex items-center gap-1.5">
                 <Phone className="w-3.5 h-3.5" /> {lead.phone}
               </a>
             </div>
           )}
           <div>
-            <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-[0.06em] mb-1.5">Subject</p>
-            <p className="text-[14px] text-[#0F172A]">{lead.subject}</p>
+            <p className="text-[11px] font-semibold text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-[0.06em] mb-1.5">Subject</p>
+            <p className="text-[14px] text-[#0F172A] os-dark:text-[var(--os-text)]">{lead.subject}</p>
           </div>
           <div>
-            <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-[0.06em] mb-1.5">Status</p>
+            <p className="text-[11px] font-semibold text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-[0.06em] mb-1.5">Status</p>
             <Badge variant={STATUS_VARIANT[lead.status] ?? "default"} size="sm" dot>{leadStatusLabel(lead.status)}</Badge>
           </div>
           <div>
-            <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-[0.06em] mb-1.5">Assigned to</p>
+            <p className="text-[11px] font-semibold text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-[0.06em] mb-1.5">Assigned to</p>
             {lead.assignedToName ? (
-              <span className="text-[14px] text-[#8B00FF] inline-flex items-center gap-1.5">
+              <span className="text-[14px] text-[#8B00FF] os-dark:text-[var(--os-purple)] inline-flex items-center gap-1.5">
                 <UserCheck className="w-3.5 h-3.5" /> {lead.assignedToName}
               </span>
             ) : (
-              <span className="text-[14px] text-[#94A3B8]">Unassigned</span>
+              <span className="text-[14px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">Unassigned</span>
             )}
           </div>
         </div>
@@ -171,8 +171,8 @@ export default function LeadDetailPage() {
         subtitle="Original message sent through the contact form."
         icon={<MessageSquare className="w-4 h-4" />}
       >
-        <div className="rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] p-4">
-          <p className="text-[14px] text-[#475569] whitespace-pre-wrap leading-relaxed">{lead.message}</p>
+        <div className="rounded-xl bg-[#F8FAFC] os-dark:bg-[var(--os-surface-2)] border border-[#E2E8F0] os-dark:border-[var(--os-border)] p-4">
+          <p className="text-[14px] text-[#475569] os-dark:text-[var(--os-text)] whitespace-pre-wrap leading-relaxed">{lead.message}</p>
         </div>
       </FormCard>
 
@@ -200,16 +200,16 @@ export default function LeadDetailPage() {
         </form>
 
         {lead.notes.length === 0 ? (
-          <p className="text-[13px] text-[#94A3B8]">No notes yet.</p>
+          <p className="text-[13px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">No notes yet.</p>
         ) : (
           <div className="space-y-2.5">
             {lead.notes.map((note) => (
-              <div key={note.id} className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl">
+              <div key={note.id} className="p-4 bg-[#F8FAFC] os-dark:bg-[var(--os-surface-2)] border border-[#E2E8F0] os-dark:border-[var(--os-border)] rounded-xl">
                 <HighlightedMentions
                   text={note.content}
-                  className="text-[14px] text-[#0F172A] whitespace-pre-wrap leading-relaxed block"
+                  className="text-[14px] text-[#0F172A] os-dark:text-[var(--os-text)] whitespace-pre-wrap leading-relaxed block"
                 />
-                <p className="text-[12px] text-[#94A3B8] mt-2">
+                <p className="text-[12px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mt-2">
                   {new Date(note.createdAt).toLocaleDateString("fr-FR", {
                     day: "2-digit",
                     month: "short",

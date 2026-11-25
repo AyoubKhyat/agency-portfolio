@@ -21,14 +21,14 @@ const SCOPE_DEFS: { value: Scope; label: string; icon: React.ComponentType<{ cla
 
 function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
   return (
-    <div className="inline-flex items-center rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-0.5">
+    <div className="inline-flex items-center rounded-lg border border-[var(--os-border)] bg-[#F9FAFB] os-dark:bg-[var(--os-surface-2)] p-0.5">
       <button
         type="button"
         onClick={() => onChange("list")}
         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all duration-150 ${
           view === "list"
-            ? "bg-white text-[#111827] shadow-sm border border-[#E5E7EB]"
-            : "text-[#6B7280] hover:text-[#111827]"
+            ? "bg-[var(--os-surface)] text-[#111827] os-dark:text-[var(--os-text)] shadow-sm border border-[var(--os-border)]"
+            : "text-[#6B7280] os-dark:text-[var(--os-text)] hover:text-[#111827] os-dark:hover:text-[var(--os-text)]"
         }`}
         title="List view"
       >
@@ -40,8 +40,8 @@ function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode
         onClick={() => onChange("timeline")}
         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all duration-150 ${
           view === "timeline"
-            ? "bg-white text-[#111827] shadow-sm border border-[#E5E7EB]"
-            : "text-[#6B7280] hover:text-[#111827]"
+            ? "bg-[var(--os-surface)] text-[#111827] os-dark:text-[var(--os-text)] shadow-sm border border-[var(--os-border)]"
+            : "text-[#6B7280] os-dark:text-[var(--os-text)] hover:text-[#111827] os-dark:hover:text-[var(--os-text)]"
         }`}
         title="Timeline view"
       >
@@ -57,7 +57,7 @@ function ScopeIndicator({ scope }: { scope: Scope }) {
   if (!def) return null;
   const Icon = def.icon;
   return (
-    <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#6B7280]">
+    <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#6B7280] os-dark:text-[var(--os-text)]">
       <Icon className="w-3.5 h-3.5" /> {def.label}
     </span>
   );
@@ -152,7 +152,7 @@ function TasksPageInner() {
 
 export default function TasksPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-purple-200 border-t-[#8B00FF] rounded-full animate-spin" /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-purple-200 os-dark:border-purple-500/30 border-t-[#8B00FF] rounded-full animate-spin" /></div>}>
       <TasksPageInner />
     </Suspense>
   );
