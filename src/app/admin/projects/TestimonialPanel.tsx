@@ -18,11 +18,11 @@ export type TestimonialApiState = {
 type Draft = { author: string; consent: string; quote: string; role: string };
 
 const input =
-  "w-full h-11 px-3.5 bg-white border border-[#D1D5DB] rounded-lg text-[14px] text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
+  "w-full h-11 px-3.5 bg-[var(--os-control-bg)] border border-[#D1D5DB] os-dark:border-[var(--os-control-border)] rounded-lg text-[14px] text-[#111827] os-dark:text-[var(--os-text)] placeholder:text-[#9CA3AF] os-dark:placeholder:text-[var(--os-text-soft)] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
 const textarea =
-  "w-full px-3.5 py-2.5 bg-white border border-[#D1D5DB] rounded-lg text-[14px] leading-relaxed text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
-const lbl = "block text-[13px] font-medium text-[#374151] mb-1.5";
-const hint = "text-[11px] text-[#9CA3AF] mt-1";
+  "w-full px-3.5 py-2.5 bg-[var(--os-control-bg)] border border-[#D1D5DB] os-dark:border-[var(--os-control-border)] rounded-lg text-[14px] leading-relaxed text-[#111827] os-dark:text-[var(--os-text)] placeholder:text-[#9CA3AF] os-dark:placeholder:text-[var(--os-text-soft)] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
+const lbl = "block text-[13px] font-medium text-[#374151] os-dark:text-[var(--os-text)] mb-1.5";
+const hint = "text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] mt-1";
 
 const draftOf = (s: TestimonialApiState): Draft => ({ author: s.author, consent: s.consent, quote: s.quote, role: s.role });
 
@@ -75,11 +75,11 @@ export default function TestimonialPanel({ projectId, initial }: { projectId?: s
   }, [projectId, initial]);
 
   if (!projectId) {
-    return <Shell><p className="text-[13px] text-[#6B7280]">Save the project first, then add the client&apos;s testimonial here.</p></Shell>;
+    return <Shell><p className="text-[13px] text-[#6B7280] os-dark:text-[var(--os-text)]">Save the project first, then add the client&apos;s testimonial here.</p></Shell>;
   }
-  if (loadError) return <Shell><p role="alert" className="text-[13px] text-red-700">{loadError}</p></Shell>;
+  if (loadError) return <Shell><p role="alert" className="text-[13px] text-red-700 os-dark:text-red-300">{loadError}</p></Shell>;
   if (!saved || !draft) {
-    return <Shell><Loader2 className="w-4 h-4 animate-spin text-[#8B00FF]" /></Shell>;
+    return <Shell><Loader2 className="w-4 h-4 animate-spin text-[#8B00FF] os-dark:text-[var(--os-purple)]" /></Shell>;
   }
 
   const textDirty = draft.quote.trim() !== saved.quote || draft.role.trim() !== saved.role;
@@ -143,15 +143,15 @@ export default function TestimonialPanel({ projectId, initial }: { projectId?: s
 
   return (
     <Shell>
-      <p className="text-[12px] text-[#6B7280] -mt-1 mb-5">
+      <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] -mt-1 mb-5">
         One testimonial per project, shown exactly as written on the French, English and Arabic homepages (nothing is
         translated), and only for Client projects. Editing a published quote, role or author unpublishes it until it is
         published again.
       </p>
 
-      <div className={`rounded-lg border p-4 ${published ? "border-emerald-200 bg-emerald-50/30" : "border-[#E5E7EB]"}`} data-testimonial>
+      <div className={`rounded-lg border p-4 ${published ? "border-emerald-200 os-dark:border-emerald-500/30 bg-emerald-50/30 os-dark:bg-emerald-500/10" : "border-[var(--os-border)]"}`} data-testimonial>
         <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
-          <h3 className="text-[13px] font-semibold text-[#111827]">Testimonial · all languages</h3>
+          <h3 className="text-[13px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">Testimonial · all languages</h3>
           <StatusBadge published={published} dirty={dirty} empty={empty} approvedAt={saved.approvedAt} approvedBy={saved.approvedBy} />
         </div>
 
@@ -185,7 +185,7 @@ export default function TestimonialPanel({ projectId, initial }: { projectId?: s
           </div>
           <div>
             <label className={lbl} htmlFor="tst-consent">
-              Consent reference <span className="font-normal text-[#9CA3AF]">· private</span>
+              Consent reference <span className="font-normal text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">· private</span>
             </label>
             <input
               id="tst-consent" className={input} value={draft.consent} maxLength={TESTIMONIAL_LIMITS.consent}
@@ -197,26 +197,26 @@ export default function TestimonialPanel({ projectId, initial }: { projectId?: s
         </div>
 
         {willUnpublish && (
-          <p className="mt-3 text-[12px] text-amber-800 bg-amber-50 border border-amber-100 rounded-md px-3 py-2">
+          <p className="mt-3 text-[12px] text-amber-800 os-dark:text-amber-300 bg-amber-50 os-dark:bg-amber-500/10 border border-amber-100 os-dark:border-amber-500/30 rounded-md px-3 py-2">
             Saving will unpublish this testimonial on every language until it is published again.
           </p>
         )}
 
-        <div className="mt-3 pt-3 border-t border-[#F3F4F6]">
+        <div className="mt-3 pt-3 border-t border-[#F3F4F6] os-dark:border-[var(--os-border)]">
           {published ? (
             <button
               type="button" onClick={hide} disabled={!!busy}
-              className="inline-flex items-center gap-1.5 h-9 px-3 bg-white border border-[#D1D5DB] rounded-lg text-[12px] font-medium text-[#374151] hover:bg-[#F9FAFB] disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 h-9 px-3 bg-[var(--os-surface)] border border-[#D1D5DB] os-dark:border-[var(--os-control-border)] rounded-lg text-[12px] font-medium text-[#374151] os-dark:text-[var(--os-text)] hover:bg-[#F9FAFB] os-dark:hover:bg-[var(--os-hover)] disabled:opacity-60"
             >
               {busy === "publish" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <EyeOff className="w-3.5 h-3.5" />} Hide from website
             </button>
           ) : dirty ? (
-            <p className="text-[12px] text-[#6B7280]">Save the testimonial before publishing.</p>
+            <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)]">Save the testimonial before publishing.</p>
           ) : problem ? (
-            <p className="text-[12px] text-[#6B7280]">Not publishable yet: {problem}</p>
+            <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)]">Not publishable yet: {problem}</p>
           ) : (
             <div className="space-y-2">
-              <label className="flex items-start gap-2 text-[12px] text-[#374151] cursor-pointer">
+              <label className="flex items-start gap-2 text-[12px] text-[#374151] os-dark:text-[var(--os-text)] cursor-pointer">
                 <input
                   type="checkbox" className="mt-0.5 w-4 h-4 accent-[#8B00FF]" checked={confirmed}
                   onChange={(e) => setConfirmed(e.target.checked)}
@@ -237,26 +237,26 @@ export default function TestimonialPanel({ projectId, initial }: { projectId?: s
       <div className="mt-5 flex items-center gap-3 flex-wrap">
         <button
           type="button" onClick={save} disabled={!dirty || !!busy}
-          className="inline-flex items-center gap-2 h-10 px-4 bg-white border border-[#D1D5DB] text-[#111827] rounded-lg text-[13px] font-semibold hover:bg-[#F9FAFB] disabled:opacity-50"
+          className="inline-flex items-center gap-2 h-10 px-4 bg-[var(--os-surface)] border border-[#D1D5DB] os-dark:border-[var(--os-control-border)] text-[#111827] os-dark:text-[var(--os-text)] rounded-lg text-[13px] font-semibold hover:bg-[#F9FAFB] os-dark:hover:bg-[var(--os-hover)] disabled:opacity-50"
         >
           {busy === "save" && <Loader2 className="w-4 h-4 animate-spin" />} Save testimonial
         </button>
-        {dirty && !busy && <span className="text-[12px] text-amber-700">Unsaved testimonial changes</span>}
-        {notice && <span role="status" className="text-[12px] text-emerald-700">{notice}</span>}
+        {dirty && !busy && <span className="text-[12px] text-amber-700 os-dark:text-amber-300">Unsaved testimonial changes</span>}
+        {notice && <span role="status" className="text-[12px] text-emerald-700 os-dark:text-emerald-300">{notice}</span>}
       </div>
-      {error && <p role="alert" className="mt-3 text-[12px] text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-[12px] text-red-700 os-dark:text-red-300 bg-red-50 os-dark:bg-red-500/10 border border-red-200 os-dark:border-red-500/30 rounded-md px-3 py-2">{error}</p>}
     </Shell>
   );
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <section className="bg-white border border-[#E5E7EB] rounded-xl p-6" aria-labelledby="tst-heading" data-testimonial-panel>
+    <section className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-6" aria-labelledby="tst-heading" data-testimonial-panel>
       <div className="flex items-center gap-2.5 mb-4">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 flex items-center justify-center text-[#8B00FF]">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 flex items-center justify-center text-[#8B00FF] os-dark:text-[var(--os-purple)]">
           <MessageSquareQuote className="w-4 h-4" />
         </div>
-        <h2 id="tst-heading" className="text-[15px] font-semibold text-[#111827]">Client testimonial</h2>
+        <h2 id="tst-heading" className="text-[15px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">Client testimonial</h2>
       </div>
       {children}
     </section>
@@ -266,14 +266,14 @@ function Shell({ children }: { children: React.ReactNode }) {
 function StatusBadge({ published, dirty, empty, approvedAt, approvedBy }: { published: boolean; dirty: boolean; empty: boolean; approvedAt: string | null; approvedBy: string | null }) {
   if (published) {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full" title={approvedBy ? `Published by ${approvedBy}` : undefined}>
+      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 os-dark:text-emerald-300 bg-emerald-50 os-dark:bg-emerald-500/10 border border-emerald-100 os-dark:border-emerald-500/30 px-2 py-0.5 rounded-full" title={approvedBy ? `Published by ${approvedBy}` : undefined}>
         <CheckCircle2 className="w-3 h-3" /> Published{approvedAt ? ` · ${formatDate(approvedAt)}` : ""}{approvedBy ? ` · ${approvedBy}` : ""}{dirty ? " · edited" : ""}
       </span>
     );
   }
-  if (empty && !dirty) return <span className="text-[11px] font-medium text-[#9CA3AF]">Not added</span>;
+  if (empty && !dirty) return <span className="text-[11px] font-medium text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">Not added</span>;
   return (
-    <span className="text-[11px] font-semibold text-[#6B7280] bg-[#F3F4F6] border border-[#E5E7EB] px-2 py-0.5 rounded-full">
+    <span className="text-[11px] font-semibold text-[#6B7280] os-dark:text-[var(--os-text)] bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] border border-[var(--os-border)] px-2 py-0.5 rounded-full">
       Draft · not public{dirty ? " · unsaved" : ""}
     </span>
   );

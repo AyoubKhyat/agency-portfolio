@@ -96,10 +96,10 @@ type InitialData = {
 };
 
 const input =
-  "w-full h-11 px-3.5 bg-white border border-[#D1D5DB] rounded-lg text-[14px] text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
+  "w-full h-11 px-3.5 bg-[var(--os-control-bg)] border border-[#D1D5DB] os-dark:border-[var(--os-control-border)] rounded-lg text-[14px] text-[#111827] os-dark:text-[var(--os-text)] placeholder:text-[#9CA3AF] os-dark:placeholder:text-[var(--os-text-soft)] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
 const textarea =
-  "w-full px-3.5 py-2.5 bg-white border border-[#D1D5DB] rounded-lg text-[14px] leading-relaxed text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
-const lbl = "block text-[13px] font-medium text-[#374151] mb-1.5";
+  "w-full px-3.5 py-2.5 bg-[var(--os-control-bg)] border border-[#D1D5DB] os-dark:border-[var(--os-control-border)] rounded-lg text-[14px] leading-relaxed text-[#111827] os-dark:text-[var(--os-text)] placeholder:text-[#9CA3AF] os-dark:placeholder:text-[var(--os-text-soft)] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15";
+const lbl = "block text-[13px] font-medium text-[#374151] os-dark:text-[var(--os-text)] mb-1.5";
 
 export default function ProjectForm({
   initial,
@@ -251,22 +251,22 @@ export default function ProjectForm({
     <div>
       <form onSubmit={handleSubmit}>
         {/* STICKY TOP ACTION BAR */}
-        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 bg-[#F7F4FF]/90 backdrop-blur border-b border-[#E5E7EB] mb-6">
+        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 bg-[#F7F4FF]/90 os-dark:bg-[var(--os-bg)]/90 backdrop-blur border-b border-[var(--os-border)] mb-6">
           <Link
             href="/admin/projects"
-            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#6B7280] hover:text-[#111827] mb-1.5"
+            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#6B7280] os-dark:text-[var(--os-text)] hover:text-[#111827] os-dark:hover:text-[var(--os-text)] mb-1.5"
           >
             <ChevronLeft className="w-3.5 h-3.5" /> Back to projects
           </Link>
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div className="min-w-0">
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-[22px] sm:text-[24px] font-bold text-[#111827] tracking-tight leading-tight">
+                <h1 className="text-[22px] sm:text-[24px] font-bold text-[#111827] os-dark:text-[var(--os-text)] tracking-tight leading-tight">
                   {mode === "create" ? "New project" : "Edit project"}
                 </h1>
                 {mode === "edit" && <ProjectStatusBadge status={status} />}
               </div>
-              <p className="text-[13px] text-[#6B7280] mt-1">
+              <p className="text-[13px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-1">
                 {mode === "create"
                   ? "Add a project to the portfolio."
                   : "Project metadata, content and portfolio settings."}
@@ -274,7 +274,7 @@ export default function ProjectForm({
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {dirty && !saving && (
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-100 rounded-full">
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-amber-700 os-dark:text-amber-300 bg-amber-50 os-dark:bg-amber-500/10 border border-amber-100 os-dark:border-amber-500/30 rounded-full">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Unsaved
                 </span>
               )}
@@ -283,7 +283,7 @@ export default function ProjectForm({
                   href={previewHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 h-10 px-4 bg-white border border-[#D1D5DB] text-[#374151] rounded-lg text-[13px] font-medium hover:bg-[#F9FAFB]"
+                  className="inline-flex items-center gap-1.5 h-10 px-4 bg-[var(--os-surface)] border border-[#D1D5DB] os-dark:border-[var(--os-control-border)] text-[#374151] os-dark:text-[var(--os-text)] rounded-lg text-[13px] font-medium hover:bg-[#F9FAFB] os-dark:hover:bg-[var(--os-hover)]"
                 >
                   <ExternalLink className="w-3.5 h-3.5" /> Preview
                 </Link>
@@ -294,7 +294,7 @@ export default function ProjectForm({
                   if (dirty && !confirm("Discard unsaved changes?")) return;
                   router.push("/admin/projects");
                 }}
-                className="hidden sm:inline-flex items-center justify-center h-10 px-4 bg-white border border-[#D1D5DB] text-[#374151] rounded-lg text-[13px] font-medium hover:bg-[#F9FAFB]"
+                className="hidden sm:inline-flex items-center justify-center h-10 px-4 bg-[var(--os-surface)] border border-[#D1D5DB] os-dark:border-[var(--os-control-border)] text-[#374151] os-dark:text-[var(--os-text)] rounded-lg text-[13px] font-medium hover:bg-[#F9FAFB] os-dark:hover:bg-[var(--os-hover)]"
               >
                 Cancel
               </button>
@@ -314,9 +314,9 @@ export default function ProjectForm({
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6">
           {/* LEFT */}
           <div className="space-y-6 min-w-0">
-            <section className="bg-white border border-[#E5E7EB] rounded-xl p-6">
+            <section className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-6">
               <div className="flex items-center gap-3 flex-wrap mb-5">
-                <span className="text-[12px] font-medium text-[#6B7280]">Editing in</span>
+                <span className="text-[12px] font-medium text-[#6B7280] os-dark:text-[var(--os-text)]">Editing in</span>
                 <div className="flex gap-1">
                   {LANGUAGES.map((l) => (
                     <button
@@ -330,14 +330,14 @@ export default function ProjectForm({
                       className={`h-8 px-3 rounded-md text-[12px] font-medium transition-colors ${
                         lang === l.value
                           ? "bg-[#8B00FF] text-white"
-                          : "bg-white border border-[#D1D5DB] text-[#374151] hover:bg-[#F9FAFB]"
+                          : "bg-[var(--os-surface)] border border-[#D1D5DB] os-dark:border-[var(--os-control-border)] text-[#374151] os-dark:text-[var(--os-text)] hover:bg-[#F9FAFB] os-dark:hover:bg-[var(--os-hover)]"
                       }`}
                     >
                       {l.label}
                     </button>
                   ))}
                 </div>
-                <span className="text-[12px] text-[#9CA3AF] ml-auto">Other locales auto-filled if empty.</span>
+                <span className="text-[12px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] ml-auto">Other locales auto-filled if empty.</span>
               </div>
 
               <div className="space-y-4" dir={isRtl ? "rtl" : "ltr"}>
@@ -377,7 +377,7 @@ export default function ProjectForm({
                   </div>
                   <div>
                     <label className={lbl}>Slug (auto)</label>
-                    <div className="w-full h-11 px-3.5 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg flex items-center text-[14px] text-[#6B7280] font-mono">
+                    <div className="w-full h-11 px-3.5 bg-[#F9FAFB] os-dark:bg-[var(--os-surface-2)] border border-[var(--os-border)] rounded-lg flex items-center text-[14px] text-[#6B7280] os-dark:text-[var(--os-text)] font-mono">
                       {slug || "—"}
                     </div>
                   </div>
@@ -423,28 +423,28 @@ export default function ProjectForm({
             <TestimonialPanel projectId={mode === "edit" ? initial?.id : undefined} />
 
             {/* Case study */}
-            <section className="bg-white border border-[#E5E7EB] rounded-xl">
+            <section className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl">
               <button
                 type="button"
                 onClick={() => setShowCaseStudy((s) => !s)}
                 className="w-full flex items-center justify-between px-6 py-4 text-left"
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 flex items-center justify-center text-[#8B00FF]">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 flex items-center justify-center text-[#8B00FF] os-dark:text-[var(--os-purple)]">
                     <Sparkles className="w-4 h-4" />
                   </div>
                   <div>
-                    <h2 className="text-[15px] font-semibold text-[#111827]">Case study</h2>
-                    <p className="text-[12px] text-[#6B7280] mt-0.5">
+                    <h2 className="text-[15px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">Case study</h2>
+                    <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">
                       Reusable content for the project page, portfolio, and client success stories.
                     </p>
                   </div>
                 </div>
-                <ChevronDown className={`w-5 h-5 text-[#6B7280] transition-transform shrink-0 ${showCaseStudy ? "rotate-180" : ""}`} />
+                <ChevronDown className={`w-5 h-5 text-[#6B7280] os-dark:text-[var(--os-text)] transition-transform shrink-0 ${showCaseStudy ? "rotate-180" : ""}`} />
               </button>
 
               {showCaseStudy && (
-                <div className="px-6 pb-6 border-t border-[#E5E7EB] pt-5 space-y-5" dir={isRtl ? "rtl" : "ltr"}>
+                <div className="px-6 pb-6 border-t border-[var(--os-border)] pt-5 space-y-5" dir={isRtl ? "rtl" : "ltr"}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className={lbl}>Client</label>
@@ -464,7 +464,7 @@ export default function ProjectForm({
                       placeholder="Premium real-estate, beautifully managed."
                       className={input}
                     />
-                    <p className="text-[11px] text-[#9CA3AF] mt-1">One-line subtitle shown on the case study hero.</p>
+                    <p className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] mt-1">One-line subtitle shown on the case study hero.</p>
                   </div>
 
                   <div>
@@ -519,9 +519,9 @@ export default function ProjectForm({
           {/* RIGHT — sticky */}
           <aside className="space-y-5 min-w-0 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-1">
             {/* Project Status */}
-            <section className="bg-white border border-[#E5E7EB] rounded-xl p-5">
+            <section className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-5">
               <div className="flex items-center justify-between mb-3 gap-2">
-                <h2 className="text-[14px] font-semibold text-[#111827]">Project status</h2>
+                <h2 className="text-[14px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">Project status</h2>
                 <ProjectStatusBadge status={status} size="sm" />
               </div>
               <select
@@ -533,15 +533,15 @@ export default function ProjectForm({
                   <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
               </select>
-              <p className="text-[11px] text-[#9CA3AF] mt-2">
+              <p className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] mt-2">
                 Workflow phase. Separate from public visibility below.
               </p>
             </section>
 
             {/* Classification */}
-            <section className="bg-white border border-[#E5E7EB] rounded-xl p-5">
+            <section className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-5">
               <fieldset>
-                <legend className="text-[14px] font-semibold text-[#111827] mb-3">
+                <legend className="text-[14px] font-semibold text-[#111827] os-dark:text-[var(--os-text)] mb-3">
                   Classification <span className="text-red-500">*</span>
                 </legend>
                 <div className="grid grid-cols-2 gap-2">
@@ -550,8 +550,8 @@ export default function ProjectForm({
                       key={k}
                       className={`flex items-center justify-center gap-2 h-10 rounded-lg border text-[13px] font-medium cursor-pointer transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#8B00FF]/30 ${
                         kind === k
-                          ? "border-[#8B00FF] bg-[#8B00FF]/10 text-[#8B00FF]"
-                          : "border-[#D1D5DB] bg-white text-[#374151] hover:bg-[#F9FAFB]"
+                          ? "border-[#8B00FF] bg-[#8B00FF]/10 text-[#8B00FF] os-dark:text-[var(--os-purple)]"
+                          : "border-[#D1D5DB] os-dark:border-[var(--os-control-border)] bg-[var(--os-surface)] text-[#374151] os-dark:text-[var(--os-text)] hover:bg-[#F9FAFB] os-dark:hover:bg-[var(--os-hover)]"
                       }`}
                     >
                       <input
@@ -567,31 +567,31 @@ export default function ProjectForm({
                     </label>
                   ))}
                 </div>
-                <p className="text-[11px] text-[#9CA3AF] mt-2">{KIND_HELP[kind]}</p>
+                <p className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] mt-2">{KIND_HELP[kind]}</p>
               </fieldset>
             </section>
 
             {/* Live preview */}
-            <section className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#E5E7EB] flex items-center justify-between gap-2">
-                <span className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider">Live preview</span>
+            <section className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-[var(--os-border)] flex items-center justify-between gap-2">
+                <span className="text-[11px] font-semibold text-[#6B7280] os-dark:text-[var(--os-text)] uppercase tracking-wider">Live preview</span>
                 <div className="flex items-center gap-1.5">
                   {visible ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 os-dark:text-emerald-300 bg-emerald-50 os-dark:bg-emerald-500/10 border border-emerald-100 os-dark:border-emerald-500/30 px-1.5 py-0.5 rounded-full">
                       <Eye className="w-3 h-3" /> Public
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#6B7280] bg-[#F3F4F6] border border-[#E5E7EB] px-1.5 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#6B7280] os-dark:text-[var(--os-text)] bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] border border-[var(--os-border)] px-1.5 py-0.5 rounded-full">
                       <EyeOff className="w-3 h-3" /> Hidden
                     </span>
                   )}
                 </div>
               </div>
-              <div className="relative aspect-[16/10] bg-[#F3F4F6]">
+              <div className="relative aspect-[16/10] bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)]">
                 {isRenderableProjectImage(image) ? (
                   <Image src={image} alt="" fill sizes="340px" className="object-cover" />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-[#9CA3AF]">
+                  <div className="absolute inset-0 flex items-center justify-center text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">
                     <ImageIcon className="w-8 h-8" />
                   </div>
                 )}
@@ -601,56 +601,56 @@ export default function ProjectForm({
                   <ProjectStatusBadge status={status} size="sm" />
                   <span
                     className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${
-                      kind === "CLIENT" ? "text-emerald-700 bg-emerald-50" : "text-[#6B7280] bg-[#F3F4F6]"
+                      kind === "CLIENT" ? "text-emerald-700 os-dark:text-emerald-300 bg-emerald-50 os-dark:bg-emerald-500/10" : "text-[#6B7280] os-dark:text-[var(--os-text)] bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)]"
                     }`}
                   >
                     {PROJECT_KIND_LABELS[kind]}
                   </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8B00FF] bg-[#8B00FF]/10 px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8B00FF] os-dark:text-[var(--os-purple)] bg-[#8B00FF]/10 px-2 py-0.5 rounded">
                     {category}
                   </span>
                   {tag && (
-                    <span className="text-[10px] font-medium text-[#374151] bg-[#F3F4F6] px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-medium text-[#374151] os-dark:text-[var(--os-text)] bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] px-2 py-0.5 rounded">
                       {tag}
                     </span>
                   )}
                 </div>
-                <h3 className="text-[15px] font-semibold text-[#111827] leading-snug truncate">{previewTitle}</h3>
+                <h3 className="text-[15px] font-semibold text-[#111827] os-dark:text-[var(--os-text)] leading-snug truncate">{previewTitle}</h3>
                 {cleanUrl ? (
                   <a
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[12px] text-[#8B00FF] hover:underline truncate max-w-full"
+                    className="inline-flex items-center gap-1 text-[12px] text-[#8B00FF] os-dark:text-[var(--os-purple)] hover:underline truncate max-w-full"
                   >
                     <ExternalLink className="w-3 h-3 shrink-0" />
                     <span className="truncate">{cleanUrl}</span>
                   </a>
                 ) : (
-                  <p className="text-[12px] text-[#9CA3AF]">No URL set</p>
+                  <p className="text-[12px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">No URL set</p>
                 )}
                 {tagsList.length > 0 && (
                   <div className="flex flex-wrap gap-1 pt-1">
                     {tagsList.slice(0, 6).map((t) => (
-                      <span key={t} className="text-[10px] text-[#6B7280] bg-[#F9FAFB] border border-[#E5E7EB] px-1.5 py-0.5 rounded">
+                      <span key={t} className="text-[10px] text-[#6B7280] os-dark:text-[var(--os-text)] bg-[#F9FAFB] os-dark:bg-[var(--os-surface-2)] border border-[var(--os-border)] px-1.5 py-0.5 rounded">
                         {t}
                       </span>
                     ))}
                   </div>
                 )}
-                <p className="text-[11px] text-[#9CA3AF] pt-2 border-t border-[#F3F4F6] mt-2">
+                <p className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] pt-2 border-t border-[#F3F4F6] os-dark:border-[var(--os-border)] mt-2">
                   Last updated · {relativeDate(lastUpdated)}
                 </p>
               </div>
             </section>
 
             {/* Cover image */}
-            <section className="bg-white border border-[#E5E7EB] rounded-xl p-5">
-              <h2 className="text-[14px] font-semibold text-[#111827] mb-1">Cover image</h2>
-              <p className="text-[12px] text-[#6B7280] mb-3">1280×800 recommended, auto-converted to WebP.</p>
+            <section className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-5">
+              <h2 className="text-[14px] font-semibold text-[#111827] os-dark:text-[var(--os-text)] mb-1">Cover image</h2>
+              <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mb-3">1280×800 recommended, auto-converted to WebP.</p>
               {isRenderableProjectImage(image) ? (
                 <div className="space-y-2">
-                  <div className="relative aspect-[16/10] rounded-lg overflow-hidden border border-[#E5E7EB] bg-[#F9FAFB]">
+                  <div className="relative aspect-[16/10] rounded-lg overflow-hidden border border-[var(--os-border)] bg-[#F9FAFB] os-dark:bg-[var(--os-surface-2)]">
                     <Image src={image} alt="Project cover" fill sizes="280px" className="object-cover" />
                   </div>
                   <div className="flex gap-2">
@@ -658,7 +658,7 @@ export default function ProjectForm({
                       type="button"
                       onClick={() => fileRef.current?.click()}
                       disabled={uploading}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 h-9 px-3 bg-white border border-[#D1D5DB] rounded-lg text-[12px] font-medium text-[#111827] hover:bg-[#F9FAFB] disabled:opacity-60"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 h-9 px-3 bg-[var(--os-surface)] border border-[#D1D5DB] os-dark:border-[var(--os-control-border)] rounded-lg text-[12px] font-medium text-[#111827] os-dark:text-[var(--os-text)] hover:bg-[#F9FAFB] os-dark:hover:bg-[var(--os-hover)] disabled:opacity-60"
                     >
                       {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
                       {uploading ? "Uploading..." : "Replace"}
@@ -666,7 +666,7 @@ export default function ProjectForm({
                     <button
                       type="button"
                       onClick={() => { setImage(""); markDirty(); }}
-                      className="inline-flex items-center justify-center h-9 px-3 border border-[#E5E7EB] rounded-lg text-[12px] text-[#6B7280] hover:text-red-600 hover:border-red-200 hover:bg-red-50"
+                      className="inline-flex items-center justify-center h-9 px-3 border border-[var(--os-border)] rounded-lg text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] hover:text-red-600 os-dark:hover:text-red-400 hover:border-red-200 os-dark:hover:border-red-500/30 hover:bg-red-50 os-dark:hover:bg-red-500/10"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -677,11 +677,11 @@ export default function ProjectForm({
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}
-                  className="w-full aspect-[16/10] border-2 border-dashed border-[#D1D5DB] rounded-lg bg-[#F9FAFB] hover:bg-[#F3F4F6] hover:border-[#9CA3AF] flex flex-col items-center justify-center gap-1 text-[12px] text-[#6B7280]"
+                  className="w-full aspect-[16/10] border-2 border-dashed border-[#D1D5DB] os-dark:border-[var(--os-control-border)] rounded-lg bg-[#F9FAFB] os-dark:bg-[var(--os-surface-2)] hover:bg-[#F3F4F6] os-dark:hover:bg-[var(--os-hover)] hover:border-[#9CA3AF] os-dark:hover:border-[var(--os-border-hover)] flex flex-col items-center justify-center gap-1 text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)]"
                 >
                   {uploading ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin text-[#8B00FF]" />
+                      <Loader2 className="w-5 h-5 animate-spin text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
                       <span>Uploading...</span>
                     </>
                   ) : (
@@ -700,25 +700,25 @@ export default function ProjectForm({
                 className="hidden"
               />
               {uploadError ? (
-                <p role="alert" className="mt-2 text-[12px] text-red-700">{uploadError}</p>
+                <p role="alert" className="mt-2 text-[12px] text-red-700 os-dark:text-red-300">{uploadError}</p>
               ) : (
-                <p className="mt-2 text-[11px] text-[#9CA3AF]">{ACCEPTED_COVER_LABEL}, up to {MAX_COVER_LABEL}.</p>
+                <p className="mt-2 text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">{ACCEPTED_COVER_LABEL}, up to {MAX_COVER_LABEL}.</p>
               )}
             </section>
 
             {/* Visibility */}
-            <section className="bg-white border border-[#E5E7EB] rounded-xl p-5">
-              <h2 className="text-[14px] font-semibold text-[#111827] mb-3">Visibility</h2>
+            <section className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-5">
+              <h2 className="text-[14px] font-semibold text-[#111827] os-dark:text-[var(--os-text)] mb-3">Visibility</h2>
               <label className="flex items-start gap-2.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={visible}
                   onChange={(e) => { setVisible(e.target.checked); markDirty(); }}
-                  className="mt-0.5 w-4 h-4 rounded border-[#D1D5DB] accent-[#8B00FF]"
+                  className="mt-0.5 w-4 h-4 rounded border-[#D1D5DB] os-dark:border-[var(--os-control-border)] accent-[#8B00FF]"
                 />
                 <div>
-                  <p className="text-[13px] font-medium text-[#111827]">Public on site</p>
-                  <p className="text-[12px] text-[#6B7280] mt-0.5">
+                  <p className="text-[13px] font-medium text-[#111827] os-dark:text-[var(--os-text)]">Public on site</p>
+                  <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">
                     {visible ? "Listed on the portfolio page." : "Hidden — only admins can see it."}
                   </p>
                 </div>
@@ -726,9 +726,9 @@ export default function ProjectForm({
             </section>
 
             {/* SEO */}
-            <section className="bg-white border border-[#E5E7EB] rounded-xl p-5">
-              <h2 className="text-[14px] font-semibold text-[#111827] mb-1">SEO</h2>
-              <p className="text-[12px] text-[#6B7280] mb-3">Shown in search engines and social shares.</p>
+            <section className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-5">
+              <h2 className="text-[14px] font-semibold text-[#111827] os-dark:text-[var(--os-text)] mb-1">SEO</h2>
+              <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mb-3">Shown in search engines and social shares.</p>
               <div className="space-y-3" dir={isRtl ? "rtl" : "ltr"}>
                 <div>
                   <label className={lbl}>Meta description</label>
@@ -747,8 +747,8 @@ export default function ProjectForm({
         </div>
 
         {error && (
-          <div className="mt-6 px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-[13px] text-red-700">{error}</p>
+          <div className="mt-6 px-4 py-3 bg-red-50 os-dark:bg-red-500/10 border border-red-200 os-dark:border-red-500/30 rounded-lg">
+            <p className="text-[13px] text-red-700 os-dark:text-red-300">{error}</p>
           </div>
         )}
       </form>
