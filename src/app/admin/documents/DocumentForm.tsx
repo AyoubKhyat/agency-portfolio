@@ -217,15 +217,15 @@ export function DocumentForm({ document: doc, clients, projects, onClose, onSave
       <form
         {...dialogProps}
         onSubmit={handleSubmit}
-        className="os-light w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-[#E2E8F0] overflow-hidden"
+        className="os-light w-full max-w-2xl bg-[var(--os-surface)] rounded-2xl shadow-xl border border-[#E2E8F0] os-dark:border-[var(--os-border)] overflow-hidden"
       >
         {/* header */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#E2E8F0]">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#E2E8F0] os-dark:border-[var(--os-border)]">
           <div>
-            <h2 id={titleId} className="text-[15px] font-semibold text-[#0F172A]">
+            <h2 id={titleId} className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">
               {isEdit ? "Edit document" : "Add document"}
             </h2>
-            <p className="text-[12px] text-[#64748B] mt-0.5">
+            <p className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-0.5">
               {isEdit
                 ? "Update the details, or replace the PDF."
                 : `PDF only, up to ${MAX_FILE_LABEL}.`}
@@ -234,7 +234,7 @@ export function DocumentForm({ document: doc, clients, projects, onClose, onSave
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#475569] hover:bg-[#F1F5F9] transition-colors"
+            className="p-1.5 rounded-lg text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)] transition-colors"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
@@ -243,9 +243,9 @@ export function DocumentForm({ document: doc, clients, projects, onClose, onSave
 
         <div className="px-5 sm:px-6 py-5 space-y-5 max-h-[calc(100vh-16rem)] overflow-y-auto">
           {formError && (
-            <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-100">
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-              <p className="text-[13px] text-red-700">{formError}</p>
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 os-dark:bg-red-500/10 border border-red-100 os-dark:border-red-500/30">
+              <AlertCircle className="w-4 h-4 text-red-600 os-dark:text-red-400 shrink-0 mt-0.5" />
+              <p className="text-[13px] text-red-700 os-dark:text-red-300">{formError}</p>
             </div>
           )}
 
@@ -271,25 +271,25 @@ export function DocumentForm({ document: doc, clients, projects, onClose, onSave
               className={cn(
                 "flex flex-col items-center justify-center gap-2 px-4 py-7 rounded-xl border-2 border-dashed cursor-pointer transition-colors",
                 dragging
-                  ? "border-[#8B00FF] bg-purple-50"
+                  ? "border-[#8B00FF] bg-purple-50 os-dark:bg-purple-500/10"
                   : fileError
-                    ? "border-red-300 bg-red-50/40"
-                    : "border-[#E2E8F0] bg-[#F8FAFC] hover:border-[#CBD5E1]",
+                    ? "border-red-300 os-dark:border-red-500/30 bg-red-50/40 os-dark:bg-red-500/10"
+                    : "border-[#E2E8F0] os-dark:border-[var(--os-border)] bg-[#F8FAFC] os-dark:bg-[var(--os-surface-2)] hover:border-[#CBD5E1] os-dark:hover:border-[var(--os-border)]",
               )}
             >
               {file ? (
                 <>
-                  <CheckCircle2 className="w-6 h-6 text-emerald-600" />
-                  <p className="text-[13px] font-medium text-[#0F172A]">{file.name}</p>
-                  <p className="text-[11px] text-[#64748B]">{formatBytes(file.size)} — click to change</p>
+                  <CheckCircle2 className="w-6 h-6 text-emerald-600 os-dark:text-emerald-400" />
+                  <p className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">{file.name}</p>
+                  <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">{formatBytes(file.size)} — click to change</p>
                 </>
               ) : (
                 <>
-                  <Upload className="w-6 h-6 text-[#94A3B8]" />
-                  <p className="text-[13px] text-[#475569]">
-                    Drop a PDF here, or <span className="text-[#8B00FF] font-medium">browse</span>
+                  <Upload className="w-6 h-6 text-[#94A3B8] os-dark:text-[var(--os-text-soft)]" />
+                  <p className="text-[13px] text-[#475569] os-dark:text-[var(--os-text)]">
+                    Drop a PDF here, or <span className="text-[#8B00FF] os-dark:text-[var(--os-purple)] font-medium">browse</span>
                   </p>
-                  <p className="text-[11px] text-[#94A3B8]">PDF only · max {MAX_FILE_LABEL}</p>
+                  <p className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">PDF only · max {MAX_FILE_LABEL}</p>
                 </>
               )}
               <input
@@ -437,7 +437,7 @@ export function DocumentForm({ document: doc, clients, projects, onClose, onSave
         </div>
 
         {/* footer */}
-        <div className="flex items-center justify-end gap-2 px-5 sm:px-6 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC]">
+        <div className="flex items-center justify-end gap-2 px-5 sm:px-6 py-4 border-t border-[#E2E8F0] os-dark:border-[var(--os-border)] bg-[#F8FAFC] os-dark:bg-[var(--os-surface-2)]">
           <FormButton type="button" variant="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </FormButton>

@@ -122,8 +122,8 @@ export default function BlogAdminPage() {
             className={cn(
               "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border",
               localeFilter === loc
-                ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF] border-purple-200"
-                : "bg-white text-[#475569] border-[var(--os-border)] hover:border-purple-200 hover:text-[#0F172A]"
+                ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF] os-dark:text-[var(--os-purple)] border-purple-200 os-dark:border-purple-500/30"
+                : "bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] border-[var(--os-border)] hover:border-purple-200 os-dark:hover:border-purple-500/30 hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)]"
             )}
           >
             {loc === "ALL" ? "All" : LOCALE_LABELS[loc]}
@@ -137,23 +137,75 @@ export default function BlogAdminPage() {
           title="No blog posts yet"
           description={localeFilter !== "ALL" ? `No posts for locale "${LOCALE_LABELS[localeFilter]}". Create one!` : "Create your first blog post."}
           action={
-            <Link href="/admin/blog/new" className="text-sm text-purple-600 hover:text-purple-500">
+            <Link href="/admin/blog/new" className="text-sm text-purple-600 os-dark:text-purple-400 hover:text-purple-500">
               Create post
             </Link>
           }
         />
       ) : (
-        <div className="border border-[var(--os-border)] rounded-2xl overflow-hidden">
+        <>
+        <ul className="md:hidden space-y-3">
+          {filtered.map((post) => (
+            <li key={post.id} className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4">
+              <div className="text-[14px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] break-words">{post.title}</div>
+              <div className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-0.5 line-clamp-2">{post.excerpt}</div>
+              <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                <Badge variant={LOCALE_VARIANTS[post.locale] || "default"} size="sm">
+                  {LOCALE_LABELS[post.locale] || post.locale}
+                </Badge>
+                <Badge variant="default" size="sm">{post.category}</Badge>
+                <button onClick={() => handleTogglePublished(post)} className="rounded-md" aria-label={post.published ? "Unpublish post" : "Publish post"}>
+                  {post.published ? (
+                    <Badge variant="green" size="sm" dot>Published</Badge>
+                  ) : (
+                    <Badge variant="default" size="sm" dot>Draft</Badge>
+                  )}
+                </button>
+              </div>
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--os-border)]">
+                <span className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
+                  {new Date(post.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}
+                </span>
+                <div className="flex items-center gap-1">
+                  <a
+                    href={`/${post.locale}/blog/${post.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Preview post"
+                    className="p-2.5 rounded-lg hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)] text-[#475569] os-dark:text-[var(--os-text)]"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                  <Link
+                    href={`/admin/blog/${post.id}/edit`}
+                    aria-label="Edit post"
+                    className="p-2.5 rounded-lg hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)] text-[#475569] os-dark:text-[var(--os-text)]"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(post.id)}
+                    aria-label="Delete post"
+                    className="p-2.5 rounded-lg hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)] text-[#475569] os-dark:text-[var(--os-text)] hover:text-red-600 os-dark:hover:text-red-400"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden md:block border border-[var(--os-border)] rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[700px]">
               <thead>
-                <tr className="border-b border-[var(--os-border)] bg-gray-50/80">
-                  <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Title</th>
-                  <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Locale</th>
-                  <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Category</th>
-                  <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Status</th>
-                  <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Date</th>
-                  <th className="text-right px-4 py-3 text-[#475569] font-medium text-xs">Actions</th>
+                <tr className="border-b border-[var(--os-border)] bg-gray-50/80 os-dark:bg-[var(--os-surface-2)]">
+                  <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Title</th>
+                  <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Locale</th>
+                  <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Category</th>
+                  <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Status</th>
+                  <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Date</th>
+                  <th className="text-right px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -163,12 +215,12 @@ export default function BlogAdminPage() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: i * 0.03 }}
-                    className="border-b border-[var(--os-border)] hover:bg-gray-50 transition-colors"
+                    className="border-b border-[var(--os-border)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-hover)] transition-colors"
                   >
                     <td className="px-4 py-3">
                       <div className="min-w-0">
-                        <div className="text-[13px] font-medium text-[#0F172A] truncate max-w-[280px]">{post.title}</div>
-                        <div className="text-[11px] text-[#64748B] truncate max-w-[280px] mt-0.5">{post.excerpt.slice(0, 60)}{post.excerpt.length > 60 ? "..." : ""}</div>
+                        <div className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] truncate max-w-[280px]">{post.title}</div>
+                        <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] truncate max-w-[280px] mt-0.5">{post.excerpt.slice(0, 60)}{post.excerpt.length > 60 ? "..." : ""}</div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -188,7 +240,7 @@ export default function BlogAdminPage() {
                         )}
                       </button>
                     </td>
-                    <td className="px-4 py-3 text-[12px] text-[#64748B]">
+                    <td className="px-4 py-3 text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
                       {new Date(post.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}
                     </td>
                     <td className="px-4 py-3">
@@ -197,22 +249,25 @@ export default function BlogAdminPage() {
                           href={`/${post.locale}/blog/${post.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg hover:bg-gray-100 text-[#475569] hover:text-blue-600 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)] text-[#475569] os-dark:text-[var(--os-text)] hover:text-blue-600 os-dark:hover:text-blue-400 transition-colors"
                           title="Preview"
+                          aria-label="Preview post"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                         </a>
                         <Link
                           href={`/admin/blog/${post.id}/edit`}
-                          className="p-1.5 rounded-lg hover:bg-gray-100 text-[#475569] hover:text-purple-600 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)] text-[#475569] os-dark:text-[var(--os-text)] hover:text-purple-600 os-dark:hover:text-purple-400 transition-colors"
                           title="Edit"
+                          aria-label="Edit post"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </Link>
                         <button
                           onClick={() => handleDelete(post.id)}
-                          className="p-1.5 rounded-lg hover:bg-gray-100 text-[#475569] hover:text-red-600 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)] text-[#475569] os-dark:text-[var(--os-text)] hover:text-red-600 os-dark:hover:text-red-400 transition-colors"
                           title="Delete"
+                          aria-label="Delete post"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -224,6 +279,7 @@ export default function BlogAdminPage() {
             </table>
           </div>
         </div>
+        </>
       )}
     </div>
   );

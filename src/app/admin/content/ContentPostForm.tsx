@@ -159,17 +159,17 @@ export function ContentPostForm({ post, defaultDate = null, onClose, onSaved }: 
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div {...dialogProps} className="os-light w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-[#E2E8F0] overflow-hidden">
+      <div {...dialogProps} className="os-light w-full max-w-2xl bg-[var(--os-surface)] rounded-2xl shadow-xl border border-[#E2E8F0] os-dark:border-[var(--os-border)] overflow-hidden">
         <form onSubmit={handleSubmit}>
           {/* header */}
-          <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#E2E8F0]">
+          <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#E2E8F0] os-dark:border-[var(--os-border)]">
             <div>
-              <h2 id={titleId} className="text-[15px] font-semibold text-[#0F172A]">{post ? "Edit post" : "New post"}</h2>
-              <p className="text-[12px] text-[#64748B] mt-0.5">
+              <h2 id={titleId} className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{post ? "Edit post" : "New post"}</h2>
+              <p className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-0.5">
                 {post?.sourceKey ? `Imported · ${post.sourceKey}` : "Instagram content plan — publishing stays manual"}
               </p>
             </div>
-            <button type="button" onClick={onClose} className="p-2 rounded-lg text-[#64748B] hover:bg-[#F1F5F9]" aria-label="Close">
+            <button type="button" onClick={onClose} className="p-2 rounded-lg text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]" aria-label="Close">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -206,7 +206,7 @@ export function ContentPostForm({ post, defaultDate = null, onClose, onSaved }: 
               htmlFor="cp-media"
               hint={
                 <>
-                  <span className={mediaShort ? "text-amber-700 font-medium" : undefined}>
+                  <span className={mediaShort ? "text-amber-700 os-dark:text-amber-300 font-medium" : undefined}>
                     {mediaCount} {mediaCount === 1 ? "item" : "items"}
                   </span>
                   {" · one per line"}
@@ -227,13 +227,13 @@ export function ContentPostForm({ post, defaultDate = null, onClose, onSaved }: 
             </Field>
 
             {problems.length > 0 && (
-              <div className="px-4 py-3 rounded-xl bg-amber-50 border border-amber-100 text-[13px] text-amber-800">
+              <div className="px-4 py-3 rounded-xl bg-amber-50 os-dark:bg-amber-500/10 border border-amber-100 os-dark:border-amber-500/30 text-[13px] text-amber-800 os-dark:text-amber-300">
                 <p className="font-medium mb-1">Before it can be {CONTENT_STATUS_LABELS[form.status as keyof typeof CONTENT_STATUS_LABELS]?.toLowerCase() ?? "saved"}:</p>
                 <ul className="list-disc pl-5 space-y-0.5">
                   {problems.map((p) => (
                     <li key={p}>
                       {isMediaProblem(p) ? (
-                        <button type="button" onClick={focusMedia} className="align-top text-left underline underline-offset-2 hover:text-amber-900">
+                        <button type="button" onClick={focusMedia} className="align-top text-left underline underline-offset-2 hover:text-amber-900 os-dark:hover:text-amber-300">
                           {p}
                         </button>
                       ) : (
@@ -280,7 +280,7 @@ export function ContentPostForm({ post, defaultDate = null, onClose, onSaved }: 
             </Field>
           </div>
 
-          <div className="flex items-center justify-end gap-2 px-5 sm:px-6 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC]">
+          <div className="flex items-center justify-end gap-2 px-5 sm:px-6 py-4 border-t border-[#E2E8F0] os-dark:border-[var(--os-border)] bg-[#F8FAFC] os-dark:bg-[var(--os-surface-2)]">
             <FormButton type="button" variant="ghost" onClick={onClose}>Cancel</FormButton>
             <FormButton type="submit" loading={saving} disabled={problems.length > 0 || (!!post && !dirty)}>
               {post ? "Save changes" : "Create post"}
@@ -322,9 +322,9 @@ function PublishPanel({ post, dirty, saving, send, onSaved }: PanelProps & { dir
   }
 
   return (
-    <div className="px-5 sm:px-6 py-5 border-t border-[#E2E8F0] space-y-3">
-      <h3 className="text-[14px] font-semibold text-[#0F172A]">Mark as published</h3>
-      <p className="text-[12.5px] text-[#64748B]">Only once the post is live on Instagram. The link and date are recorded.</p>
+    <div className="px-5 sm:px-6 py-5 border-t border-[#E2E8F0] os-dark:border-[var(--os-border)] space-y-3">
+      <h3 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Mark as published</h3>
+      <p className="text-[12.5px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">Only once the post is live on Instagram. The link and date are recorded.</p>
       <div className="grid grid-cols-1 sm:grid-cols-[1fr_220px] gap-3">
         <Field label="Instagram link" htmlFor="cp-pub-url">
           <Input id="cp-pub-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.instagram.com/p/…" />
@@ -333,12 +333,12 @@ function PublishPanel({ post, dirty, saving, send, onSaved }: PanelProps & { dir
           <Input id="cp-pub-at" type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} />
         </Field>
       </div>
-      <label className="flex items-start gap-2 text-[13px] text-[#334155]">
+      <label className="flex items-start gap-2 text-[13px] text-[#334155] os-dark:text-[var(--os-text)]">
         <input type="checkbox" className="mt-0.5" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} />
         I confirm “{post.title}” is live on Instagram.
       </label>
       <div className="flex items-center justify-end gap-3">
-        {dirty && <span className="text-[12px] text-amber-700">Save your changes first.</span>}
+        {dirty && <span className="text-[12px] text-amber-700 os-dark:text-amber-300">Save your changes first.</span>}
         <FormButton
           type="button"
           variant="secondary"
@@ -377,14 +377,14 @@ function PublishedPanel({ post, dirty, saving, send, onSaved }: PanelProps & { d
   const invalid = CONTENT_METRICS.some((m) => metrics[m].trim() !== "" && !(Number(metrics[m]) >= 0));
 
   return (
-    <div className="px-5 sm:px-6 py-5 border-t border-[#E2E8F0] space-y-4">
+    <div className="px-5 sm:px-6 py-5 border-t border-[#E2E8F0] os-dark:border-[var(--os-border)] space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-[14px] font-semibold text-[#0F172A]">Published</h3>
-        <a href={post.publishedUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[13px] text-[#7C3AED] hover:underline">
+        <h3 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Published</h3>
+        <a href={post.publishedUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[13px] text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:underline">
           View on Instagram <ExternalLink className="w-3.5 h-3.5" />
         </a>
       </div>
-      <p className="text-[12.5px] text-[#64748B]">
+      <p className="text-[12.5px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
         {post.publishedAt ? `Published ${new Date(post.publishedAt).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" })}` : ""}
         {post.metricsUpdatedAt ? ` · metrics updated ${new Date(post.metricsUpdatedAt).toLocaleDateString("fr-FR")}` : ""}
       </p>
@@ -411,13 +411,13 @@ function PublishedPanel({ post, dirty, saving, send, onSaved }: PanelProps & { d
         </FormButton>
       </div>
 
-      <div className="pt-3 border-t border-dashed border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3">
-        <label className="flex items-start gap-2 text-[12.5px] text-[#475569]">
+      <div className="pt-3 border-t border-dashed border-[#E2E8F0] os-dark:border-[var(--os-border)] flex flex-wrap items-center justify-between gap-3">
+        <label className="flex items-start gap-2 text-[12.5px] text-[#475569] os-dark:text-[var(--os-text)]">
           <input type="checkbox" className="mt-0.5" checked={confirmBack} onChange={(e) => setConfirmBack(e.target.checked)} />
           Move back to Ready (the link and metrics are kept).
         </label>
         <div className="flex items-center gap-3">
-          {dirty && <span className="text-[12px] text-amber-700">Save your changes first.</span>}
+          {dirty && <span className="text-[12px] text-amber-700 os-dark:text-amber-300">Save your changes first.</span>}
           <FormButton type="button" variant="ghost" size="sm" icon={<Undo2 className="w-4 h-4" />} disabled={!confirmBack || saving || dirty} onClick={moveBack}>
             Move out of Published
           </FormButton>

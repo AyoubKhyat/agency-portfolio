@@ -114,8 +114,8 @@ export default function BlogPostForm({ mode, initial }: BlogPostFormProps) {
     }
   }
 
-  const inputClass = "w-full px-3 py-2.5 rounded-xl border border-[var(--os-border)] bg-white text-[#0F172A] text-sm placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all";
-  const labelClass = "block text-[12px] font-semibold text-[#475569] uppercase tracking-wider mb-1.5";
+  const inputClass = "w-full px-3 py-2.5 rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)] text-[#0F172A] os-dark:text-[var(--os-text)] text-sm placeholder:text-[#94A3B8] os-dark:placeholder:text-[var(--os-text-soft)] focus:outline-none focus:ring-2 focus:ring-[#8B00FF]/20 focus:border-[#8B00FF]/40 transition-all";
+  const labelClass = "block text-[12px] font-semibold text-[#475569] os-dark:text-[var(--os-text)] uppercase tracking-wider mb-1.5";
 
   return (
     <div>
@@ -124,15 +124,15 @@ export default function BlogPostForm({ mode, initial }: BlogPostFormProps) {
         <div className="flex items-center gap-3">
           <Link
             href="/admin/blog"
-            className="p-2 rounded-xl border border-[var(--os-border)] bg-white text-[#475569] hover:text-[#0F172A] hover:border-purple-200 transition-all"
+            className="p-2 rounded-xl border border-[var(--os-border)] bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)] hover:border-purple-200 os-dark:hover:border-purple-500/30 transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-xl font-semibold text-[#0F172A]">
+            <h1 className="text-xl font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">
               {mode === "create" ? "New Blog Post" : "Edit Blog Post"}
             </h1>
-            <p className="text-xs text-[#64748B] mt-0.5">
+            <p className="text-xs text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-0.5">
               {mode === "create" ? "Write a new article" : `Editing: ${initial?.title}`}
             </p>
           </div>
@@ -143,7 +143,7 @@ export default function BlogPostForm({ mode, initial }: BlogPostFormProps) {
               href={`/${form.locale}/blog/${form.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--os-border)] bg-white text-[#475569] hover:text-blue-600 hover:border-blue-200 text-xs font-medium transition-all"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--os-border)] bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] hover:text-blue-600 os-dark:hover:text-blue-400 hover:border-blue-200 os-dark:hover:border-blue-500/30 text-xs font-medium transition-all"
             >
               <ExternalLink className="w-3.5 h-3.5" /> Preview
             </a>
@@ -160,7 +160,7 @@ export default function BlogPostForm({ mode, initial }: BlogPostFormProps) {
       </div>
 
       {error && (
-        <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+        <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 os-dark:bg-red-500/10 border border-red-200 os-dark:border-red-500/30 text-red-700 os-dark:text-red-300 text-sm">
           {error}
         </div>
       )}
@@ -170,7 +170,7 @@ export default function BlogPostForm({ mode, initial }: BlogPostFormProps) {
           {/* Main content column */}
           <div className="lg:col-span-2 space-y-5">
             {/* Title */}
-            <div className="bg-white rounded-2xl border border-[var(--os-border)] p-5 space-y-4">
+            <div className="bg-[var(--os-surface)] rounded-2xl border border-[var(--os-border)] p-5 space-y-4">
               <div>
                 <label className={labelClass}>Title</label>
                 <input
@@ -195,7 +195,7 @@ export default function BlogPostForm({ mode, initial }: BlogPostFormProps) {
                   placeholder="auto-generated-from-title"
                   className={inputClass}
                 />
-                <p className="text-[11px] text-[#94A3B8] mt-1">Auto-generated from title. Edit manually if needed.</p>
+                <p className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mt-1">Auto-generated from title. Edit manually if needed.</p>
               </div>
 
               <div>
@@ -211,7 +211,7 @@ export default function BlogPostForm({ mode, initial }: BlogPostFormProps) {
             </div>
 
             {/* Content */}
-            <div className="bg-white rounded-2xl border border-[var(--os-border)] p-5">
+            <div className="bg-[var(--os-surface)] rounded-2xl border border-[var(--os-border)] p-5">
               <label className={labelClass}>Content (Markdown)</label>
               <textarea
                 value={form.content}
@@ -220,7 +220,7 @@ export default function BlogPostForm({ mode, initial }: BlogPostFormProps) {
                 className={cn(inputClass, "min-h-[400px] font-mono text-[13px] resize-y")}
                 required
               />
-              <p className="text-[11px] text-[#94A3B8] mt-1.5">
+              <p className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mt-1.5">
                 Supports Markdown: **bold**, *italic*, ## headings, - lists, [links](url), etc.
               </p>
             </div>
@@ -229,23 +229,23 @@ export default function BlogPostForm({ mode, initial }: BlogPostFormProps) {
           {/* Sidebar column */}
           <div className="space-y-5">
             {/* Publish settings */}
-            <div className="bg-white rounded-2xl border border-[var(--os-border)] p-5 space-y-4">
-              <h3 className="text-[13px] font-semibold text-[#0F172A]">Publish Settings</h3>
+            <div className="bg-[var(--os-surface)] rounded-2xl border border-[var(--os-border)] p-5 space-y-4">
+              <h3 className="text-[13px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Publish Settings</h3>
 
               {/* Published toggle */}
               <div className="flex items-center justify-between">
-                <label className="text-[12px] font-medium text-[#475569]">Published</label>
+                <label className="text-[12px] font-medium text-[#475569] os-dark:text-[var(--os-text)]">Published</label>
                 <button
                   type="button"
                   onClick={() => updateField("published", !form.published)}
                   className={cn(
                     "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                    form.published ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3]" : "bg-gray-200"
+                    form.published ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3]" : "bg-gray-200 os-dark:bg-[var(--os-hover)]"
                   )}
                 >
                   <span
                     className={cn(
-                      "inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform",
+                      "inline-block h-4 w-4 transform rounded-full bg-[var(--os-surface)] shadow-sm transition-transform",
                       form.published ? "translate-x-6" : "translate-x-1"
                     )}
                   />
@@ -282,8 +282,8 @@ export default function BlogPostForm({ mode, initial }: BlogPostFormProps) {
             </div>
 
             {/* Meta */}
-            <div className="bg-white rounded-2xl border border-[var(--os-border)] p-5 space-y-4">
-              <h3 className="text-[13px] font-semibold text-[#0F172A]">Meta</h3>
+            <div className="bg-[var(--os-surface)] rounded-2xl border border-[var(--os-border)] p-5 space-y-4">
+              <h3 className="text-[13px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Meta</h3>
 
               <div>
                 <label className={labelClass}>Author</label>
@@ -317,7 +317,7 @@ export default function BlogPostForm({ mode, initial }: BlogPostFormProps) {
                   placeholder="/blog/my-image.webp"
                   className={inputClass}
                 />
-                <p className="text-[11px] text-[#94A3B8] mt-1">Path to image in /public or full URL</p>
+                <p className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mt-1">Path to image in /public or full URL</p>
               </div>
             </div>
           </div>
