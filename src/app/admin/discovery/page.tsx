@@ -113,13 +113,13 @@ export default function DiscoveryPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Describe your ideal client — e.g. Luxury hotels in Nice"
-              className="flex-1 bg-transparent text-[15px] text-[#0F172A] os-dark:text-[var(--os-text)] placeholder:text-[#94A3B8] os-dark:placeholder:text-[var(--os-text-soft)] outline-none"
+              className="flex-1 min-w-0 bg-transparent text-[15px] text-[#0F172A] os-dark:text-[var(--os-text)] placeholder:text-[#94A3B8] os-dark:placeholder:text-[var(--os-text-soft)] outline-none"
             />
             <button
               type="submit"
               disabled={state.kind === "loading" || query.trim().length < 3}
               className={cn(
-                "px-4 py-2 rounded-xl text-[13px] font-semibold transition-all flex items-center gap-1.5",
+                "shrink-0 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all flex items-center gap-1.5",
                 query.trim().length < 3 || state.kind === "loading"
                   ? "bg-[#F1F5F9] os-dark:bg-[var(--os-surface-2)] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] cursor-not-allowed"
                   : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/25 hover:shadow-lg hover:shadow-purple-500/30"
