@@ -20,7 +20,7 @@ const STAGE_COLORS: Record<string, string> = {
 const FUNNEL_COLORS: Record<string, string> = {
   PROSPECTS: "#3b82f6", CONTACTED: "#f59e0b", REPLIED: "#22c55e", IN_TALKS_OR_WON: "#8b5cf6", WON: "#10b981",
 };
-const TOOLTIP_STYLE = { background: "#ffffff", border: "1px solid rgba(120,120,180,0.15)", borderRadius: "12px", fontSize: "12px", color: "#111827", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" };
+const TOOLTIP_STYLE = { background: "var(--os-popover)", border: "1px solid var(--os-border)", borderRadius: "12px", fontSize: "12px", color: "var(--os-text)", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" };
 
 const SUBTITLE = "All time. Contacts, replies and wins by sector.";
 
@@ -145,7 +145,7 @@ export default function AnalyticsPage() {
                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={3} dataKey="value" stroke="none">
                   {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                 </Pie>
-                <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: "#111827" }} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: "var(--os-text)" }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
