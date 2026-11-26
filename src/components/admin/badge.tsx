@@ -3,15 +3,15 @@
 import { cn } from "@/lib/utils";
 
 const variants: Record<string, string> = {
-  default: "bg-[#F1F5F9] text-[#475569]",
-  purple: "bg-purple-100 text-[#7C3AED]",
-  blue: "bg-blue-100 text-blue-700",
-  green: "bg-emerald-100 text-emerald-700",
-  amber: "bg-amber-100 text-amber-800",
-  red: "bg-red-100 text-red-700",
-  success: "bg-emerald-100 text-emerald-700",
-  warning: "bg-amber-100 text-amber-800",
-  error: "bg-red-100 text-red-700",
+  default: "bg-[#F1F5F9] text-[#475569] os-dark:bg-white/[0.06] os-dark:text-[var(--os-text-soft)]",
+  purple: "bg-purple-100 text-[#7C3AED] os-dark:bg-purple-500/15 os-dark:text-purple-300",
+  blue: "bg-blue-100 text-blue-700 os-dark:bg-blue-500/15 os-dark:text-blue-300",
+  green: "bg-emerald-100 text-emerald-700 os-dark:bg-emerald-500/15 os-dark:text-emerald-300",
+  amber: "bg-amber-100 text-amber-800 os-dark:bg-amber-500/15 os-dark:text-amber-300",
+  red: "bg-red-100 text-red-700 os-dark:bg-red-500/15 os-dark:text-red-300",
+  success: "bg-emerald-100 text-emerald-700 os-dark:bg-emerald-500/15 os-dark:text-emerald-300",
+  warning: "bg-amber-100 text-amber-800 os-dark:bg-amber-500/15 os-dark:text-amber-300",
+  error: "bg-red-100 text-red-700 os-dark:bg-red-500/15 os-dark:text-red-300",
 };
 
 const dotColors: Record<string, string> = {
