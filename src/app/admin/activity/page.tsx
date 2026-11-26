@@ -55,16 +55,16 @@ const ACTION_ICONS: Record<string, typeof Activity> = {
 };
 
 const ACTION_COLORS: Record<string, { bg: string; text: string }> = {
-  SENT_WHATSAPP: { bg: "bg-green-100", text: "text-green-600" },
-  SENT_INSTAGRAM: { bg: "bg-pink-100", text: "text-pink-600" },
-  FOLLOW_UP: { bg: "bg-blue-100", text: "text-blue-600" },
-  MARKED_REPLIED: { bg: "bg-emerald-100", text: "text-emerald-600" },
-  STATUS_REPONDU: { bg: "bg-emerald-100", text: "text-emerald-600" },
-  ASSIGNED: { bg: "bg-violet-100", text: "text-violet-600" },
-  CREATED: { bg: "bg-slate-100", text: "text-slate-600" },
-  STATUS_CONVERTI: { bg: "bg-amber-100", text: "text-amber-600" },
-  NOTE_ADDED: { bg: "bg-sky-100", text: "text-sky-600" },
-  default: { bg: "bg-gray-100", text: "text-gray-500" },
+  SENT_WHATSAPP: { bg: "bg-green-100 os-dark:bg-green-500/15", text: "text-green-600 os-dark:text-green-400" },
+  SENT_INSTAGRAM: { bg: "bg-pink-100 os-dark:bg-pink-500/15", text: "text-pink-600 os-dark:text-pink-400" },
+  FOLLOW_UP: { bg: "bg-blue-100 os-dark:bg-blue-500/15", text: "text-blue-600 os-dark:text-blue-400" },
+  MARKED_REPLIED: { bg: "bg-emerald-100 os-dark:bg-emerald-500/15", text: "text-emerald-600 os-dark:text-emerald-400" },
+  STATUS_REPONDU: { bg: "bg-emerald-100 os-dark:bg-emerald-500/15", text: "text-emerald-600 os-dark:text-emerald-400" },
+  ASSIGNED: { bg: "bg-violet-100 os-dark:bg-violet-500/15", text: "text-violet-600 os-dark:text-violet-400" },
+  CREATED: { bg: "bg-slate-100 os-dark:bg-[var(--os-surface-2)]", text: "text-slate-600 os-dark:text-[var(--os-text)]" },
+  STATUS_CONVERTI: { bg: "bg-amber-100 os-dark:bg-amber-500/15", text: "text-amber-600 os-dark:text-amber-400" },
+  NOTE_ADDED: { bg: "bg-sky-100 os-dark:bg-sky-500/15", text: "text-sky-600 os-dark:text-sky-400" },
+  default: { bg: "bg-gray-100 os-dark:bg-[var(--os-surface-2)]", text: "text-gray-500 os-dark:text-[var(--os-text-soft)]" },
 };
 
 type ActivityItem = {
@@ -271,8 +271,8 @@ export default function ActivityPage() {
     return (
       <div className="flex items-center justify-center h-[60vh]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-[3px] border-purple-200 border-t-[#8B00FF] rounded-full animate-spin" />
-          <p className="text-[13px] text-[#64748B] font-medium">Loading activity...</p>
+          <div className="w-8 h-8 border-[3px] border-purple-200 os-dark:border-purple-500/30 border-t-[#8B00FF] rounded-full animate-spin" />
+          <p className="text-[13px] text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium">Loading activity...</p>
         </div>
       </div>
     );
@@ -326,7 +326,7 @@ export default function ActivityPage() {
           className={`px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-all shrink-0 ${
             filterUser === null
               ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
-              : "bg-white text-[#475569] border border-[#E2E8F0] hover:border-[#CBD5E1]"
+              : "bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] border border-[#E2E8F0] os-dark:border-[var(--os-border)] hover:border-[#CBD5E1] os-dark:hover:border-[var(--os-border)]"
           }`}
         >
           All Members
@@ -348,9 +348,9 @@ export default function ActivityPage() {
         <GlassCard padding="lg">
           <div className="flex items-center gap-2 mb-5">
             <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10">
-              <Trophy size={16} className="text-[#8B00FF]" />
+              <Trophy size={16} className="text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
             </div>
-            <h3 className="text-[15px] font-semibold text-[#0F172A]">Team Leaderboard</h3>
+            <h3 className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Team Leaderboard</h3>
           </div>
           <div className="space-y-3">
             {sortedStats.map((stat, i) => {
@@ -363,7 +363,7 @@ export default function ActivityPage() {
                   transition={{ duration: 0.3, delay: i * 0.06 }}
                   className="flex items-center gap-3"
                 >
-                  <span className="text-[12px] font-bold text-[#64748B] w-5 text-right shrink-0">
+                  <span className="text-[12px] font-bold text-[#64748B] os-dark:text-[var(--os-text-soft)] w-5 text-right shrink-0">
                     {i + 1}
                   </span>
                   <AvatarChip
@@ -374,22 +374,22 @@ export default function ActivityPage() {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[13px] font-medium text-[#0F172A] truncate">
+                      <span className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] truncate">
                         {stat.user.fullName}
                       </span>
                       <div className="flex items-center gap-3 shrink-0 ml-3">
-                        <span className="text-[11px] text-[#64748B]">
-                          <span className="font-semibold text-[#0F172A]">{stat.sent}</span> sent
+                        <span className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
+                          <span className="font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{stat.sent}</span> sent
                         </span>
-                        <span className="text-[11px] text-[#64748B]">
-                          <span className="font-semibold text-emerald-600">{stat.replied}</span> replied
+                        <span className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
+                          <span className="font-semibold text-emerald-600 os-dark:text-emerald-400">{stat.replied}</span> replied
                         </span>
-                        <span className="text-[11px] text-[#64748B]">
-                          <span className="font-semibold text-amber-600">{stat.converted}</span> converted
+                        <span className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
+                          <span className="font-semibold text-amber-600 os-dark:text-amber-400">{stat.converted}</span> converted
                         </span>
                       </div>
                     </div>
-                    <div className="h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
+                    <div className="h-2 bg-[#F1F5F9] os-dark:bg-[var(--os-surface-2)] rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${barWidth}%` }}
@@ -427,16 +427,16 @@ export default function ActivityPage() {
                 transition={{ duration: 0.25 }}
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <h3 className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
+                  <h3 className="text-[11px] font-semibold text-[#64748B] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider">
                     {formatDateGroup(items[0].createdAt)}
                   </h3>
-                  <div className="flex-1 h-px bg-[#E2E8F0]" />
-                  <span className="text-[11px] text-[#94A3B8] font-medium">
+                  <div className="flex-1 h-px bg-[#E2E8F0] os-dark:bg-[var(--os-border)]" />
+                  <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] font-medium">
                     {items.length} action{items.length !== 1 ? "s" : ""}
                   </span>
                 </div>
                 <GlassCard padding="none">
-                  <div className="divide-y divide-[#F1F5F9]">
+                  <div className="divide-y divide-[#F1F5F9] os-dark:divide-[var(--os-border)]">
                     {items.map((a, idx) => {
                       const IconComponent = ACTION_ICONS[a.actionType] || ACTION_ICONS.default;
                       const colors = ACTION_COLORS[a.actionType] || ACTION_COLORS.default;
@@ -446,7 +446,7 @@ export default function ActivityPage() {
                           initial={{ opacity: 0, x: -8 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.2, delay: idx * 0.03 }}
-                          className="flex items-start gap-3 px-4 sm:px-5 py-3.5 hover:bg-[#FAFBFC] transition-colors"
+                          className="flex items-start gap-3 px-4 sm:px-5 py-3.5 hover:bg-[#FAFBFC] os-dark:hover:bg-[var(--os-hover)] transition-colors"
                         >
                           <div
                             className={`flex items-center justify-center w-8 h-8 rounded-full shrink-0 mt-0.5 ${colors.bg} ${colors.text}`}
@@ -454,28 +454,28 @@ export default function ActivityPage() {
                             <IconComponent size={14} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-[13px] text-[#475569] leading-relaxed">
-                              <span className="font-semibold text-[#0F172A]">{a.userName}</span>{" "}
+                            <p className="text-[13px] text-[#475569] os-dark:text-[var(--os-text)] leading-relaxed">
+                              <span className="font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{a.userName}</span>{" "}
                               {ACTION_LABELS[a.actionType] ?? a.actionType}{" "}
                               <Link
                                 href={`/admin/prospecting/${a.prospect.id}`}
-                                className="font-semibold text-[#8B00FF] hover:text-[#7600D6] transition-colors"
+                                className="font-semibold text-[#8B00FF] os-dark:text-[var(--os-purple)] hover:text-[#7600D6] os-dark:hover:text-purple-300 transition-colors"
                               >
                                 {a.prospect.name}
                               </Link>
                             </p>
                             {a.details && a.actionType === "NOTE_ADDED" && (
-                              <div className="mt-1.5 px-3 py-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0]">
-                                <p className="text-[12px] text-[#475569] italic leading-relaxed">
+                              <div className="mt-1.5 px-3 py-2 rounded-lg bg-[#F8FAFC] os-dark:bg-[var(--os-surface-2)] border border-[#E2E8F0] os-dark:border-[var(--os-border)]">
+                                <p className="text-[12px] text-[#475569] os-dark:text-[var(--os-text)] italic leading-relaxed">
                                   &ldquo;{a.details}&rdquo;
                                 </p>
                               </div>
                             )}
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[11px] text-[#94A3B8]">{a.prospect.sector}</span>
+                              <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">{a.prospect.sector}</span>
                             </div>
                           </div>
-                          <span className="text-[11px] text-[#94A3B8] font-medium shrink-0 mt-0.5">
+                          <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] font-medium shrink-0 mt-0.5">
                             {relativeTime(a.createdAt)}
                           </span>
                         </motion.div>

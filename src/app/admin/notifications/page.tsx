@@ -33,17 +33,17 @@ const FILTERS: { value: Filter; label: string }[] = [
 ];
 
 const TYPE_STYLES: Record<string, { icon: React.ComponentType<{ className?: string }>; tint: string; chip: string }> = {
-  MENTION:                { icon: AtSign,        tint: "text-purple-600",   chip: "bg-purple-50 text-purple-700 border-purple-100" },
-  TASK_ASSIGNED:          { icon: CheckSquare,   tint: "text-blue-600",     chip: "bg-blue-50 text-blue-700 border-blue-100" },
-  TASK_DUE:               { icon: AlertCircle,   tint: "text-amber-600",    chip: "bg-amber-50 text-amber-700 border-amber-100" },
-  CLIENT_STATUS_CHANGED:  { icon: Layers,        tint: "text-emerald-600",  chip: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-  ACCOUNT_ASSIGNED:       { icon: Layers,        tint: "text-emerald-600",  chip: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-  conversion:             { icon: TrendingUp,    tint: "text-emerald-600",  chip: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-  PROPOSAL_ACCEPTED:      { icon: TrendingUp,    tint: "text-emerald-600",  chip: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+  MENTION:                { icon: AtSign,        tint: "text-purple-600 os-dark:text-purple-400",   chip: "bg-purple-50 os-dark:bg-purple-500/10 text-purple-700 os-dark:text-purple-300 border-purple-100 os-dark:border-purple-500/30" },
+  TASK_ASSIGNED:          { icon: CheckSquare,   tint: "text-blue-600 os-dark:text-blue-400",     chip: "bg-blue-50 os-dark:bg-blue-500/10 text-blue-700 os-dark:text-blue-300 border-blue-100 os-dark:border-blue-500/30" },
+  TASK_DUE:               { icon: AlertCircle,   tint: "text-amber-600 os-dark:text-amber-400",    chip: "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border-amber-100 os-dark:border-amber-500/30" },
+  CLIENT_STATUS_CHANGED:  { icon: Layers,        tint: "text-emerald-600 os-dark:text-emerald-400",  chip: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-100 os-dark:border-emerald-500/30" },
+  ACCOUNT_ASSIGNED:       { icon: Layers,        tint: "text-emerald-600 os-dark:text-emerald-400",  chip: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-100 os-dark:border-emerald-500/30" },
+  conversion:             { icon: TrendingUp,    tint: "text-emerald-600 os-dark:text-emerald-400",  chip: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-100 os-dark:border-emerald-500/30" },
+  PROPOSAL_ACCEPTED:      { icon: TrendingUp,    tint: "text-emerald-600 os-dark:text-emerald-400",  chip: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-100 os-dark:border-emerald-500/30" },
 };
 
 function typeMeta(type: string) {
-  return TYPE_STYLES[type] ?? { icon: Bell, tint: "text-[#6B7280]", chip: "bg-[#F3F4F6] text-[#374151] border-[#E5E7EB]" };
+  return TYPE_STYLES[type] ?? { icon: Bell, tint: "text-[#6B7280] os-dark:text-[var(--os-text)]", chip: "bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#374151] os-dark:text-[var(--os-text)] border-[var(--os-border)]" };
 }
 
 function relativeDate(iso: string): string {
@@ -140,7 +140,7 @@ export default function NotificationsPage() {
             type="button"
             onClick={markAllRead}
             disabled={marking || unreadCount === 0}
-            className="inline-flex items-center gap-1.5 h-10 px-3 bg-white border border-[#D1D5DB] text-[#374151] rounded-lg text-[12px] font-medium hover:bg-[#F9FAFB] disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 h-10 px-3 bg-[var(--os-surface)] border border-[#D1D5DB] os-dark:border-[var(--os-control-border)] text-[#374151] os-dark:text-[var(--os-text)] rounded-lg text-[12px] font-medium hover:bg-[#F9FAFB] os-dark:hover:bg-[var(--os-hover)] disabled:opacity-50"
           >
             {marking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCheck className="w-3.5 h-3.5" />}
             Mark all read
@@ -154,7 +154,7 @@ export default function NotificationsPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-6 h-6 text-[#8B00FF] animate-spin" />
+          <Loader2 className="w-6 h-6 text-[#8B00FF] os-dark:text-[var(--os-purple)] animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState
@@ -166,10 +166,10 @@ export default function NotificationsPage() {
         <div className="space-y-6">
           {(["today", "yesterday", "earlier"] as const).map((k) => grouped[k].length > 0 && (
             <section key={k}>
-              <h3 className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wider mb-2 px-1">
+              <h3 className="text-[11px] font-semibold text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider mb-2 px-1">
                 {k === "today" ? "Today" : k === "yesterday" ? "Yesterday" : "Earlier"}
               </h3>
-              <div className="bg-white border border-[#E5E7EB] rounded-xl divide-y divide-[#F3F4F6] overflow-hidden">
+              <div className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl divide-y divide-[#F3F4F6] os-dark:divide-[var(--os-border)] overflow-hidden">
                 {grouped[k].map((n) => <Row key={n.id} n={n} onClick={() => markRead(n)} />)}
               </div>
             </section>
@@ -187,8 +187,8 @@ function Row({ n, onClick }: { n: Notification; onClick: () => void }) {
     <div
       onClick={onClick}
       className={cn(
-        "flex items-start gap-3 px-4 py-3 transition-colors cursor-pointer hover:bg-[#FAFAFE]",
-        !n.read && "bg-[#FAFAFE]",
+        "flex items-start gap-3 px-4 py-3 transition-colors cursor-pointer hover:bg-[#FAFAFE] os-dark:hover:bg-[var(--os-hover)]",
+        !n.read && "bg-[var(--os-surface-2)]",
       )}
     >
       <div className={cn("flex items-center justify-center w-9 h-9 rounded-lg shrink-0", meta.chip)}>
@@ -196,15 +196,15 @@ function Row({ n, onClick }: { n: Notification; onClick: () => void }) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
-          <p className={cn("text-[13px] leading-snug", n.read ? "text-[#475569]" : "text-[#111827] font-medium")}>
+          <p className={cn("text-[13px] leading-snug", n.read ? "text-[#475569] os-dark:text-[var(--os-text)]" : "text-[#111827] os-dark:text-[var(--os-text)] font-medium")}>
             {n.title}
           </p>
           {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-[#8B00FF] mt-1.5 shrink-0" />}
         </div>
         {n.body && (
-          <p className="text-[12px] text-[#6B7280] mt-0.5 line-clamp-2">{n.body}</p>
+          <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5 line-clamp-2">{n.body}</p>
         )}
-        <p className="text-[11px] text-[#9CA3AF] mt-1">{relativeDate(n.createdAt)}</p>
+        <p className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] mt-1">{relativeDate(n.createdAt)}</p>
       </div>
     </div>
   );
