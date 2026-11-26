@@ -117,10 +117,10 @@ export default function CommandCenterPage() {
     return (
       <div>
         <PageHeader title="Business report" subtitle="How the agency is doing, right now." />
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
-          <p className="text-[14px] font-semibold text-red-700">Could not load dashboard</p>
-          <p className="text-[13px] text-red-600 mt-1">{loadError}</p>
-          <p className="text-[12px] text-red-500 mt-3">Try refreshing the page, or log out and back in if you recently changed accounts.</p>
+        <div className="bg-red-50 os-dark:bg-red-500/10 border border-red-200 os-dark:border-red-500/30 rounded-2xl p-6">
+          <p className="text-[14px] font-semibold text-red-700 os-dark:text-red-300">Could not load dashboard</p>
+          <p className="text-[13px] text-red-600 os-dark:text-red-400 mt-1">{loadError}</p>
+          <p className="text-[12px] text-red-500 os-dark:text-red-400 mt-3">Try refreshing the page, or log out and back in if you recently changed accounts.</p>
         </div>
       </div>
     );
@@ -183,9 +183,9 @@ export default function CommandCenterPage() {
               <HealthRow key={s.label} label={s.label} count={s.count} severity={s.severity} />
             ))}
           </div>
-          <p className="text-[11px] text-[#94A3B8] mt-3 leading-relaxed">
+          <p className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mt-3 leading-relaxed">
             Follow-up dates include historical records, many from before the July 2026 cleanup.{" "}
-            <Link href="/admin" className="text-purple-600 hover:text-purple-700">Today</Link> shows which are backed by a recorded send.
+            <Link href="/admin" className="text-purple-600 os-dark:text-purple-400 hover:text-purple-700 os-dark:hover:text-purple-300">Today</Link> shows which are backed by a recorded send.
           </p>
         </GlassCard>
       </div>
@@ -197,30 +197,30 @@ export default function CommandCenterPage() {
             title="Recent wins"
             subtitle="Signed contracts."
             link={{ href: "/admin/contracts?status=SIGNED", label: "All contracts" }}
-            icon={<Trophy className="w-4 h-4 text-emerald-600" />}
+            icon={<Trophy className="w-4 h-4 text-emerald-600 os-dark:text-emerald-400" />}
           />
           {recentWins.length === 0 ? (
             <EmptyPanel text="No signed contracts yet — once you sign one it lands here." />
           ) : (
-            <ul className="divide-y divide-[#F3F4F6]">
+            <ul className="divide-y divide-[#F3F4F6] os-dark:divide-[var(--os-border)]">
               {recentWins.map((w) => {
                 const href = w.client ? `/admin/clients/${w.client.id}` : w.prospect ? `/admin/prospecting/${w.prospect.id}` : "#";
                 return (
                   <li key={w.id}>
-                    <Link href={href} className="flex items-center gap-3 py-3 hover:bg-[#FAFAFE] -mx-2 px-2 rounded-lg">
-                      <span className="flex items-center justify-center w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 shrink-0">
+                    <Link href={href} className="flex items-center gap-3 py-3 hover:bg-[#FAFAFE] os-dark:hover:bg-[var(--os-hover)] -mx-2 px-2 rounded-lg">
+                      <span className="flex items-center justify-center w-9 h-9 rounded-full bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-600 os-dark:text-emerald-400 shrink-0">
                         <CircleDollarSign className="w-4 h-4" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[13px] font-medium text-[#111827] truncate">{w.title}</p>
-                        <p className="text-[11px] text-[#6B7280]">
+                        <p className="text-[13px] font-medium text-[#111827] os-dark:text-[var(--os-text)] truncate">{w.title}</p>
+                        <p className="text-[11px] text-[#6B7280] os-dark:text-[var(--os-text)]">
                           {w.client?.companyName ?? w.prospect?.name ?? "—"}
                           {w.createdByName ? ` · ${w.createdByName}` : ""}
                           {w.signedDate ? ` · ${relativeDate(w.signedDate)}` : ""}
                         </p>
                       </div>
-                      <p className="text-[13px] font-bold text-[#111827] shrink-0">
-                        {fmt(w.amount)} <span className="text-[10px] font-normal text-[#9CA3AF]">{w.currency}</span>
+                      <p className="text-[13px] font-bold text-[#111827] os-dark:text-[var(--os-text)] shrink-0">
+                        {fmt(w.amount)} <span className="text-[11px] font-normal text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">{w.currency}</span>
                       </p>
                     </Link>
                   </li>
@@ -235,31 +235,31 @@ export default function CommandCenterPage() {
             title="Projects at risk"
             subtitle="Overdue or due within a week."
             link={{ href: "/admin/pipeline", label: "Pipeline" }}
-            icon={<AlertTriangle className="w-4 h-4 text-amber-600" />}
+            icon={<AlertTriangle className="w-4 h-4 text-amber-600 os-dark:text-amber-400" />}
           />
           {projectsAtRisk.length === 0 ? (
             <EmptyPanel text="No projects flagged. Nice." />
           ) : (
-            <ul className="divide-y divide-[#F3F4F6]">
+            <ul className="divide-y divide-[#F3F4F6] os-dark:divide-[var(--os-border)]">
               {projectsAtRisk.map((p) => (
                 <li key={p.id} className="py-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-[13px] font-medium text-[#111827] truncate">{p.name}</p>
-                      <p className="text-[11px] text-[#6B7280]">
+                      <p className="text-[13px] font-medium text-[#111827] os-dark:text-[var(--os-text)] truncate">{p.name}</p>
+                      <p className="text-[11px] text-[#6B7280] os-dark:text-[var(--os-text)]">
                         {p.clientName} · {p.status.replace("_", " ")} · {p.progress}%
                       </p>
                     </div>
                     <span className={cn(
                       "text-[11px] font-semibold shrink-0 px-1.5 py-0.5 rounded border",
                       p.daysOverdue > 0
-                        ? "bg-red-50 text-red-700 border-red-100"
-                        : "bg-amber-50 text-amber-700 border-amber-100",
+                        ? "bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 border-red-100 os-dark:border-red-500/30"
+                        : "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border-amber-100 os-dark:border-amber-500/30",
                     )}>
                       {p.daysOverdue > 0 ? `${p.daysOverdue}d late` : p.dueDate ? `due ${relativeDate(p.dueDate)}` : "no date"}
                     </span>
                   </div>
-                  <div className="h-1.5 mt-2 bg-[#F3F4F6] rounded-full overflow-hidden">
+                  <div className="h-1.5 mt-2 bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] rounded-full overflow-hidden">
                     <div className={cn("h-full rounded-full",
                       p.daysOverdue > 0 ? "bg-red-500" : p.progress > 50 ? "bg-emerald-500" : "bg-amber-500"
                     )} style={{ width: `${Math.min(p.progress, 100)}%` }} />
@@ -278,7 +278,7 @@ export default function CommandCenterPage() {
             title="Overdue tasks"
             subtitle="What's slipping through the cracks."
             link={{ href: "/admin/tasks?scope=overdue", label: "All overdue" }}
-            icon={<CheckSquare className="w-4 h-4 text-amber-600" />}
+            icon={<CheckSquare className="w-4 h-4 text-amber-600 os-dark:text-amber-400" />}
           />
           {overdueTasks.length === 0 ? (
             <EmptyPanel text="No overdue tasks. Smooth." />
@@ -288,8 +288,8 @@ export default function CommandCenterPage() {
                 <li key={t.id} className="flex items-start gap-2 py-1.5">
                   <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] text-[#111827] truncate">{t.title}</p>
-                    <p className="text-[11px] text-[#9CA3AF]">
+                    <p className="text-[13px] text-[#111827] os-dark:text-[var(--os-text)] truncate">{t.title}</p>
+                    <p className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">
                       {t.ownerName ? `${t.ownerName} · ` : ""}{t.parentLabel ? `${t.parentLabel} · ` : ""}
                       Due {relativeDate(t.dueDate)}
                     </p>
@@ -305,7 +305,7 @@ export default function CommandCenterPage() {
             title="Upcoming meetings"
             subtitle="Next 7 days."
             link={{ href: "/admin/meetings?scope=upcoming", label: "All meetings" }}
-            icon={<Calendar className="w-4 h-4 text-blue-600" />}
+            icon={<Calendar className="w-4 h-4 text-blue-600 os-dark:text-blue-400" />}
           />
           {upcomingMeetings.length === 0 ? (
             <EmptyPanel text="No meetings scheduled this week." />
@@ -317,12 +317,12 @@ export default function CommandCenterPage() {
                 const linkedLabel = m.client?.companyName ?? m.prospect?.name ?? "—";
                 return (
                   <li key={m.id} className="flex items-start gap-2 py-1.5">
-                    <Icon className="mt-0.5 w-3.5 h-3.5 text-[#9CA3AF] shrink-0" />
+                    <Icon className="mt-0.5 w-3.5 h-3.5 text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] text-[#111827] truncate">{m.title}</p>
-                      <p className="text-[11px] text-[#9CA3AF]">
+                      <p className="text-[13px] text-[#111827] os-dark:text-[var(--os-text)] truncate">{m.title}</p>
+                      <p className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">
                         {linkedHref ? (
-                          <Link href={linkedHref} className="hover:text-[#8B00FF]">{linkedLabel}</Link>
+                          <Link href={linkedHref} className="hover:text-[#8B00FF] os-dark:hover:text-[var(--os-purple)]">{linkedLabel}</Link>
                         ) : linkedLabel}
                         {m.owner ? ` · ${m.owner.fullName}` : ""}
                         {` · ${new Date(m.startAt).toLocaleString("fr-FR", { weekday: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" })}`}
@@ -338,17 +338,17 @@ export default function CommandCenterPage() {
 
       {/* Top performers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <GlassCard padding="lg" className="border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50">
-          <SectionHeader title="Top salesperson" subtitle="By signed contract value (MAD)." icon={<Crown className="w-4 h-4 text-[#8B00FF]" />} />
+        <GlassCard padding="lg" className="border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50 to-violet-50 os-dark:from-purple-500/10 os-dark:to-violet-500/5">
+          <SectionHeader title="Top salesperson" subtitle="By signed contract value (MAD)." icon={<Crown className="w-4 h-4 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />} />
           {topSalesperson ? (
             <div className="flex items-center gap-4">
               <span className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[16px] font-bold">
                 {topSalesperson.avatarInitials ?? (topSalesperson.fullName?.charAt(0) ?? "?")}
               </span>
               <div>
-                <p className="text-[16px] font-bold text-[#111827]">{topSalesperson.fullName ?? "Unknown"}</p>
-                <p className="text-[12px] text-[#6B7280]">{topSalesperson.deals} deal{topSalesperson.deals === 1 ? "" : "s"}</p>
-                <p className="text-[18px] font-bold text-[#8B00FF] mt-1">{fmt(topSalesperson.revenue)} <span className="text-[11px] font-normal text-[#9CA3AF]">MAD</span></p>
+                <p className="text-[16px] font-bold text-[#111827] os-dark:text-[var(--os-text)]">{topSalesperson.fullName ?? "Unknown"}</p>
+                <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)]">{topSalesperson.deals} deal{topSalesperson.deals === 1 ? "" : "s"}</p>
+                <p className="text-[18px] font-bold text-[#8B00FF] os-dark:text-[var(--os-purple)] mt-1">{fmt(topSalesperson.revenue)} <span className="text-[11px] font-normal text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">MAD</span></p>
               </div>
             </div>
           ) : (
@@ -357,15 +357,15 @@ export default function CommandCenterPage() {
         </GlassCard>
 
         <GlassCard padding="lg">
-          <SectionHeader title="Top sector" subtitle="Signed contract value (MAD) by prospect sector." icon={<Target className="w-4 h-4 text-emerald-600" />} />
+          <SectionHeader title="Top sector" subtitle="Signed contract value (MAD) by prospect sector." icon={<Target className="w-4 h-4 text-emerald-600 os-dark:text-emerald-400" />} />
           {topSector ? (
             <>
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="text-[16px] font-bold text-[#111827]">{topSector.sector}</p>
-                  <p className="text-[12px] text-[#6B7280]">{topSector.deals} deal{topSector.deals === 1 ? "" : "s"}</p>
+                  <p className="text-[16px] font-bold text-[#111827] os-dark:text-[var(--os-text)]">{topSector.sector}</p>
+                  <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)]">{topSector.deals} deal{topSector.deals === 1 ? "" : "s"}</p>
                 </div>
-                <p className="text-[18px] font-bold text-emerald-600">{fmt(topSector.revenue)} <span className="text-[11px] font-normal text-[#9CA3AF]">MAD</span></p>
+                <p className="text-[18px] font-bold text-emerald-600 os-dark:text-emerald-400">{fmt(topSector.revenue)} <span className="text-[11px] font-normal text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">MAD</span></p>
               </div>
               {data.sectorBreakdown.length > 1 && (
                 <div className="space-y-1.5">
@@ -373,8 +373,8 @@ export default function CommandCenterPage() {
                     const pct = data.sectorBreakdown[0].revenue > 0 ? (s.revenue / data.sectorBreakdown[0].revenue) * 100 : 0;
                     return (
                       <div key={s.sector} className="flex items-center gap-2">
-                        <span className="text-[11px] text-[#6B7280] w-32 truncate">{s.sector}</span>
-                        <div className="flex-1 h-1.5 bg-[#F3F4F6] rounded-full overflow-hidden">
+                        <span className="text-[11px] text-[#6B7280] os-dark:text-[var(--os-text)] w-32 truncate">{s.sector}</span>
+                        <div className="flex-1 h-1.5 bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] rounded-full overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${pct}%` }}
@@ -382,7 +382,7 @@ export default function CommandCenterPage() {
                             className="h-full bg-emerald-500/60 rounded-full"
                           />
                         </div>
-                        <span className="text-[11px] font-medium text-[#374151] w-16 text-right">{fmt(s.revenue)}</span>
+                        <span className="text-[11px] font-medium text-[#374151] os-dark:text-[var(--os-text)] w-16 text-right">{fmt(s.revenue)}</span>
                       </div>
                     );
                   })}
@@ -431,19 +431,19 @@ function MoneyDetail({ money }: { money: Money }) {
       <SectionHeader title="Money, in detail" subtitle={`All amounts in ${REPORT_CURRENCY}. Each deal is counted in one place only.`} />
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {rows.map((r) => (
-          <div key={r.label} className="rounded-xl bg-[#F9FAFB] p-3">
-            <p className="text-[16px] font-bold text-[#111827]">{fmt(r.value)} <span className="text-[10px] font-normal text-[#9CA3AF]">{REPORT_CURRENCY}</span></p>
-            <p className="text-[12px] font-medium text-[#374151]">{r.label}</p>
-            <p className="text-[11px] text-[#6B7280]">{r.count} · {r.note}</p>
+          <div key={r.label} className="rounded-xl bg-[#F9FAFB] os-dark:bg-[var(--os-surface-2)] p-3">
+            <p className="text-[16px] font-bold text-[#111827] os-dark:text-[var(--os-text)]">{fmt(r.value)} <span className="text-[11px] font-normal text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">{REPORT_CURRENCY}</span></p>
+            <p className="text-[12px] font-medium text-[#374151] os-dark:text-[var(--os-text)]">{r.label}</p>
+            <p className="text-[11px] text-[#6B7280] os-dark:text-[var(--os-text)]">{r.count} · {r.note}</p>
           </div>
         ))}
       </div>
       {notes.length > 0 && (
-        <ul className="mt-3 space-y-1 text-[12px] text-amber-700">
+        <ul className="mt-3 space-y-1 text-[12px] text-amber-700 os-dark:text-amber-300">
           {notes.map((n) => <li key={n}>{n}</li>)}
         </ul>
       )}
-      <p className="mt-3 text-[11px] text-[#6B7280]">
+      <p className="mt-3 text-[11px] text-[#6B7280] os-dark:text-[var(--os-text)]">
         Signed contracts are signed, active or completed, dated by their signing date. The pipeline is sent proposals only.
         Paid invoices include VAT and are marked paid by hand; contract and proposal values are before tax, so the two are never added together.
         There is no forecast figure, because it mixed these amounts.
@@ -454,14 +454,14 @@ function MoneyDetail({ money }: { money: Money }) {
 
 function KPI({ label, value, suffix, tone, hint }: { label: string; value: string; suffix?: string; tone: "purple" | "blue" | "emerald" | "amber" | "indigo" | "cyan" | "red" | "ok"; hint?: string }) {
   const tones: Record<typeof tone, { ring: string; text: string; bg: string }> = {
-    purple:  { ring: "border-purple-200",  text: "text-[#8B00FF]",  bg: "bg-gradient-to-br from-purple-50 to-violet-50" },
-    blue:    { ring: "border-blue-200",    text: "text-blue-600",   bg: "bg-gradient-to-br from-blue-50 to-sky-50" },
-    emerald: { ring: "border-emerald-200", text: "text-emerald-600",bg: "bg-gradient-to-br from-emerald-50 to-green-50" },
-    amber:   { ring: "border-amber-200",   text: "text-amber-600",  bg: "bg-gradient-to-br from-amber-50 to-yellow-50" },
-    indigo:  { ring: "border-indigo-200",  text: "text-indigo-600", bg: "bg-gradient-to-br from-indigo-50 to-blue-50" },
-    cyan:    { ring: "border-cyan-200",    text: "text-cyan-600",   bg: "bg-gradient-to-br from-cyan-50 to-sky-50" },
-    red:     { ring: "border-red-200",     text: "text-red-600",    bg: "bg-gradient-to-br from-red-50 to-rose-50" },
-    ok:      { ring: "border-[#E5E7EB]",   text: "text-[#111827]",  bg: "bg-white" },
+    purple:  { ring: "border-purple-200 os-dark:border-purple-500/30",  text: "text-[#8B00FF] os-dark:text-[var(--os-purple)]",  bg: "bg-gradient-to-br from-purple-50 to-violet-50 os-dark:from-purple-500/10 os-dark:to-violet-500/5" },
+    blue:    { ring: "border-blue-200 os-dark:border-blue-500/30",    text: "text-blue-600 os-dark:text-blue-400",   bg: "bg-gradient-to-br from-blue-50 to-sky-50 os-dark:from-blue-500/10 os-dark:to-sky-500/5" },
+    emerald: { ring: "border-emerald-200 os-dark:border-emerald-500/30", text: "text-emerald-600 os-dark:text-emerald-400",bg: "bg-gradient-to-br from-emerald-50 to-green-50 os-dark:from-emerald-500/10 os-dark:to-green-500/5" },
+    amber:   { ring: "border-amber-200 os-dark:border-amber-500/30",   text: "text-amber-600 os-dark:text-amber-400",  bg: "bg-gradient-to-br from-amber-50 to-yellow-50 os-dark:from-amber-500/10 os-dark:to-yellow-500/5" },
+    indigo:  { ring: "border-indigo-200 os-dark:border-indigo-500/30",  text: "text-indigo-600 os-dark:text-indigo-400", bg: "bg-gradient-to-br from-indigo-50 to-blue-50 os-dark:from-indigo-500/10 os-dark:to-blue-500/5" },
+    cyan:    { ring: "border-cyan-200 os-dark:border-cyan-500/30",    text: "text-cyan-600 os-dark:text-cyan-400",   bg: "bg-gradient-to-br from-cyan-50 to-sky-50 os-dark:from-cyan-500/10 os-dark:to-sky-500/5" },
+    red:     { ring: "border-red-200 os-dark:border-red-500/30",     text: "text-red-600 os-dark:text-red-400",    bg: "bg-gradient-to-br from-red-50 to-rose-50 os-dark:from-red-500/10 os-dark:to-rose-500/5" },
+    ok:      { ring: "border-[var(--os-border)]",   text: "text-[#111827] os-dark:text-[var(--os-text)]",  bg: "bg-[var(--os-surface)]" },
   };
   const s = tones[tone];
   return (
@@ -472,10 +472,10 @@ function KPI({ label, value, suffix, tone, hint }: { label: string; value: strin
       className={cn("rounded-2xl border p-4 sm:p-5 shadow-sm", s.ring, s.bg)}
     >
       <p className={cn("text-2xl sm:text-3xl font-bold tracking-tight", s.text)}>
-        {value}{suffix ? <span className="text-[12px] sm:text-[13px] font-medium text-[#9CA3AF] ml-1.5">{suffix}</span> : null}
+        {value}{suffix ? <span className="text-[12px] sm:text-[13px] font-medium text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] ml-1.5">{suffix}</span> : null}
       </p>
-      <p className="text-[12px] sm:text-[13px] text-[#475569] mt-1 font-medium">{label}</p>
-      {hint && <p className="text-[11px] text-[#6B7280] mt-1">{hint}</p>}
+      <p className="text-[12px] sm:text-[13px] text-[#475569] os-dark:text-[var(--os-text)] mt-1 font-medium">{label}</p>
+      {hint && <p className="text-[11px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-1">{hint}</p>}
     </motion.div>
   );
 }
@@ -486,12 +486,12 @@ function SectionHeader({ title, subtitle, link, icon }: { title: string; subtitl
       <div>
         <div className="flex items-center gap-2">
           {icon}
-          <h3 className="text-[14px] font-semibold text-[#111827]">{title}</h3>
+          <h3 className="text-[14px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">{title}</h3>
         </div>
-        {subtitle && <p className="text-[12px] text-[#6B7280] mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">{subtitle}</p>}
       </div>
       {link && (
-        <Link href={link.href} className="text-[11px] font-medium text-[#8B00FF] hover:text-[#7A00E0] flex items-center gap-0.5 shrink-0">
+        <Link href={link.href} className="text-[11px] font-medium text-[#8B00FF] os-dark:text-[var(--os-purple)] hover:text-[#7A00E0] os-dark:hover:text-purple-300 flex items-center gap-0.5 shrink-0">
           {link.label} <ArrowRight className="w-3 h-3" />
         </Link>
       )}
@@ -500,14 +500,14 @@ function SectionHeader({ title, subtitle, link, icon }: { title: string; subtitl
 }
 
 function EmptyPanel({ text }: { text: string }) {
-  return <p className="text-[12px] text-[#9CA3AF] text-center py-6">{text}</p>;
+  return <p className="text-[12px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] text-center py-6">{text}</p>;
 }
 
 function HealthPill({ score }: { score: number }) {
   const tone =
-    score >= 85 ? { text: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-100", dot: "bg-emerald-500", label: "Healthy" } :
-    score >= 65 ? { text: "text-amber-700",   bg: "bg-amber-50",   border: "border-amber-100",   dot: "bg-amber-500",   label: "Needs attention" } :
-                  { text: "text-red-700",     bg: "bg-red-50",     border: "border-red-100",     dot: "bg-red-500",     label: "Action required" };
+    score >= 85 ? { text: "text-emerald-700 os-dark:text-emerald-300", bg: "bg-emerald-50 os-dark:bg-emerald-500/10", border: "border-emerald-100 os-dark:border-emerald-500/30", dot: "bg-emerald-500", label: "Healthy" } :
+    score >= 65 ? { text: "text-amber-700 os-dark:text-amber-300",   bg: "bg-amber-50 os-dark:bg-amber-500/10",   border: "border-amber-100 os-dark:border-amber-500/30",   dot: "bg-amber-500",   label: "Needs attention" } :
+                  { text: "text-red-700 os-dark:text-red-300",     bg: "bg-red-50 os-dark:bg-red-500/10",     border: "border-red-100 os-dark:border-red-500/30",     dot: "bg-red-500",     label: "Action required" };
   return (
     <Link href="/admin/system-status" className={cn("inline-flex items-center gap-2 px-3 py-2 rounded-xl border", tone.bg, tone.border)}>
       <span className={cn("w-2 h-2 rounded-full", tone.dot)} />
@@ -520,15 +520,15 @@ function HealthPill({ score }: { score: number }) {
 
 function HealthRow({ label, count, severity }: { label: string; count: number; severity: "ok" | "warn" | "danger" }) {
   const styles = {
-    ok:     { dot: "bg-emerald-500", text: "text-[#111827]" },
-    warn:   { dot: "bg-amber-500",   text: "text-amber-700" },
-    danger: { dot: "bg-red-500",     text: "text-red-700" },
+    ok:     { dot: "bg-emerald-500", text: "text-[#111827] os-dark:text-[var(--os-text)]" },
+    warn:   { dot: "bg-amber-500",   text: "text-amber-700 os-dark:text-amber-300" },
+    danger: { dot: "bg-red-500",     text: "text-red-700 os-dark:text-red-300" },
   }[severity];
   return (
     <div className="flex items-center justify-between py-1.5">
       <div className="flex items-center gap-2.5">
         <span className={cn("w-2 h-2 rounded-full", styles.dot)} />
-        <span className="text-[13px] text-[#475569]">{label}</span>
+        <span className="text-[13px] text-[#475569] os-dark:text-[var(--os-text)]">{label}</span>
       </div>
       <span className={cn("text-[14px] font-semibold", styles.text)}>{count}</span>
     </div>
@@ -553,13 +553,13 @@ function FunnelChart({ funnel }: { funnel: Funnel }) {
         return (
           <div key={s.label}>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[12px] text-[#475569] font-medium">{s.label}</span>
+              <span className="text-[12px] text-[#475569] os-dark:text-[var(--os-text)] font-medium">{s.label}</span>
               <div className="flex items-center gap-2">
-                {conv !== null && <span className="text-[10px] text-[#9CA3AF]">{conv}% of prev</span>}
-                <span className="text-[14px] font-semibold text-[#111827]">{s.value}</span>
+                {conv !== null && <span className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">{conv}% of prev</span>}
+                <span className="text-[14px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">{s.value}</span>
               </div>
             </div>
-            <div className="h-2.5 bg-[#F3F4F6] rounded-full overflow-hidden">
+            <div className="h-2.5 bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.max(pct, 2)}%` }}
