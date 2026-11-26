@@ -25,7 +25,7 @@ export default function SalesPlaybookPage() {
         title="Sales Playbook"
         subtitle="Templates, sequences, scripts, and coaching to lift reply and conversion rates."
         actions={
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-[12px] text-[#64748B]">
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
             <BookOpen className="w-3.5 h-3.5" />
             Tools for the sales team
           </span>

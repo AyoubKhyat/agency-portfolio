@@ -85,8 +85,8 @@ export function TemplatesTab() {
               className={cn(
                 "text-[12px] px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all",
                 filter === c
-                  ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#7C3AED] border border-purple-200"
-                  : "text-[#475569] hover:bg-[#F1F5F9] border border-transparent"
+                  ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] border border-purple-200 os-dark:border-purple-500/30"
+                  : "text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)] border border-transparent"
               )}
             >
               {c === "ALL" ? "All channels" : CHANNEL_LABEL[c]}
@@ -116,39 +116,39 @@ export function TemplatesTab() {
       ) : (
         <div className="space-y-3">
           {filtered.map((t) => (
-            <div key={t.id} className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
+            <div key={t.id} className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[14px] font-semibold text-[#0F172A]">{t.name}</span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 bg-[#F1F5F9] rounded text-[#64748B] uppercase tracking-wider">{t.key}</span>
-                    <span className="text-[11px] px-2 py-0.5 bg-purple-50 text-[#7C3AED] rounded-full font-medium">
+                    <span className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{t.name}</span>
+                    <span className="text-[11px] font-mono px-1.5 py-0.5 bg-[#F1F5F9] os-dark:bg-[var(--os-surface-2)] rounded text-[#64748B] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider">{t.key}</span>
+                    <span className="text-[11px] px-2 py-0.5 bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] rounded-full font-medium">
                       {CHANNEL_LABEL[t.channel] || t.channel}
                     </span>
-                    <span className="text-[11px] px-2 py-0.5 bg-gray-50 text-[#475569] rounded-full uppercase">{t.language}</span>
+                    <span className="text-[11px] px-2 py-0.5 bg-gray-50 os-dark:bg-[var(--os-surface-2)] text-[#475569] os-dark:text-[var(--os-text)] rounded-full uppercase">{t.language}</span>
                     {!t.isActive && (
-                      <span className="text-[11px] px-2 py-0.5 bg-red-50 text-red-600 rounded-full">Inactive</span>
+                      <span className="text-[11px] px-2 py-0.5 bg-red-50 os-dark:bg-red-500/10 text-red-600 os-dark:text-red-400 rounded-full">Inactive</span>
                     )}
                   </div>
                   {t.subject && (
-                    <div className="mt-2 text-[12px] text-[#475569]"><span className="font-medium">Subject:</span> {t.subject}</div>
+                    <div className="mt-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)]"><span className="font-medium">Subject:</span> {t.subject}</div>
                   )}
-                  <pre className="mt-2 text-[12.5px] text-[#0F172A] whitespace-pre-wrap font-sans leading-relaxed">{t.body}</pre>
+                  <pre className="mt-2 text-[12.5px] text-[#0F172A] os-dark:text-[var(--os-text)] whitespace-pre-wrap font-sans leading-relaxed">{t.body}</pre>
                   {t.notes && (
-                    <div className="mt-2 text-[11px] text-[#64748B] italic">{t.notes}</div>
+                    <div className="mt-2 text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] italic">{t.notes}</div>
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <button onClick={() => handleCopy(t)} className="p-1.5 rounded-lg text-[#475569] hover:text-[#8B00FF] hover:bg-purple-50" title="Copy body">
-                    {copiedId === t.id ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                  <button onClick={() => handleCopy(t)} className="p-1.5 rounded-lg text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#8B00FF] os-dark:hover:text-[var(--os-purple)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10" title="Copy body">
+                    {copiedId === t.id ? <Check className="w-4 h-4 text-emerald-600 os-dark:text-emerald-400" /> : <Copy className="w-4 h-4" />}
                   </button>
-                  <button onClick={() => handleToggleActive(t)} className="text-[11px] font-medium text-[#64748B] px-2 py-1 rounded-md hover:bg-[#F1F5F9]" title="Toggle active">
+                  <button onClick={() => handleToggleActive(t)} className="text-[11px] font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)] px-2 py-1 rounded-md hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]" title="Toggle active">
                     {t.isActive ? "Disable" : "Enable"}
                   </button>
-                  <button onClick={() => setEditing(t)} className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]" title="Edit">
+                  <button onClick={() => setEditing(t)} className="p-1.5 rounded-lg text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]" title="Edit">
                     <Pencil className="w-4 h-4" />
                   </button>
-                  <button onClick={() => handleDelete(t.id)} className="p-1.5 rounded-lg text-[#475569] hover:text-red-600 hover:bg-red-50" title="Delete">
+                  <button onClick={() => handleDelete(t.id)} className="p-1.5 rounded-lg text-[#475569] os-dark:text-[var(--os-text)] hover:text-red-600 os-dark:hover:text-red-400 hover:bg-red-50 os-dark:hover:bg-red-500/10" title="Delete">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -226,15 +226,15 @@ function TemplateModal({
     }
   }
 
-  const inputCls = "w-full px-3 py-2 rounded-lg border border-[var(--os-border)] bg-white text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300";
-  const labelCls = "block text-[12px] font-medium text-[#475569] mb-1.5";
+  const inputCls = "w-full px-3 py-2 rounded-lg border border-[var(--os-border)] bg-[var(--os-control-bg)] text-[13px] text-[#0F172A] os-dark:text-[var(--os-text)] focus:outline-none focus:ring-2 focus:ring-purple-300 os-dark:focus:ring-purple-500/40 focus:border-purple-300 os-dark:focus:border-purple-500/30";
+  const labelCls = "block text-[12px] font-medium text-[#475569] os-dark:text-[var(--os-text)] mb-1.5";
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 sm:pt-20 px-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-      <div {...dialogProps} className="relative w-full max-w-2xl bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
+      <div {...dialogProps} className="relative w-full max-w-2xl bg-[var(--os-surface)] rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--os-border)]">
-          <h2 id={titleId} className="text-lg font-semibold text-[#0F172A]">{isNew ? "New template" : "Edit template"}</h2>
-          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]">
+          <h2 id={titleId} className="text-lg font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{isNew ? "New template" : "Edit template"}</h2>
+          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -246,7 +246,7 @@ function TemplateModal({
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} required placeholder="Website offer (FR)" />
             </div>
             <div>
-              <label className={labelCls}>Key {!isNew && <span className="text-[10px] text-[#94A3B8]">(immutable)</span>}</label>
+              <label className={labelCls}>Key {!isNew && <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">(immutable)</span>}</label>
               <input
                 type="text"
                 value={key}
@@ -277,7 +277,7 @@ function TemplateModal({
           </div>
 
           <div>
-            <label className={labelCls}>Body * <span className="text-[10px] text-[#94A3B8]">— use {`{{name}}`}, {`{{sector}}`}, {`{{city}}`} placeholders</span></label>
+            <label className={labelCls}>Body * <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">— use {`{{name}}`}, {`{{sector}}`}, {`{{city}}`} placeholders</span></label>
             <textarea value={body} onChange={(e) => setBody(e.target.value)} className={cn(inputCls, "h-48 resize-none font-mono text-[12.5px]")} required />
           </div>
 
@@ -286,10 +286,10 @@ function TemplateModal({
             <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} className={inputCls} placeholder="When to use this template" />
           </div>
 
-          {error && <div className="text-[12px] text-red-600">{error}</div>}
+          {error && <div className="text-[12px] text-red-600 os-dark:text-red-400">{error}</div>}
 
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-[13px] font-medium text-[#475569] hover:bg-[#F1F5F9]">Cancel</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-[13px] font-medium text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]">Cancel</button>
             <button
               type="submit"
               disabled={submitting || !name.trim() || !body.trim() || (isNew && !key.trim())}
