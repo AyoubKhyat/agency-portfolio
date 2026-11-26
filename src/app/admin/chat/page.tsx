@@ -148,7 +148,7 @@ function ChatInner() {
     if (!active) return;
     const sp = new URLSearchParams(window.location.search);
     sp.set("channel", active.slug);
-    window.history.replaceState({}, "", `/admin/chat?${sp.toString()}`);
+    window.history.replaceState(window.history.state, "", `/admin/chat?${sp.toString()}`);
   }, [active]);
 
   // Load + poll messages for the active channel (cursor-based: only fetch new)
@@ -219,14 +219,43 @@ function ChatInner() {
     setSending(false);
   }
 
+  // Below lg, opening a conversation from the list adds a history entry so the
+  // browser Back button returns to the list (and Forward reopens it). Desktop
+  // and ?channel= deep links keep their single entry.
+  function openConversation(c: Channel) {
+    setActive(c);
+    setSidebarOpen(false);
+    if (!window.matchMedia("(min-width: 1024px)").matches) {
+      const sp = new URLSearchParams(window.location.search);
+      sp.set("channel", c.slug);
+      window.history.pushState({ ...window.history.state, chatView: "conversation" }, "", `/admin/chat?${sp.toString()}`);
+    }
+  }
+
+  function backToList() {
+    if (window.history.state?.chatView === "conversation") window.history.back();
+    else setSidebarOpen(true);
+  }
+
+  useEffect(() => {
+    const onPop = () => {
+      const isConversation = window.history.state?.chatView === "conversation";
+      setSidebarOpen(!isConversation);
+      const slug = new URLSearchParams(window.location.search).get("channel");
+      const target = [...channels, ...dms].find((c) => c.slug === slug);
+      if (target) setActive((prev) => (prev?.id === target.id ? prev : target));
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [channels, dms]);
+
   async function openDm(user: User) {
     const res = await fetch(`/api/admin/chat/dm/${user.id}`, { method: "POST" });
     if (!res.ok) return;
     const dm = await res.json();
     await loadChannels();
-    setSidebarOpen(false);
     // Construct a synthetic Channel and switch.
-    setActive({ id: dm.id, slug: dm.slug, name: dm.name, description: "", isDm: true, unread: 0, lastMessage: null, members: [], partner: dm.partner });
+    openConversation({ id: dm.id, slug: dm.slug, name: dm.name, description: "", isDm: true, unread: 0, lastMessage: null, members: [], partner: dm.partner });
   }
 
   async function toggleReaction(message: Message, emoji: string) {
@@ -347,7 +376,7 @@ function ChatInner() {
   const showList = sidebarOpen && !(channelsLoaded && !active);
 
   return (
-    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6 lg:-mt-8 flex h-[calc(100dvh-3.5rem)] lg:h-dvh bg-[var(--os-surface)] border-t border-[var(--os-border)] overflow-hidden">
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6 lg:-mt-8 -mb-4 sm:-mb-6 lg:mb-0 flex h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] lg:h-dvh bg-[var(--os-surface)] border-t border-[var(--os-border)] overflow-hidden">
       {/* Sidebar */}
       <aside className={cn(
         "w-full lg:w-72 shrink-0 lg:border-r border-[var(--os-border)] flex flex-col bg-[var(--os-surface-2)]",
@@ -364,7 +393,7 @@ function ChatInner() {
               <ChannelRow
                 key={c.id}
                 active={active?.id === c.id}
-                onClick={() => { setActive(c); setSidebarOpen(false); }}
+                onClick={() => openConversation(c)}
                 icon={<Hash className="w-3.5 h-3.5 text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]" />}
                 name={c.name}
                 unread={c.unread}
@@ -378,7 +407,7 @@ function ChatInner() {
               <ChannelRow
                 key={c.id}
                 active={active?.id === c.id}
-                onClick={() => { setActive(c); setSidebarOpen(false); }}
+                onClick={() => openConversation(c)}
                 icon={
                   <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[10px] font-bold flex items-center justify-center">
                     {c.partner?.avatarInitials ?? "?"}
@@ -440,7 +469,7 @@ function ChatInner() {
             <div className="px-4 sm:px-6 py-3 border-b border-[var(--os-border)] flex items-center gap-3">
               <button
                 className="lg:hidden p-1.5 rounded-md text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F3F4F6] os-dark:hover:bg-[var(--os-hover)]"
-                onClick={() => setSidebarOpen(true)}
+                onClick={backToList}
                 aria-label="Show channels"
               >
                 <ArrowLeft className="w-4 h-4" />
