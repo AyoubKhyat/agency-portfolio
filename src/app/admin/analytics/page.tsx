@@ -165,7 +165,7 @@ export default function AnalyticsPage() {
             <BarChart data={sectorChartData} layout="vertical" margin={{ left: 10, right: 10 }}>
               <XAxis type="number" tick={{ fill: "#9CA3AF", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
               <YAxis type="category" dataKey="name" tick={{ fill: "#6B7280", fontSize: 11 }} axisLine={false} tickLine={false} width={100} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(139, 92, 246, 0.08)" }} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: "var(--os-text)" }} cursor={{ fill: "rgba(139, 92, 246, 0.08)" }} />
               <Bar dataKey="count" fill="#8b5cf6" radius={[0, 4, 4, 0]} barSize={16} />
             </BarChart>
           </ResponsiveContainer>
