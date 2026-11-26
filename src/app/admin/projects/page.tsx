@@ -74,11 +74,11 @@ export default function ProjectsPage() {
         count={projects.length}
         actions={
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <div className="flex items-center bg-white border border-[var(--os-border)] rounded-lg p-0.5">
-              <button onClick={() => setView("grid")} className={cn("p-1.5 rounded-md transition-colors", view === "grid" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "text-[#475569] hover:text-[#0F172A]")}>
+            <div className="flex items-center bg-[var(--os-surface)] border border-[var(--os-border)] rounded-lg p-0.5">
+              <button onClick={() => setView("grid")} className={cn("p-1.5 rounded-md transition-colors", view === "grid" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF] os-dark:text-[var(--os-purple)]" : "text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)]")}>
                 <LayoutGrid className="w-4 h-4" />
               </button>
-              <button onClick={() => setView("list")} className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]" : "text-[#475569] hover:text-[#0F172A]")}>
+              <button onClick={() => setView("list")} className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF] os-dark:text-[var(--os-purple)]" : "text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)]")}>
                 <List className="w-4 h-4" />
               </button>
             </div>
@@ -103,7 +103,7 @@ export default function ProjectsPage() {
           title="No projects yet"
           description="Create your first portfolio project."
           action={
-            <Link href="/admin/projects/new" className="text-sm text-purple-600 hover:text-purple-600">
+            <Link href="/admin/projects/new" className="text-sm text-purple-600 os-dark:text-purple-400 hover:text-purple-600 os-dark:hover:text-purple-400">
               Create project
             </Link>
           }
@@ -116,32 +116,32 @@ export default function ProjectsPage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: i * 0.05 }}
-              className="group relative rounded-2xl border border-[var(--os-border)] bg-white overflow-hidden hover:border-[var(--os-border-hover)] hover:shadow-lg hover:shadow-purple-900/[0.06] hover:-translate-y-1 transition-all duration-300"
+              className="group relative rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] overflow-hidden hover:border-[var(--os-border-hover)] hover:shadow-lg hover:shadow-purple-900/[0.06] hover:-translate-y-1 transition-all duration-300"
             >
               {/* Image */}
               <div className="relative aspect-[16/10] bg-[var(--os-surface-2)] overflow-hidden">
                 {isRenderableProjectImage(project.image) ? (
                   <Image src={project.image} alt="" fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="400px" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-300">
+                  <div className="w-full h-full flex items-center justify-center text-gray-300 os-dark:text-[var(--os-text-soft)]">
                     <FolderKanban className="w-8 h-8" />
                   </div>
                 )}
                 {/* Hover overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                 <div className="absolute bottom-3 right-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <button onClick={() => handleToggle(project.id)} className="p-2 rounded-lg bg-white/90 backdrop-blur-sm text-[#0F172A] hover:bg-black/80 transition-colors">
+                  <button onClick={() => handleToggle(project.id)} className="p-2 rounded-lg bg-white/90 os-dark:bg-[var(--os-surface)]/90 backdrop-blur-sm text-[#0F172A] os-dark:text-[var(--os-text)] hover:bg-black/80 transition-colors">
                     {project.visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                   </button>
-                  <Link href={`/admin/projects/${project.id}/edit`} className="p-2 rounded-lg bg-white/90 backdrop-blur-sm text-[#0F172A] hover:bg-black/80 transition-colors">
+                  <Link href={`/admin/projects/${project.id}/edit`} className="p-2 rounded-lg bg-white/90 os-dark:bg-[var(--os-surface)]/90 backdrop-blur-sm text-[#0F172A] os-dark:text-[var(--os-text)] hover:bg-black/80 transition-colors">
                     <Pencil className="w-3.5 h-3.5" />
                   </Link>
                   {project.url && (
-                    <a href={project.url} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-white/90 backdrop-blur-sm text-[#0F172A] hover:bg-black/80 transition-colors">
+                    <a href={project.url} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-white/90 os-dark:bg-[var(--os-surface)]/90 backdrop-blur-sm text-[#0F172A] os-dark:text-[var(--os-text)] hover:bg-black/80 transition-colors">
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   )}
-                  <button onClick={() => handleDelete(project.id)} className="p-2 rounded-lg bg-white/90 backdrop-blur-sm text-red-600 hover:bg-red-500/30 transition-colors">
+                  <button onClick={() => handleDelete(project.id)} className="p-2 rounded-lg bg-white/90 os-dark:bg-[var(--os-surface)]/90 backdrop-blur-sm text-red-600 os-dark:text-red-400 hover:bg-red-500/30 transition-colors">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -159,10 +159,10 @@ export default function ProjectsPage() {
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="text-[14px] font-semibold text-[#0F172A] truncate">
+                    <h3 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] truncate">
                       {project.translations[0]?.title ?? project.slug}
                     </h3>
-                    <p className="text-[12px] text-[#475569] mt-0.5 truncate">
+                    <p className="text-[12px] text-[#475569] os-dark:text-[var(--os-text)] mt-0.5 truncate">
                       {project.translations[0]?.desc?.slice(0, 60)}
                     </p>
                   </div>
@@ -176,24 +176,71 @@ export default function ProjectsPage() {
           ))}
         </div>
       ) : (
-        /* List view - existing table style */
-        <div className="border border-[var(--os-border)] rounded-2xl overflow-hidden">
+        /* List view: cards on mobile, table from md */
+        <>
+        <ul className="md:hidden space-y-3">
+          {projects.map((project) => (
+            <li key={project.id} className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-16 h-11 relative rounded-lg overflow-hidden bg-[var(--os-surface-2)] shrink-0">
+                  {isRenderableProjectImage(project.image) && (
+                    <Image src={project.image} alt="" fill className="object-cover" sizes="64px" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[14px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] break-words">{project.translations[0]?.title ?? project.slug}</div>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    <ProjectStatusBadge status={project.status} size="sm" />
+                    <Badge variant={isClientProject(project) ? "success" : "default"} size="sm">
+                      {PROJECT_KIND_LABELS[isClientProject(project) ? "CLIENT" : "CONCEPT"]}
+                    </Badge>
+                    <Badge variant="purple" size="sm">{project.category}</Badge>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-1 mt-3 pt-3 border-t border-[var(--os-border)]">
+                <button
+                  onClick={() => handleToggle(project.id)}
+                  aria-label={project.visible ? "Hide project" : "Show project"}
+                  className="p-2.5 rounded-lg hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)]"
+                >
+                  {project.visible ? <Eye className="w-4 h-4 text-emerald-600 os-dark:text-emerald-400" /> : <EyeOff className="w-4 h-4 text-gray-400 os-dark:text-[var(--os-text-soft)]" />}
+                </button>
+                <Link
+                  href={`/admin/projects/${project.id}/edit`}
+                  aria-label="Edit project"
+                  className="p-2.5 rounded-lg hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)] text-[#475569] os-dark:text-[var(--os-text)]"
+                >
+                  <Pencil className="w-4 h-4" />
+                </Link>
+                <button
+                  onClick={() => handleDelete(project.id)}
+                  aria-label="Delete project"
+                  className="p-2.5 rounded-lg hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)] text-[#475569] os-dark:text-[var(--os-text)] hover:text-red-600 os-dark:hover:text-red-400"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden md:block border border-[var(--os-border)] rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[640px]">
             <thead>
-              <tr className="border-b border-[var(--os-border)] bg-gray-50/80">
-                <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Image</th>
-                <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Title</th>
-                <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Status</th>
-                <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Type</th>
-                <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Category</th>
-                <th className="text-left px-4 py-3 text-[#475569] font-medium text-xs">Visible</th>
-                <th className="text-right px-4 py-3 text-[#475569] font-medium text-xs">Actions</th>
+              <tr className="border-b border-[var(--os-border)] bg-gray-50/80 os-dark:bg-[var(--os-surface-2)]">
+                <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Image</th>
+                <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Title</th>
+                <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Status</th>
+                <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Type</th>
+                <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Category</th>
+                <th className="text-left px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Visible</th>
+                <th className="text-right px-4 py-3 text-[#475569] os-dark:text-[var(--os-text)] font-medium text-xs">Actions</th>
               </tr>
             </thead>
             <tbody>
               {projects.map((project) => (
-                <tr key={project.id} className="border-b border-[var(--os-border)] hover:bg-gray-50 transition-colors">
+                <tr key={project.id} className="border-b border-[var(--os-border)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-hover)] transition-colors">
                   <td className="px-4 py-3">
                     <div className="w-12 h-8 relative rounded overflow-hidden bg-[var(--os-surface-2)]">
                       {isRenderableProjectImage(project.image) && (
@@ -201,7 +248,7 @@ export default function ProjectsPage() {
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-[#0F172A] font-medium">{project.translations[0]?.title ?? project.slug}</td>
+                  <td className="px-4 py-3 text-[#0F172A] os-dark:text-[var(--os-text)] font-medium">{project.translations[0]?.title ?? project.slug}</td>
                   <td className="px-4 py-3"><ProjectStatusBadge status={project.status} size="sm" /></td>
                   <td className="px-4 py-3">
                     <Badge variant={isClientProject(project) ? "success" : "default"} size="sm">
@@ -210,16 +257,16 @@ export default function ProjectsPage() {
                   </td>
                   <td className="px-4 py-3"><Badge variant="purple" size="sm">{project.category}</Badge></td>
                   <td className="px-4 py-3">
-                    <button onClick={() => handleToggle(project.id)} className="transition-colors">
-                      {project.visible ? <Eye className="w-4 h-4 text-emerald-600" /> : <EyeOff className="w-4 h-4 text-gray-400" />}
+                    <button onClick={() => handleToggle(project.id)} aria-label={project.visible ? "Hide project" : "Show project"} className="transition-colors">
+                      {project.visible ? <Eye className="w-4 h-4 text-emerald-600 os-dark:text-emerald-400" /> : <EyeOff className="w-4 h-4 text-gray-400 os-dark:text-[var(--os-text-soft)]" />}
                     </button>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <Link href={`/admin/projects/${project.id}/edit`} className="p-1.5 rounded-lg hover:bg-gray-100 text-[#475569] hover:text-purple-600 transition-colors">
+                      <Link href={`/admin/projects/${project.id}/edit`} aria-label="Edit project" className="p-1.5 rounded-lg hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)] text-[#475569] os-dark:text-[var(--os-text)] hover:text-purple-600 os-dark:hover:text-purple-400 transition-colors">
                         <Pencil className="w-3.5 h-3.5" />
                       </Link>
-                      <button onClick={() => handleDelete(project.id)} className="p-1.5 rounded-lg hover:bg-gray-100 text-[#475569] hover:text-red-600 transition-colors">
+                      <button onClick={() => handleDelete(project.id)} aria-label="Delete project" className="p-1.5 rounded-lg hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)] text-[#475569] os-dark:text-[var(--os-text)] hover:text-red-600 os-dark:hover:text-red-400 transition-colors">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -230,6 +277,7 @@ export default function ProjectsPage() {
           </table>
           </div>
         </div>
+        </>
       )}
     </div>
   );
