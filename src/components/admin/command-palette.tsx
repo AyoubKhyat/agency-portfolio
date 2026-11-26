@@ -267,11 +267,11 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     return (
       <div key={entityType}>
         <div className="flex items-center gap-2 px-4 py-2">
-          <Icon className="w-3.5 h-3.5 text-[#8B00FF]" />
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">
+          <Icon className="w-3.5 h-3.5 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)]">
             {meta.label}
           </span>
-          <span className="text-[11px] text-[#94A3B8]">({items.length})</span>
+          <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">({items.length})</span>
         </div>
         {items.map((flat) => {
           const globalIndex = flatItems.indexOf(flat);
@@ -286,24 +286,24 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
                 isSelected
-                  ? "bg-gradient-to-r from-[#8B00FF]/5 to-[#C026D3]/5"
-                  : "hover:bg-[#F8FAFC]"
+                  ? "bg-gradient-to-r from-[#8B00FF]/5 to-[#C026D3]/5 os-dark:from-[#8B00FF]/15 os-dark:to-[#C026D3]/10"
+                  : "hover:bg-[#F8FAFC] os-dark:hover:bg-[var(--os-hover)]"
               )}
             >
               <div className={cn(
                 "flex items-center justify-center w-8 h-8 rounded-lg shrink-0",
                 isSelected
                   ? "bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white"
-                  : "bg-[#F1F5F9] text-[#475569]"
+                  : "bg-[#F1F5F9] os-dark:bg-[var(--os-hover)] text-[#475569] os-dark:text-[var(--os-text)]"
               )}>
                 <Icon className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-[#0F172A] truncate">
+                <p className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] truncate">
                   {flat.item.label}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[11px] text-[#64748B] truncate">
+                  <span className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] truncate">
                     {flat.item.sublabel}
                   </span>
                   <Badge
@@ -316,7 +316,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               </div>
               <ArrowRight className={cn(
                 "w-4 h-4 shrink-0 transition-colors",
-                isSelected ? "text-[#8B00FF]" : "text-[#CBD5E1]"
+                isSelected ? "text-[#8B00FF] os-dark:text-[var(--os-purple)]" : "text-[#CBD5E1] os-dark:text-[var(--os-text-faint)]"
               )} />
             </button>
           );
@@ -329,8 +329,8 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     return (
       <div className="py-2">
         <div className="flex items-center gap-2 px-4 py-2">
-          <LayoutDashboard className="w-3.5 h-3.5 text-[#8B00FF]" />
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">
+          <LayoutDashboard className="w-3.5 h-3.5 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)]">
             Quick Actions
           </span>
         </div>
@@ -347,25 +347,25 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
                 isSelected
-                  ? "bg-gradient-to-r from-[#8B00FF]/5 to-[#C026D3]/5"
-                  : "hover:bg-[#F8FAFC]"
+                  ? "bg-gradient-to-r from-[#8B00FF]/5 to-[#C026D3]/5 os-dark:from-[#8B00FF]/15 os-dark:to-[#C026D3]/10"
+                  : "hover:bg-[#F8FAFC] os-dark:hover:bg-[var(--os-hover)]"
               )}
             >
               <div className={cn(
                 "flex items-center justify-center w-8 h-8 rounded-lg shrink-0",
                 isSelected
                   ? "bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white"
-                  : "bg-[#F1F5F9] text-[#475569]"
+                  : "bg-[#F1F5F9] os-dark:bg-[var(--os-hover)] text-[#475569] os-dark:text-[var(--os-text)]"
               )}>
                 <Icon className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-[#0F172A] truncate">{action.label}</p>
-                <p className="text-[11px] text-[#64748B] truncate">{action.sublabel}</p>
+                <p className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] truncate">{action.label}</p>
+                <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] truncate">{action.sublabel}</p>
               </div>
               <ArrowRight className={cn(
                 "w-4 h-4 shrink-0 transition-colors",
-                isSelected ? "text-[#8B00FF]" : "text-[#CBD5E1]"
+                isSelected ? "text-[#8B00FF] os-dark:text-[var(--os-purple)]" : "text-[#CBD5E1] os-dark:text-[var(--os-text-faint)]"
               )} />
             </button>
           );
@@ -378,10 +378,10 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     if (recentSearches.length === 0) return null;
 
     return (
-      <div className="py-2 border-b border-[#F1F5F9]">
+      <div className="py-2 border-b border-[#F1F5F9] os-dark:border-[var(--os-border)]">
         <div className="flex items-center gap-2 px-4 py-2">
-          <Search className="w-3.5 h-3.5 text-[#94A3B8]" />
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">
+          <Search className="w-3.5 h-3.5 text-[#94A3B8] os-dark:text-[var(--os-text-soft)]" />
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)]">
             Recent Searches
           </span>
         </div>
@@ -390,7 +390,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             <button
               key={term}
               onClick={() => setQuery(term)}
-              className="inline-flex items-center px-2.5 py-1 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[12px] text-[#475569] rounded-lg transition-colors"
+              className="inline-flex items-center px-2.5 py-1 bg-[#F1F5F9] os-dark:bg-[var(--os-hover)] hover:bg-[#E2E8F0] os-dark:hover:bg-[var(--os-border-hover)] text-[12px] text-[#475569] os-dark:text-[var(--os-text)] rounded-lg transition-colors"
             >
               {term}
             </button>
@@ -421,28 +421,28 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
               {...dialogProps}
-              className="w-full max-w-[600px] bg-white rounded-2xl shadow-2xl border border-[#E5E7EB] overflow-hidden pointer-events-auto"
+              className="w-full max-w-[600px] bg-[var(--os-popover)] rounded-2xl shadow-2xl border border-[var(--os-border)] overflow-hidden pointer-events-auto"
             >
               {/* Search input */}
-              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#E5E7EB]">
-                <Search className="w-5 h-5 text-[#94A3B8] shrink-0" />
+              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[var(--os-border)]">
+                <Search className="w-5 h-5 text-[#94A3B8] os-dark:text-[var(--os-text-soft)] shrink-0" />
                 <input
                   ref={inputRef}
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search prospects, leads, clients, projects, tasks, meetings, messages..."
-                  className="flex-1 text-[15px] text-[#0F172A] placeholder:text-[#94A3B8] bg-transparent outline-none"
+                  className="flex-1 text-[15px] text-[#0F172A] os-dark:text-[var(--os-text)] placeholder:text-[#94A3B8] os-dark:placeholder:text-[var(--os-text-soft)] bg-transparent outline-none"
                 />
                 {query && (
                   <button
                     onClick={() => setQuery("")}
-                    className="p-1 rounded-md text-[#94A3B8] hover:text-[#475569] hover:bg-[#F1F5F9] transition-colors shrink-0"
+                    className="p-1 rounded-md text-[#94A3B8] os-dark:text-[var(--os-text-soft)] hover:text-[#475569] os-dark:hover:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)] transition-colors shrink-0"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 )}
-                <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 bg-[#F1F5F9] border border-[#E5E7EB] rounded text-[11px] font-medium text-[#64748B] shrink-0">
+                <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 bg-[#F1F5F9] os-dark:bg-[var(--os-hover)] border border-[var(--os-border)] rounded text-[11px] font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)] shrink-0">
                   ESC
                 </kbd>
               </div>
@@ -452,13 +452,13 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                 {/* Loading */}
                 {loading && (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-5 h-5 text-[#8B00FF] animate-spin" />
+                    <Loader2 className="w-5 h-5 text-[#8B00FF] os-dark:text-[var(--os-purple)] animate-spin" />
                   </div>
                 )}
 
                 {/* Search results */}
                 {!loading && results && hasResults && (
-                  <div className="py-2 divide-y divide-[#F1F5F9]">
+                  <div className="py-2 divide-y divide-[#F1F5F9] os-dark:divide-[var(--os-border)]">
                     {ENTITY_TYPES.map((et) => renderEntityGroup(et))}
                   </div>
                 )}
@@ -466,11 +466,11 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                 {/* No results */}
                 {!loading && results && !hasResults && (
                   <div className="flex flex-col items-center justify-center py-12 px-4">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-[#F1F5F9] mb-3">
-                      <Search className="w-5 h-5 text-[#94A3B8]" />
+                    <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-[#F1F5F9] os-dark:bg-[var(--os-hover)] mb-3">
+                      <Search className="w-5 h-5 text-[#94A3B8] os-dark:text-[var(--os-text-soft)]" />
                     </div>
-                    <p className="text-[14px] font-medium text-[#475569]">No results found</p>
-                    <p className="text-[13px] text-[#94A3B8] mt-1">
+                    <p className="text-[14px] font-medium text-[#475569] os-dark:text-[var(--os-text)]">No results found</p>
+                    <p className="text-[13px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mt-1">
                       Try a different search term
                     </p>
                   </div>
@@ -487,27 +487,27 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
               {/* Footer with keyboard hints */}
               {(hasResults || showingQuickActions) && (
-                <div className="flex items-center gap-4 px-4 py-2.5 border-t border-[#E5E7EB] bg-[#F8FAFC]">
+                <div className="flex items-center gap-4 px-4 py-2.5 border-t border-[var(--os-border)] bg-[#F8FAFC] os-dark:bg-[var(--os-surface)]">
                   <div className="flex items-center gap-1.5">
-                    <kbd className="inline-flex items-center justify-center w-5 h-5 bg-white border border-[#E5E7EB] rounded text-[10px] font-medium text-[#64748B]">
+                    <kbd className="inline-flex items-center justify-center w-5 h-5 bg-[var(--os-surface)] os-dark:bg-[var(--os-hover)] border border-[var(--os-border)] rounded text-[11px] font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">
                       &uarr;
                     </kbd>
-                    <kbd className="inline-flex items-center justify-center w-5 h-5 bg-white border border-[#E5E7EB] rounded text-[10px] font-medium text-[#64748B]">
+                    <kbd className="inline-flex items-center justify-center w-5 h-5 bg-[var(--os-surface)] os-dark:bg-[var(--os-hover)] border border-[var(--os-border)] rounded text-[11px] font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">
                       &darr;
                     </kbd>
-                    <span className="text-[11px] text-[#94A3B8] ml-0.5">Navigate</span>
+                    <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] ml-0.5">Navigate</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <kbd className="inline-flex items-center justify-center h-5 px-1.5 bg-white border border-[#E5E7EB] rounded text-[10px] font-medium text-[#64748B]">
+                    <kbd className="inline-flex items-center justify-center h-5 px-1.5 bg-[var(--os-surface)] os-dark:bg-[var(--os-hover)] border border-[var(--os-border)] rounded text-[11px] font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">
                       Enter
                     </kbd>
-                    <span className="text-[11px] text-[#94A3B8] ml-0.5">Open</span>
+                    <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] ml-0.5">Open</span>
                   </div>
                   <div className="flex items-center gap-1.5 ml-auto">
-                    <kbd className="inline-flex items-center justify-center h-5 px-1.5 bg-white border border-[#E5E7EB] rounded text-[10px] font-medium text-[#64748B]">
+                    <kbd className="inline-flex items-center justify-center h-5 px-1.5 bg-[var(--os-surface)] os-dark:bg-[var(--os-hover)] border border-[var(--os-border)] rounded text-[11px] font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">
                       Ctrl+K
                     </kbd>
-                    <span className="text-[11px] text-[#94A3B8] ml-0.5">Search</span>
+                    <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] ml-0.5">Search</span>
                   </div>
                 </div>
               )}
