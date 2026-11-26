@@ -34,19 +34,19 @@ export default function AdminError({
         </div>
 
         {/* Heading */}
-        <h2 className="text-xl font-bold text-[#0F172A] mb-2">
+        <h2 className="text-xl font-bold text-[var(--os-text)] mb-2">
           Something went wrong
         </h2>
 
         {/* Description */}
-        <p className="text-sm text-[#64748B] mb-6 leading-relaxed">
+        <p className="text-sm text-[var(--os-text-soft)] mb-6 leading-relaxed">
           An unexpected error occurred in the admin panel. You can try again or
           go back to the dashboard.
         </p>
 
         {/* Error digest (dev hint) */}
         {error.digest && (
-          <p className="text-xs text-[#94A3B8] mb-4 font-mono">
+          <p className="text-xs text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mb-4 font-mono">
             Error ID: {error.digest}
           </p>
         )}
@@ -55,7 +55,7 @@ export default function AdminError({
         <div className="flex items-center justify-center gap-3">
           <button
             onClick={reset}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#8B00FF] to-[#C026D3] px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-purple-500/20 transition hover:shadow-lg hover:shadow-purple-500/30 focus:outline-none focus:ring-2 focus:ring-[#8B00FF] focus:ring-offset-2"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#8B00FF] to-[#C026D3] px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-purple-500/20 transition hover:shadow-lg hover:shadow-purple-500/30 focus:outline-none focus:ring-2 focus:ring-[#8B00FF] focus:ring-offset-2 os-dark:focus:ring-offset-[var(--os-bg)]"
           >
             <svg
               className="h-4 w-4"
@@ -75,7 +75,7 @@ export default function AdminError({
 
           <a
             href="/admin"
-            className="inline-flex items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-5 py-2.5 text-sm font-medium text-[#475569] transition hover:bg-[#F8FAFC] hover:border-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#8B00FF] focus:ring-offset-2"
+            className="inline-flex items-center gap-2 rounded-xl border border-[#E2E8F0] os-dark:border-[var(--os-border)] bg-white os-dark:bg-[var(--os-surface)] px-5 py-2.5 text-sm font-medium text-[#475569] os-dark:text-[var(--os-text)] transition hover:bg-[#F8FAFC] os-dark:hover:bg-[var(--os-hover)] hover:border-[#CBD5E1] os-dark:hover:border-[var(--os-border-hover)] focus:outline-none focus:ring-2 focus:ring-[#8B00FF] focus:ring-offset-2 os-dark:focus:ring-offset-[var(--os-bg)]"
           >
             Dashboard
           </a>
