@@ -44,9 +44,9 @@ type ChannelFilter = "whatsapp" | "instagram" | "website" | "email" | "phone";
 type ImportTier = "HOT_ONLY" | "HOT_WARM" | "ALL";
 
 const QUALITY_BADGE: Record<QualityLabel, string> = {
-  HOT: "bg-rose-50 text-rose-700 border-rose-200",
-  WARM: "bg-amber-50 text-amber-700 border-amber-200",
-  COLD: "bg-gray-100 text-gray-600 border-gray-200",
+  HOT: "bg-rose-50 os-dark:bg-rose-500/10 text-rose-700 os-dark:text-rose-300 border-rose-200 os-dark:border-rose-500/30",
+  WARM: "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border-amber-200 os-dark:border-amber-500/30",
+  COLD: "bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-gray-600 os-dark:text-[var(--os-text)] border-gray-200 os-dark:border-[var(--os-border)]",
 };
 
 type SweepProgress = {
@@ -451,20 +451,20 @@ export function BulkSweepTab({
     <div className="space-y-5">
       {/* Provider hint */}
       {providerName === "OSM" && (
-        <div className="rounded-2xl border border-blue-200 bg-blue-50/40 p-3 text-[12px] text-blue-900 flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-blue-600" />
+        <div className="rounded-2xl border border-blue-200 os-dark:border-blue-500/30 bg-blue-50/40 os-dark:bg-blue-500/10 p-3 text-[12px] text-blue-900 os-dark:text-blue-300 flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-blue-600 os-dark:text-blue-400" />
           <span>
             Running on <span className="font-semibold">OpenStreetMap</span>. Coverage in Morocco is uneven — niche sectors (osteopaths, tax consultants, wedding planners) return 0-3 results.
-            Add <code className="px-1 py-0.5 bg-white rounded text-[11px] font-mono">GOOGLE_PLACES_API_KEY</code> for 5-10× more results per sector.
+            Add <code className="px-1 py-0.5 bg-[var(--os-surface)] rounded text-[11px] font-mono">GOOGLE_PLACES_API_KEY</code> for 5-10× more results per sector.
           </span>
         </div>
       )}
 
       {/* Presets */}
-      <div className="rounded-2xl border border-purple-200 bg-purple-50/30 p-4 sm:p-5">
+      <div className="rounded-2xl border border-purple-200 os-dark:border-purple-500/30 bg-purple-50/30 os-dark:bg-purple-500/10 p-4 sm:p-5">
         <div className="flex items-center gap-2 mb-3">
-          <Zap className="w-4 h-4 text-[#8B00FF]" />
-          <h2 className="text-[14px] font-semibold text-[#0F172A]">Quick presets</h2>
+          <Zap className="w-4 h-4 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
+          <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Quick presets</h2>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -485,38 +485,38 @@ export function BulkSweepTab({
           <button
             onClick={presetSecondary}
             disabled={running}
-            className="text-[12px] px-3 py-1.5 rounded-lg font-medium border border-purple-200 bg-white text-[#7C3AED] hover:bg-purple-50 disabled:opacity-50"
+            className="text-[12px] px-3 py-1.5 rounded-lg font-medium border border-purple-200 os-dark:border-purple-500/30 bg-[var(--os-surface)] text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10 disabled:opacity-50"
           >
             Secondary sectors
           </button>
           <button
             onClick={presetAllSectors}
             disabled={running}
-            className="text-[12px] px-3 py-1.5 rounded-lg font-medium border border-purple-200 bg-white text-[#7C3AED] hover:bg-purple-50 disabled:opacity-50"
+            className="text-[12px] px-3 py-1.5 rounded-lg font-medium border border-purple-200 os-dark:border-purple-500/30 bg-[var(--os-surface)] text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10 disabled:opacity-50"
           >
             All sectors ({sectors.length})
           </button>
-          <div className="text-[11px] text-[#64748B] ml-auto self-center">
+          <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] ml-auto self-center">
             Each preset selects sectors city-wide. Pick cities below to scope.
           </div>
         </div>
       </div>
 
       {/* Cities multi-select */}
-      <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[14px] font-semibold text-[#0F172A] flex items-center gap-1.5">
+          <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] flex items-center gap-1.5">
             Cities
             {multiCity && (
-              <span className="text-[10px] uppercase tracking-wider font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">
+              <span className="text-[11px] uppercase tracking-wider font-bold text-amber-700 os-dark:text-amber-300 bg-amber-50 os-dark:bg-amber-500/10 border border-amber-200 os-dark:border-amber-500/30 px-1.5 py-0.5 rounded-full">
                 multi-city
               </span>
             )}
           </h2>
           <div className="flex items-center gap-2">
-            <button onClick={selectAllCities} disabled={running} className="text-[11px] text-[#7C3AED] hover:underline disabled:opacity-50">All</button>
-            <button onClick={clearCities} disabled={running} className="text-[11px] text-[#64748B] hover:text-[#0F172A] disabled:opacity-50">Clear</button>
-            <span className="text-[11px] text-[#94A3B8]">{selectedCities.size} of {cities.length} selected</span>
+            <button onClick={selectAllCities} disabled={running} className="text-[11px] text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:underline disabled:opacity-50">All</button>
+            <button onClick={clearCities} disabled={running} className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)] disabled:opacity-50">Clear</button>
+            <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">{selectedCities.size} of {cities.length} selected</span>
           </div>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -529,7 +529,7 @@ export function BulkSweepTab({
                 "text-[11.5px] px-2.5 py-1 rounded-full border transition-all",
                 selectedCities.has(c.key)
                   ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white border-transparent"
-                  : "bg-white text-[#475569] border-[var(--os-border)] hover:border-purple-300",
+                  : "bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] border-[var(--os-border)] hover:border-purple-300 os-dark:hover:border-purple-500/30",
                 running && "opacity-50 cursor-not-allowed"
               )}
             >
@@ -538,20 +538,20 @@ export function BulkSweepTab({
           ))}
         </div>
         {multiCity && (
-          <div className="mt-2 text-[11px] text-amber-700 bg-amber-50/40 border border-amber-200 rounded-lg px-2.5 py-1.5">
+          <div className="mt-2 text-[11px] text-amber-700 os-dark:text-amber-300 bg-amber-50/40 os-dark:bg-amber-500/10 border border-amber-200 os-dark:border-amber-500/30 rounded-lg px-2.5 py-1.5">
             Multi-city mode: neighborhood drill-down disabled (only Marrakech has neighborhood data). All sweeps run city-wide.
           </div>
         )}
       </div>
 
       {/* Selectors */}
-      <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[14px] font-semibold text-[#0F172A]">Sectors</h2>
+          <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Sectors</h2>
           <div className="flex items-center gap-2">
-            <button onClick={selectAllSectors} className="text-[11px] text-[#7C3AED] hover:underline">All</button>
-            <button onClick={clearSectors} className="text-[11px] text-[#64748B] hover:text-[#0F172A]">Clear</button>
-            <span className="text-[11px] text-[#94A3B8]">{selectedSectors.size} selected</span>
+            <button onClick={selectAllSectors} className="text-[11px] text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:underline">All</button>
+            <button onClick={clearSectors} className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)]">Clear</button>
+            <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">{selectedSectors.size} selected</span>
           </div>
         </div>
         <div className="space-y-3">
@@ -561,9 +561,9 @@ export function BulkSweepTab({
               <div key={cat}>
                 <button
                   onClick={() => selectCategorySectors(cat)}
-                  className="text-[10px] uppercase tracking-wider font-bold text-[#64748B] hover:text-[#7C3AED] mb-1.5 flex items-center gap-1.5"
+                  className="text-[11px] uppercase tracking-wider font-bold text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)] mb-1.5 flex items-center gap-1.5"
                 >
-                  <input type="checkbox" checked={allInCatSelected} readOnly className="rounded border-gray-300 text-purple-600 pointer-events-none" />
+                  <input type="checkbox" checked={allInCatSelected} readOnly className="rounded border-gray-300 os-dark:border-[var(--os-border-hover)] text-purple-600 os-dark:text-purple-400 pointer-events-none" />
                   {cat}
                 </button>
                 <div className="flex flex-wrap gap-1.5">
@@ -576,7 +576,7 @@ export function BulkSweepTab({
                         "text-[11.5px] px-2.5 py-1 rounded-full border transition-all",
                         selectedSectors.has(s.key)
                           ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white border-transparent"
-                          : "bg-white text-[#475569] border-[var(--os-border)] hover:border-purple-300",
+                          : "bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] border-[var(--os-border)] hover:border-purple-300 os-dark:hover:border-purple-500/30",
                         running && "opacity-50 cursor-not-allowed"
                       )}
                     >
@@ -591,13 +591,13 @@ export function BulkSweepTab({
       </div>
 
       {!multiCity && neighborhoods.length > 0 && (
-      <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[14px] font-semibold text-[#0F172A]">Neighborhoods{singleCityKey ? ` · ${cities.find((c) => c.key === singleCityKey)?.label ?? singleCityKey}` : ""}</h2>
+          <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Neighborhoods{singleCityKey ? ` · ${cities.find((c) => c.key === singleCityKey)?.label ?? singleCityKey}` : ""}</h2>
           <div className="flex items-center gap-2">
-            <button onClick={selectAllNeighborhoods} className="text-[11px] text-[#7C3AED] hover:underline">All</button>
-            <button onClick={clearNeighborhoods} className="text-[11px] text-[#64748B] hover:text-[#0F172A]">Clear</button>
-            <span className="text-[11px] text-[#94A3B8]">{selectedNeighborhoods.size} selected</span>
+            <button onClick={selectAllNeighborhoods} className="text-[11px] text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:underline">All</button>
+            <button onClick={clearNeighborhoods} className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)]">Clear</button>
+            <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">{selectedNeighborhoods.size} selected</span>
           </div>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -610,7 +610,7 @@ export function BulkSweepTab({
                 "text-[11.5px] px-2.5 py-1 rounded-full border transition-all",
                 selectedNeighborhoods.has(n)
                   ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white border-transparent"
-                  : "bg-white text-[#475569] border-[var(--os-border)] hover:border-purple-300",
+                  : "bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] border-[var(--os-border)] hover:border-purple-300 os-dark:hover:border-purple-500/30",
                 running && "opacity-50 cursor-not-allowed"
               )}
             >
@@ -618,13 +618,13 @@ export function BulkSweepTab({
             </button>
           ))}
         </div>
-        <label className="flex items-center gap-2 mt-3 text-[12px] text-[#475569]">
+        <label className="flex items-center gap-2 mt-3 text-[12px] text-[#475569] os-dark:text-[var(--os-text)]">
           <input
             type="checkbox"
             checked={includeCityWide}
             onChange={(e) => setIncludeCityWide(e.target.checked)}
             disabled={running}
-            className="rounded border-gray-300 text-purple-600"
+            className="rounded border-gray-300 os-dark:border-[var(--os-border-hover)] text-purple-600 os-dark:text-purple-400"
           />
           Also search city-wide for each sector (recommended for sparse data)
         </label>
@@ -632,23 +632,23 @@ export function BulkSweepTab({
       )}
 
       {/* Plan + start */}
-      <div className="rounded-2xl border-2 border-purple-200 bg-purple-50/30 p-4 sm:p-5">
+      <div className="rounded-2xl border-2 border-purple-200 os-dark:border-purple-500/30 bg-purple-50/30 os-dark:bg-purple-500/10 p-4 sm:p-5">
         {/* Sweep history pre-check banner */}
         {sweepCheck && sweepCheck.matches.length > 0 && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-3 mb-3">
+          <div className="rounded-lg border border-amber-200 os-dark:border-amber-500/30 bg-amber-50/40 os-dark:bg-amber-500/10 p-3 mb-3">
             <div className="flex items-start gap-2">
-              <FastForward className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
+              <FastForward className="w-4 h-4 text-amber-700 os-dark:text-amber-300 mt-0.5 shrink-0" />
               <div className="flex-1 min-w-0">
-                <div className="text-[12.5px] font-medium text-amber-900">
+                <div className="text-[12.5px] font-medium text-amber-900 os-dark:text-amber-300">
                   {sweepCheck.matches.length} of {queryList.length} {queryList.length === 1 ? "query" : "queries"} already swept in last {sweepCheck.withinDays} days
                 </div>
-                <label className="flex items-center gap-2 mt-1.5 text-[12px] text-amber-800 cursor-pointer">
+                <label className="flex items-center gap-2 mt-1.5 text-[12px] text-amber-800 os-dark:text-amber-300 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={skipRecent}
                     onChange={(e) => setSkipRecent(e.target.checked)}
                     disabled={running}
-                    className="rounded border-amber-300 text-purple-600 focus:ring-purple-300"
+                    className="rounded border-amber-300 os-dark:border-amber-500/30 text-purple-600 os-dark:text-purple-400 focus:ring-purple-300 os-dark:focus:ring-purple-500/40"
                   />
                   Skip recently swept queries (saves {sweepCheck.matches.length} API calls)
                 </label>
@@ -658,21 +658,21 @@ export function BulkSweepTab({
         )}
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="text-[12.5px] text-[#475569]">
-            Plan: <span className="font-semibold text-[#0F172A]">{effectiveQueries.length} queries</span>
+          <div className="text-[12.5px] text-[#475569] os-dark:text-[var(--os-text)]">
+            Plan: <span className="font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{effectiveQueries.length} queries</span>
             {effectiveQueries.length > 0 && (
-              <> · <span className="font-medium text-[#0F172A]">~{estimatedSeconds}s</span> at {pacingMs}ms pacing</>
+              <> · <span className="font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">~{estimatedSeconds}s</span> at {pacingMs}ms pacing</>
             )}
-            {checkingSweeps && <span className="text-[#94A3B8] ml-2">· checking history...</span>}
-            {tooMany && <span className="text-red-600 font-medium ml-2">· Exceeds limit ({MAX_QUERIES} max per sweep)</span>}
+            {checkingSweeps && <span className="text-[#94A3B8] os-dark:text-[var(--os-text-soft)] ml-2">· checking history...</span>}
+            {tooMany && <span className="text-red-600 os-dark:text-red-400 font-medium ml-2">· Exceeds limit ({MAX_QUERIES} max per sweep)</span>}
             {sweepCheck && sweepCheck.matches.length > 0 && skipRecent && (
-              <span className="text-emerald-700 ml-2 text-[11px]">· {sweepCheck.matches.length} skipped from history</span>
+              <span className="text-emerald-700 os-dark:text-emerald-300 ml-2 text-[11px]">· {sweepCheck.matches.length} skipped from history</span>
             )}
           </div>
           {running ? (
             <button
               onClick={cancelSweep}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium bg-white border border-red-200 text-red-700 hover:bg-red-50"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium bg-[var(--os-surface)] border border-red-200 os-dark:border-red-500/30 text-red-700 os-dark:text-red-300 hover:bg-red-50 os-dark:hover:bg-red-500/10"
             >
               <Pause className="w-4 h-4" />
               Cancel
@@ -691,65 +691,65 @@ export function BulkSweepTab({
 
         {progress && (
           <div className="mt-3">
-            <div className="flex items-center justify-between text-[11px] text-[#64748B] mb-1">
+            <div className="flex items-center justify-between text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mb-1">
               <span>{progress.completed} / {progress.total} · {progress.currentLabel}</span>
               <span>{Math.round((progress.completed / progress.total) * 100)}%</span>
             </div>
-            <div className="h-2 rounded-full bg-purple-100 overflow-hidden">
+            <div className="h-2 rounded-full bg-purple-100 os-dark:bg-purple-500/15 overflow-hidden">
               <div className="h-full bg-gradient-to-r from-[#8B00FF] to-[#C026D3] transition-all" style={{ width: `${(progress.completed / progress.total) * 100}%` }} />
             </div>
-            {progress.errors > 0 && <div className="text-[11px] text-amber-700 mt-1">{progress.errors} queries errored (typically rate-limit or no-data)</div>}
+            {progress.errors > 0 && <div className="text-[11px] text-amber-700 os-dark:text-amber-300 mt-1">{progress.errors} queries errored (typically rate-limit or no-data)</div>}
           </div>
         )}
       </div>
 
       {/* Results */}
       {results.length > 0 && (
-        <div className="rounded-2xl border border-[var(--os-border)] bg-white">
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)]">
           {/* Filter row */}
-          <div className="px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/40 space-y-2">
+          <div className="px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/40 os-dark:bg-[var(--os-surface-2)] space-y-2">
             <div className="flex flex-wrap items-center gap-3 text-[11.5px]">
-              <span className="text-[10px] uppercase tracking-wider text-[#64748B] font-bold">Filter</span>
+              <span className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-bold">Filter</span>
               <label className="flex items-center gap-1.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={contactableOnly}
                   onChange={(e) => setContactableOnly(e.target.checked)}
-                  className="rounded border-gray-300 text-purple-600"
+                  className="rounded border-gray-300 os-dark:border-[var(--os-border-hover)] text-purple-600 os-dark:text-purple-400"
                 />
-                <span className="text-[#475569] font-medium">Contactable only</span>
+                <span className="text-[#475569] os-dark:text-[var(--os-text)] font-medium">Contactable only</span>
               </label>
-              <span className="text-[#94A3B8]">·</span>
+              <span className="text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">·</span>
               {(["whatsapp","instagram","website","email","phone"] as ChannelFilter[]).map((c) => (
                 <label key={c} className="flex items-center gap-1 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={requiredChannels.has(c)}
                     onChange={() => toggleChannelFilter(c)}
-                    className="rounded border-gray-300 text-purple-600"
+                    className="rounded border-gray-300 os-dark:border-[var(--os-border-hover)] text-purple-600 os-dark:text-purple-400"
                   />
-                  <span className="text-[#475569] capitalize">{c}</span>
+                  <span className="text-[#475569] os-dark:text-[var(--os-text)] capitalize">{c}</span>
                 </label>
               ))}
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/60">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/60 os-dark:bg-[var(--os-surface-2)]">
             <div className="flex items-center gap-3 flex-wrap text-[12px]">
-              <span className="font-medium text-[#0F172A]">{filteredResults.length} shown</span>
-              {filteredResults.length !== results.length && <span className="text-[#94A3B8]">of {results.length}</span>}
-              <span className="text-[#64748B]">·</span>
-              <span className="text-rose-700"><Flame className="w-3 h-3 inline -mt-0.5" /> {hotNewCount} HOT</span>
-              <span className="text-amber-700">{warmNewCount} WARM</span>
-              <span className="text-[#64748B]">{coldNewCount} COLD</span>
-              <span className="text-[#94A3B8]">· {existsCount} exists</span>
+              <span className="font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">{filteredResults.length} shown</span>
+              {filteredResults.length !== results.length && <span className="text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">of {results.length}</span>}
+              <span className="text-[#64748B] os-dark:text-[var(--os-text-soft)]">·</span>
+              <span className="text-rose-700 os-dark:text-rose-300"><Flame className="w-3 h-3 inline -mt-0.5" /> {hotNewCount} HOT</span>
+              <span className="text-amber-700 os-dark:text-amber-300">{warmNewCount} WARM</span>
+              <span className="text-[#64748B] os-dark:text-[var(--os-text-soft)]">{coldNewCount} COLD</span>
+              <span className="text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">· {existsCount} exists</span>
             </div>
 
             <div className="flex items-center gap-2">
               <select
                 value={importTier}
                 onChange={(e) => setImportTier(e.target.value as ImportTier)}
-                className="text-[12px] px-2 py-1 rounded-lg border border-[var(--os-border)] bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300"
+                className="text-[12px] px-2 py-1 rounded-lg border border-[var(--os-border)] bg-[var(--os-control-bg)] text-[#0F172A] os-dark:text-[var(--os-text)] focus:outline-none focus:ring-2 focus:ring-purple-300 os-dark:focus:ring-purple-500/40"
               >
                 <option value="HOT_ONLY">Import HOT only</option>
                 <option value="HOT_WARM">Import HOT + WARM</option>
@@ -767,14 +767,14 @@ export function BulkSweepTab({
           </div>
 
           {importError && (
-            <div role="alert" className="px-4 py-2 text-[12px] bg-red-50 text-red-700 border-b border-red-100 flex items-center gap-2">
+            <div role="alert" className="px-4 py-2 text-[12px] bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 border-b border-red-100 os-dark:border-red-500/30 flex items-center gap-2">
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
               {importError}
             </div>
           )}
 
           {importResult && (
-            <div className="px-4 py-2 text-[12px] bg-emerald-50 text-emerald-800 border-b border-emerald-100">
+            <div className="px-4 py-2 text-[12px] bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-800 os-dark:text-emerald-300 border-b border-emerald-100 os-dark:border-emerald-500/30">
               Imported {importResult.imported} prospect{importResult.imported !== 1 ? "s" : ""}
               {importResult.skipped > 0 ? ` · skipped ${importResult.skipped} (final-check duplicates)` : ""}
             </div>
@@ -782,8 +782,8 @@ export function BulkSweepTab({
 
           <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-white">
-                <tr className="border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
+              <thead className="sticky top-0 bg-[var(--os-surface)]">
+                <tr className="border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium">
                   <th className="px-3 py-2 text-left">Quality</th>
                   <th className="px-3 py-2 text-left">Business</th>
                   {multiCity && <th className="px-3 py-2 text-left">City</th>}
@@ -800,23 +800,23 @@ export function BulkSweepTab({
                 {filteredResults.slice(0, 300).map((r) => {
                   const flags = channelFlags({ phone: r.phone, whatsapp: r.whatsapp, instagram: r.instagram, website: r.website, email: r.email ?? null });
                   return (
-                    <tr key={r.sourceId} className={cn("border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60", r.duplicateStatus === "EXISTS" && "opacity-60")}>
+                    <tr key={r.sourceId} className={cn("border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-hover)]", r.duplicateStatus === "EXISTS" && "opacity-60")}>
                       <td className="px-3 py-2">
-                        <span className={cn("inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border", QUALITY_BADGE[r.qualityLabel])}>
+                        <span className={cn("inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border", QUALITY_BADGE[r.qualityLabel])}>
                           {r.qualityLabel === "HOT" && <Flame className="w-3 h-3" />}
                           {r.qualityLabel}
                         </span>
                       </td>
                       <td className="px-3 py-2">
-                        <div className="text-[13px] font-medium text-[#0F172A]">{r.name}</div>
-                        <div className="text-[11px] text-[#64748B]">
+                        <div className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">{r.name}</div>
+                        <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
                           {sectors.find((s) => s.key === r.sweepSectorKey)?.label || r.sweepSectorKey}
                           {r.sweepNeighborhood && ` · ${r.sweepNeighborhood}`}
                           {r.rating !== null && r.rating !== undefined && ` · ★${r.rating} (${r.reviewCount ?? 0})`}
                         </div>
                       </td>
                       {multiCity && (
-                        <td className="px-3 py-2 text-[12px] text-[#475569]">
+                        <td className="px-3 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)]">
                           {cities.find((c) => c.key === r.city)?.label || r.city}
                         </td>
                       )}
@@ -826,17 +826,17 @@ export function BulkSweepTab({
                       <td className="px-3 py-2 text-center"><ChannelMark on={flags.email} title={r.email || "No email"} /></td>
                       <td className="px-3 py-2 text-center"><ChannelMark on={flags.phone} title={r.phone || "No phone"} /></td>
                       <td className="px-3 py-2">
-                        <span className={cn("text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded border",
-                          r.duplicateStatus === "NEW" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                          r.duplicateStatus === "POSSIBLE" ? "bg-amber-50 text-amber-700 border-amber-200" :
-                          "bg-gray-100 text-gray-600 border-gray-200"
+                        <span className={cn("text-[11px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded border",
+                          r.duplicateStatus === "NEW" ? "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-200 os-dark:border-emerald-500/30" :
+                          r.duplicateStatus === "POSSIBLE" ? "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border-amber-200 os-dark:border-amber-500/30" :
+                          "bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-gray-600 os-dark:text-[var(--os-text)] border-gray-200 os-dark:border-[var(--os-border)]"
                         )} title={r.duplicateReason || undefined}>
                           {r.duplicateStatus.toLowerCase()}
                         </span>
                       </td>
                       <td className="px-3 py-2 text-right">
                         {r.mapsUrl && (
-                          <a href={r.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-[#64748B] hover:text-[#8B00FF]">
+                          <a href={r.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-[#8B00FF] os-dark:hover:text-[var(--os-purple)]">
                             <ExternalLink className="w-3.5 h-3.5 inline" />
                           </a>
                         )}
@@ -847,7 +847,7 @@ export function BulkSweepTab({
               </tbody>
             </table>
             {filteredResults.length > 300 && (
-              <div className="px-4 py-2 text-[11px] text-[#64748B] text-center">Showing top 300 by opportunity score · {filteredResults.length - 300} more match the filter</div>
+              <div className="px-4 py-2 text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] text-center">Showing top 300 by opportunity score · {filteredResults.length - 300} more match the filter</div>
             )}
           </div>
         </div>
@@ -865,10 +865,10 @@ export function BulkSweepTab({
       )}
 
       {progress && progress.completed === progress.total && results.length === 0 && (
-        <div className="rounded-2xl border border-[var(--os-border)] bg-white p-8 text-center">
-          <Compass className="w-8 h-8 text-[#94A3B8] mx-auto mb-2" />
-          <div className="text-[14px] font-semibold text-[#0F172A]">Sweep complete · no businesses found</div>
-          <div className="text-[12px] text-[#64748B] mt-1">
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-8 text-center">
+          <Compass className="w-8 h-8 text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mx-auto mb-2" />
+          <div className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Sweep complete · no businesses found</div>
+          <div className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-1">
             {providerName === "OSM"
               ? "OpenStreetMap doesn't have these sectors mapped in Marrakech. Add a Google Places API key for full coverage."
               : "Try different sectors or neighborhoods."}
@@ -877,11 +877,11 @@ export function BulkSweepTab({
       )}
 
       {errors.length > 0 && (
-        <details className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 text-[12px]">
-          <summary className="cursor-pointer font-medium text-amber-800">{errors.length} query errors (click to expand)</summary>
+        <details className="rounded-xl border border-amber-200 os-dark:border-amber-500/30 bg-amber-50/40 os-dark:bg-amber-500/10 p-3 text-[12px]">
+          <summary className="cursor-pointer font-medium text-amber-800 os-dark:text-amber-300">{errors.length} query errors (click to expand)</summary>
           <div className="mt-2 space-y-1 max-h-48 overflow-y-auto">
             {errors.map((e, i) => (
-              <div key={i} className="text-[11px] text-amber-700">
+              <div key={i} className="text-[11px] text-amber-700 os-dark:text-amber-300">
                 {cities.find((c) => c.key === e.city)?.label || e.city} · {sectors.find((s) => s.key === e.sector)?.label || e.sector}{e.neighborhood ? ` · ${e.neighborhood}` : ""}: {e.message}
               </div>
             ))}
@@ -899,7 +899,7 @@ function ChannelMark({ on, title }: { on: boolean; title?: string }) {
       title={title}
       className={cn(
         "inline-flex items-center justify-center w-5 h-5 rounded text-[11px] font-bold",
-        on ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-[#CBD5E1]"
+        on ? "bg-emerald-100 os-dark:bg-emerald-500/15 text-emerald-700 os-dark:text-emerald-300" : "bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-[#CBD5E1] os-dark:text-[var(--os-text-faint)]"
       )}
     >
       {on ? "✓" : "✗"}
@@ -936,10 +936,10 @@ function PostSweepReport({
   })).sort((a, b) => b.count - a.count);
 
   return (
-    <div className="rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/40 to-teal-50/40 p-4 sm:p-5">
+    <div className="rounded-2xl border-2 border-emerald-200 os-dark:border-emerald-500/30 bg-gradient-to-br from-emerald-50/40 to-teal-50/40 os-dark:from-emerald-500/10 os-dark:to-teal-500/5 p-4 sm:p-5">
       <div className="flex items-center gap-2 mb-3">
-        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-        <h2 className="text-[14px] font-semibold text-[#0F172A]">Sweep complete · {progress?.total ?? "?"} queries run</h2>
+        <CheckCircle2 className="w-4 h-4 text-emerald-600 os-dark:text-emerald-400" />
+        <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Sweep complete · {progress?.total ?? "?"} queries run</h2>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
@@ -950,32 +950,32 @@ function PostSweepReport({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="rounded-xl bg-white border border-emerald-100 p-3">
-          <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-2">Sectors covered ({sectorsCovered.size})</div>
+        <div className="rounded-xl bg-[var(--os-surface)] border border-emerald-100 os-dark:border-emerald-500/30 p-3">
+          <div className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-2">Sectors covered ({sectorsCovered.size})</div>
           {sectorBreakdown.length > 0 ? (
             <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
               {sectorBreakdown.map((s) => (
-                <span key={s.key} className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span key={s.key} className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border border-emerald-200 os-dark:border-emerald-500/30">
                   {s.label} <span className="font-bold tabular-nums">{s.count}</span>
                 </span>
               ))}
             </div>
-          ) : <p className="text-[12px] text-[#94A3B8]">None</p>}
+          ) : <p className="text-[12px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">None</p>}
         </div>
-        <div className="rounded-xl bg-white border border-emerald-100 p-3">
-          <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-2">Neighborhoods covered ({neighborhoodsCovered.size})</div>
+        <div className="rounded-xl bg-[var(--os-surface)] border border-emerald-100 os-dark:border-emerald-500/30 p-3">
+          <div className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-2">Neighborhoods covered ({neighborhoodsCovered.size})</div>
           {neighborhoodsCovered.size > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {Array.from(neighborhoodsCovered).map((n) => (
-                <span key={n} className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">{n}</span>
+                <span key={n} className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border border-emerald-200 os-dark:border-emerald-500/30">{n}</span>
               ))}
             </div>
-          ) : <p className="text-[12px] text-[#94A3B8]">City-wide queries only — no neighborhood drill-down.</p>}
+          ) : <p className="text-[12px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">City-wide queries only — no neighborhood drill-down.</p>}
         </div>
       </div>
 
       {importResult && (
-        <div className="mt-3 p-2.5 rounded-lg bg-purple-50 border border-purple-200 text-[12.5px] text-[#7C3AED]">
+        <div className="mt-3 p-2.5 rounded-lg bg-purple-50 os-dark:bg-purple-500/10 border border-purple-200 os-dark:border-purple-500/30 text-[12.5px] text-[#7C3AED] os-dark:text-[var(--os-purple)]">
           ✓ Imported <span className="font-bold">{importResult.imported}</span> prospect{importResult.imported !== 1 ? "s" : ""}
           {importResult.skipped > 0 && ` · skipped ${importResult.skipped} final-check duplicates`}
         </div>
@@ -987,14 +987,14 @@ function PostSweepReport({
 function SummaryStat({ label, value, subtle, highlight, warn }: { label: string; value: number; subtle?: string; highlight?: boolean; warn?: boolean }) {
   return (
     <div className={cn(
-      "rounded-xl border bg-white p-3",
-      highlight ? "border-purple-200" : warn ? "border-amber-200" : "border-emerald-100"
+      "rounded-xl border bg-[var(--os-surface)] p-3",
+      highlight ? "border-purple-200 os-dark:border-purple-500/30" : warn ? "border-amber-200 os-dark:border-amber-500/30" : "border-emerald-100 os-dark:border-emerald-500/30"
     )}>
-      <div className="text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-0.5">{label}</div>
-      <div className={cn("text-2xl font-bold tabular-nums", highlight ? "text-[#8B00FF]" : warn ? "text-amber-700" : "text-[#0F172A]")}>
+      <div className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-0.5">{label}</div>
+      <div className={cn("text-2xl font-bold tabular-nums", highlight ? "text-[#8B00FF] os-dark:text-[var(--os-purple)]" : warn ? "text-amber-700 os-dark:text-amber-300" : "text-[#0F172A] os-dark:text-[var(--os-text)]")}>
         {value}
       </div>
-      {subtle && <div className="text-[10px] text-[#94A3B8] mt-0.5">{subtle}</div>}
+      {subtle && <div className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mt-0.5">{subtle}</div>}
     </div>
   );
 }
