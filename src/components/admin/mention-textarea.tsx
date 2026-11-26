@@ -21,12 +21,32 @@ type Props = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "onChange"> & {
   users?: MentionableUser[];
 };
 
+// Room the suggestion list needs (header + a few rows). If the nearest clipping
+// ancestor (or the viewport) leaves less than this below the textarea and more
+// above it, the list opens upwards instead.
+const LIST_ROOM = 240;
+function opensAbove(ta: HTMLTextAreaElement | null): boolean {
+  if (!ta) return false;
+  const r = ta.getBoundingClientRect();
+  let top = 0, bottom = window.innerHeight;
+  for (let p = ta.parentElement; p; p = p.parentElement) {
+    if (/(auto|scroll|hidden|clip)/.test(getComputedStyle(p).overflowY)) {
+      const pr = p.getBoundingClientRect();
+      top = Math.max(top, pr.top); bottom = Math.min(bottom, pr.bottom);
+      break;
+    }
+  }
+  const below = bottom - r.bottom, above = r.top - top;
+  return below < LIST_ROOM && above > below;
+}
+
 type MentionState = {
   open: boolean;
   prefix: string;
   start: number; // character index of the @ in the textarea value
   end: number;   // character index of the caret
   selected: number;
+  above?: boolean; // open the list above the textarea (not enough room below)
 };
 
 export const MentionTextarea = forwardRef<HTMLTextAreaElement, Props>(function MentionTextarea(
@@ -81,7 +101,7 @@ export const MentionTextarea = forwardRef<HTMLTextAreaElement, Props>(function M
     const caret = e.target.selectionStart ?? text.length;
     const m = detect(text, caret);
     if (m) {
-      setState({ open: true, prefix: m.prefix, start: m.start, end: m.end, selected: 0 });
+      setState({ open: true, prefix: m.prefix, start: m.start, end: m.end, selected: 0, above: opensAbove(e.target) });
     } else {
       setState((prev) => (prev.open ? { ...prev, open: false } : prev));
     }
@@ -142,7 +162,7 @@ export const MentionTextarea = forwardRef<HTMLTextAreaElement, Props>(function M
         {...rest}
       />
       {state.open && suggestions.length > 0 && (
-        <div className="absolute z-50 left-3 top-full mt-1 bg-white os-dark:bg-[var(--os-popover)] border border-[#E5E7EB] os-dark:border-[var(--os-border)] rounded-lg shadow-lg shadow-slate-900/[0.08] py-1 min-w-[220px] max-w-[320px]">
+        <div className={cn("absolute z-50 left-3 bg-white os-dark:bg-[var(--os-popover)] border border-[#E5E7EB] os-dark:border-[var(--os-border)] rounded-lg shadow-lg shadow-slate-900/[0.08] py-1 min-w-[220px] max-w-[320px]", state.above ? "bottom-full mb-1" : "top-full mt-1")}>
           <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">
             Mention a teammate
           </div>

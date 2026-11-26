@@ -95,8 +95,10 @@ function ChatInner() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachOpen, setAttachOpen] = useState(false);
   const [sending, setSending] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Below lg the channel list and the conversation take turns: a link to a
+  // specific channel opens the conversation, otherwise the list comes first.
+  const [sidebarOpen, setSidebarOpen] = useState(!initialSlug);
+  const messagesBoxRef = useRef<HTMLDivElement>(null);
 
   // Load me + team once
   useEffect(() => {
@@ -186,8 +188,10 @@ function ChatInner() {
 
   // Scroll to bottom on new messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+    // Scroll only the message list; scrollIntoView would also scroll the page and hide the chat header.
+    const box = messagesBoxRef.current;
+    if (box) box.scrollTo({ top: box.scrollHeight, behavior: "smooth" });
+  }, [messages.length, sidebarOpen]);
 
   async function send() {
     if (!active || !composer.trim() || sending) return;
@@ -220,6 +224,7 @@ function ChatInner() {
     if (!res.ok) return;
     const dm = await res.json();
     await loadChannels();
+    setSidebarOpen(false);
     // Construct a synthetic Channel and switch.
     setActive({ id: dm.id, slug: dm.slug, name: dm.name, description: "", isDm: true, unread: 0, lastMessage: null, members: [], partner: dm.partner });
   }
@@ -338,12 +343,15 @@ function ChatInner() {
     return team.filter((u) => u.id !== me?.id && !existingPartnerIds.has(u.id));
   }, [team, dms, me]);
 
+  // Below lg only one pane shows; with no channels at all the empty state wins.
+  const showList = sidebarOpen && !(channelsLoaded && !active);
+
   return (
     <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6 lg:-mt-8 flex h-[calc(100dvh-3.5rem)] lg:h-dvh bg-[var(--os-surface)] border-t border-[var(--os-border)] overflow-hidden">
       {/* Sidebar */}
       <aside className={cn(
-        "w-72 shrink-0 border-r border-[var(--os-border)] flex flex-col bg-[var(--os-surface-2)]",
-        !sidebarOpen && "hidden lg:flex",
+        "w-full lg:w-72 shrink-0 lg:border-r border-[var(--os-border)] flex flex-col bg-[var(--os-surface-2)]",
+        !showList && "hidden lg:flex",
       )}>
         <div className="px-4 py-4 border-b border-[var(--os-border)]">
           <h2 className="text-[15px] font-bold text-[#111827] os-dark:text-[var(--os-text)]">Chat</h2>
@@ -401,7 +409,7 @@ function ChatInner() {
       </aside>
 
       {/* Main pane */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[var(--os-surface)]">
+      <div className={cn("flex-1 flex flex-col min-w-0 bg-[var(--os-surface)]", showList && "hidden lg:flex")}>
         {!active && !channelsLoaded ? (
           <div className="flex-1 flex items-center justify-center text-[13px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -455,7 +463,7 @@ function ChatInner() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-[#FAFAFE]/40 os-dark:bg-[var(--os-surface-2)]">
+            <div ref={messagesBoxRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-[#FAFAFE]/40 os-dark:bg-[var(--os-surface-2)]">
               {loadingMessages ? (
                 <div className="flex justify-center pt-10"><Loader2 className="w-5 h-5 text-[#8B00FF] os-dark:text-[var(--os-purple)] animate-spin" /></div>
               ) : messages.length === 0 ? (
@@ -493,7 +501,6 @@ function ChatInner() {
                       </div>
                     </div>
                   ))}
-                  <div ref={messagesEndRef} />
                 </div>
               )}
             </div>
