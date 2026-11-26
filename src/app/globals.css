@@ -114,9 +114,9 @@ body {
    white in dark mode (e.g. FormCard), so token-coloured text in it stays dark-on-white. */
 .admin-os,
 .admin-os .os-light {
-  --os-bg: #F7F4FF;
+  --os-bg: #F6F7F9;
   --os-surface: #ffffff;
-  --os-surface-2: #FAFAFE;
+  --os-surface-2: #F9FAFB;
   --os-surface-3: #ffffff;
   --os-hover: #F1F5F9;
   --os-border: #E5E7EB;
@@ -127,7 +127,7 @@ body {
   /* Brand primary (= --prim-dark; --prim #8B6FE0 is too light for text on white).
      Scoped copies, not var(--prim): html.dark follows the public site toggle, not .os-dark. */
   --os-purple: #7C5CFA;
-  --os-purple-glow: rgba(124, 92, 250, 0.12);
+  --os-purple-glow: rgba(124, 92, 250, 0.07);
   --os-purple-subtle: rgba(124, 92, 250, 0.05);
   /* Fill for small white text on purple (white on #6a4ee0 = 5.56:1) */
   --os-purple-strong: #6a4ee0;
@@ -193,7 +193,7 @@ body {
   --os-text-muted: #9CA3AF;
   --os-text-dim: #6B7280;
   --os-purple: #A78BFA;
-  --os-purple-glow: rgba(167, 139, 250, 0.15);
+  --os-purple-glow: rgba(167, 139, 250, 0.10);
   --os-purple-subtle: rgba(167, 139, 250, 0.08);
   --os-purple-strong: #6a4ee0;
   /* = .dark --grad-a / --grad-b */
