@@ -52,11 +52,11 @@ const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const TYPE_COLOR: Record<string, string> = {
-  PROSPECT: "text-violet-700 bg-violet-50 border-violet-100",
-  CLIENT:   "text-purple-700 bg-purple-50 border-purple-100",
-  PROJECT:  "text-blue-700 bg-blue-50 border-blue-100",
-  TASK:     "text-amber-700 bg-amber-50 border-amber-100",
-  MEETING:  "text-emerald-700 bg-emerald-50 border-emerald-100",
+  PROSPECT: "text-violet-700 os-dark:text-violet-300 bg-violet-50 os-dark:bg-violet-500/10 border-violet-100 os-dark:border-violet-500/30",
+  CLIENT:   "text-purple-700 os-dark:text-purple-300 bg-purple-50 os-dark:bg-purple-500/10 border-purple-100 os-dark:border-purple-500/30",
+  PROJECT:  "text-blue-700 os-dark:text-blue-300 bg-blue-50 os-dark:bg-blue-500/10 border-blue-100 os-dark:border-blue-500/30",
+  TASK:     "text-amber-700 os-dark:text-amber-300 bg-amber-50 os-dark:bg-amber-500/10 border-amber-100 os-dark:border-amber-500/30",
+  MEETING:  "text-emerald-700 os-dark:text-emerald-300 bg-emerald-50 os-dark:bg-emerald-500/10 border-emerald-100 os-dark:border-emerald-500/30",
 };
 
 const QUICK_REACTIONS = ["👍", "🎉", "❤️", "😂", "🔥", "👀"];
@@ -339,15 +339,15 @@ function ChatInner() {
   }, [team, dms, me]);
 
   return (
-    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6 lg:-mt-8 flex h-[calc(100vh-3.5rem)] lg:h-[calc(100vh)] bg-white border-t border-[#E5E7EB] overflow-hidden">
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6 lg:-mt-8 flex h-[calc(100dvh-3.5rem)] lg:h-dvh bg-[var(--os-surface)] border-t border-[var(--os-border)] overflow-hidden">
       {/* Sidebar */}
       <aside className={cn(
-        "w-72 shrink-0 border-r border-[#E5E7EB] flex flex-col bg-[#FAFAFE]",
+        "w-72 shrink-0 border-r border-[var(--os-border)] flex flex-col bg-[var(--os-surface-2)]",
         !sidebarOpen && "hidden lg:flex",
       )}>
-        <div className="px-4 py-4 border-b border-[#E5E7EB]">
-          <h2 className="text-[15px] font-bold text-[#111827]">Chat</h2>
-          <p className="text-[11px] text-[#6B7280] mt-0.5">Team-wide channels + direct messages</p>
+        <div className="px-4 py-4 border-b border-[var(--os-border)]">
+          <h2 className="text-[15px] font-bold text-[#111827] os-dark:text-[var(--os-text)]">Chat</h2>
+          <p className="text-[11px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-0.5">Team-wide channels + direct messages</p>
         </div>
 
         <div className="flex-1 overflow-y-auto py-3">
@@ -357,7 +357,7 @@ function ChatInner() {
                 key={c.id}
                 active={active?.id === c.id}
                 onClick={() => { setActive(c); setSidebarOpen(false); }}
-                icon={<Hash className="w-3.5 h-3.5 text-[#9CA3AF]" />}
+                icon={<Hash className="w-3.5 h-3.5 text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]" />}
                 name={c.name}
                 unread={c.unread}
                 preview={c.lastMessage?.content}
@@ -372,7 +372,7 @@ function ChatInner() {
                 active={active?.id === c.id}
                 onClick={() => { setActive(c); setSidebarOpen(false); }}
                 icon={
-                  <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[9px] font-bold flex items-center justify-center">
+                  <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[10px] font-bold flex items-center justify-center">
                     {c.partner?.avatarInitials ?? "?"}
                   </span>
                 }
@@ -383,12 +383,12 @@ function ChatInner() {
             ))}
             {dmCandidates.length > 0 && (
               <div className="mt-2">
-                <p className="px-3 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider mb-1">Start a DM</p>
+                <p className="px-3 text-[11px] font-semibold text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider mb-1">Start a DM</p>
                 {dmCandidates.map((u) => (
                   <button
                     key={u.id}
                     onClick={() => openDm(u)}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-white rounded-md text-[12px] text-[#6B7280] hover:text-[#111827]"
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-white os-dark:hover:bg-[var(--os-hover)] rounded-md text-[12px] text-[#6B7280] os-dark:text-[var(--os-text)] hover:text-[#111827] os-dark:hover:text-[var(--os-text)]"
                   >
                     <Plus className="w-3 h-3" />
                     {u.fullName}
@@ -401,19 +401,19 @@ function ChatInner() {
       </aside>
 
       {/* Main pane */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white">
+      <div className="flex-1 flex flex-col min-w-0 bg-[var(--os-surface)]">
         {!active && !channelsLoaded ? (
-          <div className="flex-1 flex items-center justify-center text-[13px] text-[#9CA3AF]">
+          <div className="flex-1 flex items-center justify-center text-[13px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">
             <Loader2 className="w-5 h-5 animate-spin" />
           </div>
         ) : !active ? (
           <div className="flex-1 flex items-center justify-center p-8 text-center">
             <div className="max-w-sm">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#F3F4F6] text-[#9CA3AF] mb-3">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] mb-3">
                 <MessageCircle className="w-7 h-7" />
               </div>
-              <h3 className="text-[15px] font-semibold text-[#111827] mb-1">No channels yet</h3>
-              <p className="text-[13px] text-[#6B7280] mb-3">
+              <h3 className="text-[15px] font-semibold text-[#111827] os-dark:text-[var(--os-text)] mb-1">No channels yet</h3>
+              <p className="text-[13px] text-[#6B7280] os-dark:text-[var(--os-text)] mb-3">
                 You don&apos;t have any channels assigned yet. This usually means your session is
                 stale — try logging out and back in.
               </p>
@@ -429,36 +429,37 @@ function ChatInner() {
         ) : (
           <>
             {/* Channel header */}
-            <div className="px-4 sm:px-6 py-3 border-b border-[#E5E7EB] flex items-center gap-3">
+            <div className="px-4 sm:px-6 py-3 border-b border-[var(--os-border)] flex items-center gap-3">
               <button
-                className="lg:hidden p-1.5 rounded-md text-[#475569] hover:bg-[#F3F4F6]"
+                className="lg:hidden p-1.5 rounded-md text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F3F4F6] os-dark:hover:bg-[var(--os-hover)]"
                 onClick={() => setSidebarOpen(true)}
+                aria-label="Show channels"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
               {active.isDm ? (
-                <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[10px] font-bold flex items-center justify-center">
+                <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[11px] font-bold flex items-center justify-center">
                   {active.partner?.avatarInitials ?? "?"}
                 </span>
               ) : (
-                <Hash className="w-4 h-4 text-[#475569]" />
+                <Hash className="w-4 h-4 text-[#475569] os-dark:text-[var(--os-text)]" />
               )}
               <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-[#111827] truncate">
+                <p className="text-[14px] font-semibold text-[#111827] os-dark:text-[var(--os-text)] truncate">
                   {active.isDm ? active.partner?.fullName ?? "DM" : active.name}
                 </p>
                 {active.description && !active.isDm && (
-                  <p className="text-[11px] text-[#6B7280] truncate">{active.description}</p>
+                  <p className="text-[11px] text-[#6B7280] os-dark:text-[var(--os-text)] truncate">{active.description}</p>
                 )}
               </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-[#FAFAFE]/40">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-[#FAFAFE]/40 os-dark:bg-[var(--os-surface-2)]">
               {loadingMessages ? (
-                <div className="flex justify-center pt-10"><Loader2 className="w-5 h-5 text-[#8B00FF] animate-spin" /></div>
+                <div className="flex justify-center pt-10"><Loader2 className="w-5 h-5 text-[#8B00FF] os-dark:text-[var(--os-purple)] animate-spin" /></div>
               ) : messages.length === 0 ? (
-                <div className="text-center text-[12px] text-[#9CA3AF] py-10">
+                <div className="text-center text-[12px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] py-10">
                   No messages yet. Say hi!
                 </div>
               ) : (
@@ -466,7 +467,7 @@ function ChatInner() {
                   {messagesByDay.map((g, gi) => (
                     <div key={gi}>
                       <div className="text-center my-3">
-                        <span className="inline-block px-3 py-0.5 rounded-full bg-white border border-[#E5E7EB] text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">{g.day}</span>
+                        <span className="inline-block px-3 py-0.5 rounded-full bg-[var(--os-surface)] border border-[var(--os-border)] text-[11px] font-semibold uppercase tracking-wider text-[#6B7280] os-dark:text-[var(--os-text)]">{g.day}</span>
                       </div>
                       <div className="space-y-1">
                         {g.items.map((m, i) => {
@@ -498,29 +499,29 @@ function ChatInner() {
             </div>
 
             {/* Composer */}
-            <div className="px-4 sm:px-6 py-3 border-t border-[#E5E7EB] bg-white">
+            <div className="px-4 sm:px-6 py-3 border-t border-[var(--os-border)] bg-[var(--os-surface)]">
               {attach && (
-                <div className="flex items-center gap-2 mb-2 px-3 py-1.5 rounded-lg bg-[#F3F4F6] border border-[#E5E7EB] text-[12px] text-[#374151]">
+                <div className="flex items-center gap-2 mb-2 px-3 py-1.5 rounded-lg bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] border border-[var(--os-border)] text-[12px] text-[#374151] os-dark:text-[var(--os-text)]">
                   <AttachChip result={attach} />
-                  <button onClick={() => setAttach(null)} className="ml-auto text-[#9CA3AF] hover:text-red-500">
+                  <button onClick={() => setAttach(null)} aria-label="Remove attached record" className="ml-auto text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] hover:text-red-500">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               )}
               {filePreview && (
-                <div className="flex items-center gap-3 mb-2 px-3 py-2 rounded-lg bg-[#F3F4F6] border border-[#E5E7EB]">
+                <div className="flex items-center gap-3 mb-2 px-3 py-2 rounded-lg bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] border border-[var(--os-border)]">
                   {filePreview.file.type.startsWith("image/") ? (
                     <img src={filePreview.url} alt="" className="w-16 h-16 rounded-lg object-cover" />
                   ) : (
-                    <div className="w-16 h-16 rounded-lg bg-red-50 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-lg bg-red-50 os-dark:bg-red-500/10 flex items-center justify-center">
                       <FileText className="w-6 h-6 text-red-500" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-medium text-[#111827] truncate">{filePreview.file.name}</p>
-                    <p className="text-[10px] text-[#6B7280]">{(filePreview.file.size / 1024).toFixed(0)} KB</p>
+                    <p className="text-[12px] font-medium text-[#111827] os-dark:text-[var(--os-text)] truncate">{filePreview.file.name}</p>
+                    <p className="text-[11px] text-[#6B7280] os-dark:text-[var(--os-text)]">{(filePreview.file.size / 1024).toFixed(0)} KB</p>
                   </div>
-                  <button onClick={clearFilePreview} className="text-[#9CA3AF] hover:text-red-500">
+                  <button onClick={clearFilePreview} aria-label="Remove file" className="text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] hover:text-red-500">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -540,22 +541,24 @@ function ChatInner() {
                   placeholder={filePreview ? "Add a caption..." : `Message ${active.isDm ? active.partner?.fullName ?? "" : "#" + active.name}`}
                   rows={1}
                   users={team}
-                  className="min-h-[44px] pr-40 resize-none"
+                  className="min-h-[44px] pr-40 resize-none os-dark:bg-[var(--os-control-bg)] os-dark:border-[var(--os-control-border)] os-dark:text-[var(--os-text)] os-dark:placeholder:text-[var(--os-text-soft)]"
                 />
                 <div className="absolute right-2 top-1.5 flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-1.5 rounded-md text-[#6B7280] hover:bg-[#F3F4F6]"
+                    className="p-1.5 rounded-md text-[#6B7280] os-dark:text-[var(--os-text)] hover:bg-[#F3F4F6] os-dark:hover:bg-[var(--os-hover)]"
                     title="Upload image or PDF"
+                    aria-label="Upload image or PDF"
                   >
                     <Image className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
                     onClick={() => setAttachOpen(true)}
-                    className="p-1.5 rounded-md text-[#6B7280] hover:bg-[#F3F4F6]"
+                    className="p-1.5 rounded-md text-[#6B7280] os-dark:text-[var(--os-text)] hover:bg-[#F3F4F6] os-dark:hover:bg-[var(--os-hover)]"
                     title="Attach a record"
+                    aria-label="Attach a record"
                   >
                     <Paperclip className="w-4 h-4" />
                   </button>
@@ -565,12 +568,13 @@ function ChatInner() {
                     disabled={sending || (!composer.trim() && !filePreview)}
                     className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-[#8B00FF] hover:bg-[#7A00E0] text-white disabled:opacity-40"
                     title="Send"
+                    aria-label="Send message"
                   >
                     {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
-              <p className="text-[10px] text-[#9CA3AF] mt-1">⏎ to send · ⇧⏎ for newline · @ to mention · @AI for assistant · 📎 images & PDFs</p>
+              <p className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] mt-1">⏎ to send · ⇧⏎ for newline · @ to mention · @AI for assistant · 📎 images & PDFs</p>
             </div>
           </>
         )}
@@ -588,7 +592,7 @@ function ChatInner() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-3">
-      <p className="px-3 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider mb-1">{title}</p>
+      <p className="px-3 text-[11px] font-semibold text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider mb-1">{title}</p>
       <div className="space-y-0.5 px-2">{children}</div>
     </div>
   );
@@ -600,23 +604,23 @@ function ChannelRow({ active, onClick, icon, name, unread, preview }: { active: 
       onClick={onClick}
       className={cn(
         "w-full flex items-center gap-2 px-2 py-2 rounded-md text-left transition-colors",
-        active ? "bg-white border border-[#E5E7EB] shadow-sm" : "hover:bg-white border border-transparent",
+        active ? "bg-[var(--os-surface)] border border-[var(--os-border)] shadow-sm" : "hover:bg-white os-dark:hover:bg-[var(--os-hover)] border border-transparent",
       )}
     >
       {icon}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className={cn("text-[13px] truncate", unread > 0 ? "font-bold text-[#111827]" : "font-medium text-[#374151]")}>
+          <span className={cn("text-[13px] truncate", unread > 0 ? "font-bold text-[#111827] os-dark:text-[var(--os-text)]" : "font-medium text-[#374151] os-dark:text-[var(--os-text)]")}>
             {name}
           </span>
           {unread > 0 && (
-            <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[#8B00FF] text-white text-[10px] font-bold">
+            <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[#8B00FF] text-white text-[11px] font-bold">
               {unread > 99 ? "99+" : unread}
             </span>
           )}
         </div>
         {preview && unread === 0 && (
-          <p className="text-[11px] text-[#9CA3AF] truncate mt-0.5">{preview}</p>
+          <p className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] truncate mt-0.5">{preview}</p>
         )}
       </div>
     </button>
@@ -646,7 +650,7 @@ function MessageBubble({ message, isMe, isAdmin, groupWithPrev, team, reactions,
 
   return (
     <div
-      className={cn("group flex gap-3 px-2 py-1 rounded-md relative", hovering && "bg-white", isAI && "bg-blue-50/40")}
+      className={cn("group flex gap-3 px-2 py-1 rounded-md relative", hovering && "bg-[var(--os-surface)] os-dark:bg-[var(--os-hover)]", isAI && "bg-blue-50/40 os-dark:bg-blue-500/10")}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => { setHovering(false); setEmojiOpen(false); setConfirmDelete(false); }}
     >
@@ -666,9 +670,9 @@ function MessageBubble({ message, isMe, isAdmin, groupWithPrev, team, reactions,
       <div className="min-w-0 flex-1">
         {!groupWithPrev && (
           <div className="flex items-center gap-2 mb-0.5">
-            <span className={cn("text-[13px] font-semibold", isAI ? "text-blue-600" : "text-[#111827]")}>{message.authorName}</span>
+            <span className={cn("text-[13px] font-semibold", isAI ? "text-blue-600 os-dark:text-blue-400" : "text-[#111827] os-dark:text-[var(--os-text)]")}>{message.authorName}</span>
             {isAI && <Sparkles className="w-3 h-3 text-blue-400" />}
-            <span className="text-[10px] text-[#9CA3AF]">{formatTime(message.createdAt)}</span>
+            <span className="text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">{formatTime(message.createdAt)}</span>
           </div>
         )}
         {editing ? (
@@ -677,26 +681,26 @@ function MessageBubble({ message, isMe, isAdmin, groupWithPrev, team, reactions,
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitEdit(); } if (e.key === "Escape") setEditing(false); }}
-              className="w-full px-3 py-2 rounded-lg border border-purple-200 text-[13px] text-[#111827] focus:ring-2 focus:ring-purple-100 outline-none resize-none"
+              className="w-full px-3 py-2 rounded-lg bg-[var(--os-control-bg)] border border-purple-200 os-dark:border-purple-500/30 text-[13px] text-[#111827] os-dark:text-[var(--os-text)] focus:ring-2 focus:ring-purple-100 os-dark:focus:ring-purple-500/40 outline-none resize-none"
               rows={2}
               autoFocus
             />
             <div className="flex gap-2 mt-1.5">
               <button onClick={submitEdit} className="text-[11px] px-2.5 py-1 rounded-md bg-[#8B00FF] text-white font-medium hover:bg-[#7A00E0]">Save</button>
-              <button onClick={() => setEditing(false)} className="text-[11px] px-2.5 py-1 rounded-md text-[#6B7280] hover:bg-[#F3F4F6]">Cancel</button>
+              <button onClick={() => setEditing(false)} className="text-[11px] px-2.5 py-1 rounded-md text-[#6B7280] os-dark:text-[var(--os-text)] hover:bg-[#F3F4F6] os-dark:hover:bg-[var(--os-hover)]">Cancel</button>
             </div>
           </div>
         ) : (
           <>
             {!message.fileUrl && (
-              <div className="text-[13px] text-[#111827] leading-relaxed">
+              <div className="text-[13px] text-[#111827] os-dark:text-[var(--os-text)] leading-relaxed">
                 <HighlightedMentions text={message.content} users={team} />
               </div>
             )}
             {message.fileUrl && message.fileType?.startsWith("image/") && (
               <div className="mt-1">
                 {message.content && message.content !== message.fileName && (
-                  <div className="text-[13px] text-[#111827] leading-relaxed mb-1">
+                  <div className="text-[13px] text-[#111827] os-dark:text-[var(--os-text)] leading-relaxed mb-1">
                     <HighlightedMentions text={message.content} users={team} />
                   </div>
                 )}
@@ -704,7 +708,7 @@ function MessageBubble({ message, isMe, isAdmin, groupWithPrev, team, reactions,
                   <img
                     src={message.fileUrl}
                     alt={message.fileName ?? "image"}
-                    className="max-w-[320px] max-h-[240px] rounded-lg border border-[#E5E7EB] object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                    className="max-w-[320px] max-h-[240px] rounded-lg border border-[var(--os-border)] object-cover cursor-pointer hover:opacity-90 transition-opacity"
                   />
                 </a>
               </div>
@@ -712,14 +716,14 @@ function MessageBubble({ message, isMe, isAdmin, groupWithPrev, team, reactions,
             {message.fileUrl && message.fileType === "application/pdf" && (
               <div className="mt-1">
                 {message.content && message.content !== message.fileName && (
-                  <div className="text-[13px] text-[#111827] leading-relaxed mb-1">
+                  <div className="text-[13px] text-[#111827] os-dark:text-[var(--os-text)] leading-relaxed mb-1">
                     <HighlightedMentions text={message.content} users={team} />
                   </div>
                 )}
                 <a
                   href={message.fileUrl}
                   download={message.fileName ?? "file.pdf"}
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-red-200 bg-red-50 text-red-700 text-[12px] font-medium hover:bg-red-100 transition-colors"
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-red-200 os-dark:border-red-500/30 bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 text-[12px] font-medium hover:bg-red-100 os-dark:hover:bg-red-500/15 transition-colors"
                 >
                   <FileText className="w-4 h-4" />
                   {message.fileName ?? "Document.pdf"}
@@ -744,36 +748,38 @@ function MessageBubble({ message, isMe, isAdmin, groupWithPrev, team, reactions,
                 key={r.emoji}
                 onClick={() => onReact(r.emoji)}
                 title={r.users.join(", ")}
+                aria-label={`${r.emoji} ${r.count}, ${r.users.join(", ")}`}
+                aria-pressed={r.mine}
                 className={cn(
                   "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[12px]",
-                  r.mine ? "bg-[#F3E8FF] border-[#E9D5FF] text-[#7E22CE]" : "bg-white border-[#E5E7EB] text-[#374151] hover:bg-[#F9FAFB]",
+                  r.mine ? "bg-[#F3E8FF] os-dark:bg-purple-500/10 border-[#E9D5FF] os-dark:border-purple-500/30 text-[#7E22CE] os-dark:text-[var(--os-purple)]" : "bg-[var(--os-surface)] border-[var(--os-border)] text-[#374151] os-dark:text-[var(--os-text)] hover:bg-[#F9FAFB] os-dark:hover:bg-[var(--os-hover)]",
                 )}
               >
                 <span>{r.emoji}</span>
-                <span className="text-[10px] font-semibold">{r.count}</span>
+                <span className="text-[11px] font-semibold">{r.count}</span>
               </button>
             ))}
           </div>
         )}
       </div>
       {hovering && !editing && (
-        <div className="absolute -top-3 right-2 bg-white border border-[#E5E7EB] rounded-md shadow-sm px-1 py-0.5 flex items-center gap-0.5">
+        <div className="absolute -top-3 right-2 bg-[var(--os-popover)] border border-[var(--os-border)] rounded-md shadow-sm px-1 py-0.5 flex items-center gap-0.5">
           {QUICK_REACTIONS.slice(0, emojiOpen ? QUICK_REACTIONS.length : 3).map((e) => (
-            <button key={e} onClick={() => onReact(e)} className="px-1 hover:bg-[#F3F4F6] rounded">{e}</button>
+            <button key={e} onClick={() => onReact(e)} aria-label={`React with ${e}`} className="px-1 hover:bg-[#F3F4F6] os-dark:hover:bg-[var(--os-hover)] rounded">{e}</button>
           ))}
-          <button onClick={() => setEmojiOpen((s) => !s)} className="px-1 text-[#6B7280] hover:bg-[#F3F4F6] rounded">
+          <button onClick={() => setEmojiOpen((s) => !s)} aria-label={emojiOpen ? "Fewer reactions" : "More reactions"} aria-expanded={emojiOpen} className="px-1 text-[#6B7280] os-dark:text-[var(--os-text)] hover:bg-[#F3F4F6] os-dark:hover:bg-[var(--os-hover)] rounded">
             <Smile className="w-3 h-3" />
           </button>
           {isMe && (
-            <button onClick={() => { setEditContent(message.content); setEditing(true); }} className="px-1 text-[#6B7280] hover:bg-[#F3F4F6] rounded" title="Edit">
+            <button onClick={() => { setEditContent(message.content); setEditing(true); }} className="px-1 text-[#6B7280] os-dark:text-[var(--os-text)] hover:bg-[#F3F4F6] os-dark:hover:bg-[var(--os-hover)] rounded" title="Edit" aria-label="Edit message">
               <span className="text-[11px]">✏️</span>
             </button>
           )}
           {(isMe || isAdmin) && (
             confirmDelete ? (
-              <button onClick={onDelete} className="px-1.5 py-0.5 text-[10px] font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded">Delete?</button>
+              <button onClick={onDelete} aria-label="Confirm delete message" className="px-1.5 py-0.5 text-[11px] font-medium text-red-600 os-dark:text-red-400 bg-red-50 os-dark:bg-red-500/10 hover:bg-red-100 os-dark:hover:bg-red-500/15 rounded">Delete?</button>
             ) : (
-              <button onClick={() => setConfirmDelete(true)} className="px-1 text-[#6B7280] hover:bg-red-50 hover:text-red-500 rounded" title="Delete">
+              <button onClick={() => setConfirmDelete(true)} className="px-1 text-[#6B7280] os-dark:text-[var(--os-text)] hover:bg-red-50 os-dark:hover:bg-red-500/10 hover:text-red-500 rounded" title="Delete" aria-label="Delete message">
                 <X className="w-3 h-3" />
               </button>
             )
@@ -786,7 +792,7 @@ function MessageBubble({ message, isMe, isAdmin, groupWithPrev, team, reactions,
 
 function AttachChip({ result }: { result: AttachResult }) {
   const Icon = TYPE_ICON[result.type] ?? Paperclip;
-  const color = TYPE_COLOR[result.type] ?? "text-[#374151] bg-[#F3F4F6] border-[#E5E7EB]";
+  const color = TYPE_COLOR[result.type] ?? "text-[#374151] os-dark:text-[var(--os-text)] bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] border-[var(--os-border)]";
   return (
     <Link
       href={result.href}
@@ -836,45 +842,45 @@ function AttachPicker({ open, onClose, onPick }: { open: boolean; onClose: () =>
             {...dialogProps}
             onClick={(e) => e.stopPropagation()}
             initial={{ y: 8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 8, opacity: 0 }}
-            className="w-full max-w-[520px] bg-white rounded-2xl border border-[#E5E7EB] shadow-2xl overflow-hidden"
+            className="w-full max-w-[520px] bg-[var(--os-popover)] rounded-2xl border border-[var(--os-border)] shadow-2xl overflow-hidden"
           >
-            <div className="px-4 py-3 border-b border-[#E5E7EB] flex items-center gap-2">
-              <Search className="w-4 h-4 text-[#9CA3AF]" />
+            <div className="px-4 py-3 border-b border-[var(--os-border)] flex items-center gap-2">
+              <Search className="w-4 h-4 text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]" />
               <input
                 autoFocus
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search prospects, clients, projects, tasks, meetings..."
-                className="flex-1 bg-transparent text-[14px] text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none"
+                className="flex-1 bg-transparent text-[14px] text-[#111827] os-dark:text-[var(--os-text)] placeholder:text-[#9CA3AF] os-dark:placeholder:text-[var(--os-text-soft)] focus:outline-none"
               />
-              <button onClick={onClose} aria-label="Close" className="text-[#9CA3AF] hover:text-[#111827]">
+              <button onClick={onClose} aria-label="Close" className="text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] hover:text-[#111827] os-dark:hover:text-[var(--os-text)]">
                 <X className="w-4 h-4" />
               </button>
             </div>
             <div className="max-h-[420px] overflow-y-auto">
               {q.length < 2 ? (
-                <p className="px-4 py-6 text-center text-[12px] text-[#9CA3AF]">Type at least 2 characters.</p>
+                <p className="px-4 py-6 text-center text-[12px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">Type at least 2 characters.</p>
               ) : searching && results.length === 0 ? (
-                <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 text-[#8B00FF] animate-spin" /></div>
+                <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 text-[#8B00FF] os-dark:text-[var(--os-purple)] animate-spin" /></div>
               ) : results.length === 0 ? (
-                <p className="px-4 py-6 text-center text-[12px] text-[#9CA3AF]">No matches.</p>
+                <p className="px-4 py-6 text-center text-[12px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">No matches.</p>
               ) : (
                 <ul>
                   {results.map((r, i) => {
                     const Icon = TYPE_ICON[r.type] ?? Paperclip;
-                    const color = TYPE_COLOR[r.type] ?? "text-[#374151]";
+                    const color = TYPE_COLOR[r.type] ?? "text-[#374151] os-dark:text-[var(--os-text)]";
                     return (
                       <li key={`${r.type}-${r.id}-${i}`}>
                         <button
                           onClick={() => onPick(r)}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#FAFAFE] border-t border-[#F3F4F6]"
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#FAFAFE] os-dark:hover:bg-[var(--os-hover)] border-t border-[#F3F4F6] os-dark:border-[var(--os-border)]"
                         >
                           <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", color)}>
                             <Icon className="w-4 h-4" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-[13px] font-medium text-[#111827] truncate">{r.label}</p>
-                            <p className="text-[11px] text-[#6B7280] truncate">{r.type} · {r.sub}</p>
+                            <p className="text-[13px] font-medium text-[#111827] os-dark:text-[var(--os-text)] truncate">{r.label}</p>
+                            <p className="text-[11px] text-[#6B7280] os-dark:text-[var(--os-text)] truncate">{r.type} · {r.sub}</p>
                           </div>
                         </button>
                       </li>
@@ -892,7 +898,7 @@ function AttachPicker({ open, onClose, onPick }: { open: boolean; onClose: () =>
 
 export default function ChatPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center pt-20"><Loader2 className="w-6 h-6 text-[#8B00FF] animate-spin" /></div>}>
+    <Suspense fallback={<div className="flex justify-center pt-20"><Loader2 className="w-6 h-6 text-[#8B00FF] os-dark:text-[var(--os-purple)] animate-spin" /></div>}>
       <ChatInner />
     </Suspense>
   );
