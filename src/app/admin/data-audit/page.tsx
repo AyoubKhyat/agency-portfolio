@@ -98,7 +98,7 @@ export default function DataAuditPage() {
         title="Data audit"
         subtitle="If a prospect is HOT, the table must show at least one contact action."
         actions={
-          <button onClick={load} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[var(--os-border)] bg-white text-[#475569] hover:bg-gray-50">
+          <button onClick={load} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[var(--os-border)] bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-hover)]">
             <RefreshCw className="w-3.5 h-3.5" /> Refresh
           </button>
         }
@@ -108,8 +108,8 @@ export default function DataAuditPage() {
       <div className={cn(
         "rounded-2xl border-2 p-4 mb-5 flex items-center gap-3",
         totalIssues === 0
-          ? "border-emerald-200 bg-gradient-to-br from-emerald-50/40 to-teal-50/40"
-          : "border-amber-200 bg-gradient-to-br from-amber-50/40 to-orange-50/40"
+          ? "border-emerald-200 os-dark:border-emerald-500/30 bg-gradient-to-br from-emerald-50/40 to-teal-50/40 os-dark:from-emerald-500/10 os-dark:to-teal-500/5"
+          : "border-amber-200 os-dark:border-amber-500/30 bg-gradient-to-br from-amber-50/40 to-orange-50/40 os-dark:from-amber-500/10 os-dark:to-orange-500/5"
       )}>
         <div className={cn(
           "w-10 h-10 rounded-xl flex items-center justify-center shadow-md shrink-0",
@@ -120,10 +120,10 @@ export default function DataAuditPage() {
             : <AlertTriangle className="w-5 h-5 text-white" />}
         </div>
         <div className="flex-1">
-          <div className="text-[14px] font-semibold text-[#0F172A]">
+          <div className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">
             {totalIssues === 0 ? "All checks passed" : `${totalIssues} integrity issue${totalIssues !== 1 ? "s" : ""} found`}
           </div>
-          <div className="text-[12px] text-[#475569]">
+          <div className="text-[12px] text-[#475569] os-dark:text-[var(--os-text)]">
             {totalIssues === 0
               ? "Every HOT prospect has at least one contact channel and rendering should be consistent."
               : "Use the fix actions below to resolve. Most are automatic."}
@@ -140,29 +140,29 @@ export default function DataAuditPage() {
       </div>
 
       {/* HOT breakdown */}
-      <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5 mb-5">
-        <div className="text-[14px] font-semibold text-[#0F172A] mb-3">HOT composition</div>
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5 mb-5">
+        <div className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] mb-3">HOT composition</div>
         <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-xl bg-emerald-50/60 border border-emerald-200 p-3 text-center">
-            <div className="text-2xl font-bold text-emerald-700 tabular-nums">{data.breakdown.hotPhoneOnly}</div>
-            <div className="text-[10px] uppercase tracking-wider text-emerald-700 font-medium">Phone only</div>
-            <div className="text-[10px] text-[#64748B] mt-0.5">Shows: WA + Call</div>
+          <div className="rounded-xl bg-emerald-50/60 os-dark:bg-emerald-500/10 border border-emerald-200 os-dark:border-emerald-500/30 p-3 text-center">
+            <div className="text-2xl font-bold text-emerald-700 os-dark:text-emerald-300 tabular-nums">{data.breakdown.hotPhoneOnly}</div>
+            <div className="text-[11px] uppercase tracking-wider text-emerald-700 os-dark:text-emerald-300 font-medium">Phone only</div>
+            <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-0.5">Shows: WA + Call</div>
           </div>
-          <div className="rounded-xl bg-purple-50/60 border border-purple-200 p-3 text-center">
-            <div className="text-2xl font-bold text-[#8B00FF] tabular-nums">{data.breakdown.hotIgOnly}</div>
-            <div className="text-[10px] uppercase tracking-wider text-[#7C3AED] font-medium">Instagram only</div>
-            <div className="text-[10px] text-[#64748B] mt-0.5">Shows: IG</div>
+          <div className="rounded-xl bg-purple-50/60 os-dark:bg-purple-500/10 border border-purple-200 os-dark:border-purple-500/30 p-3 text-center">
+            <div className="text-2xl font-bold text-[#8B00FF] os-dark:text-[var(--os-purple)] tabular-nums">{data.breakdown.hotIgOnly}</div>
+            <div className="text-[11px] uppercase tracking-wider text-[#7C3AED] os-dark:text-[var(--os-purple)] font-medium">Instagram only</div>
+            <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-0.5">Shows: IG</div>
           </div>
-          <div className="rounded-xl bg-rose-50/60 border border-rose-200 p-3 text-center">
-            <div className="text-2xl font-bold text-rose-700 tabular-nums">{data.breakdown.hotBoth}</div>
-            <div className="text-[10px] uppercase tracking-wider text-rose-700 font-medium">Phone + IG</div>
-            <div className="text-[10px] text-[#64748B] mt-0.5">Shows: WA + IG + Call</div>
+          <div className="rounded-xl bg-rose-50/60 os-dark:bg-rose-500/10 border border-rose-200 os-dark:border-rose-500/30 p-3 text-center">
+            <div className="text-2xl font-bold text-rose-700 os-dark:text-rose-300 tabular-nums">{data.breakdown.hotBoth}</div>
+            <div className="text-[11px] uppercase tracking-wider text-rose-700 os-dark:text-rose-300 font-medium">Phone + IG</div>
+            <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-0.5">Shows: WA + IG + Call</div>
           </div>
         </div>
       </div>
 
       {fixError && (
-        <div role="alert" className="mb-5 p-3 rounded-xl border border-red-200 bg-red-50 flex items-center gap-2 text-[12.5px] text-red-700">
+        <div role="alert" className="mb-5 p-3 rounded-xl border border-red-200 os-dark:border-red-500/30 bg-red-50 os-dark:bg-red-500/10 flex items-center gap-2 text-[12.5px] text-red-700 os-dark:text-red-300">
           <AlertCircle className="w-4 h-4 shrink-0" />
           {fixError}
         </div>
@@ -170,9 +170,9 @@ export default function DataAuditPage() {
 
       {/* Fix result toast */}
       {fixResult && (
-        <div className="mb-5 p-3 rounded-xl border border-emerald-200 bg-emerald-50/40 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-          <div className="text-[12.5px] text-emerald-800">
+        <div className="mb-5 p-3 rounded-xl border border-emerald-200 os-dark:border-emerald-500/30 bg-emerald-50/40 os-dark:bg-emerald-500/10 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 os-dark:text-emerald-400" />
+          <div className="text-[12.5px] text-emerald-800 os-dark:text-emerald-300">
             Ran <span className="font-mono">{fixResult.action}</span> — updated {fixResult.updated} prospects.
           </div>
         </div>
@@ -254,15 +254,15 @@ export default function DataAuditPage() {
       </div>
 
       {/* 20 random HOT sample */}
-      <div className="mt-6 rounded-2xl border border-[var(--os-border)] bg-white overflow-hidden">
-        <div className="px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/60">
-          <h2 className="text-[14px] font-semibold text-[#0F172A]">20 random HOT prospects (verification)</h2>
-          <div className="text-[11px] text-[#64748B] mt-0.5">Each row should render at least one of: WA, IG, Call.</div>
+      <div className="mt-6 rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] overflow-hidden">
+        <div className="px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/60 os-dark:bg-[var(--os-surface-2)]">
+          <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">20 random HOT prospects (verification)</h2>
+          <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-0.5">Each row should render at least one of: WA, IG, Call.</div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
+              <tr className="border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium">
                 <th className="px-3 py-2 text-left">Name</th>
                 <th className="px-3 py-2 text-left">Phone</th>
                 <th className="px-3 py-2 text-left">Instagram</th>
@@ -276,21 +276,21 @@ export default function DataAuditPage() {
                 const hasPhone = !!(p.phone && p.phone.trim());
                 const hasIG = !!(p.instagram && p.instagram.trim());
                 return (
-                  <tr key={p.id} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60">
-                    <td className="px-3 py-2 text-[13px] font-medium text-[#0F172A]">{p.name}</td>
-                    <td className="px-3 py-2 text-[12px] text-[#475569] tabular-nums">{p.phone || <span className="text-[#94A3B8]">—</span>}</td>
-                    <td className="px-3 py-2 text-[12px] text-[#475569]">{p.instagram || <span className="text-[#94A3B8]">—</span>}</td>
+                  <tr key={p.id} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-hover)]">
+                    <td className="px-3 py-2 text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">{p.name}</td>
+                    <td className="px-3 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)] tabular-nums">{p.phone || <span className="text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">—</span>}</td>
+                    <td className="px-3 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)]">{p.instagram || <span className="text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">—</span>}</td>
                     <td className="px-3 py-2 text-center">
                       <div className="inline-flex items-center gap-1">
-                        {hasPhone && <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">WA</span>}
-                        {hasIG && <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-[#7C3AED]">IG</span>}
-                        {hasPhone && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">Call</span>}
-                        {!hasPhone && !hasIG && <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-50 text-red-600">none</span>}
+                        {hasPhone && <span className="text-[11px] px-1.5 py-0.5 rounded bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300">WA</span>}
+                        {hasIG && <span className="text-[11px] px-1.5 py-0.5 rounded bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)]">IG</span>}
+                        {hasPhone && <span className="text-[11px] px-1.5 py-0.5 rounded bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300">Call</span>}
+                        {!hasPhone && !hasIG && <span className="text-[11px] px-1.5 py-0.5 rounded bg-red-50 os-dark:bg-red-500/10 text-red-600 os-dark:text-red-400">none</span>}
                       </div>
                     </td>
                     <td className="px-3 py-2 text-center text-[12px] tabular-nums">{p.score ?? 0}</td>
                     <td className="px-3 py-2 text-right">
-                      <Link href={`/admin/prospecting/${p.id}`} className="text-[#64748B] hover:text-[#8B00FF]">
+                      <Link href={`/admin/prospecting/${p.id}`} className="text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-[#8B00FF] os-dark:hover:text-[var(--os-purple)]">
                         <ExternalLink className="w-3.5 h-3.5 inline" />
                       </Link>
                     </td>
@@ -308,14 +308,14 @@ export default function DataAuditPage() {
 /* ---------- Helpers ---------- */
 function Stat({ label, value, color = "default" }: { label: string; value: number; color?: "default" | "rose" | "amber" | "gray" }) {
   const colors: Record<string, string> = {
-    default: "text-[#0F172A]",
-    rose: "text-rose-700",
-    amber: "text-amber-700",
-    gray: "text-[#64748B]",
+    default: "text-[#0F172A] os-dark:text-[var(--os-text)]",
+    rose: "text-rose-700 os-dark:text-rose-300",
+    amber: "text-amber-700 os-dark:text-amber-300",
+    gray: "text-[#64748B] os-dark:text-[var(--os-text-soft)]",
   };
   return (
-    <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
-      <div className="text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-1">{label}</div>
+    <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5">
+      <div className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1">{label}</div>
       <div className={cn("text-2xl sm:text-3xl font-bold tabular-nums", colors[color])}>{value.toLocaleString()}</div>
     </div>
   );
@@ -336,24 +336,24 @@ function IssueCard({
   const ok = count === 0;
   return (
     <div className={cn(
-      "rounded-2xl border p-4 sm:p-5 bg-white",
-      ok ? "border-emerald-200" : tone === "rose" ? "border-rose-200" : tone === "amber" ? "border-amber-200" : "border-[var(--os-border)]"
+      "rounded-2xl border p-4 sm:p-5 bg-[var(--os-surface)]",
+      ok ? "border-emerald-200 os-dark:border-emerald-500/30" : tone === "rose" ? "border-rose-200 os-dark:border-rose-500/30" : tone === "amber" ? "border-amber-200 os-dark:border-amber-500/30" : "border-[var(--os-border)]"
     )}>
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-start gap-3">
           <div className={cn(
             "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
-            ok ? "bg-emerald-50 text-emerald-600" : tone === "rose" ? "bg-rose-50 text-rose-600" : tone === "amber" ? "bg-amber-50 text-amber-600" : "bg-gray-100 text-[#64748B]"
+            ok ? "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-600 os-dark:text-emerald-400" : tone === "rose" ? "bg-rose-50 os-dark:bg-rose-500/10 text-rose-600 os-dark:text-rose-400" : tone === "amber" ? "bg-amber-50 os-dark:bg-amber-500/10 text-amber-600 os-dark:text-amber-400" : "bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-[#64748B] os-dark:text-[var(--os-text-soft)]"
           )}>
             {ok ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           </div>
           <div>
-            <div className="text-[14px] font-semibold text-[#0F172A]">{title}</div>
-            <div className="text-[12px] text-[#475569] mt-0.5">{description}</div>
+            <div className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{title}</div>
+            <div className="text-[12px] text-[#475569] os-dark:text-[var(--os-text)] mt-0.5">{description}</div>
           </div>
         </div>
         <div className="text-right shrink-0">
-          <div className={cn("text-3xl font-bold tabular-nums", ok ? "text-emerald-700" : "text-[#0F172A]")}>{count}</div>
+          <div className={cn("text-3xl font-bold tabular-nums", ok ? "text-emerald-700 os-dark:text-emerald-300" : "text-[#0F172A] os-dark:text-[var(--os-text)]")}>{count}</div>
         </div>
       </div>
 
@@ -369,10 +369,10 @@ function IssueCard({
       )}
 
       {!ok && sample && sample.length > 0 && (
-        <div className="mt-3 rounded-lg border border-[var(--os-border)] bg-gray-50/40 overflow-hidden">
-          <div className="max-h-48 overflow-y-auto">
+        <div className="mt-3 rounded-lg border border-[var(--os-border)] bg-gray-50/40 os-dark:bg-[var(--os-surface-2)] overflow-hidden">
+          <div className="max-h-48 overflow-auto">
             <table className="w-full text-[11.5px]">
-              <thead className="text-[10px] uppercase tracking-wider text-[#64748B] font-medium bg-white border-b border-[var(--os-border)] sticky top-0">
+              <thead className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium bg-[var(--os-surface)] border-b border-[var(--os-border)] sticky top-0">
                 <tr>
                   <th className="px-2 py-1 text-left">Name</th>
                   <th className="px-2 py-1 text-left">Phone</th>
@@ -383,11 +383,11 @@ function IssueCard({
               <tbody>
                 {sample.map((p) => (
                   <tr key={p.id} className="border-b border-[var(--os-border)] last:border-0">
-                    <td className="px-2 py-1 text-[#0F172A] font-medium">
-                      <Link href={`/admin/prospecting/${p.id}`} className="hover:text-[#7C3AED]">{p.name}</Link>
+                    <td className="px-2 py-1 text-[#0F172A] os-dark:text-[var(--os-text)] font-medium">
+                      <Link href={`/admin/prospecting/${p.id}`} className="hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)]">{p.name}</Link>
                     </td>
-                    <td className="px-2 py-1 text-[#475569]">{p.phone || "—"}</td>
-                    <td className="px-2 py-1 text-[#475569]">{p.instagram || "—"}</td>
+                    <td className="px-2 py-1 text-[#475569] os-dark:text-[var(--os-text)]">{p.phone || "—"}</td>
+                    <td className="px-2 py-1 text-[#475569] os-dark:text-[var(--os-text)]">{p.instagram || "—"}</td>
                     <td className="px-2 py-1">{p.qualityLabel || "—"}</td>
                   </tr>
                 ))}
@@ -398,10 +398,10 @@ function IssueCard({
       )}
 
       {!ok && mismatchSample && mismatchSample.length > 0 && (
-        <div className="mt-3 rounded-lg border border-[var(--os-border)] bg-gray-50/40 overflow-hidden">
-          <div className="max-h-48 overflow-y-auto">
+        <div className="mt-3 rounded-lg border border-[var(--os-border)] bg-gray-50/40 os-dark:bg-[var(--os-surface-2)] overflow-hidden">
+          <div className="max-h-48 overflow-auto">
             <table className="w-full text-[11.5px]">
-              <thead className="text-[10px] uppercase tracking-wider text-[#64748B] font-medium bg-white border-b border-[var(--os-border)] sticky top-0">
+              <thead className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium bg-[var(--os-surface)] border-b border-[var(--os-border)] sticky top-0">
                 <tr>
                   <th className="px-2 py-1 text-left">Name</th>
                   <th className="px-2 py-1 text-left">Stored</th>
@@ -411,11 +411,11 @@ function IssueCard({
               <tbody>
                 {mismatchSample.map((p) => (
                   <tr key={p.id} className="border-b border-[var(--os-border)] last:border-0">
-                    <td className="px-2 py-1 text-[#0F172A] font-medium">
-                      <Link href={`/admin/prospecting/${p.id}`} className="hover:text-[#7C3AED]">{p.name}</Link>
+                    <td className="px-2 py-1 text-[#0F172A] os-dark:text-[var(--os-text)] font-medium">
+                      <Link href={`/admin/prospecting/${p.id}`} className="hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)]">{p.name}</Link>
                     </td>
-                    <td className="px-2 py-1 text-[#475569]">{p.stored || "null"}</td>
-                    <td className="px-2 py-1 text-emerald-700 font-semibold">{p.recomputed}</td>
+                    <td className="px-2 py-1 text-[#475569] os-dark:text-[var(--os-text)]">{p.stored || "null"}</td>
+                    <td className="px-2 py-1 text-emerald-700 os-dark:text-emerald-300 font-semibold">{p.recomputed}</td>
                   </tr>
                 ))}
               </tbody>
