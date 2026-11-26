@@ -16,7 +16,7 @@ export function EmptyState({ icon, title, description, action, className }: Empt
     <div className={cn("flex flex-col items-center justify-center py-20 text-center", className)}>
       <div className="relative mb-6">
         <div className="absolute inset-0 w-20 h-20 rounded-full bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 blur-xl" />
-        <div className="relative flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-violet-100 text-[#8B00FF] shadow-sm">
+        <div className="relative flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-violet-100 os-dark:from-purple-500/20 os-dark:to-violet-500/10 text-[#8B00FF] os-dark:text-purple-300 shadow-sm os-dark:ring-1 os-dark:ring-purple-500/20">
           {icon}
         </div>
       </div>
