@@ -75,8 +75,8 @@ export function ScriptsTab() {
               className={cn(
                 "text-[12px] px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all",
                 filter === c
-                  ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#7C3AED] border border-purple-200"
-                  : "text-[#475569] hover:bg-[#F1F5F9] border border-transparent"
+                  ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] border border-purple-200 os-dark:border-purple-500/30"
+                  : "text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)] border border-transparent"
               )}
             >
               {c === "ALL" ? "All categories" : CATEGORY_LABEL[c]}
@@ -107,36 +107,36 @@ export function ScriptsTab() {
         <div className="space-y-6">
           {CATEGORIES.filter((c) => grouped[c]?.length).map((cat) => (
             <div key={cat}>
-              <h3 className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-2">
-                {CATEGORY_LABEL[cat]} <span className="text-[#94A3B8]">({grouped[cat].length})</span>
+              <h3 className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-2">
+                {CATEGORY_LABEL[cat]} <span className="text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">({grouped[cat].length})</span>
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {grouped[cat].map((s) => (
-                  <div key={s.id} className="rounded-2xl border border-[var(--os-border)] bg-white p-4">
+                  <div key={s.id} className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[13px] font-semibold text-[#0F172A]">{s.title}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-[#475569] rounded uppercase">{s.language}</span>
-                          {!s.isActive && <span className="text-[10px] px-1.5 py-0.5 bg-red-50 text-red-600 rounded">Inactive</span>}
+                          <span className="text-[13px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{s.title}</span>
+                          <span className="text-[11px] px-1.5 py-0.5 bg-gray-50 os-dark:bg-[var(--os-surface-2)] text-[#475569] os-dark:text-[var(--os-text)] rounded uppercase">{s.language}</span>
+                          {!s.isActive && <span className="text-[11px] px-1.5 py-0.5 bg-red-50 os-dark:bg-red-500/10 text-red-600 os-dark:text-red-400 rounded">Inactive</span>}
                         </div>
                         {s.tags && (
                           <div className="mt-1 flex flex-wrap gap-1">
                             {s.tags.split(",").map((tag) => tag.trim()).filter(Boolean).map((tag) => (
-                              <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-purple-50 text-[#7C3AED] rounded">{tag}</span>
+                              <span key={tag} className="text-[11px] px-1.5 py-0.5 bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] rounded">{tag}</span>
                             ))}
                           </div>
                         )}
-                        <pre className="mt-2 text-[12px] text-[#475569] whitespace-pre-wrap font-sans leading-relaxed">{s.body}</pre>
+                        <pre className="mt-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)] whitespace-pre-wrap font-sans leading-relaxed">{s.body}</pre>
                       </div>
                       <div className="flex flex-col gap-1 shrink-0">
-                        <button onClick={() => handleCopy(s)} className="p-1.5 rounded-lg text-[#475569] hover:text-[#8B00FF] hover:bg-purple-50">
-                          {copiedId === s.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        <button onClick={() => handleCopy(s)} className="p-1.5 rounded-lg text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#8B00FF] os-dark:hover:text-[var(--os-purple)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10">
+                          {copiedId === s.id ? <Check className="w-3.5 h-3.5 text-emerald-600 os-dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
-                        <button onClick={() => setEditing(s)} className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]">
+                        <button onClick={() => setEditing(s)} className="p-1.5 rounded-lg text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]">
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => handleDelete(s.id)} className="p-1.5 rounded-lg text-[#475569] hover:text-red-600 hover:bg-red-50">
+                        <button onClick={() => handleDelete(s.id)} className="p-1.5 rounded-lg text-[#475569] os-dark:text-[var(--os-text)] hover:text-red-600 os-dark:hover:text-red-400 hover:bg-red-50 os-dark:hover:bg-red-500/10">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -208,15 +208,15 @@ function ScriptModal({
     }
   }
 
-  const inputCls = "w-full px-3 py-2 rounded-lg border border-[var(--os-border)] bg-white text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300";
-  const labelCls = "block text-[12px] font-medium text-[#475569] mb-1.5";
+  const inputCls = "w-full px-3 py-2 rounded-lg border border-[var(--os-border)] bg-[var(--os-control-bg)] text-[13px] text-[#0F172A] os-dark:text-[var(--os-text)] focus:outline-none focus:ring-2 focus:ring-purple-300 os-dark:focus:ring-purple-500/40 focus:border-purple-300 os-dark:focus:border-purple-500/30";
+  const labelCls = "block text-[12px] font-medium text-[#475569] os-dark:text-[var(--os-text)] mb-1.5";
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 sm:pt-20 px-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-      <div {...dialogProps} className="relative w-full max-w-xl bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
+      <div {...dialogProps} className="relative w-full max-w-xl bg-[var(--os-surface)] rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--os-border)]">
-          <h2 id={titleId} className="text-lg font-semibold text-[#0F172A]">{isNew ? "New script" : "Edit script"}</h2>
-          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]">
+          <h2 id={titleId} className="text-lg font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{isNew ? "New script" : "Edit script"}</h2>
+          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -252,10 +252,10 @@ function ScriptModal({
             <textarea value={body} onChange={(e) => setBody(e.target.value)} className={cn(inputCls, "h-44 resize-none font-mono text-[12.5px]")} required />
           </div>
 
-          {error && <div className="text-[12px] text-red-600">{error}</div>}
+          {error && <div className="text-[12px] text-red-600 os-dark:text-red-400">{error}</div>}
 
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-[13px] font-medium text-[#475569] hover:bg-[#F1F5F9]">Cancel</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-[13px] font-medium text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]">Cancel</button>
             <button
               type="submit"
               disabled={submitting || !title.trim() || !body.trim()}

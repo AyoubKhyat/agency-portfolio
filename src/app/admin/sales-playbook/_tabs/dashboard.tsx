@@ -101,12 +101,12 @@ export function DashboardTab() {
   return (
     <div className="space-y-6">
       {/* Range note + actions */}
-      <div className="flex items-center justify-between text-[12px] text-[#64748B]">
+      <div className="flex items-center justify-between text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
         <span>Last {data.sinceDays} days</span>
         <button
           onClick={recomputeScores}
           disabled={recomputing}
-          className="inline-flex items-center gap-1.5 text-[#8B00FF] hover:text-[#7C3AED] disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 text-[#8B00FF] os-dark:text-[var(--os-purple)] hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)] disabled:opacity-50"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${recomputing ? "animate-spin" : ""}`} />
           {recomputing ? "Scoring..." : "Recompute prospect scores"}
@@ -148,14 +148,14 @@ export function DashboardTab() {
 
       {/* Winning insight banner */}
       {data.winningInsight && (
-        <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50 p-4 sm:p-5 flex items-start gap-3">
+        <div className="rounded-2xl border-2 border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50 to-violet-50 os-dark:from-purple-500/10 os-dark:to-violet-500/5 p-4 sm:p-5 flex items-start gap-3">
           <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B00FF] to-[#C026D3] flex items-center justify-center shadow-md shadow-purple-500/30">
             <Trophy className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[11px] uppercase tracking-wider text-[#8B00FF] font-bold mb-0.5">Winning insight</div>
-            <div className="text-[14px] font-semibold text-[#0F172A]">{data.winningInsight.label}</div>
-            <div className="text-[13px] text-[#8B00FF] font-medium">{data.winningInsight.value} <span className="text-[#64748B] font-normal">· {data.winningInsight.meta}</span></div>
+            <div className="text-[11px] uppercase tracking-wider text-[#8B00FF] os-dark:text-[var(--os-purple)] font-bold mb-0.5">Winning insight</div>
+            <div className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{data.winningInsight.label}</div>
+            <div className="text-[13px] text-[#8B00FF] os-dark:text-[var(--os-purple)] font-medium">{data.winningInsight.value} <span className="text-[#64748B] os-dark:text-[var(--os-text-soft)] font-normal">· {data.winningInsight.meta}</span></div>
           </div>
         </div>
       )}
@@ -180,51 +180,51 @@ export function DashboardTab() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-[15px] font-semibold text-[var(--os-text)]">Team performance</h2>
           {winner && (
-            <span className="text-[11px] text-[#64748B]">
+            <span className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
               Leader: <span className="font-medium text-[var(--os-text)]">{winner.name}</span>
             </span>
           )}
         </div>
 
-        <div className="border border-[var(--os-border)] rounded-2xl overflow-hidden bg-white">
+        <div className="border border-[var(--os-border)] rounded-2xl overflow-hidden bg-[var(--os-surface)]">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50/80 border-b border-[var(--os-border)]">
-                  <th className="text-left px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B]">Team member</th>
-                  <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B]">Sent</th>
-                  <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B]">Replies</th>
-                  <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B]">Reply rate</th>
-                  <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] hidden md:table-cell">Meetings</th>
-                  <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] hidden md:table-cell">Proposals</th>
-                  <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B]">Won</th>
+                <tr className="bg-gray-50/80 os-dark:bg-[var(--os-surface-2)] border-b border-[var(--os-border)]">
+                  <th className="text-left px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">Team member</th>
+                  <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">Sent</th>
+                  <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">Replies</th>
+                  <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">Reply rate</th>
+                  <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)] hidden md:table-cell">Meetings</th>
+                  <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)] hidden md:table-cell">Proposals</th>
+                  <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">Won</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-[13px] text-[#64748B]">
+                    <td colSpan={7} className="px-4 py-10 text-center text-[13px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
                       No team activity in the last {data.sinceDays} days.
                     </td>
                   </tr>
                 ) : sortedUsers.map((u, i) => (
-                  <tr key={u.userId} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60">
+                  <tr key={u.userId} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-hover)]">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-medium text-[#94A3B8] w-4 tabular-nums">{i + 1}</span>
-                        <span className="text-[13px] font-medium text-[#0F172A]">{u.name}</span>
+                        <span className="text-[11px] font-medium text-[#94A3B8] os-dark:text-[var(--os-text-soft)] w-4 tabular-nums">{i + 1}</span>
+                        <span className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">{u.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right text-[13px] text-[#475569] tabular-nums">{u.messagesSent}</td>
-                    <td className="px-4 py-3 text-right text-[13px] text-[#475569] tabular-nums">{u.repliesReceived}</td>
+                    <td className="px-4 py-3 text-right text-[13px] text-[#475569] os-dark:text-[var(--os-text)] tabular-nums">{u.messagesSent}</td>
+                    <td className="px-4 py-3 text-right text-[13px] text-[#475569] os-dark:text-[var(--os-text)] tabular-nums">{u.repliesReceived}</td>
                     <td className="px-4 py-3 text-right text-[13px] tabular-nums">
-                      <span className={u.replyRate >= 15 ? "text-emerald-600 font-medium" : "text-[#475569]"}>
+                      <span className={u.replyRate >= 15 ? "text-emerald-600 os-dark:text-emerald-400 font-medium" : "text-[#475569] os-dark:text-[var(--os-text)]"}>
                         {u.replyRate}%
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-[13px] text-[#475569] tabular-nums hidden md:table-cell">{u.meetingsBooked}</td>
-                    <td className="px-4 py-3 text-right text-[13px] text-[#475569] tabular-nums hidden md:table-cell">{u.proposalsSent}</td>
-                    <td className="px-4 py-3 text-right text-[13px] font-semibold text-[#8B00FF] tabular-nums">{u.clientsWon}</td>
+                    <td className="px-4 py-3 text-right text-[13px] text-[#475569] os-dark:text-[var(--os-text)] tabular-nums hidden md:table-cell">{u.meetingsBooked}</td>
+                    <td className="px-4 py-3 text-right text-[13px] text-[#475569] os-dark:text-[var(--os-text)] tabular-nums hidden md:table-cell">{u.proposalsSent}</td>
+                    <td className="px-4 py-3 text-right text-[13px] font-semibold text-[#8B00FF] os-dark:text-[var(--os-purple)] tabular-nums">{u.clientsWon}</td>
                   </tr>
                 ))}
               </tbody>
@@ -277,24 +277,24 @@ function VariantPerformance({ variants }: { variants: { variant: string; sent: n
             <div
               key={v.variant}
               className={cn(
-                "rounded-2xl border p-4 bg-white",
-                isWinner ? "border-purple-300 shadow-sm shadow-purple-500/10" : "border-[var(--os-border)]"
+                "rounded-2xl border p-4 bg-[var(--os-surface)]",
+                isWinner ? "border-purple-300 os-dark:border-purple-500/30 shadow-sm shadow-purple-500/10" : "border-[var(--os-border)]"
               )}
             >
               <div className="flex items-center justify-between mb-2">
                 <div className={cn(
                   "w-7 h-7 rounded-lg flex items-center justify-center text-[12px] font-bold",
-                  isWinner ? "bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white" : "bg-gray-100 text-[#475569]"
+                  isWinner ? "bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white" : "bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-[#475569] os-dark:text-[var(--os-text)]"
                 )}>
                   {v.variant}
                 </div>
-                {isWinner && <span className="text-[9px] uppercase tracking-wider text-[#8B00FF] font-bold">Winner</span>}
+                {isWinner && <span className="text-[10px] uppercase tracking-wider text-[#8B00FF] os-dark:text-[var(--os-purple)] font-bold">Winner</span>}
               </div>
-              <div className="text-[11px] text-[#64748B] mb-1.5">{VARIANT_LABELS[v.variant] || v.variant}</div>
-              <div className={cn("text-2xl font-bold tabular-nums", isWinner ? "text-[#8B00FF]" : "text-[#0F172A]")}>
+              <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mb-1.5">{VARIANT_LABELS[v.variant] || v.variant}</div>
+              <div className={cn("text-2xl font-bold tabular-nums", isWinner ? "text-[#8B00FF] os-dark:text-[var(--os-purple)]" : "text-[#0F172A] os-dark:text-[var(--os-text)]")}>
                 {v.replyRate}%
               </div>
-              <div className="text-[10px] text-[#94A3B8] mt-1 tabular-nums">{v.replied} / {v.sent} sends</div>
+              <div className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mt-1 tabular-nums">{v.replied} / {v.sent} sends</div>
             </div>
           );
         })}
@@ -308,12 +308,12 @@ function ConversionFunnel({ funnel }: { funnel: FunnelStage[] }) {
   return (
     <div>
       <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3">Conversion funnel</h2>
-      <div className="border border-[var(--os-border)] rounded-2xl bg-white p-4 sm:p-5 space-y-2">
+      <div className="border border-[var(--os-border)] rounded-2xl bg-[var(--os-surface)] p-4 sm:p-5 space-y-2">
         {funnel.map((stage, i) => {
           const widthPct = Math.max(8, (stage.count / max) * 100);
           return (
             <div key={stage.stage} className="flex items-center gap-3">
-              <span className="text-[12px] text-[#64748B] w-28 shrink-0">{stage.stage}</span>
+              <span className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)] w-28 shrink-0">{stage.stage}</span>
               <div className="flex-1 relative">
                 <div
                   className="h-7 rounded-md bg-gradient-to-r from-[#8B00FF] to-[#C026D3] flex items-center px-2 text-white text-[12px] font-semibold transition-all"
@@ -322,7 +322,7 @@ function ConversionFunnel({ funnel }: { funnel: FunnelStage[] }) {
                   {stage.count.toLocaleString()}
                 </div>
               </div>
-              <span className="text-[11px] text-[#64748B] w-14 text-right tabular-nums">
+              <span className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] w-14 text-right tabular-nums">
                 {stage.conversionFromPrev === null ? "—" : `${stage.conversionFromPrev}%`}
               </span>
             </div>
@@ -340,15 +340,15 @@ function TemplatePerformance({ templates }: { templates: TemplateStat[] }) {
   return (
     <div>
       <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3">Template performance</h2>
-      <div className="border border-[var(--os-border)] rounded-2xl overflow-hidden bg-white">
+      <div className="border border-[var(--os-border)] rounded-2xl overflow-hidden bg-[var(--os-surface)]">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50/80 border-b border-[var(--os-border)]">
-              <th className="text-left px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B]">Template</th>
-              <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B]">Sent</th>
-              <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B]">Replied</th>
-              <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B]">Meetings</th>
-              <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B]">Reply rate</th>
+            <tr className="bg-gray-50/80 os-dark:bg-[var(--os-surface-2)] border-b border-[var(--os-border)]">
+              <th className="text-left px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">Template</th>
+              <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">Sent</th>
+              <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">Replied</th>
+              <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">Meetings</th>
+              <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">Reply rate</th>
             </tr>
           </thead>
           <tbody>
@@ -356,19 +356,19 @@ function TemplatePerformance({ templates }: { templates: TemplateStat[] }) {
               const isTop = topThird.includes(t);
               const isBottom = bottomThird.includes(t);
               return (
-                <tr key={t.id} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60">
+                <tr key={t.id} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-hover)]">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[13px] font-medium text-[#0F172A]">{t.name}</span>
-                      <span className="text-[10px] text-[#64748B] uppercase">{t.channel}</span>
-                      {isTop && <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-medium">TOP</span>}
-                      {isBottom && !isTop && <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-medium">BOTTOM</span>}
+                      <span className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">{t.name}</span>
+                      <span className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] uppercase">{t.channel}</span>
+                      {isTop && <span className="text-[11px] px-1.5 py-0.5 rounded bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 font-medium">TOP</span>}
+                      {isBottom && !isTop && <span className="text-[11px] px-1.5 py-0.5 rounded bg-rose-50 os-dark:bg-rose-500/10 text-rose-700 os-dark:text-rose-300 font-medium">BOTTOM</span>}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-right text-[13px] text-[#475569] tabular-nums">{t.sent}</td>
-                  <td className="px-4 py-3 text-right text-[13px] text-[#475569] tabular-nums">{t.replied}</td>
-                  <td className="px-4 py-3 text-right text-[13px] text-[#475569] tabular-nums">{t.meetingBooked}</td>
-                  <td className="px-4 py-3 text-right text-[13px] font-semibold text-[#0F172A] tabular-nums">{t.replyRate}%</td>
+                  <td className="px-4 py-3 text-right text-[13px] text-[#475569] os-dark:text-[var(--os-text)] tabular-nums">{t.sent}</td>
+                  <td className="px-4 py-3 text-right text-[13px] text-[#475569] os-dark:text-[var(--os-text)] tabular-nums">{t.replied}</td>
+                  <td className="px-4 py-3 text-right text-[13px] text-[#475569] os-dark:text-[var(--os-text)] tabular-nums">{t.meetingBooked}</td>
+                  <td className="px-4 py-3 text-right text-[13px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] tabular-nums">{t.replyRate}%</td>
                 </tr>
               );
             })}
@@ -384,7 +384,7 @@ function ReplyReasonsBlock({ reasons, total }: { reasons: ReplyReason[]; total: 
     return (
       <div>
         <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3">Why prospects reply</h2>
-        <div className="rounded-2xl border border-[var(--os-border)] bg-white p-5 text-[12px] text-[#94A3B8]">
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-5 text-[12px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">
           Tag reasons as replies come in to surface what's actually killing deals.
         </div>
       </div>
@@ -393,8 +393,8 @@ function ReplyReasonsBlock({ reasons, total }: { reasons: ReplyReason[]; total: 
   return (
     <div>
       <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3">Why prospects reply</h2>
-      <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
-        <div className="h-3 w-full rounded-full bg-gray-100 overflow-hidden flex">
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5">
+        <div className="h-3 w-full rounded-full bg-gray-100 os-dark:bg-[var(--os-surface-2)] overflow-hidden flex">
           {reasons.map((r) => (
             <div
               key={r.reason}
@@ -408,8 +408,8 @@ function ReplyReasonsBlock({ reasons, total }: { reasons: ReplyReason[]; total: 
           {reasons.map((r) => (
             <div key={r.reason} className="flex items-center gap-2 text-[12px]">
               <span className={cn("w-2.5 h-2.5 rounded-sm", REPLY_REASON_COLORS[r.reason] || "bg-gray-400")} />
-              <span className="text-[#0F172A] font-medium flex-1">{REPLY_REASON_LABELS[r.reason] || r.reason}</span>
-              <span className="text-[#64748B] tabular-nums">{r.count} ({Math.round((r.count / total) * 100)}%)</span>
+              <span className="text-[#0F172A] os-dark:text-[var(--os-text)] font-medium flex-1">{REPLY_REASON_LABELS[r.reason] || r.reason}</span>
+              <span className="text-[#64748B] os-dark:text-[var(--os-text-soft)] tabular-nums">{r.count} ({Math.round((r.count / total) * 100)}%)</span>
             </div>
           ))}
         </div>
@@ -423,23 +423,23 @@ function MonthlySnapshot({ monthly }: { monthly: DashboardData["monthly"] }) {
     <div>
       <h2 className="text-[15px] font-semibold text-[var(--os-text)] mb-3">{monthly.label} so far</h2>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4">
-          <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-1.5">Messages</div>
-          <div className="text-2xl font-bold text-[#0F172A] tabular-nums">{monthly.messagesSent}</div>
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4">
+          <div className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1.5">Messages</div>
+          <div className="text-2xl font-bold text-[#0F172A] os-dark:text-[var(--os-text)] tabular-nums">{monthly.messagesSent}</div>
         </div>
-        <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4">
-          <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-1.5">Replies</div>
-          <div className="text-2xl font-bold text-[#0F172A] tabular-nums">{monthly.repliesReceived}</div>
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4">
+          <div className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1.5">Replies</div>
+          <div className="text-2xl font-bold text-[#0F172A] os-dark:text-[var(--os-text)] tabular-nums">{monthly.repliesReceived}</div>
         </div>
-        <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4">
-          <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-1.5">Reply rate</div>
-          <div className={cn("text-2xl font-bold tabular-nums", monthly.replyRate >= 15 ? "text-emerald-600" : "text-[#0F172A]")}>
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4">
+          <div className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1.5">Reply rate</div>
+          <div className={cn("text-2xl font-bold tabular-nums", monthly.replyRate >= 15 ? "text-emerald-600 os-dark:text-emerald-400" : "text-[#0F172A] os-dark:text-[var(--os-text)]")}>
             {monthly.replyRate}%
           </div>
         </div>
-        <div className="rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50 p-4">
-          <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-1.5">Clients won</div>
-          <div className="text-2xl font-bold text-[#8B00FF] tabular-nums">{monthly.clientsWon}</div>
+        <div className="rounded-2xl border border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50 to-violet-50 os-dark:from-purple-500/10 os-dark:to-violet-500/5 p-4">
+          <div className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1.5">Clients won</div>
+          <div className="text-2xl font-bold text-[#8B00FF] os-dark:text-[var(--os-purple)] tabular-nums">{monthly.clientsWon}</div>
         </div>
       </div>
     </div>
@@ -448,19 +448,19 @@ function MonthlySnapshot({ monthly }: { monthly: DashboardData["monthly"] }) {
 
 function CoachingCard({ icon, label, data, empty }: { icon: React.ReactNode; label: string; data: CoachingHighlight; empty: string }) {
   return (
-    <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
-      <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
-        <span className="text-[#8B00FF]">{icon}</span>
+    <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5">
+      <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium">
+        <span className="text-[#8B00FF] os-dark:text-[var(--os-purple)]">{icon}</span>
         {label}
       </div>
       {data ? (
         <div className="mt-3">
-          <div className="text-[15px] font-semibold text-[#0F172A]">{data.label}</div>
-          <div className="text-[13px] text-[#8B00FF] font-medium mt-1">{data.value}</div>
-          <div className="text-[11px] text-[#64748B] mt-0.5">{data.meta}</div>
+          <div className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{data.label}</div>
+          <div className="text-[13px] text-[#8B00FF] os-dark:text-[var(--os-purple)] font-medium mt-1">{data.value}</div>
+          <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-0.5">{data.meta}</div>
         </div>
       ) : (
-        <div className="mt-3 text-[12px] text-[#94A3B8] leading-relaxed">{empty}</div>
+        <div className="mt-3 text-[12px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] leading-relaxed">{empty}</div>
       )}
     </div>
   );

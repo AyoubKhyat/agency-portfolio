@@ -18,9 +18,9 @@ type SequenceItem = {
 };
 
 const SCORE_BADGE: Record<string, string> = {
-  HIGH: "bg-emerald-50 text-emerald-700",
-  MEDIUM: "bg-amber-50 text-amber-700",
-  LOW: "bg-gray-50 text-gray-600",
+  HIGH: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300",
+  MEDIUM: "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300",
+  LOW: "bg-gray-50 os-dark:bg-[var(--os-surface-2)] text-gray-600 os-dark:text-[var(--os-text)]",
 };
 
 export function SequencesTab() {
@@ -71,8 +71,8 @@ export function SequencesTab() {
               className={cn(
                 "text-[12px] px-3 py-1.5 rounded-lg font-medium capitalize transition-all",
                 filter === f
-                  ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#7C3AED] border border-purple-200"
-                  : "text-[#475569] hover:bg-[#F1F5F9] border border-transparent"
+                  ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] border border-purple-200 os-dark:border-purple-500/30"
+                  : "text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)] border border-transparent"
               )}
             >
               {f === "due" ? `Due now (${counts.due})` : f === "upcoming" ? `Upcoming (${counts.upcoming})` : `All (${items.length})`}
@@ -80,8 +80,8 @@ export function SequencesTab() {
           ))}
         </div>
 
-        <div className="text-[12px] text-[#64748B]">
-          Cadence: <span className="text-[#0F172A] font-medium">Day 1 → 4 → 10 → 20</span>
+        <div className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
+          Cadence: <span className="text-[#0F172A] os-dark:text-[var(--os-text)] font-medium">Day 1 → 4 → 10 → 20</span>
         </div>
       </div>
 
@@ -97,50 +97,51 @@ export function SequencesTab() {
           description={filter === "due" ? "Reach out to new prospects to start the cadence." : "Send initial contact to start the 20-day cadence."}
         />
       ) : (
-        <div className="border border-[var(--os-border)] rounded-2xl overflow-hidden bg-white">
-          <table className="w-full text-sm">
+        <div className="border border-[var(--os-border)] rounded-2xl overflow-hidden bg-[var(--os-surface)]">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-sm">
             <thead>
-              <tr className="bg-gray-50/80 border-b border-[var(--os-border)]">
-                <th className="text-left px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B]">Prospect</th>
-                <th className="text-left px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B]">Next step</th>
-                <th className="text-left px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] hidden md:table-cell">Due</th>
-                <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B]">Action</th>
+              <tr className="bg-gray-50/80 os-dark:bg-[var(--os-surface-2)] border-b border-[var(--os-border)]">
+                <th className="text-left px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">Prospect</th>
+                <th className="text-left px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">Next step</th>
+                <th className="text-left px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)] hidden md:table-cell">Due</th>
+                <th className="text-right px-4 py-3 text-[11px] uppercase tracking-wider font-medium text-[#64748B] os-dark:text-[var(--os-text-soft)]">Action</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((item) => (
-                <tr key={`${item.prospectId}-${item.step}`} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60">
+                <tr key={`${item.prospectId}-${item.step}`} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-hover)]">
                   <td className="px-4 py-3">
                     <Link href={`/admin/prospecting/${item.prospectId}`} className="block group">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[13px] font-medium text-[#0F172A] group-hover:text-[#8B00FF]">{item.prospectName}</span>
+                        <span className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] group-hover:text-[#8B00FF] os-dark:group-hover:text-[var(--os-purple)]">{item.prospectName}</span>
                         {item.scoreLabel && (
-                          <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium", SCORE_BADGE[item.scoreLabel])}>
+                          <span className={cn("text-[11px] px-1.5 py-0.5 rounded-full font-medium", SCORE_BADGE[item.scoreLabel])}>
                             {item.scoreLabel}
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-[#64748B] mt-0.5">{item.sector}</div>
+                      <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-0.5">{item.sector}</div>
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-[#475569]">{item.stepLabel}</td>
+                  <td className="px-4 py-3 text-[12px] text-[#475569] os-dark:text-[var(--os-text)]">{item.stepLabel}</td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     {item.overdueDays > 0 ? (
-                      <span className="inline-flex items-center gap-1 text-[12px] text-red-600 font-medium">
+                      <span className="inline-flex items-center gap-1 text-[12px] text-red-600 os-dark:text-red-400 font-medium">
                         <AlertCircle className="w-3 h-3" />
                         {item.overdueDays}d overdue
                       </span>
                     ) : item.overdueDays === 0 ? (
-                      <span className="text-[12px] text-amber-700 font-medium">Today</span>
+                      <span className="text-[12px] text-amber-700 os-dark:text-amber-300 font-medium">Today</span>
                     ) : (
-                      <span className="text-[12px] text-[#64748B]">in {Math.abs(item.overdueDays)}d</span>
+                      <span className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">in {Math.abs(item.overdueDays)}d</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => markDone(item)}
-                        className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-700 hover:bg-emerald-50 px-2 py-1 rounded-md"
+                        className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-700 os-dark:text-emerald-300 hover:bg-emerald-50 os-dark:hover:bg-emerald-500/10 px-2 py-1 rounded-md"
                         title="Mark this follow-up sent"
                       >
                         <Check className="w-3 h-3" />
@@ -148,7 +149,7 @@ export function SequencesTab() {
                       </button>
                       <Link
                         href={`/admin/prospecting/${item.prospectId}`}
-                        className="inline-flex items-center gap-1 text-[11px] font-medium text-[#475569] hover:text-[#8B00FF]"
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#8B00FF] os-dark:hover:text-[var(--os-purple)]"
                       >
                         Open
                         <ArrowRight className="w-3 h-3" />
@@ -159,6 +160,7 @@ export function SequencesTab() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>
