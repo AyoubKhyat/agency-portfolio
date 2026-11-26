@@ -56,21 +56,18 @@ function MoneyStat({ value, label, accent, index }: { value: number; label: stri
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
       className={cn(
-        "rounded-2xl border p-4 sm:p-5 shadow-sm",
-        accent
-          ? "border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50 os-dark:from-purple-500/10 to-violet-50 os-dark:to-violet-500/10"
-          : "border-[var(--os-border)] bg-[var(--os-surface)]",
+        "rounded-2xl border p-4 sm:p-5 shadow-sm border-[var(--os-border)] bg-[var(--os-surface)]",
       )}
     >
       <div className="flex items-start justify-between mb-3">
         <div className={cn(
           "flex items-center justify-center w-9 h-9 rounded-xl",
-          accent ? "bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 text-[var(--os-brand)]" : "bg-[var(--os-hover)] text-[var(--os-text-muted)]",
+          "bg-[var(--os-hover)]", accent ? "text-[var(--os-brand)]" : "text-[var(--os-text-muted)]",
         )}>
           <DollarSign className="w-5 h-5" />
         </div>
       </div>
-      <div className={cn("text-2xl sm:text-3xl font-bold tracking-tight", accent ? "text-[var(--os-brand)]" : "text-[var(--os-text)]")}>
+      <div className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--os-text)]">
         {formatMAD(value)}
         <span className="text-[12px] sm:text-[13px] font-medium text-[#9CA3AF] os-dark:text-[var(--os-text-soft)] ml-1.5">MAD</span>
       </div>
@@ -139,7 +136,7 @@ export default function ClientsPage() {
         actions={
           <Link
             href="/admin/clients/new"
-            className="inline-flex items-center gap-1.5 h-10 px-4 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white rounded-lg text-[13px] font-semibold shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+            className="os-btn-primary inline-flex items-center gap-1.5 h-10 px-4 rounded-lg text-[13px] font-semibold"
           >
             <Plus className="w-4 h-4" /> New client
           </Link>
@@ -186,7 +183,7 @@ export default function ClientsPage() {
             clients.length === 0 ? (
               <Link
                 href="/admin/clients/new"
-                className="inline-flex items-center gap-2 h-10 px-4 bg-[#8B00FF] hover:bg-[#7A00E0] text-white rounded-lg text-[13px] font-semibold"
+                className="os-btn-primary inline-flex items-center gap-1.5 h-10 px-4 rounded-lg text-[13px] font-semibold"
               >
                 <Plus className="w-4 h-4" /> New client
               </Link>
@@ -260,7 +257,7 @@ export default function ClientsPage() {
 
                 {c.accountManager && (
                   <div className="flex items-center gap-2 pt-3 mt-2 border-t border-[#F3F4F6] os-dark:border-[var(--os-border)]">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[10px] font-bold">
+                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text)] text-[10px] font-bold">
                       {c.accountManager.avatarInitials}
                     </span>
                     <span className="text-[11px] text-[#6B7280] os-dark:text-[var(--os-text)]">
