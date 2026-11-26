@@ -95,8 +95,10 @@ function ChatInner() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachOpen, setAttachOpen] = useState(false);
   const [sending, setSending] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Below lg the channel list and the conversation take turns: a link to a
+  // specific channel opens the conversation, otherwise the list comes first.
+  const [sidebarOpen, setSidebarOpen] = useState(!initialSlug);
+  const messagesBoxRef = useRef<HTMLDivElement>(null);
 
   // Load me + team once
   useEffect(() => {
@@ -146,7 +148,7 @@ function ChatInner() {
     if (!active) return;
     const sp = new URLSearchParams(window.location.search);
     sp.set("channel", active.slug);
-    window.history.replaceState({}, "", `/admin/chat?${sp.toString()}`);
+    window.history.replaceState(window.history.state, "", `/admin/chat?${sp.toString()}`);
   }, [active]);
 
   // Load + poll messages for the active channel (cursor-based: only fetch new)
@@ -186,8 +188,10 @@ function ChatInner() {
 
   // Scroll to bottom on new messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+    // Scroll only the message list; scrollIntoView would also scroll the page and hide the chat header.
+    const box = messagesBoxRef.current;
+    if (box) box.scrollTo({ top: box.scrollHeight, behavior: "smooth" });
+  }, [messages.length, sidebarOpen]);
 
   async function send() {
     if (!active || !composer.trim() || sending) return;
@@ -215,13 +219,43 @@ function ChatInner() {
     setSending(false);
   }
 
+  // Below lg, opening a conversation from the list adds a history entry so the
+  // browser Back button returns to the list (and Forward reopens it). Desktop
+  // and ?channel= deep links keep their single entry.
+  function openConversation(c: Channel) {
+    setActive(c);
+    setSidebarOpen(false);
+    if (!window.matchMedia("(min-width: 1024px)").matches) {
+      const sp = new URLSearchParams(window.location.search);
+      sp.set("channel", c.slug);
+      window.history.pushState({ ...window.history.state, chatView: "conversation" }, "", `/admin/chat?${sp.toString()}`);
+    }
+  }
+
+  function backToList() {
+    if (window.history.state?.chatView === "conversation") window.history.back();
+    else setSidebarOpen(true);
+  }
+
+  useEffect(() => {
+    const onPop = () => {
+      const isConversation = window.history.state?.chatView === "conversation";
+      setSidebarOpen(!isConversation);
+      const slug = new URLSearchParams(window.location.search).get("channel");
+      const target = [...channels, ...dms].find((c) => c.slug === slug);
+      if (target) setActive((prev) => (prev?.id === target.id ? prev : target));
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [channels, dms]);
+
   async function openDm(user: User) {
     const res = await fetch(`/api/admin/chat/dm/${user.id}`, { method: "POST" });
     if (!res.ok) return;
     const dm = await res.json();
     await loadChannels();
     // Construct a synthetic Channel and switch.
-    setActive({ id: dm.id, slug: dm.slug, name: dm.name, description: "", isDm: true, unread: 0, lastMessage: null, members: [], partner: dm.partner });
+    openConversation({ id: dm.id, slug: dm.slug, name: dm.name, description: "", isDm: true, unread: 0, lastMessage: null, members: [], partner: dm.partner });
   }
 
   async function toggleReaction(message: Message, emoji: string) {
@@ -338,12 +372,15 @@ function ChatInner() {
     return team.filter((u) => u.id !== me?.id && !existingPartnerIds.has(u.id));
   }, [team, dms, me]);
 
+  // Below lg only one pane shows; with no channels at all the empty state wins.
+  const showList = sidebarOpen && !(channelsLoaded && !active);
+
   return (
-    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6 lg:-mt-8 flex h-[calc(100dvh-3.5rem)] lg:h-dvh bg-[var(--os-surface)] border-t border-[var(--os-border)] overflow-hidden">
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6 lg:-mt-8 -mb-4 sm:-mb-6 lg:mb-0 flex h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] lg:h-dvh bg-[var(--os-surface)] border-t border-[var(--os-border)] overflow-hidden">
       {/* Sidebar */}
       <aside className={cn(
-        "w-72 shrink-0 border-r border-[var(--os-border)] flex flex-col bg-[var(--os-surface-2)]",
-        !sidebarOpen && "hidden lg:flex",
+        "w-full lg:w-72 shrink-0 lg:border-r border-[var(--os-border)] flex flex-col bg-[var(--os-surface-2)]",
+        !showList && "hidden lg:flex",
       )}>
         <div className="px-4 py-4 border-b border-[var(--os-border)]">
           <h2 className="text-[15px] font-bold text-[#111827] os-dark:text-[var(--os-text)]">Chat</h2>
@@ -356,7 +393,7 @@ function ChatInner() {
               <ChannelRow
                 key={c.id}
                 active={active?.id === c.id}
-                onClick={() => { setActive(c); setSidebarOpen(false); }}
+                onClick={() => openConversation(c)}
                 icon={<Hash className="w-3.5 h-3.5 text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]" />}
                 name={c.name}
                 unread={c.unread}
@@ -370,7 +407,7 @@ function ChatInner() {
               <ChannelRow
                 key={c.id}
                 active={active?.id === c.id}
-                onClick={() => { setActive(c); setSidebarOpen(false); }}
+                onClick={() => openConversation(c)}
                 icon={
                   <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[10px] font-bold flex items-center justify-center">
                     {c.partner?.avatarInitials ?? "?"}
@@ -401,7 +438,7 @@ function ChatInner() {
       </aside>
 
       {/* Main pane */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[var(--os-surface)]">
+      <div className={cn("flex-1 flex flex-col min-w-0 bg-[var(--os-surface)]", showList && "hidden lg:flex")}>
         {!active && !channelsLoaded ? (
           <div className="flex-1 flex items-center justify-center text-[13px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -432,7 +469,7 @@ function ChatInner() {
             <div className="px-4 sm:px-6 py-3 border-b border-[var(--os-border)] flex items-center gap-3">
               <button
                 className="lg:hidden p-1.5 rounded-md text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F3F4F6] os-dark:hover:bg-[var(--os-hover)]"
-                onClick={() => setSidebarOpen(true)}
+                onClick={backToList}
                 aria-label="Show channels"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -455,7 +492,7 @@ function ChatInner() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-[#FAFAFE]/40 os-dark:bg-[var(--os-surface-2)]">
+            <div ref={messagesBoxRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-[#FAFAFE]/40 os-dark:bg-[var(--os-surface-2)]">
               {loadingMessages ? (
                 <div className="flex justify-center pt-10"><Loader2 className="w-5 h-5 text-[#8B00FF] os-dark:text-[var(--os-purple)] animate-spin" /></div>
               ) : messages.length === 0 ? (
@@ -493,7 +530,6 @@ function ChatInner() {
                       </div>
                     </div>
                   ))}
-                  <div ref={messagesEndRef} />
                 </div>
               )}
             </div>
