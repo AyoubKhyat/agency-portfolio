@@ -64,10 +64,10 @@ type Coverage = {
 };
 
 const BUCKET_LABELS: Record<string, { label: string; icon: string; color: string }> = {
-  never_contacted: { label: "Never contacted", icon: "🆕", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  due_day_4: { label: "Day 4+ no follow-up", icon: "📨", color: "bg-amber-50 text-amber-700 border-amber-200" },
-  due_day_10: { label: "Day 10+ no follow-up", icon: "⏰", color: "bg-rose-50 text-rose-700 border-rose-200" },
-  due_day_20: { label: "Day 20+ no follow-up", icon: "🚨", color: "bg-purple-50 text-purple-700 border-purple-200" },
+  never_contacted: { label: "Never contacted", icon: "🆕", color: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-200 os-dark:border-emerald-500/30" },
+  due_day_4: { label: "Day 4+ no follow-up", icon: "📨", color: "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border-amber-200 os-dark:border-amber-500/30" },
+  due_day_10: { label: "Day 10+ no follow-up", icon: "⏰", color: "bg-rose-50 os-dark:bg-rose-500/10 text-rose-700 os-dark:text-rose-300 border-rose-200 os-dark:border-rose-500/30" },
+  due_day_20: { label: "Day 20+ no follow-up", icon: "🚨", color: "bg-purple-50 os-dark:bg-purple-500/10 text-purple-700 os-dark:text-purple-300 border-purple-200 os-dark:border-purple-500/30" },
 };
 
 function followupStage(p: QueueProspect): string {
@@ -314,11 +314,11 @@ function ConfirmSendBar({
   const lg = size === "lg";
   return (
     <div className={cn(
-      "flex items-center gap-2 flex-wrap rounded-lg border border-amber-200 bg-amber-50/70",
+      "flex items-center gap-2 flex-wrap rounded-lg border border-amber-200 os-dark:border-amber-500/30 bg-amber-50/70 os-dark:bg-amber-500/10",
       lg ? "px-3 py-2.5" : "px-2 py-1.5",
     )}>
-      <AlertTriangle className={cn("text-amber-600 shrink-0", lg ? "w-4 h-4" : "w-3.5 h-3.5")} />
-      <span className={cn("text-amber-900 font-medium", lg ? "text-[13px]" : "text-[11px]")}>
+      <AlertTriangle className={cn("text-amber-600 os-dark:text-amber-400 shrink-0", lg ? "w-4 h-4" : "w-3.5 h-3.5")} />
+      <span className={cn("text-amber-900 os-dark:text-amber-300 font-medium", lg ? "text-[13px]" : "text-[11px]")}>
         {channelLabel} opened — did you actually send it?
       </span>
       <button
@@ -337,7 +337,7 @@ function ConfirmSendBar({
         onClick={onCancel}
         disabled={busy}
         className={cn(
-          "inline-flex items-center gap-1 rounded-md font-medium text-[#475569] bg-white border border-[var(--os-border)] hover:bg-gray-50 disabled:opacity-60",
+          "inline-flex items-center gap-1 rounded-md font-medium text-[#475569] os-dark:text-[var(--os-text)] bg-[var(--os-surface)] border border-[var(--os-border)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-hover)] disabled:opacity-60",
           lg ? "px-3 py-1.5 text-[12px]" : "px-2 py-1 text-[11px]",
         )}
       >
@@ -459,7 +459,7 @@ export default function OutreachCommandCenter() {
             <button onClick={() => setAddOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20 hover:shadow-lg">
               <Plus className="w-3.5 h-3.5" /> Add prospect
             </button>
-            <button onClick={loadAll} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[var(--os-border)] bg-white text-[#475569] hover:bg-gray-50">
+            <button onClick={loadAll} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[var(--os-border)] bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-hover)]">
               <RefreshCw className="w-3.5 h-3.5" /> Refresh
             </button>
           </div>
@@ -522,11 +522,11 @@ function ScoreboardCard({ scoreboard, loading, actionableHot }: { scoreboard: Sc
   }
   const c = scoreboard.counts;
   return (
-    <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50/40 to-violet-50/40 p-4 sm:p-5 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
+    <div className="rounded-2xl border-2 border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50/40 to-violet-50/40 os-dark:from-purple-500/10 os-dark:to-violet-500/5 p-4 sm:p-5 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
       <div className="flex items-center gap-2 mb-3">
-        <Crown className="w-4 h-4 text-[#8B00FF]" />
+        <Crown className="w-4 h-4 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
         <h2 className="text-[14px] font-semibold text-[var(--os-text)]">Today&apos;s scoreboard</h2>
-        <span className="ml-auto text-[11px] text-[#64748B]">all team members</span>
+        <span className="ml-auto text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">all team members</span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
         {typeof actionableHot === "number" && (
@@ -540,12 +540,12 @@ function ScoreboardCard({ scoreboard, loading, actionableHot }: { scoreboard: Sc
         <ScoreCard label="Clients" value={c.clientsWon} icon={<Trophy className="w-3.5 h-3.5" />} highlight />
       </div>
       {scoreboard.perUser.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-[#64748B]">
+        <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
           <span className="font-semibold text-[var(--os-text)]">By user:</span>
           {scoreboard.perUser.map((u) => (
-            <span key={u.userId} className="px-2 py-0.5 bg-white rounded border border-[var(--os-border)]">
-              {u.name}: <span className="font-medium text-[#0F172A]">{u.messagesSent}</span> sent
-              {u.replies > 0 && <span className="text-emerald-700"> · {u.replies} replies ({u.replyRate}%)</span>}
+            <span key={u.userId} className="px-2 py-0.5 bg-[var(--os-surface)] rounded border border-[var(--os-border)]">
+              {u.name}: <span className="font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">{u.messagesSent}</span> sent
+              {u.replies > 0 && <span className="text-emerald-700 os-dark:text-emerald-300"> · {u.replies} replies ({u.replyRate}%)</span>}
             </span>
           ))}
         </div>
@@ -558,21 +558,21 @@ function ScoreCard({ label, value, icon, subtle, highlight, pool }: { label: str
   return (
     <div className={cn(
       "rounded-xl border p-2.5",
-      highlight ? "border-purple-300 bg-white shadow-sm shadow-purple-500/10"
-        : pool ? "border-rose-200 bg-gradient-to-br from-rose-50/60 to-orange-50/40 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]"
-        : "border-purple-100 bg-white"
+      highlight ? "border-purple-300 os-dark:border-purple-500/30 bg-[var(--os-surface)] shadow-sm shadow-purple-500/10"
+        : pool ? "border-rose-200 os-dark:border-rose-500/30 bg-gradient-to-br from-rose-50/60 to-orange-50/4 os-dark:from-rose-500/10 os-dark:to-orange-500/50 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]"
+        : "border-purple-100 os-dark:border-purple-500/30 bg-[var(--os-surface)]"
     )}>
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium mb-1">
-        <span className={cn(highlight ? "text-[#8B00FF]" : pool ? "text-rose-600" : "text-[#7C3AED]")}>{icon}</span>
-        <span className={pool ? "text-rose-700" : "text-[#64748B]"}>{label}</span>
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-medium mb-1">
+        <span className={cn(highlight ? "text-[#8B00FF] os-dark:text-[var(--os-purple)]" : pool ? "text-rose-600 os-dark:text-rose-400" : "text-[#7C3AED] os-dark:text-[var(--os-purple)]")}>{icon}</span>
+        <span className={pool ? "text-rose-700 os-dark:text-rose-300" : "text-[#64748B] os-dark:text-[var(--os-text-soft)]"}>{label}</span>
       </div>
       <div className={cn(
         "text-xl sm:text-2xl font-bold tabular-nums",
-        highlight ? "text-[#8B00FF]" : pool ? "text-rose-700" : "text-[#0F172A]"
+        highlight ? "text-[#8B00FF] os-dark:text-[var(--os-purple)]" : pool ? "text-rose-700 os-dark:text-rose-300" : "text-[#0F172A] os-dark:text-[var(--os-text)]"
       )}>
         {value}
       </div>
-      {subtle && <div className={cn("text-[10px]", pool ? "text-rose-600" : "text-[#64748B]")}>{subtle}</div>}
+      {subtle && <div className={cn("text-[11px]", pool ? "text-rose-600 os-dark:text-rose-400" : "text-[#64748B] os-dark:text-[var(--os-text-soft)]")}>{subtle}</div>}
     </div>
   );
 }
@@ -588,7 +588,7 @@ function CoverageBlock({ coverage, loading }: { coverage: Coverage | null; loadi
   return (
     <div className={cn(
       "rounded-2xl border-2 p-4 sm:p-5 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]",
-      needsExpansion ? "border-amber-200 bg-gradient-to-br from-amber-50/40 to-orange-50/40" : "border-emerald-200 bg-gradient-to-br from-emerald-50/40 to-teal-50/40"
+      needsExpansion ? "border-amber-200 os-dark:border-amber-500/30 bg-gradient-to-br from-amber-50/40 to-orange-50/40 os-dark:from-amber-500/10 os-dark:to-orange-500/5" : "border-emerald-200 os-dark:border-emerald-500/30 bg-gradient-to-br from-emerald-50/40 to-teal-50/40 os-dark:from-emerald-500/10 os-dark:to-teal-500/5"
     )}>
       <div className="flex items-start gap-3 mb-3">
         <div className={cn(
@@ -615,7 +615,7 @@ function CoverageBlock({ coverage, loading }: { coverage: Coverage | null; loadi
 
       {/* City expansion recommendation */}
       {needsExpansion && (
-        <div className="border-t border-amber-200/60 pt-4">
+        <div className="border-t border-amber-200/60 os-dark:border-amber-500/30 pt-4">
           <div className="text-[13px] font-semibold text-[var(--os-text)] mb-1">
             Next-city recommendation
           </div>
@@ -625,24 +625,24 @@ function CoverageBlock({ coverage, loading }: { coverage: Coverage | null; loadi
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {recommendations.slice(0, 4).map((c, i) => (
               <div key={c.key} className={cn(
-                "rounded-xl border bg-white p-3",
-                i === 0 ? "border-amber-300 shadow-sm" : "border-[var(--os-border)]"
+                "rounded-xl border bg-[var(--os-surface)] p-3",
+                i === 0 ? "border-amber-300 os-dark:border-amber-500/30 shadow-sm" : "border-[var(--os-border)]"
               )}>
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className={cn(
                     "inline-flex items-center justify-center w-6 h-6 rounded-lg text-[11px] font-bold",
-                    i === 0 ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white" : "bg-gray-100 text-[#475569]"
+                    i === 0 ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white" : "bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-[#475569] os-dark:text-[var(--os-text)]"
                   )}>
                     {i + 1}
                   </span>
-                  <span className="text-[14px] font-semibold text-[#0F172A]">{c.label}</span>
-                  <span className="text-[11px] text-[#94A3B8]">{c.population.toLocaleString()}k pop</span>
-                  <span className="ml-auto text-[10px] uppercase tracking-wider text-amber-700 font-bold">score {c.expectedScore}</span>
+                  <span className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{c.label}</span>
+                  <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">{c.population.toLocaleString()}k pop</span>
+                  <span className="ml-auto text-[11px] uppercase tracking-wider text-amber-700 os-dark:text-amber-300 font-bold">score {c.expectedScore}</span>
                 </div>
-                <div className="text-[11.5px] text-[#475569] leading-snug mb-2">{c.rationale}</div>
+                <div className="text-[11.5px] text-[#475569] os-dark:text-[var(--os-text)] leading-snug mb-2">{c.rationale}</div>
                 <div className="flex flex-wrap gap-1">
                   {c.sectors.slice(0, 5).map((s) => (
-                    <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-[#7C3AED] border border-purple-100">{s}</span>
+                    <span key={s} className="text-[11px] px-1.5 py-0.5 rounded bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] border border-purple-100 os-dark:border-purple-500/30">{s}</span>
                   ))}
                 </div>
               </div>
@@ -650,13 +650,13 @@ function CoverageBlock({ coverage, loading }: { coverage: Coverage | null; loadi
           </div>
           {recommendations.length > 4 && (
             <details className="mt-2 text-[11px]">
-              <summary className="cursor-pointer text-[#7C3AED] hover:underline">Show all {recommendations.length} cities</summary>
+              <summary className="cursor-pointer text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:underline">Show all {recommendations.length} cities</summary>
               <div className="mt-2 space-y-1.5">
                 {recommendations.slice(4).map((c, i) => (
                   <div key={c.key} className="flex items-center gap-2 text-[11.5px]">
-                    <span className="text-[#94A3B8] tabular-nums w-5">{i + 5}.</span>
+                    <span className="text-[#94A3B8] os-dark:text-[var(--os-text-soft)] tabular-nums w-5">{i + 5}.</span>
                     <span className="font-medium text-[var(--os-text)]">{c.label}</span>
-                    <span className="text-[#64748B]">— {c.rationale}</span>
+                    <span className="text-[#64748B] os-dark:text-[var(--os-text-soft)]">— {c.rationale}</span>
                   </div>
                 ))}
               </div>
@@ -680,17 +680,17 @@ function CoverageBlock({ coverage, loading }: { coverage: Coverage | null; loadi
 function CoverageStat({ label, value, tone, subtle }: { label: string; value: number; tone?: "hot" | "warm"; subtle?: string }) {
   return (
     <div className={cn(
-      "rounded-xl border p-2.5 bg-white",
-      tone === "hot" ? "border-rose-200" : tone === "warm" ? "border-amber-200" : "border-[var(--os-border)]"
+      "rounded-xl border p-2.5 bg-[var(--os-surface)]",
+      tone === "hot" ? "border-rose-200 os-dark:border-rose-500/30" : tone === "warm" ? "border-amber-200 os-dark:border-amber-500/30" : "border-[var(--os-border)]"
     )}>
-      <div className="text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-0.5">{label}</div>
+      <div className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-0.5">{label}</div>
       <div className={cn(
         "text-lg sm:text-xl font-bold tabular-nums",
-        tone === "hot" ? "text-rose-700" : tone === "warm" ? "text-amber-700" : "text-[#0F172A]"
+        tone === "hot" ? "text-rose-700 os-dark:text-rose-300" : tone === "warm" ? "text-amber-700 os-dark:text-amber-300" : "text-[#0F172A] os-dark:text-[var(--os-text)]"
       )}>
         {value.toLocaleString()}
       </div>
-      {subtle && <div className="text-[10px] text-[#94A3B8]">{subtle}</div>}
+      {subtle && <div className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">{subtle}</div>}
     </div>
   );
 }
@@ -725,12 +725,12 @@ function ActionRow({ p, onAction, onSend, onFollowUp, compact, templates }: { p:
             rel="noopener noreferrer"
             onClick={() => arm({ channel: "WHATSAPP", body: wa.body, templateId: wa.templateId })}
             title={openTitle("WHATSAPP", wa.body)}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 hover:bg-emerald-100 os-dark:hover:bg-emerald-500/15"
           >
             <FaWhatsapp className="w-3.5 h-3.5" /> WA
           </a>
         ) : (
-          <button disabled title="No usable WhatsApp number for this prospect" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-gray-100 text-gray-400 cursor-not-allowed">
+          <button disabled title="No usable WhatsApp number for this prospect" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-gray-400 os-dark:text-[var(--os-text-soft)] cursor-not-allowed">
             <FaWhatsapp className="w-3.5 h-3.5" /> WA
           </button>
         )
@@ -748,18 +748,18 @@ function ActionRow({ p, onAction, onSend, onFollowUp, compact, templates }: { p:
               arm({ channel: "INSTAGRAM", body: ig.body, templateId: ig.templateId });
             }}
             title={openTitle("INSTAGRAM", ig.body)}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-[#7C3AED] hover:bg-purple-100"
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:bg-purple-100 os-dark:hover:bg-purple-500/15"
           >
             <FaInstagram className="w-3.5 h-3.5" /> IG
           </a>
         ) : (
-          <button disabled title="No usable Instagram handle for this prospect" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-gray-100 text-gray-400 cursor-not-allowed">
+          <button disabled title="No usable Instagram handle for this prospect" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-gray-400 os-dark:text-[var(--os-text-soft)] cursor-not-allowed">
             <FaInstagram className="w-3.5 h-3.5" /> IG
           </button>
         )
       )}
       {hasPhone && (
-        <a href={`tel:${p.phone}`} title={`Call ${p.phone}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 hover:bg-amber-100">
+        <a href={`tel:${p.phone}`} title={`Call ${p.phone}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 hover:bg-amber-100 os-dark:hover:bg-amber-500/15">
           <PhoneIcon className="w-3.5 h-3.5" /> Call
         </a>
       )}
@@ -768,18 +768,18 @@ function ActionRow({ p, onAction, onSend, onFollowUp, compact, templates }: { p:
         <button
           onClick={() => onFollowUp(p)}
           title={`Record follow-up ${FOLLOWUP_STEP_NUMBER[nextStep]} as sent (does not change the first-send date)`}
-          className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 hover:bg-amber-100"
+          className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 hover:bg-amber-100 os-dark:hover:bg-amber-500/15"
         >
           <CheckIcon className="w-3.5 h-3.5" /> FU {FOLLOWUP_STEP_NUMBER[nextStep]}
         </button>
       )}
-      <button onClick={() => onAction(p.id, "REPONDU", "MARKED_REPLIED")} title="Mark replied" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 hover:bg-blue-100">
+      <button onClick={() => onAction(p.id, "REPONDU", "MARKED_REPLIED")} title="Mark replied" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-blue-50 os-dark:bg-blue-500/10 text-blue-700 os-dark:text-blue-300 hover:bg-blue-100 os-dark:hover:bg-blue-500/15">
         <MessageCircle className="w-3.5 h-3.5" /> Reply
       </button>
-      <button onClick={() => onAction(p.id, null, "MEETING_BOOKED")} title="Mark meeting booked" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-cyan-50 text-cyan-700 hover:bg-cyan-100">
+      <button onClick={() => onAction(p.id, null, "MEETING_BOOKED")} title="Mark meeting booked" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-cyan-50 os-dark:bg-cyan-500/10 text-cyan-700 os-dark:text-cyan-300 hover:bg-cyan-100 os-dark:hover:bg-cyan-500/15">
         <CalendarCheck className="w-3.5 h-3.5" /> Meeting
       </button>
-      <button onClick={() => onAction(p.id, null, "PROPOSAL_SENT")} title="Mark proposal sent" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100">
+      <button onClick={() => onAction(p.id, null, "PROPOSAL_SENT")} title="Mark proposal sent" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-indigo-50 os-dark:bg-indigo-500/10 text-indigo-700 os-dark:text-indigo-300 hover:bg-indigo-100 os-dark:hover:bg-indigo-500/15">
         <FileSignature className="w-3.5 h-3.5" /> Proposal
       </button>
       <button onClick={() => onAction(p.id, "CONVERTI", "STATUS_CONVERTI")} title="Mark client won" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm hover:shadow">
@@ -803,17 +803,17 @@ function QueueTab({ queue, loading, onAction, onSend, onFollowUp, templates }: {
         const bucket = queue.buckets[key];
         const meta = BUCKET_LABELS[key];
         return (
-          <details key={key} open={key === "never_contacted" || bucket.length > 0} className="rounded-2xl border border-[var(--os-border)] bg-white">
-            <summary className="cursor-pointer px-4 py-3 flex items-center justify-between gap-3 hover:bg-gray-50/60 rounded-2xl">
+          <details key={key} open={key === "never_contacted" || bucket.length > 0} className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)]">
+            <summary className="cursor-pointer px-4 py-3 flex items-center justify-between gap-3 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-hover)] rounded-2xl">
               <div className="flex items-center gap-2">
                 <span className="text-[16px]">{meta.icon}</span>
-                <h2 className="text-[14px] font-semibold text-[#0F172A]">{meta.label}</h2>
-                <span className={cn("text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border", meta.color)}>{bucket.length}</span>
+                <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{meta.label}</h2>
+                <span className={cn("text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border", meta.color)}>{bucket.length}</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#94A3B8]" />
+              <ChevronRight className="w-4 h-4 text-[#94A3B8] os-dark:text-[var(--os-text-soft)]" />
             </summary>
             {bucket.length === 0 ? (
-              <div className="px-4 py-6 text-center text-[12px] text-[#94A3B8] border-t border-[var(--os-border)]">
+              <div className="px-4 py-6 text-center text-[12px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] border-t border-[var(--os-border)]">
                 Empty — every HOT prospect at this stage has been handled.
               </div>
             ) : (
@@ -822,7 +822,7 @@ function QueueTab({ queue, loading, onAction, onSend, onFollowUp, templates }: {
                   <ProspectRow key={p.id} p={p} onAction={onAction} onSend={onSend} onFollowUp={onFollowUp} templates={templates} />
                 ))}
                 {bucket.length > 50 && (
-                  <div className="px-4 py-2 text-[11px] text-[#64748B] text-center">+ {bucket.length - 50} more</div>
+                  <div className="px-4 py-2 text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] text-center">+ {bucket.length - 50} more</div>
                 )}
               </div>
             )}
@@ -835,28 +835,28 @@ function QueueTab({ queue, loading, onAction, onSend, onFollowUp, templates }: {
 
 function ProspectRow({ p, onAction, onSend, onFollowUp, templates }: { p: QueueProspect; onAction: (id: string, status: string | null, actionType: string) => void; onSend: (id: string, channel: OutreachChannel, body: string, templateId: string | null) => void | Promise<void>; onFollowUp: (p: QueueProspect) => void; templates: Template[] }) {
   return (
-    <div className="px-4 py-3 hover:bg-gray-50/60">
+    <div className="px-4 py-3 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-hover)]">
       <div className="flex items-start gap-3 flex-wrap">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap mb-0.5">
-            <Link href={`/admin/prospecting/${p.id}`} className="text-[14px] font-semibold text-[#0F172A] hover:text-[#7C3AED]">
+            <Link href={`/admin/prospecting/${p.id}`} className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)]">
               {p.name}
             </Link>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-bold uppercase tracking-wider"><Flame className="w-2.5 h-2.5 inline -mt-0.5" /> HOT</span>
-            <span className="text-[11px] text-[#64748B]">{p.sector}</span>
-            {p.neighborhood && <span className="text-[11px] text-[#94A3B8]">· {p.neighborhood}</span>}
-            {p.score !== null && <span className="text-[10px] text-[#7C3AED] font-medium">score {p.score}</span>}
+            <span className="text-[11px] px-1.5 py-0.5 rounded bg-rose-50 os-dark:bg-rose-500/10 text-rose-700 os-dark:text-rose-300 font-bold uppercase tracking-wider"><Flame className="w-2.5 h-2.5 inline -mt-0.5" /> HOT</span>
+            <span className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">{p.sector}</span>
+            {p.neighborhood && <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">· {p.neighborhood}</span>}
+            {p.score !== null && <span className="text-[11px] text-[#7C3AED] os-dark:text-[var(--os-purple)] font-medium">score {p.score}</span>}
             {isFollowupCapped(p) && (
-              <span title="Already messaged twice — no pre-filled template will load" className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">✓ Followed up</span>
+              <span title="Already messaged twice — no pre-filled template will load" className="text-[11px] px-1.5 py-0.5 rounded bg-slate-100 os-dark:bg-[var(--os-surface-2)] text-slate-600 os-dark:text-[var(--os-text)] font-medium">✓ Followed up</span>
             )}
           </div>
-          <div className="flex items-center gap-2 text-[11px] text-[#64748B] flex-wrap">
+          <div className="flex items-center gap-2 text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] flex-wrap">
             {p.phone && <span className="tabular-nums">{p.phone}</span>}
             {p.instagram && <span>@{p.instagram.replace(/^@/, "")}</span>}
             <span>·</span>
             <span>{followupStage(p)}</span>
             {p.lastActionAt && <><span>·</span><span>last touched {relativeDate(p.lastActionAt)}</span></>}
-            {p.owner && <><span>·</span><span className="font-medium text-[#475569]">{p.owner.fullName}</span></>}
+            {p.owner && <><span>·</span><span className="font-medium text-[#475569] os-dark:text-[var(--os-text)]">{p.owner.fullName}</span></>}
           </div>
         </div>
         <div className="shrink-0">
@@ -874,8 +874,8 @@ function PredictionsTab({ predictions, loading, onAction, onSend, onFollowUp, te
   if (loading || !predictions) return <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="os-skeleton h-24 rounded-2xl" />)}</div>;
   if (predictions.length === 0) {
     return (
-      <div className="rounded-2xl border border-[var(--os-border)] bg-white p-8 text-center text-[#64748B]">
-        <Sparkles className="w-6 h-6 mx-auto text-[#94A3B8] mb-2" />
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-8 text-center text-[#64748B] os-dark:text-[var(--os-text-soft)]">
+        <Sparkles className="w-6 h-6 mx-auto text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mb-2" />
         <p className="text-[13px]">No HOT prospects to predict yet. Mark some as replied to generate signal.</p>
       </div>
     );
@@ -883,22 +883,22 @@ function PredictionsTab({ predictions, loading, onAction, onSend, onFollowUp, te
   return (
     <div className="space-y-3">
       {predictions.map((p, i) => (
-        <div key={p.id} className="rounded-2xl border border-[var(--os-border)] bg-white p-4">
+        <div key={p.id} className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4">
           <div className="flex items-start gap-3">
             <div className="shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/30">
-              <div className="text-[9px] uppercase tracking-wider font-medium opacity-80 leading-none">Score</div>
+              <div className="text-[10px] uppercase tracking-wider font-medium opacity-80 leading-none">Score</div>
               <div className="text-[15px] font-bold tabular-nums leading-tight">{p.predictionScore}</div>
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className="text-[12px] text-[#94A3B8] tabular-nums font-medium">#{i + 1}</span>
-                <Link href={`/admin/prospecting/${p.id}`} className="text-[14px] font-semibold text-[#0F172A] hover:text-[#7C3AED]">{p.name}</Link>
-                <span className="text-[11px] text-[#64748B]">{p.sector}</span>
-                {p.neighborhood && <span className="text-[11px] text-[#94A3B8]">· {p.neighborhood}</span>}
+                <span className="text-[12px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] tabular-nums font-medium">#{i + 1}</span>
+                <Link href={`/admin/prospecting/${p.id}`} className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)]">{p.name}</Link>
+                <span className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">{p.sector}</span>
+                {p.neighborhood && <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">· {p.neighborhood}</span>}
               </div>
               <div className="flex flex-wrap gap-1 mb-2">
                 {p.reasons.map((r) => (
-                  <span key={r} className="text-[10.5px] px-1.5 py-0.5 rounded bg-purple-50 text-[#7C3AED] border border-purple-100">{r}</span>
+                  <span key={r} className="text-[10.5px] px-1.5 py-0.5 rounded bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] border border-purple-100 os-dark:border-purple-500/30">{r}</span>
                 ))}
               </div>
               <ActionRow p={p} onAction={onAction} onSend={onSend} onFollowUp={onFollowUp} templates={templates} />
@@ -925,10 +925,10 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
 
   if (!current) {
     return (
-      <div className="rounded-2xl border border-[var(--os-border)] bg-white p-10 text-center">
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-10 text-center">
         <Trophy className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
-        <div className="text-[15px] font-semibold text-[#0F172A]">Queue empty</div>
-        <div className="text-[12px] text-[#64748B] mt-1">All priority HOT prospects have been touched. Check Queue or Predictions tabs.</div>
+        <div className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Queue empty</div>
+        <div className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-1">All priority HOT prospects have been touched. Check Queue or Predictions tabs.</div>
       </div>
     );
   }
@@ -940,27 +940,27 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
   return (
     <div className="max-w-3xl mx-auto">
       {/* Progress */}
-      <div className="flex items-center justify-between mb-3 text-[11px] text-[#64748B]">
+      <div className="flex items-center justify-between mb-3 text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
         <span>Prospect <span className="font-bold text-[var(--os-text)] tabular-nums">{idx + 1}</span> of {prospects.length}</span>
         <span>{remaining} remaining tonight</span>
       </div>
 
       {/* Main card */}
-      <div className="rounded-2xl border-2 border-purple-200 bg-white p-6 sm:p-8 mb-4 shadow-md shadow-purple-500/5">
+      <div className="rounded-2xl border-2 border-purple-200 os-dark:border-purple-500/30 bg-[var(--os-surface)] p-6 sm:p-8 mb-4 shadow-md shadow-purple-500/5">
         <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <Flame className="w-4 h-4 text-rose-600" />
-          <span className="text-[10px] px-2 py-0.5 rounded bg-rose-50 text-rose-700 font-bold uppercase tracking-wider">HOT</span>
-          <span className="text-[11px] text-[#94A3B8]">·</span>
-          <span className="text-[11px] text-[#64748B]">score {current.score ?? 0} · {current.sector}{current.neighborhood ? ` · ${current.neighborhood}` : ""}</span>
+          <Flame className="w-4 h-4 text-rose-600 os-dark:text-rose-400" />
+          <span className="text-[11px] px-2 py-0.5 rounded bg-rose-50 os-dark:bg-rose-500/10 text-rose-700 os-dark:text-rose-300 font-bold uppercase tracking-wider">HOT</span>
+          <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">·</span>
+          <span className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">score {current.score ?? 0} · {current.sector}{current.neighborhood ? ` · ${current.neighborhood}` : ""}</span>
           {isFollowupCapped(current) && (
-            <span title="Already messaged twice — no pre-filled template will load" className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">✓ Followed up</span>
+            <span title="Already messaged twice — no pre-filled template will load" className="text-[11px] px-2 py-0.5 rounded bg-slate-100 os-dark:bg-[var(--os-surface-2)] text-slate-600 os-dark:text-[var(--os-text)] font-medium">✓ Followed up</span>
           )}
         </div>
-        <h2 className="text-[22px] sm:text-[26px] font-bold text-[#0F172A] tracking-tight mb-2">{current.name}</h2>
-        <div className="space-y-1 mb-4 text-[13px] text-[#475569]">
-          {current.phone && <div className="flex items-center gap-2"><PhoneIcon className="w-3.5 h-3.5 text-[#94A3B8]" /><span className="tabular-nums">{current.phone}</span></div>}
-          {current.instagram && <div className="flex items-center gap-2"><FaInstagram className="w-3.5 h-3.5 text-[#94A3B8]" /><span>@{current.instagram.replace(/^@/, "")}</span></div>}
-          <div className="flex items-center gap-2 text-[#94A3B8]">
+        <h2 className="text-[22px] sm:text-[26px] font-bold text-[#0F172A] os-dark:text-[var(--os-text)] tracking-tight mb-2">{current.name}</h2>
+        <div className="space-y-1 mb-4 text-[13px] text-[#475569] os-dark:text-[var(--os-text)]">
+          {current.phone && <div className="flex items-center gap-2"><PhoneIcon className="w-3.5 h-3.5 text-[#94A3B8] os-dark:text-[var(--os-text-soft)]" /><span className="tabular-nums">{current.phone}</span></div>}
+          {current.instagram && <div className="flex items-center gap-2"><FaInstagram className="w-3.5 h-3.5 text-[#94A3B8] os-dark:text-[var(--os-text-soft)]" /><span>@{current.instagram.replace(/^@/, "")}</span></div>}
+          <div className="flex items-center gap-2 text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">
             <span>Stage: {followupStage(current)}</span>
             {current.lastActionAt && <span>· last touched {relativeDate(current.lastActionAt)}</span>}
           </div>
@@ -986,7 +986,7 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
                   <FaWhatsapp className="w-4 h-4" /> WhatsApp
                 </a>
               ) : (
-                <button disabled title="No usable WhatsApp number for this prospect" className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-gray-200 text-gray-400 cursor-not-allowed">
+                <button disabled title="No usable WhatsApp number for this prospect" className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-gray-200 os-dark:bg-[var(--os-hover)] text-gray-400 os-dark:text-[var(--os-text-soft)] cursor-not-allowed">
                   <FaWhatsapp className="w-4 h-4" /> WhatsApp
                 </button>
               )
@@ -1007,7 +1007,7 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
                   <FaInstagram className="w-4 h-4" /> Instagram
                 </a>
               ) : (
-                <button disabled title="No usable Instagram handle for this prospect" className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-gray-200 text-gray-400 cursor-not-allowed">
+                <button disabled title="No usable Instagram handle for this prospect" className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-gray-200 os-dark:bg-[var(--os-hover)] text-gray-400 os-dark:text-[var(--os-text-soft)] cursor-not-allowed">
                   <FaInstagram className="w-4 h-4" /> Instagram
                 </button>
               )
@@ -1026,18 +1026,18 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
             <button
               onClick={() => onFollowUp(current)}
               title="Record the next follow-up as sent (does not change the first-send date)"
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-amber-50 text-amber-700 hover:bg-amber-100"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 hover:bg-amber-100 os-dark:hover:bg-amber-500/15"
             >
               <CheckIcon className="w-3 h-3" /> FU {FOLLOWUP_STEP_NUMBER[nextFollowupStep(current)!]} sent
             </button>
           )}
-          <button onClick={() => onAction(current.id, "REPONDU", "MARKED_REPLIED")} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-blue-50 text-blue-700 hover:bg-blue-100">
+          <button onClick={() => onAction(current.id, "REPONDU", "MARKED_REPLIED")} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-blue-50 os-dark:bg-blue-500/10 text-blue-700 os-dark:text-blue-300 hover:bg-blue-100 os-dark:hover:bg-blue-500/15">
             <MessageCircle className="w-3 h-3" /> Replied
           </button>
-          <button onClick={() => onAction(current.id, null, "MEETING_BOOKED")} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-cyan-50 text-cyan-700 hover:bg-cyan-100">
+          <button onClick={() => onAction(current.id, null, "MEETING_BOOKED")} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-cyan-50 os-dark:bg-cyan-500/10 text-cyan-700 os-dark:text-cyan-300 hover:bg-cyan-100 os-dark:hover:bg-cyan-500/15">
             <CalendarCheck className="w-3 h-3" /> Meeting
           </button>
-          <button onClick={() => onAction(current.id, null, "PROPOSAL_SENT")} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100">
+          <button onClick={() => onAction(current.id, null, "PROPOSAL_SENT")} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-indigo-50 os-dark:bg-indigo-500/10 text-indigo-700 os-dark:text-indigo-300 hover:bg-indigo-100 os-dark:hover:bg-indigo-500/15">
             <FileSignature className="w-3 h-3" /> Proposal
           </button>
           <button onClick={() => onAction(current.id, "CONVERTI", "STATUS_CONVERTI")} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white">
@@ -1047,10 +1047,10 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
 
         {/* Detail / playbook links */}
         <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--os-border)] text-[11px]">
-          <Link href={`/admin/prospecting/${current.id}`} className="text-[#7C3AED] hover:underline inline-flex items-center gap-1">
+          <Link href={`/admin/prospecting/${current.id}`} className="text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:underline inline-flex items-center gap-1">
             Full profile <ExternalLink className="w-3 h-3" />
           </Link>
-          <Link href={`/admin/sales-playbook`} className="text-[#7C3AED] hover:underline inline-flex items-center gap-1">
+          <Link href={`/admin/sales-playbook`} className="text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:underline inline-flex items-center gap-1">
             Sales Playbook <BookOpen className="w-3 h-3" />
           </Link>
         </div>
@@ -1061,7 +1061,7 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
         <button
           onClick={() => setIdx((i) => Math.max(0, i - 1))}
           disabled={idx === 0}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium border border-[var(--os-border)] bg-white text-[#475569] disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium border border-[var(--os-border)] bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] disabled:opacity-40"
         >
           <ChevronLeft className="w-4 h-4" /> Back
         </button>
@@ -1073,7 +1073,7 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
         </button>
         <button
           onClick={() => setIdx((i) => Math.min(prospects.length - 1, i + 1))}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium border border-[var(--os-border)] bg-white text-[#475569]"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium border border-[var(--os-border)] bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)]"
           title="Skip without action"
         >
           Skip <SkipForward className="w-3.5 h-3.5" />
@@ -1114,7 +1114,7 @@ function AllHotTab({ prospects, loading, onAction, onSend, onFollowUp, templates
               "text-[12px] px-3 py-1.5 rounded-lg font-medium transition-all",
               filter === f.id
                 ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
-                : "bg-white border border-[var(--os-border)] text-[#475569] hover:bg-gray-50"
+                : "bg-[var(--os-surface)] border border-[var(--os-border)] text-[#475569] os-dark:text-[var(--os-text)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-hover)]"
             )}
           >
             {f.label}
@@ -1122,11 +1122,11 @@ function AllHotTab({ prospects, loading, onAction, onSend, onFollowUp, templates
         ))}
       </div>
 
-      <div className="rounded-2xl border border-[var(--os-border)] bg-white overflow-hidden">
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[var(--os-border)] bg-gray-50/60 text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
+              <tr className="border-b border-[var(--os-border)] bg-gray-50/60 os-dark:bg-[var(--os-surface-2)] text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium">
                 <th className="text-left px-3 py-2">Business</th>
                 <th className="text-left px-3 py-2 hidden md:table-cell">Sector</th>
                 <th className="text-left px-3 py-2 hidden lg:table-cell">Phone</th>
@@ -1140,23 +1140,23 @@ function AllHotTab({ prospects, loading, onAction, onSend, onFollowUp, templates
             </thead>
             <tbody>
               {filtered.slice(0, 300).map((p) => (
-                <tr key={p.id} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60">
+                <tr key={p.id} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-hover)]">
                   <td className="px-3 py-2">
-                    <Link href={`/admin/prospecting/${p.id}`} className="text-[13px] font-medium text-[#0F172A] hover:text-[#7C3AED]">{p.name}</Link>
-                    <div className="text-[10px] text-[#94A3B8] md:hidden">{p.sector}{p.neighborhood ? ` · ${p.neighborhood}` : ""}</div>
+                    <Link href={`/admin/prospecting/${p.id}`} className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)]">{p.name}</Link>
+                    <div className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] md:hidden">{p.sector}{p.neighborhood ? ` · ${p.neighborhood}` : ""}</div>
                   </td>
-                  <td className="px-3 py-2 text-[12px] text-[#475569] hidden md:table-cell">{p.sector}</td>
-                  <td className="px-3 py-2 text-[12px] text-[#475569] hidden lg:table-cell tabular-nums">{p.phone || <span className="text-[#CBD5E1]">—</span>}</td>
-                  <td className="px-3 py-2 text-[12px] text-[#475569] hidden lg:table-cell">{p.instagram ? `@${p.instagram.replace(/^@/, "")}` : <span className="text-[#CBD5E1]">—</span>}</td>
-                  <td className="px-3 py-2 text-[12px] text-[#475569] hidden md:table-cell">{relativeDate(p.lastActionAt)}</td>
-                  <td className="px-3 py-2 text-[11px] text-[#64748B] hidden md:table-cell">{followupStage(p)}</td>
-                  <td className="px-3 py-2 text-[11px] text-[#64748B] hidden lg:table-cell">{p.owner?.fullName || <span className="text-[#CBD5E1]">unassigned</span>}</td>
+                  <td className="px-3 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)] hidden md:table-cell">{p.sector}</td>
+                  <td className="px-3 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)] hidden lg:table-cell tabular-nums">{p.phone || <span className="text-[#CBD5E1] os-dark:text-[var(--os-text-faint)]">—</span>}</td>
+                  <td className="px-3 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)] hidden lg:table-cell">{p.instagram ? `@${p.instagram.replace(/^@/, "")}` : <span className="text-[#CBD5E1] os-dark:text-[var(--os-text-faint)]">—</span>}</td>
+                  <td className="px-3 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)] hidden md:table-cell">{relativeDate(p.lastActionAt)}</td>
+                  <td className="px-3 py-2 text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] hidden md:table-cell">{followupStage(p)}</td>
+                  <td className="px-3 py-2 text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] hidden lg:table-cell">{p.owner?.fullName || <span className="text-[#CBD5E1] os-dark:text-[var(--os-text-faint)]">unassigned</span>}</td>
                   <td className="px-3 py-2">
-                    {p.status === "REPONDU" && <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-medium">REPLIED</span>}
-                    {p.status === "ENVOYE" && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-medium">SENT</span>}
-                    {p.status === "A_ENVOYER" && <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-[#64748B] font-medium">PENDING</span>}
-                    {p.status === "CONVERTI" && <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-[#7C3AED] font-medium">CLIENT</span>}
-                    {isFollowupCapped(p) && <span title="Already messaged twice — no pre-filled template will load" className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">✓ FU</span>}
+                    {p.status === "REPONDU" && <span className="text-[11px] px-1.5 py-0.5 rounded bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 font-medium">REPLIED</span>}
+                    {p.status === "ENVOYE" && <span className="text-[11px] px-1.5 py-0.5 rounded bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 font-medium">SENT</span>}
+                    {p.status === "A_ENVOYER" && <span className="text-[11px] px-1.5 py-0.5 rounded bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium">PENDING</span>}
+                    {p.status === "CONVERTI" && <span className="text-[11px] px-1.5 py-0.5 rounded bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] font-medium">CLIENT</span>}
+                    {isFollowupCapped(p) && <span title="Already messaged twice — no pre-filled template will load" className="ml-1 text-[11px] px-1.5 py-0.5 rounded bg-slate-100 os-dark:bg-[var(--os-surface-2)] text-slate-600 os-dark:text-[var(--os-text)] font-medium">✓ FU</span>}
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex justify-end">
@@ -1169,7 +1169,7 @@ function AllHotTab({ prospects, loading, onAction, onSend, onFollowUp, templates
           </table>
         </div>
         {filtered.length > 300 && (
-          <div className="px-4 py-2 text-[11px] text-[#64748B] text-center border-t border-[var(--os-border)]">Showing top 300 of {filtered.length}</div>
+          <div className="px-4 py-2 text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] text-center border-t border-[var(--os-border)]">Showing top 300 of {filtered.length}</div>
         )}
       </div>
     </div>
@@ -1233,18 +1233,18 @@ function QuickAddModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 sm:pt-16 px-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-      <div {...dialogProps} className="relative w-full max-w-lg bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
+      <div {...dialogProps} className="relative w-full max-w-lg bg-[var(--os-surface)] rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
         <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--os-border)]">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8B00FF] to-[#C026D3] flex items-center justify-center shadow-md shadow-purple-500/20">
               <Plus className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h2 id={titleId} className="text-[15px] font-semibold text-[#0F172A]">Quick add prospect</h2>
-              <div className="text-[11px] text-[#64748B]">Lands in &quot;Never contacted&quot; — start messaging right after</div>
+              <h2 id={titleId} className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Quick add prospect</h2>
+              <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">Lands in &quot;Never contacted&quot; — start messaging right after</div>
             </div>
           </div>
-          <button onClick={onClose} aria-label="Close" className="p-1 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} aria-label="Close" className="p-1 rounded-lg text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]"><X className="w-4 h-4" /></button>
         </div>
 
         {saved ? (
@@ -1252,13 +1252,13 @@ function QuickAddModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
             <div className="w-12 h-12 rounded-xl bg-emerald-500 mx-auto mb-3 flex items-center justify-center shadow-md shadow-emerald-500/30">
               <CheckIcon className="w-6 h-6 text-white" />
             </div>
-            <div className="text-[14px] font-semibold text-[#0F172A] mb-1">{saved.name} added</div>
-            <div className="text-[12px] text-[#64748B]">
+            <div className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] mb-1">{saved.name} added</div>
+            <div className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
               Classified as <span className={cn(
                 "px-1.5 py-0.5 rounded font-bold",
-                saved.qualityLabel === "HOT" ? "bg-rose-100 text-rose-700" :
-                saved.qualityLabel === "WARM" ? "bg-amber-100 text-amber-700" :
-                "bg-gray-100 text-gray-600"
+                saved.qualityLabel === "HOT" ? "bg-rose-100 os-dark:bg-rose-500/15 text-rose-700 os-dark:text-rose-300" :
+                saved.qualityLabel === "WARM" ? "bg-amber-100 os-dark:bg-amber-500/15 text-amber-700 os-dark:text-amber-300" :
+                "bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-gray-600 os-dark:text-[var(--os-text)]"
               )}>{saved.qualityLabel}</span> · refreshing queue...
             </div>
           </div>
@@ -1268,8 +1268,8 @@ function QuickAddModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
               <input type="text" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Restaurant Le Foundouk" className={QINPUT} required />
             </QField>
 
-            <div className="rounded-lg border border-purple-200 bg-purple-50/30 p-2.5">
-              <div className="text-[10px] uppercase tracking-wider text-[#7C3AED] font-bold mb-2">Contact (need at least one)</div>
+            <div className="rounded-lg border border-purple-200 os-dark:border-purple-500/30 bg-purple-50/30 os-dark:bg-purple-500/10 p-2.5">
+              <div className="text-[11px] uppercase tracking-wider text-[#7C3AED] os-dark:text-[var(--os-purple)] font-bold mb-2">Contact (need at least one)</div>
               <div className="grid grid-cols-2 gap-2">
                 <QField label="Phone">
                   <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="06 12 34 56 78" className={QINPUT} />
@@ -1279,12 +1279,12 @@ function QuickAddModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
                 </QField>
               </div>
               {phone.trim() && (
-                <div className="text-[10px] text-[#64748B] mt-1.5">
+                <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-1.5">
                   {/^[+]?2?1?2?0?[67]/.test(phone.replace(/\D/g, "")) || /^[67]/.test(phone.replace(/\D/g, ""))
-                    ? <span className="text-emerald-700">✓ Mobile — will be HOT, WhatsApp ready</span>
+                    ? <span className="text-emerald-700 os-dark:text-emerald-300">✓ Mobile — will be HOT, WhatsApp ready</span>
                     : /^[+]?2?1?2?0?5/.test(phone.replace(/\D/g, "")) || /^5/.test(phone.replace(/\D/g, ""))
-                    ? <span className="text-amber-700">⚠ Landline (05xx) — will be WARM unless Instagram added</span>
-                    : <span className="text-[#94A3B8]">Format will be normalized to +212</span>}
+                    ? <span className="text-amber-700 os-dark:text-amber-300">⚠ Landline (05xx) — will be WARM unless Instagram added</span>
+                    : <span className="text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">Format will be normalized to +212</span>}
                 </div>
               )}
             </div>
@@ -1301,7 +1301,7 @@ function QuickAddModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
             </div>
 
             <details className="text-[12px]">
-              <summary className="cursor-pointer text-[#7C3AED] hover:underline">Add website / email (optional)</summary>
+              <summary className="cursor-pointer text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:underline">Add website / email (optional)</summary>
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <QField label="Website">
                   <input type="text" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://..." className={QINPUT} />
@@ -1313,11 +1313,11 @@ function QuickAddModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
             </details>
 
             {error && (
-              <div className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-2.5 py-2">{error}</div>
+              <div className="text-[12px] text-red-600 os-dark:text-red-400 bg-red-50 os-dark:bg-red-500/10 border border-red-200 os-dark:border-red-500/30 rounded-lg px-2.5 py-2">{error}</div>
             )}
 
             <div className="flex justify-end gap-2 pt-1">
-              <button type="button" onClick={onClose} className="px-3 py-2 rounded-xl text-[13px] font-medium text-[#475569] hover:bg-[#F1F5F9]">Cancel</button>
+              <button type="button" onClick={onClose} className="px-3 py-2 rounded-xl text-[13px] font-medium text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]">Cancel</button>
               <button type="submit" disabled={!canSubmit || saving} className={cn(
                 "inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-[13px] font-semibold text-white shadow-md transition-all",
                 !canSubmit || saving ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:shadow-lg"
@@ -1333,12 +1333,12 @@ function QuickAddModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
   );
 }
 
-const QINPUT = "w-full px-2.5 py-1.5 rounded-lg border border-[var(--os-border)] bg-white text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300";
+const QINPUT = "w-full px-2.5 py-1.5 rounded-lg border border-[var(--os-border)] bg-[var(--os-control-bg)] text-[13px] text-[#0F172A] os-dark:text-[var(--os-text)] focus:outline-none focus:ring-2 focus:ring-purple-300 os-dark:focus:ring-purple-500/40";
 
 function QField({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-1">
+      <label className="block text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1">
         {label}{required && <span className="text-rose-500 ml-0.5">*</span>}
       </label>
       {children}
