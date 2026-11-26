@@ -11,7 +11,7 @@ const ACTION_LABELS: Record<string, string> = {
   STATUS_ENVOYE: "changed status to Sent", STATUS_REPONDU: "marked as replied", STATUS_CONVERTI: "converted to lead",
   NOTE_ADDED: "added a note to", UPDATED: "updated",
 };
-const ROLE_COLORS: Record<string, string> = { admin: "bg-violet-50 text-violet-600", sales: "bg-blue-50 text-blue-600", designer: "bg-pink-50 text-pink-600", developer: "bg-emerald-50 text-emerald-600" };
+const ROLE_COLORS: Record<string, string> = { admin: "bg-violet-50 os-dark:bg-violet-500/10 text-violet-600 os-dark:text-violet-400", sales: "bg-blue-50 os-dark:bg-blue-500/10 text-blue-600 os-dark:text-blue-400", designer: "bg-pink-50 os-dark:bg-pink-500/10 text-pink-600 os-dark:text-pink-400", developer: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-600 os-dark:text-emerald-400" };
 
 type SessionUser = { userId: string; email: string; fullName: string; role: string; avatarInitials: string };
 type Activity = { id: string; userName: string; actionType: string; details: string | null; createdAt: string; prospect: { id: string; name: string; sector: string } };
@@ -47,41 +47,41 @@ export default function ProfilePage() {
       });
   }, [router]);
 
-  if (loading || !me) return <div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>;
+  if (loading || !me) return <div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-violet-300 os-dark:border-violet-500/30 border-t-violet-600 rounded-full animate-spin" /></div>;
 
   const cards = [
-    { label: "Assigned to me", value: myStat?.assigned ?? 0, color: "text-[#0F172A]" },
-    { label: "Sent by me", value: myStat?.sent ?? 0, color: "text-blue-600" },
-    { label: "Replies", value: myStat?.replied ?? 0, color: "text-emerald-600" },
-    { label: "Converted", value: myStat?.converted ?? 0, color: "text-violet-600" },
-    { label: "Follow-ups pending", value: pendingFollowups, color: "text-amber-600" },
+    { label: "Assigned to me", value: myStat?.assigned ?? 0, color: "text-[#0F172A] os-dark:text-[var(--os-text)]" },
+    { label: "Sent by me", value: myStat?.sent ?? 0, color: "text-blue-600 os-dark:text-blue-400" },
+    { label: "Replies", value: myStat?.replied ?? 0, color: "text-emerald-600 os-dark:text-emerald-400" },
+    { label: "Converted", value: myStat?.converted ?? 0, color: "text-violet-600 os-dark:text-violet-400" },
+    { label: "Follow-ups pending", value: pendingFollowups, color: "text-amber-600 os-dark:text-amber-400" },
   ];
 
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6">
+      <div className="bg-[var(--os-surface)] rounded-2xl border border-gray-100 os-dark:border-[var(--os-border)] p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
           <div className="flex items-center gap-4 sm:gap-5">
             <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-lg sm:text-xl font-semibold text-white shadow-lg shadow-violet-100 shrink-0">
               {me.avatarInitials}
             </div>
             <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl font-semibold text-[#0F172A]">{me.fullName}</h1>
+              <h1 className="text-lg sm:text-xl font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{me.fullName}</h1>
               <div className="flex items-center gap-2 sm:gap-3 mt-1 flex-wrap">
-                <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-semibold uppercase ${ROLE_COLORS[me.role] ?? ""}`}>{me.role}</span>
-                <span className="text-[12px] sm:text-[13px] text-[#64748B] truncate">{me.email}</span>
+                <span className={`px-2.5 py-0.5 rounded-lg text-[11px] font-semibold uppercase ${ROLE_COLORS[me.role] ?? ""}`}>{me.role}</span>
+                <span className="text-[12px] sm:text-[13px] text-[#64748B] os-dark:text-[var(--os-text-soft)] truncate">{me.email}</span>
               </div>
             </div>
           </div>
           <div className="sm:ml-auto flex gap-4 sm:gap-4 pl-16 sm:pl-0">
             <div className="text-center sm:text-right">
-              <p className="text-lg sm:text-xl font-semibold text-[#0F172A]">{myStat?.replyRate ?? 0}%</p>
-              <p className="text-[10px] text-[#64748B] uppercase">Reply rate</p>
+              <p className="text-lg sm:text-xl font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{myStat?.replyRate ?? 0}%</p>
+              <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] uppercase">Reply rate</p>
             </div>
             <div className="text-center sm:text-right">
-              <p className="text-lg sm:text-xl font-semibold text-[#0F172A]">{myStat?.conversionRate ?? 0}%</p>
-              <p className="text-[10px] text-[#64748B] uppercase">Conversion</p>
+              <p className="text-lg sm:text-xl font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{myStat?.conversionRate ?? 0}%</p>
+              <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] uppercase">Conversion</p>
             </div>
           </div>
         </div>
@@ -90,29 +90,29 @@ export default function ProfilePage() {
       {/* Performance Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3 mb-4 sm:mb-6">
         {cards.map((c) => (
-          <div key={c.label} className="bg-white rounded-2xl border border-gray-100 p-3 sm:p-4 text-center">
+          <div key={c.label} className="bg-[var(--os-surface)] rounded-2xl border border-gray-100 os-dark:border-[var(--os-border)] p-3 sm:p-4 text-center">
             <p className={`text-xl sm:text-2xl font-semibold ${c.color}`}>{c.value}</p>
-            <p className="text-[10px] text-[#64748B] mt-1 uppercase tracking-wide">{c.label}</p>
+            <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-1 uppercase tracking-wide">{c.label}</p>
           </div>
         ))}
       </div>
 
       {/* My Activity */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6">
-        <h2 className="text-[15px] font-semibold text-[#0F172A] mb-4 sm:mb-5">My Activity</h2>
+      <div className="bg-[var(--os-surface)] rounded-2xl border border-gray-100 os-dark:border-[var(--os-border)] p-4 sm:p-6">
+        <h2 className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] mb-4 sm:mb-5">My Activity</h2>
         {activities.length === 0 ? (
-          <p className="text-[13px] text-[#64748B] py-8 text-center">No activity yet. Start prospecting!</p>
+          <p className="text-[13px] text-[#64748B] os-dark:text-[var(--os-text-soft)] py-8 text-center">No activity yet. Start prospecting!</p>
         ) : (
-          <div className="space-y-0 border-l-2 border-gray-100 ml-2">
+          <div className="space-y-0 border-l-2 border-gray-100 os-dark:border-[var(--os-border)] ml-2">
             {activities.map((a) => (
               <div key={a.id} className="relative pl-5 pb-4">
                 <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-violet-400" />
-                <p className="text-[13px] text-gray-600">
+                <p className="text-[13px] text-gray-600 os-dark:text-[var(--os-text)]">
                   {ACTION_LABELS[a.actionType] ?? a.actionType}{" "}
-                  <Link href={`/admin/prospecting/${a.prospect.id}`} className="font-medium text-violet-600 hover:text-violet-700">{a.prospect.name}</Link>
+                  <Link href={`/admin/prospecting/${a.prospect.id}`} className="font-medium text-violet-600 os-dark:text-violet-400 hover:text-violet-700 os-dark:hover:text-violet-300">{a.prospect.name}</Link>
                 </p>
-                {a.details && a.actionType === "NOTE_ADDED" && <p className="text-[11px] text-[#64748B] mt-0.5 truncate">&ldquo;{a.details}&rdquo;</p>}
-                <p className="text-[10px] text-[#64748B] mt-0.5">{new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+                {a.details && a.actionType === "NOTE_ADDED" && <p className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-0.5 truncate">&ldquo;{a.details}&rdquo;</p>}
+                <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-0.5">{new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
               </div>
             ))}
           </div>

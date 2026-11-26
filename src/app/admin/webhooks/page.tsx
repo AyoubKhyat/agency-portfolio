@@ -38,7 +38,7 @@ function Toast({ message, type }: { message: string; type: "success" | "error" }
   return (
     <div className={cn(
       "fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-medium animate-in slide-in-from-bottom-4",
-      type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200",
+      type === "success" ? "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border border-emerald-200 os-dark:border-emerald-500/30" : "bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 border border-red-200 os-dark:border-red-500/30",
     )}>
       {type === "success" ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
       {message}
@@ -245,12 +245,12 @@ export default function WebhooksPage() {
       {showForm && (
         <GlassCard className="mb-6" padding="lg">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-[15px] font-semibold text-[#0F172A]">
+            <h3 className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">
               {editingId ? "Edit Webhook" : "New Webhook"}
             </h3>
             <button
               onClick={resetForm}
-              className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#475569] hover:bg-[#F1F5F9] transition-colors"
+              className="p-1.5 rounded-lg text-[#94A3B8] os-dark:text-[var(--os-text-soft)] hover:text-[#475569] os-dark:hover:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)] transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -259,7 +259,7 @@ export default function WebhooksPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[13px] font-medium text-[#0F172A] mb-1.5">
+                <label className="block text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] mb-1.5">
                   Name <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -270,7 +270,7 @@ export default function WebhooksPage() {
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#0F172A] mb-1.5">
+                <label className="block text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] mb-1.5">
                   URL <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -284,7 +284,7 @@ export default function WebhooksPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-[#0F172A] mb-2">
+              <label className="block text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] mb-2">
                 Events <span className="text-red-500">*</span>
               </label>
               <div className="flex flex-wrap gap-2">
@@ -299,7 +299,7 @@ export default function WebhooksPage() {
                         "px-3 py-1.5 rounded-lg text-[12px] font-medium border transition-all duration-150",
                         selected
                           ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white border-transparent shadow-sm shadow-purple-500/20"
-                          : "bg-white border-[#E2E8F0] text-[#475569] hover:border-[#CBD5E1] hover:bg-[#F8FAFC]"
+                          : "bg-[var(--os-surface)] border-[#E2E8F0] os-dark:border-[var(--os-border)] text-[#475569] os-dark:text-[var(--os-text)] hover:border-[#CBD5E1] os-dark:hover:border-[var(--os-border)] hover:bg-[#F8FAFC] os-dark:hover:bg-[var(--os-hover)]"
                       )}
                     >
                       {ev.label}
@@ -310,9 +310,9 @@ export default function WebhooksPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-[#0F172A] mb-1.5">
+              <label className="block text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] mb-1.5">
                 Signing Secret{" "}
-                <span className="text-[11px] text-[#94A3B8] font-normal">(optional)</span>
+                <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] font-normal">(optional)</span>
               </label>
               <Input
                 type="password"
@@ -321,7 +321,7 @@ export default function WebhooksPage() {
                 onChange={(e) => setFormSecret(e.target.value)}
                 autoComplete="off"
               />
-              <p className="text-[11px] text-[#94A3B8] mt-1">
+              <p className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mt-1">
                 If set, payloads will include an X-Webhook-Signature header for verification.
               </p>
             </div>
@@ -341,15 +341,15 @@ export default function WebhooksPage() {
       {/* Webhooks Table */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-[#8B00FF]" />
+          <Loader2 className="w-6 h-6 animate-spin text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
         </div>
       ) : webhooks.length === 0 ? (
         <GlassCard className="text-center py-16">
-          <Globe className="w-12 h-12 mx-auto text-[#CBD5E1] mb-4" />
-          <h3 className="text-[15px] font-semibold text-[#0F172A] mb-1">
+          <Globe className="w-12 h-12 mx-auto text-[#CBD5E1] os-dark:text-[var(--os-text-faint)] mb-4" />
+          <h3 className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] mb-1">
             No webhooks configured
           </h3>
-          <p className="text-[13px] text-[#64748B] mb-5">
+          <p className="text-[13px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mb-5">
             Add a webhook to send real-time event notifications to external services.
           </p>
           <FormButton
@@ -362,23 +362,80 @@ export default function WebhooksPage() {
         </GlassCard>
       ) : (
         <GlassCard padding="none">
-          <div className="overflow-x-auto">
+          {/* Below md: one card per webhook (same actions as the table) */}
+          <ul className="md:hidden divide-y divide-[#F1F5F9] os-dark:divide-[var(--os-border)]">
+            {webhooks.map((wh) => (
+              <li key={wh.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={cn("w-2 h-2 rounded-full shrink-0", wh.isActive ? "bg-emerald-500" : "bg-gray-300 os-dark:bg-[var(--os-control-border)]")} />
+                    <span className="text-[14px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] truncate">{wh.name}</span>
+                  </div>
+                  <button
+                    onClick={() => handleToggle(wh)}
+                    role="switch"
+                    aria-checked={wh.isActive}
+                    aria-label={`${wh.name} active`}
+                    className={cn(
+                      "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors",
+                      wh.isActive ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] shadow-sm shadow-purple-500/30" : "bg-[#CBD5E1] os-dark:bg-[var(--os-control-border)]"
+                    )}
+                  >
+                    <span className={cn("inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform", wh.isActive ? "translate-x-[22px]" : "translate-x-0.5")} />
+                  </button>
+                </div>
+                <code className="block text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)] bg-[#F8FAFC] os-dark:bg-[var(--os-surface-2)] px-2 py-1 rounded-md font-mono break-all">
+                  {truncateUrl(wh.url)}
+                </code>
+                <div className="flex flex-wrap gap-1">
+                  {wh.events.split(",").map((ev) => (
+                    <Badge key={ev} variant={eventBadgeVariant(ev.trim())} size="sm">{ev.trim()}</Badge>
+                  ))}
+                </div>
+                <div className="flex items-center justify-end gap-1 pt-1">
+                  <button
+                    onClick={() => handleTest(wh)}
+                    disabled={testingId === wh.id}
+                    aria-label="Send test event"
+                    className="p-2 rounded-lg text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-amber-600 os-dark:hover:text-amber-400 hover:bg-amber-50 os-dark:hover:bg-amber-500/10 transition-colors disabled:opacity-50"
+                  >
+                    {testingId === wh.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                  </button>
+                  <button
+                    onClick={() => startEdit(wh)}
+                    aria-label="Edit"
+                    className="p-2 rounded-lg text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-[#8B00FF] os-dark:hover:text-[var(--os-purple)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10 transition-colors"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(wh.id)}
+                    aria-label="Delete"
+                    className="p-2 rounded-lg text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-red-500 hover:bg-red-50 os-dark:hover:bg-red-500/10 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#F1F5F9]">
-                  <th className="text-left text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider px-5 py-3">
+                <tr className="border-b border-[#F1F5F9] os-dark:border-[var(--os-border)]">
+                  <th className="text-left text-[11px] font-semibold text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider px-5 py-3">
                     Name
                   </th>
-                  <th className="text-left text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider px-5 py-3">
+                  <th className="text-left text-[11px] font-semibold text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider px-5 py-3">
                     URL
                   </th>
-                  <th className="text-left text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider px-5 py-3">
+                  <th className="text-left text-[11px] font-semibold text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider px-5 py-3">
                     Events
                   </th>
-                  <th className="text-center text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider px-5 py-3">
+                  <th className="text-center text-[11px] font-semibold text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider px-5 py-3">
                     Active
                   </th>
-                  <th className="text-right text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider px-5 py-3">
+                  <th className="text-right text-[11px] font-semibold text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider px-5 py-3">
                     Actions
                   </th>
                 </tr>
@@ -387,23 +444,23 @@ export default function WebhooksPage() {
                 {webhooks.map((wh) => (
                   <tr
                     key={wh.id}
-                    className="border-b border-[#F8FAFC] last:border-0 hover:bg-[#FAFBFD] transition-colors"
+                    className="border-b border-[#F8FAFC] os-dark:border-[var(--os-border)] last:border-0 hover:bg-[#FAFBFD] os-dark:hover:bg-[var(--os-hover)] transition-colors"
                   >
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2.5">
                         <div
                           className={cn(
                             "w-2 h-2 rounded-full shrink-0",
-                            wh.isActive ? "bg-emerald-500" : "bg-gray-300"
+                            wh.isActive ? "bg-emerald-500" : "bg-gray-300 os-dark:bg-[var(--os-control-border)]"
                           )}
                         />
-                        <span className="text-[13px] font-medium text-[#0F172A]">
+                        <span className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">
                           {wh.name}
                         </span>
                       </div>
                     </td>
                     <td className="px-5 py-3.5">
-                      <code className="text-[12px] text-[#64748B] bg-[#F8FAFC] px-2 py-0.5 rounded-md font-mono">
+                      <code className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)] bg-[#F8FAFC] os-dark:bg-[var(--os-surface-2)] px-2 py-0.5 rounded-md font-mono">
                         {truncateUrl(wh.url)}
                       </code>
                     </td>
@@ -419,11 +476,14 @@ export default function WebhooksPage() {
                     <td className="px-5 py-3.5 text-center">
                       <button
                         onClick={() => handleToggle(wh)}
+                        role="switch"
+                        aria-checked={wh.isActive}
+                        aria-label={`${wh.name} active`}
                         className={cn(
                           "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors",
                           wh.isActive
                             ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] shadow-sm shadow-purple-500/30"
-                            : "bg-[#CBD5E1]"
+                            : "bg-[#CBD5E1] os-dark:bg-[var(--os-control-border)]"
                         )}
                       >
                         <span
@@ -440,7 +500,8 @@ export default function WebhooksPage() {
                           onClick={() => handleTest(wh)}
                           disabled={testingId === wh.id}
                           title="Send test"
-                          className="p-1.5 rounded-lg text-[#94A3B8] hover:text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50"
+                          aria-label="Send test event"
+                          className="p-1.5 rounded-lg text-[#94A3B8] os-dark:text-[var(--os-text-soft)] hover:text-amber-600 os-dark:hover:text-amber-400 hover:bg-amber-50 os-dark:hover:bg-amber-500/10 transition-colors disabled:opacity-50"
                         >
                           {testingId === wh.id ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -451,14 +512,16 @@ export default function WebhooksPage() {
                         <button
                           onClick={() => startEdit(wh)}
                           title="Edit"
-                          className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#8B00FF] hover:bg-purple-50 transition-colors"
+                          aria-label="Edit"
+                          className="p-1.5 rounded-lg text-[#94A3B8] os-dark:text-[var(--os-text-soft)] hover:text-[#8B00FF] os-dark:hover:text-[var(--os-purple)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10 transition-colors"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(wh.id)}
                           title="Delete"
-                          className="p-1.5 rounded-lg text-[#94A3B8] hover:text-red-500 hover:bg-red-50 transition-colors"
+                          aria-label="Delete"
+                          className="p-1.5 rounded-lg text-[#94A3B8] os-dark:text-[var(--os-text-soft)] hover:text-red-500 hover:bg-red-50 os-dark:hover:bg-red-500/10 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

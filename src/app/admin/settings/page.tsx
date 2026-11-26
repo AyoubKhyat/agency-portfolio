@@ -32,7 +32,7 @@ function Toast({ message, type }: { message: string; type: "success" | "error" }
   return (
     <div className={cn(
       "fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-medium animate-in slide-in-from-bottom-4",
-      type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200",
+      type === "success" ? "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border border-emerald-200 os-dark:border-emerald-500/30" : "bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 border border-red-200 os-dark:border-red-500/30",
     )}>
       {type === "success" ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
       {message}
@@ -166,35 +166,35 @@ export default function SettingsPage() {
             <User className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-[#0F172A]">Profile</h2>
-            <p className="text-xs text-[#475569]">Update your name and avatar</p>
+            <h2 className="text-base font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Profile</h2>
+            <p className="text-xs text-[#475569] os-dark:text-[var(--os-text)]">Update your name and avatar</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           <div>
-            <label className="block text-xs font-medium text-[#475569] mb-1.5">Full Name</label>
+            <label className="block text-xs font-medium text-[#475569] os-dark:text-[var(--os-text)] mb-1.5">Full Name</label>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-[#0F172A] focus:ring-2 focus:ring-purple-200 focus:border-purple-400 outline-none transition-all"
+              className="w-full px-3 py-2 rounded-lg bg-[var(--os-control-bg)] border border-gray-200 os-dark:border-[var(--os-border)] text-sm text-[#0F172A] os-dark:text-[var(--os-text)] focus:ring-2 focus:ring-purple-200 os-dark:focus:ring-purple-500/40 focus:border-purple-400 os-dark:focus:border-purple-500/50 outline-none transition-all"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#475569] mb-1.5">Initials</label>
+            <label className="block text-xs font-medium text-[#475569] os-dark:text-[var(--os-text)] mb-1.5">Initials</label>
             <input
               type="text"
               value={initials}
               onChange={(e) => setInitials(e.target.value.slice(0, 3))}
               maxLength={3}
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-[#0F172A] focus:ring-2 focus:ring-purple-200 focus:border-purple-400 outline-none transition-all"
+              className="w-full px-3 py-2 rounded-lg bg-[var(--os-control-bg)] border border-gray-200 os-dark:border-[var(--os-border)] text-sm text-[#0F172A] os-dark:text-[var(--os-text)] focus:ring-2 focus:ring-purple-200 os-dark:focus:ring-purple-500/40 focus:border-purple-400 os-dark:focus:border-purple-500/50 outline-none transition-all"
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-[#94A3B8] mb-4">
-          <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-600 font-medium capitalize">{me?.role}</span>
+        <div className="flex items-center gap-3 text-xs text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mb-4">
+          <span className="px-2 py-0.5 rounded-md bg-purple-50 os-dark:bg-purple-500/10 text-purple-600 os-dark:text-purple-400 font-medium capitalize">{me?.role}</span>
           <span>{me?.email}</span>
         </div>
 
@@ -210,25 +210,25 @@ export default function SettingsPage() {
             <Lock className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-[#0F172A]">Change Password</h2>
-            <p className="text-xs text-[#475569]">Update your login credentials</p>
+            <h2 className="text-base font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Change Password</h2>
+            <p className="text-xs text-[#475569] os-dark:text-[var(--os-text)]">Update your login credentials</p>
           </div>
         </div>
 
         <div className="space-y-4 mb-6">
           <div>
-            <label className="block text-xs font-medium text-[#475569] mb-1.5">Current Password</label>
+            <label className="block text-xs font-medium text-[#475569] os-dark:text-[var(--os-text)] mb-1.5">Current Password</label>
             <div className="relative">
               <input
                 type={showPasswords ? "text" : "password"}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-3 py-2 pr-10 rounded-lg border border-gray-200 text-sm text-[#0F172A] focus:ring-2 focus:ring-purple-200 focus:border-purple-400 outline-none transition-all"
+                className="w-full px-3 py-2 pr-10 rounded-lg bg-[var(--os-control-bg)] border border-gray-200 os-dark:border-[var(--os-border)] text-sm text-[#0F172A] os-dark:text-[var(--os-text)] focus:ring-2 focus:ring-purple-200 os-dark:focus:ring-purple-500/40 focus:border-purple-400 os-dark:focus:border-purple-500/50 outline-none transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPasswords(!showPasswords)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#475569]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] os-dark:text-[var(--os-text-soft)] hover:text-[#475569] os-dark:hover:text-[var(--os-text)]"
               >
                 {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -236,29 +236,29 @@ export default function SettingsPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[#475569] mb-1.5">New Password</label>
+              <label className="block text-xs font-medium text-[#475569] os-dark:text-[var(--os-text)] mb-1.5">New Password</label>
               <input
                 type={showPasswords ? "text" : "password"}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-[#0F172A] focus:ring-2 focus:ring-purple-200 focus:border-purple-400 outline-none transition-all"
+                className="w-full px-3 py-2 rounded-lg bg-[var(--os-control-bg)] border border-gray-200 os-dark:border-[var(--os-border)] text-sm text-[#0F172A] os-dark:text-[var(--os-text)] focus:ring-2 focus:ring-purple-200 os-dark:focus:ring-purple-500/40 focus:border-purple-400 os-dark:focus:border-purple-500/50 outline-none transition-all"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#475569] mb-1.5">Confirm Password</label>
+              <label className="block text-xs font-medium text-[#475569] os-dark:text-[var(--os-text)] mb-1.5">Confirm Password</label>
               <input
                 type={showPasswords ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={cn(
-                  "w-full px-3 py-2 rounded-lg border text-sm text-[#0F172A] focus:ring-2 focus:ring-purple-200 outline-none transition-all",
-                  confirmPassword && confirmPassword !== newPassword ? "border-red-300 focus:border-red-400" : "border-gray-200 focus:border-purple-400",
+                  "w-full px-3 py-2 rounded-lg bg-[var(--os-control-bg)] border text-sm text-[#0F172A] os-dark:text-[var(--os-text)] focus:ring-2 focus:ring-purple-200 os-dark:focus:ring-purple-500/40 outline-none transition-all",
+                  confirmPassword && confirmPassword !== newPassword ? "border-red-300 os-dark:border-red-500/30 focus:border-red-400 os-dark:focus:border-red-500/50" : "border-gray-200 os-dark:border-[var(--os-border)] focus:border-purple-400 os-dark:focus:border-purple-500/50",
                 )}
               />
             </div>
           </div>
           {newPassword && newPassword.length < 6 && (
-            <p className="text-xs text-amber-600">Password must be at least 6 characters</p>
+            <p className="text-xs text-amber-600 os-dark:text-amber-400">Password must be at least 6 characters</p>
           )}
         </div>
 
@@ -280,43 +280,96 @@ export default function SettingsPage() {
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-[#0F172A]">Team Management</h2>
-              <p className="text-xs text-[#475569]">Manage roles and access for your team</p>
+              <h2 className="text-base font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Team Management</h2>
+              <p className="text-xs text-[#475569] os-dark:text-[var(--os-text)]">Manage roles and access for your team</p>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Below md: one card per member (same controls as the table) */}
+          <ul className="md:hidden divide-y divide-gray-100 os-dark:divide-[var(--os-border)]">
+            {team.map((user) => (
+              <li key={user.id} className="py-3 space-y-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0",
+                    user.isActive ? "bg-gradient-to-br from-purple-500 to-violet-600" : "bg-gray-300 os-dark:bg-[var(--os-surface-3)]",
+                  )}>
+                    {user.avatarInitials}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-[#0F172A] os-dark:text-[var(--os-text)] truncate">{user.fullName}</p>
+                    <p className="text-xs text-[#475569] os-dark:text-[var(--os-text)] truncate">{user.email}</p>
+                  </div>
+                  <span className={cn(
+                    "text-xs px-2 py-0.5 rounded-full font-medium shrink-0",
+                    user.isActive ? "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-600 os-dark:text-emerald-400" : "bg-red-50 os-dark:bg-red-500/10 text-red-600 os-dark:text-red-400",
+                  )}>
+                    {user.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-3 pl-[42px]">
+                  <select
+                    value={user.role}
+                    onChange={(e) => changeUserRole(user.id, e.target.value)}
+                    disabled={user.id === me?.userId}
+                    aria-label={`Role for ${user.fullName}`}
+                    className="text-xs px-2 py-1.5 rounded-md border border-gray-200 os-dark:border-[var(--os-border)] bg-[var(--os-control-bg)] text-[#0F172A] os-dark:text-[var(--os-text)] disabled:opacity-50"
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="sales">Sales</option>
+                    <option value="developer">Developer</option>
+                    <option value="designer">Designer</option>
+                  </select>
+                  {user.id !== me?.userId && (
+                    <button
+                      onClick={() => toggleUserActive(user)}
+                      className={cn(
+                        "text-xs px-3 py-1.5 rounded-md font-medium transition-colors",
+                        user.isActive
+                          ? "text-red-600 os-dark:text-red-400 hover:bg-red-50 os-dark:hover:bg-red-500/10"
+                          : "text-emerald-600 os-dark:text-emerald-400 hover:bg-emerald-50 os-dark:hover:bg-emerald-500/10",
+                      )}
+                    >
+                      {user.isActive ? "Deactivate" : "Activate"}
+                    </button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="text-left py-3 px-2 text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Member</th>
-                  <th className="text-left py-3 px-2 text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Email</th>
-                  <th className="text-left py-3 px-2 text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Role</th>
-                  <th className="text-left py-3 px-2 text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Status</th>
-                  <th className="text-right py-3 px-2 text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Actions</th>
+                <tr className="border-b border-gray-100 os-dark:border-[var(--os-border)]">
+                  <th className="text-left py-3 px-2 text-xs font-medium text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider">Member</th>
+                  <th className="text-left py-3 px-2 text-xs font-medium text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider">Email</th>
+                  <th className="text-left py-3 px-2 text-xs font-medium text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider">Role</th>
+                  <th className="text-left py-3 px-2 text-xs font-medium text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider">Status</th>
+                  <th className="text-right py-3 px-2 text-xs font-medium text-[#94A3B8] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {team.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                  <tr key={user.id} className="border-b border-gray-50 os-dark:border-[var(--os-border)] hover:bg-gray-50/50 os-dark:hover:bg-[var(--os-hover)] transition-colors">
                     <td className="py-3 px-2">
                       <div className="flex items-center gap-2.5">
                         <div className={cn(
                           "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white",
-                          user.isActive ? "bg-gradient-to-br from-purple-500 to-violet-600" : "bg-gray-300",
+                          user.isActive ? "bg-gradient-to-br from-purple-500 to-violet-600" : "bg-gray-300 os-dark:bg-[var(--os-surface-3)]",
                         )}>
                           {user.avatarInitials}
                         </div>
-                        <span className="font-medium text-[#0F172A]">{user.fullName}</span>
+                        <span className="font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">{user.fullName}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-2 text-[#475569]">{user.email}</td>
+                    <td className="py-3 px-2 text-[#475569] os-dark:text-[var(--os-text)]">{user.email}</td>
                     <td className="py-3 px-2">
                       <select
                         value={user.role}
                         onChange={(e) => changeUserRole(user.id, e.target.value)}
                         disabled={user.id === me?.userId}
-                        className="text-xs px-2 py-1 rounded-md border border-gray-200 bg-white text-[#0F172A] disabled:opacity-50"
+                        aria-label={`Role for ${user.fullName}`}
+                        className="text-xs px-2 py-1 rounded-md border border-gray-200 os-dark:border-[var(--os-border)] bg-[var(--os-control-bg)] text-[#0F172A] os-dark:text-[var(--os-text)] disabled:opacity-50"
                       >
                         <option value="admin">Admin</option>
                         <option value="sales">Sales</option>
@@ -327,7 +380,7 @@ export default function SettingsPage() {
                     <td className="py-3 px-2">
                       <span className={cn(
                         "text-xs px-2 py-0.5 rounded-full font-medium",
-                        user.isActive ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600",
+                        user.isActive ? "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-600 os-dark:text-emerald-400" : "bg-red-50 os-dark:bg-red-500/10 text-red-600 os-dark:text-red-400",
                       )}>
                         {user.isActive ? "Active" : "Inactive"}
                       </span>
@@ -339,8 +392,8 @@ export default function SettingsPage() {
                           className={cn(
                             "text-xs px-3 py-1 rounded-md font-medium transition-colors",
                             user.isActive
-                              ? "text-red-600 hover:bg-red-50"
-                              : "text-emerald-600 hover:bg-emerald-50",
+                              ? "text-red-600 os-dark:text-red-400 hover:bg-red-50 os-dark:hover:bg-red-500/10"
+                              : "text-emerald-600 os-dark:text-emerald-400 hover:bg-emerald-50 os-dark:hover:bg-emerald-500/10",
                           )}
                         >
                           {user.isActive ? "Deactivate" : "Activate"}
