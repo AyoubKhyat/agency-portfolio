@@ -859,7 +859,7 @@ function ProspectRow({ p, onAction, onSend, onFollowUp, templates }: { p: QueueP
             {p.owner && <><span>·</span><span className="font-medium text-[#475569] os-dark:text-[var(--os-text)]">{p.owner.fullName}</span></>}
           </div>
         </div>
-        <div className="shrink-0">
+        <div className="shrink-0 max-w-full">
           <ActionRow p={p} onAction={onAction} onSend={onSend} onFollowUp={onFollowUp} templates={templates} />
         </div>
       </div>
