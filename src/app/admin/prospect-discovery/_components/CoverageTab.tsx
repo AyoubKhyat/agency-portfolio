@@ -61,40 +61,40 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
 
       {/* Sweep coverage progress */}
       {data.sweep && (
-        <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
             <div className="flex items-center gap-2">
-              <History className="w-4 h-4 text-[#8B00FF]" />
-              <h2 className="text-[14px] font-semibold text-[#0F172A]">Sweep coverage</h2>
+              <History className="w-4 h-4 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
+              <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Sweep coverage</h2>
             </div>
-            <div className="text-[12px] text-[#64748B]">{data.sweep.totalSweeps} sweeps logged total</div>
+            <div className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">{data.sweep.totalSweeps} sweeps logged total</div>
           </div>
           <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-4">
-            <div className="rounded-xl bg-purple-50/60 border border-purple-200 p-3 text-center">
-              <div className="text-2xl font-bold text-[#8B00FF] tabular-nums">{data.sweep.sectorCoveragePct}%</div>
-              <div className="text-[10px] uppercase tracking-wider text-[#7C3AED] font-medium mt-0.5">Sector coverage</div>
+            <div className="rounded-xl bg-purple-50/60 os-dark:bg-purple-500/10 border border-purple-200 os-dark:border-purple-500/30 p-3 text-center">
+              <div className="text-2xl font-bold text-[#8B00FF] os-dark:text-[var(--os-purple)] tabular-nums">{data.sweep.sectorCoveragePct}%</div>
+              <div className="text-[11px] uppercase tracking-wider text-[#7C3AED] os-dark:text-[var(--os-purple)] font-medium mt-0.5">Sector coverage</div>
             </div>
-            <div className="rounded-xl bg-emerald-50/60 border border-emerald-200 p-3 text-center">
-              <div className="text-2xl font-bold text-emerald-700 tabular-nums">{data.sweep.sectorsSwept}</div>
-              <div className="text-[10px] uppercase tracking-wider text-emerald-700 font-medium mt-0.5">Sectors swept</div>
+            <div className="rounded-xl bg-emerald-50/60 os-dark:bg-emerald-500/10 border border-emerald-200 os-dark:border-emerald-500/30 p-3 text-center">
+              <div className="text-2xl font-bold text-emerald-700 os-dark:text-emerald-300 tabular-nums">{data.sweep.sectorsSwept}</div>
+              <div className="text-[11px] uppercase tracking-wider text-emerald-700 os-dark:text-emerald-300 font-medium mt-0.5">Sectors swept</div>
             </div>
-            <div className="rounded-xl bg-amber-50/60 border border-amber-200 p-3 text-center">
-              <div className="text-2xl font-bold text-amber-700 tabular-nums">{data.sweep.neverSweptSectors.length}</div>
-              <div className="text-[10px] uppercase tracking-wider text-amber-700 font-medium mt-0.5">Never swept</div>
+            <div className="rounded-xl bg-amber-50/60 os-dark:bg-amber-500/10 border border-amber-200 os-dark:border-amber-500/30 p-3 text-center">
+              <div className="text-2xl font-bold text-amber-700 os-dark:text-amber-300 tabular-nums">{data.sweep.neverSweptSectors.length}</div>
+              <div className="text-[11px] uppercase tracking-wider text-amber-700 os-dark:text-amber-300 font-medium mt-0.5">Never swept</div>
             </div>
           </div>
 
           {data.sweep.neverSweptSectors.length > 0 && (
             <div className="mb-3">
-              <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-1.5">Sectors never swept</div>
+              <div className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1.5">Sectors never swept</div>
               <div className="flex flex-wrap gap-1.5">
                 {data.sweep.neverSweptSectors.slice(0, 30).map((s) => (
-                  <span key={s.key} className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                  <span key={s.key} className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border border-amber-200 os-dark:border-amber-500/30">
                     {s.label}
                   </span>
                 ))}
                 {data.sweep.neverSweptSectors.length > 30 && (
-                  <span className="text-[11px] text-[#94A3B8]">+ {data.sweep.neverSweptSectors.length - 30} more</span>
+                  <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">+ {data.sweep.neverSweptSectors.length - 30} more</span>
                 )}
               </div>
             </div>
@@ -103,7 +103,7 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
       )}
 
       {/* Find More */}
-      <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50/40 to-violet-50/40 p-4 sm:p-5 flex items-center justify-between gap-3 flex-wrap">
+      <div className="rounded-2xl border-2 border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50/40 to-violet-50/40 os-dark:from-purple-500/10 os-dark:to-violet-500/5 p-4 sm:p-5 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B00FF] to-[#C026D3] flex items-center justify-center shadow-md shadow-purple-500/30">
             <TrendingDown className="w-5 h-5 text-white" />
@@ -128,16 +128,16 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
       </div>
 
       {/* Per-sector */}
-      <div className="rounded-2xl border border-[var(--os-border)] bg-white overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/60">
-          <h2 className="text-[14px] font-semibold text-[#0F172A]">Coverage by sector</h2>
-          <button onClick={load} className="text-[11px] text-[#7C3AED] hover:underline inline-flex items-center gap-1">
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/60 os-dark:bg-[var(--os-surface-2)]">
+          <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Coverage by sector</h2>
+          <button onClick={load} className="text-[11px] text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:underline inline-flex items-center gap-1">
             <RefreshCw className="w-3 h-3" /> Refresh
           </button>
         </div>
-        <div className="max-h-[400px] overflow-y-auto">
+        <div className="max-h-[400px] overflow-auto">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-white border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
+            <thead className="sticky top-0 bg-[var(--os-surface)] border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium">
               <tr>
                 <th className="px-4 py-2 text-left">Sector</th>
                 <th className="px-3 py-2 text-right">Discovered</th>
@@ -148,15 +148,15 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
             </thead>
             <tbody>
               {data.bySector.length === 0 ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-[12px] text-[#94A3B8]">No prospects yet.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-[12px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">No prospects yet.</td></tr>
               ) : data.bySector.map((row) => (
-                <tr key={row.sector} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60">
-                  <td className="px-4 py-2 text-[13px] font-medium text-[#0F172A]">{row.sector}</td>
-                  <td className="px-3 py-2 text-right text-[13px] text-[#0F172A] tabular-nums">{row.discovered}</td>
-                  <td className="px-3 py-2 text-right text-[13px] text-emerald-700 tabular-nums">{row.contacted}</td>
-                  <td className="px-3 py-2 text-right text-[13px] text-[#7C3AED] tabular-nums font-medium">{row.remaining}</td>
+                <tr key={row.sector} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-hover)]">
+                  <td className="px-4 py-2 text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">{row.sector}</td>
+                  <td className="px-3 py-2 text-right text-[13px] text-[#0F172A] os-dark:text-[var(--os-text)] tabular-nums">{row.discovered}</td>
+                  <td className="px-3 py-2 text-right text-[13px] text-emerald-700 os-dark:text-emerald-300 tabular-nums">{row.contacted}</td>
+                  <td className="px-3 py-2 text-right text-[13px] text-[#7C3AED] os-dark:text-[var(--os-purple)] tabular-nums font-medium">{row.remaining}</td>
                   <td className="px-4 py-2">
-                    <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                    <div className="h-1.5 rounded-full bg-gray-100 os-dark:bg-[var(--os-surface-2)] overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-[#8B00FF] to-[#C026D3]" style={{ width: `${(row.discovered / maxSectorDiscovered) * 100}%` }} />
                     </div>
                   </td>
@@ -168,13 +168,13 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
       </div>
 
       {/* Per-neighborhood */}
-      <div className="rounded-2xl border border-[var(--os-border)] bg-white overflow-hidden">
-        <div className="px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/60">
-          <h2 className="text-[14px] font-semibold text-[#0F172A]">Coverage by neighborhood</h2>
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] overflow-hidden">
+        <div className="px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/60 os-dark:bg-[var(--os-surface-2)]">
+          <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Coverage by neighborhood</h2>
         </div>
-        <div className="max-h-[400px] overflow-y-auto">
+        <div className="max-h-[400px] overflow-auto">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-white border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
+            <thead className="sticky top-0 bg-[var(--os-surface)] border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium">
               <tr>
                 <th className="px-4 py-2 text-left">Neighborhood</th>
                 <th className="px-3 py-2 text-right">Discovered</th>
@@ -185,15 +185,15 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
             </thead>
             <tbody>
               {data.byNeighborhood.length === 0 ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-[12px] text-[#94A3B8]">No prospects yet.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-[12px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">No prospects yet.</td></tr>
               ) : data.byNeighborhood.map((row) => (
-                <tr key={row.neighborhood} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60">
-                  <td className="px-4 py-2 text-[13px] font-medium text-[#0F172A]">{row.neighborhood}</td>
-                  <td className="px-3 py-2 text-right text-[13px] text-[#0F172A] tabular-nums">{row.discovered}</td>
-                  <td className="px-3 py-2 text-right text-[13px] text-emerald-700 tabular-nums">{row.contacted}</td>
-                  <td className="px-3 py-2 text-right text-[13px] text-[#7C3AED] tabular-nums font-medium">{row.remaining}</td>
+                <tr key={row.neighborhood} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-hover)]">
+                  <td className="px-4 py-2 text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">{row.neighborhood}</td>
+                  <td className="px-3 py-2 text-right text-[13px] text-[#0F172A] os-dark:text-[var(--os-text)] tabular-nums">{row.discovered}</td>
+                  <td className="px-3 py-2 text-right text-[13px] text-emerald-700 os-dark:text-emerald-300 tabular-nums">{row.contacted}</td>
+                  <td className="px-3 py-2 text-right text-[13px] text-[#7C3AED] os-dark:text-[var(--os-purple)] tabular-nums font-medium">{row.remaining}</td>
                   <td className="px-4 py-2">
-                    <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                    <div className="h-1.5 rounded-full bg-gray-100 os-dark:bg-[var(--os-surface-2)] overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-[#8B00FF] to-[#C026D3]" style={{ width: `${(row.discovered / maxNbDiscovered) * 100}%` }} />
                     </div>
                   </td>
@@ -206,17 +206,17 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
 
       {/* Recent sweep activity */}
       {data.sweep && data.sweep.recentSweeps.length > 0 && (
-        <div className="rounded-2xl border border-[var(--os-border)] bg-white overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/60">
-            <h2 className="text-[14px] font-semibold text-[#0F172A] flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-[#8B00FF]" />
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/60 os-dark:bg-[var(--os-surface-2)]">
+            <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
               Recent sweep activity
             </h2>
-            <span className="text-[11px] text-[#64748B]">last {data.sweep.recentSweeps.length}</span>
+            <span className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">last {data.sweep.recentSweeps.length}</span>
           </div>
-          <div className="max-h-[300px] overflow-y-auto">
+          <div className="max-h-[300px] overflow-auto">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-white border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
+              <thead className="sticky top-0 bg-[var(--os-surface)] border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium">
                 <tr>
                   <th className="px-4 py-2 text-left">When</th>
                   <th className="px-3 py-2 text-left">Sector</th>
@@ -232,16 +232,16 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
                   const hoursAgo = Math.floor((Date.now() - when.getTime()) / (60 * 60 * 1000));
                   const label = hoursAgo < 24 ? `${hoursAgo}h ago` : `${Math.floor(hoursAgo / 24)}d ago`;
                   return (
-                    <tr key={i} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60">
-                      <td className="px-4 py-2 text-[12px] text-[#475569]">{label}</td>
-                      <td className="px-3 py-2 text-[12px] text-[#0F172A]">{s.sector}</td>
-                      <td className="px-3 py-2 text-[12px] text-[#475569] hidden md:table-cell">{s.neighborhood || "city-wide"}</td>
-                      <td className="px-3 py-2 text-right text-[12px] tabular-nums text-[#0F172A]">{s.resultCount}</td>
-                      <td className="px-3 py-2 text-right text-[12px] tabular-nums text-[#7C3AED] font-medium">{s.importedCount}</td>
+                    <tr key={i} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-hover)]">
+                      <td className="px-4 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)]">{label}</td>
+                      <td className="px-3 py-2 text-[12px] text-[#0F172A] os-dark:text-[var(--os-text)]">{s.sector}</td>
+                      <td className="px-3 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)] hidden md:table-cell">{s.neighborhood || "city-wide"}</td>
+                      <td className="px-3 py-2 text-right text-[12px] tabular-nums text-[#0F172A] os-dark:text-[var(--os-text)]">{s.resultCount}</td>
+                      <td className="px-3 py-2 text-right text-[12px] tabular-nums text-[#7C3AED] os-dark:text-[var(--os-purple)] font-medium">{s.importedCount}</td>
                       <td className="px-3 py-2 text-[11px]">
                         <span className={cn(
                           "px-1.5 py-0.5 rounded font-medium",
-                          s.provider === "GOOGLE" ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-[#475569]"
+                          s.provider === "GOOGLE" ? "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300" : "bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-[#475569] os-dark:text-[var(--os-text)]"
                         )}>
                           {s.provider}
                         </span>
@@ -257,9 +257,9 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
 
       {/* Low coverage callouts */}
       {data.lowCoverageSectors.length > 0 && (
-        <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
-          <h2 className="text-[14px] font-semibold text-[#0F172A] mb-3 flex items-center gap-2">
-            <Users className="w-4 h-4 text-[#8B00FF]" />
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5">
+          <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] mb-3 flex items-center gap-2">
+            <Users className="w-4 h-4 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
             Sectors with &lt; 5 prospects ({data.lowCoverageSectors.length})
           </h2>
           <div className="flex flex-wrap gap-1.5">
@@ -268,7 +268,7 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
                 key={s.key}
                 className={cn(
                   "text-[11.5px] px-2.5 py-1 rounded-full border",
-                  s.discovered === 0 ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"
+                  s.discovered === 0 ? "bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 border-red-200 os-dark:border-red-500/30" : "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border-amber-200 os-dark:border-amber-500/30"
                 )}
                 title={`${s.discovered} prospects · ${s.category}`}
               >
@@ -286,13 +286,13 @@ function Stat({ label, value, subtle, highlight }: { label: string; value: numbe
   return (
     <div className={cn(
       "rounded-2xl border p-4 sm:p-5",
-      highlight ? "border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50" : "border-[var(--os-border)] bg-white"
+      highlight ? "border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50 to-violet-50 os-dark:from-purple-500/10 os-dark:to-violet-500/5" : "border-[var(--os-border)] bg-[var(--os-surface)]"
     )}>
-      <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium mb-1.5">{label}</div>
-      <div className={cn("text-2xl sm:text-3xl font-bold tabular-nums", highlight ? "text-[#8B00FF]" : "text-[#0F172A]")}>
+      <div className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1.5">{label}</div>
+      <div className={cn("text-2xl sm:text-3xl font-bold tabular-nums", highlight ? "text-[#8B00FF] os-dark:text-[var(--os-purple)]" : "text-[#0F172A] os-dark:text-[var(--os-text)]")}>
         {value.toLocaleString()}
       </div>
-      {subtle && <div className="text-[11px] text-[#64748B] mt-0.5">{subtle}</div>}
+      {subtle && <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-0.5">{subtle}</div>}
     </div>
   );
 }

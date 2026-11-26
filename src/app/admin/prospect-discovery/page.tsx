@@ -79,9 +79,9 @@ const NEIGHBORHOODS_FALLBACK: Record<string, string[]> = {
 };
 
 const DUP_BADGE: Record<DuplicateStatus, string> = {
-  NEW: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  POSSIBLE: "bg-amber-50 text-amber-700 border-amber-200",
-  EXISTS: "bg-gray-100 text-gray-600 border-gray-200",
+  NEW: "bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 border-emerald-200 os-dark:border-emerald-500/30",
+  POSSIBLE: "bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 border-amber-200 os-dark:border-amber-500/30",
+  EXISTS: "bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-gray-600 os-dark:text-[var(--os-text)] border-gray-200 os-dark:border-[var(--os-border)]",
 };
 
 /* ---------------- Page ---------------- */
@@ -341,39 +341,39 @@ export default function ProspectDiscoveryPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-5">
           {/* Search form */}
-          <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
-            <h2 className="text-[14px] font-semibold text-[#0F172A] mb-3 flex items-center gap-2">
-              <Search className="w-4 h-4 text-[#8B00FF]" />
+          <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5">
+            <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] mb-3 flex items-center gap-2">
+              <Search className="w-4 h-4 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
               Search businesses
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
-                <label className="block text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-1">City</label>
-                <select value={city} onChange={(e) => { setCity(e.target.value); setNeighborhood(""); }} className="w-full px-2.5 py-2 rounded-lg border border-[var(--os-border)] bg-white text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300">
+                <label className="block text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1">City</label>
+                <select value={city} onChange={(e) => { setCity(e.target.value); setNeighborhood(""); }} className="w-full px-2.5 py-2 rounded-lg border border-[var(--os-border)] bg-[var(--os-control-bg)] text-[13px] text-[#0F172A] os-dark:text-[var(--os-text)] focus:outline-none focus:ring-2 focus:ring-purple-300 os-dark:focus:ring-purple-500/40">
                   {CITIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-1">Sector</label>
-                <select value={sector} onChange={(e) => setSector(e.target.value)} className="w-full px-2.5 py-2 rounded-lg border border-[var(--os-border)] bg-white text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300">
+                <label className="block text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1">Sector</label>
+                <select value={sector} onChange={(e) => setSector(e.target.value)} className="w-full px-2.5 py-2 rounded-lg border border-[var(--os-border)] bg-[var(--os-control-bg)] text-[13px] text-[#0F172A] os-dark:text-[var(--os-text)] focus:outline-none focus:ring-2 focus:ring-purple-300 os-dark:focus:ring-purple-500/40">
                   {SECTORS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-1">Neighborhood</label>
-                <select value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} className="w-full px-2.5 py-2 rounded-lg border border-[var(--os-border)] bg-white text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300">
+                <label className="block text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1">Neighborhood</label>
+                <select value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} className="w-full px-2.5 py-2 rounded-lg border border-[var(--os-border)] bg-[var(--os-control-bg)] text-[13px] text-[#0F172A] os-dark:text-[var(--os-text)] focus:outline-none focus:ring-2 focus:ring-purple-300 os-dark:focus:ring-purple-500/40">
                   <option value="">Any</option>
                   {(NEIGHBORHOODS_BY_CITY[city] || []).map((n) => <option key={n} value={n}>{n}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-1">Keyword</label>
-                <input type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="(optional)" className="w-full px-2.5 py-2 rounded-lg border border-[var(--os-border)] bg-white text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                <label className="block text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1">Keyword</label>
+                <input type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="(optional)" className="w-full px-2.5 py-2 rounded-lg border border-[var(--os-border)] bg-[var(--os-control-bg)] text-[13px] text-[#0F172A] os-dark:text-[var(--os-text)] focus:outline-none focus:ring-2 focus:ring-purple-300 os-dark:focus:ring-purple-500/40" />
               </div>
             </div>
 
             <div className="flex items-center justify-between gap-3 mt-4">
-              <div className="text-[11px] text-[#64748B] flex items-center gap-1.5">
+              <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] flex items-center gap-1.5">
                 <Info className="w-3 h-3" />
                 {searchData?.provider === "GOOGLE"
                   ? "Searching via Google Places (richer data)"
@@ -390,16 +390,16 @@ export default function ProspectDiscoveryPage() {
             </div>
 
             {searchError && (
-              <div className="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
+              <div className="mt-3 p-3 rounded-lg bg-amber-50 os-dark:bg-amber-500/10 border border-amber-200 os-dark:border-amber-500/30 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600 os-dark:text-amber-400" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-semibold text-amber-900">{errorTitle(searchError.code)}</div>
-                  <div className="text-[12px] text-amber-800 mt-0.5">{searchError.message}</div>
+                  <div className="text-[13px] font-semibold text-amber-900 os-dark:text-amber-300">{errorTitle(searchError.code)}</div>
+                  <div className="text-[12px] text-amber-800 os-dark:text-amber-300 mt-0.5">{searchError.message}</div>
                   {errorHint(searchError.code) && (
-                    <div className="text-[11px] text-amber-700 mt-1.5 italic">{errorHint(searchError.code)}</div>
+                    <div className="text-[11px] text-amber-700 os-dark:text-amber-300 mt-1.5 italic">{errorHint(searchError.code)}</div>
                   )}
                 </div>
-                <button onClick={() => setSearchError(null)} className="text-amber-600 hover:text-amber-800">
+                <button onClick={() => setSearchError(null)} className="text-amber-600 os-dark:text-amber-400 hover:text-amber-800 os-dark:hover:text-amber-300">
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -407,7 +407,7 @@ export default function ProspectDiscoveryPage() {
           </div>
 
           {importError && (
-            <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[12.5px] text-red-700 flex items-center gap-2">
+            <div role="alert" className="rounded-xl border border-red-200 os-dark:border-red-500/30 bg-red-50 os-dark:bg-red-500/10 px-3 py-2 text-[12.5px] text-red-700 os-dark:text-red-300 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               {importError}
             </div>
@@ -415,25 +415,25 @@ export default function ProspectDiscoveryPage() {
 
           {/* Import result */}
           {importResult && (
-            <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-4 flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+            <div className="rounded-2xl border-2 border-emerald-200 os-dark:border-emerald-500/30 bg-emerald-50/40 os-dark:bg-emerald-500/10 p-4 flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 os-dark:text-emerald-400 shrink-0 mt-0.5" />
               <div className="flex-1">
-                <div className="text-[14px] font-semibold text-[#0F172A]">
+                <div className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">
                   Imported {importResult.imported} prospect{importResult.imported !== 1 ? "s" : ""}
-                  {importResult.skipped > 0 && <span className="text-[#64748B] font-normal"> · skipped {importResult.skipped} duplicate{importResult.skipped !== 1 ? "s" : ""}</span>}
+                  {importResult.skipped > 0 && <span className="text-[#64748B] os-dark:text-[var(--os-text-soft)] font-normal"> · skipped {importResult.skipped} duplicate{importResult.skipped !== 1 ? "s" : ""}</span>}
                 </div>
                 {importResult.imported > 0 && (
                   <div className="flex items-center gap-2 mt-2">
                     <button
                       onClick={() => setCampaignModalOpen(true)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-[var(--os-surface)] border border-emerald-300 os-dark:border-emerald-500/30 text-emerald-700 os-dark:text-emerald-300 hover:bg-emerald-50 os-dark:hover:bg-emerald-500/10"
                     >
                       <Megaphone className="w-3 h-3" />
                       Create campaign from {importResult.imported}
                     </button>
                     <button
                       onClick={() => setImportResult(null)}
-                      className="text-[11px] text-[#64748B] hover:text-[#0F172A]"
+                      className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)]"
                     >
                       Dismiss
                     </button>
@@ -445,24 +445,24 @@ export default function ProspectDiscoveryPage() {
 
           {/* Google Places key missing — shown after first OSM search */}
           {searchData?.provider === "OSM" && (
-            <div className="rounded-2xl border border-blue-200 bg-blue-50/40 p-3 flex items-start gap-2.5">
-              <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-              <div className="flex-1 text-[12px] text-blue-900">
-                <span className="font-semibold">Google Places API key not configured.</span> Results come from OpenStreetMap, which has uneven coverage for some sectors in Morocco (dentists, beauty salons, accountants are sparse). Add <code className="px-1 py-0.5 bg-white rounded text-[11px] font-mono">GOOGLE_PLACES_API_KEY</code> on Vercel for ratings, review counts, and richer phone-number coverage. <a href="https://console.cloud.google.com/apis/library/places-backend.googleapis.com" target="_blank" rel="noopener noreferrer" className="underline font-medium">Get a key →</a>
+            <div className="rounded-2xl border border-blue-200 os-dark:border-blue-500/30 bg-blue-50/40 os-dark:bg-blue-500/10 p-3 flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-blue-600 os-dark:text-blue-400 shrink-0 mt-0.5" />
+              <div className="flex-1 text-[12px] text-blue-900 os-dark:text-blue-300">
+                <span className="font-semibold">Google Places API key not configured.</span> Results come from OpenStreetMap, which has uneven coverage for some sectors in Morocco (dentists, beauty salons, accountants are sparse). Add <code className="px-1 py-0.5 bg-[var(--os-surface)] rounded text-[11px] font-mono">GOOGLE_PLACES_API_KEY</code> on Vercel for ratings, review counts, and richer phone-number coverage. <a href="https://console.cloud.google.com/apis/library/places-backend.googleapis.com" target="_blank" rel="noopener noreferrer" className="underline font-medium">Get a key →</a>
               </div>
             </div>
           )}
 
           {/* Results */}
           {searchData && (
-            <div className="rounded-2xl border border-[var(--os-border)] bg-white overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/60">
+            <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--os-border)] bg-gray-50/60 os-dark:bg-[var(--os-surface-2)]">
                 <div className="flex items-center gap-3 flex-wrap text-[12px]">
-                  <span className="font-medium text-[#0F172A]">{searchData.total} results</span>
-                  <span className="text-[#64748B]">·</span>
-                  <span className="inline-flex items-center gap-1 text-emerald-700"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{searchData.counts.new} new</span>
-                  <span className="inline-flex items-center gap-1 text-amber-700"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />{searchData.counts.possible} possible</span>
-                  <span className="inline-flex items-center gap-1 text-[#64748B]"><span className="w-1.5 h-1.5 rounded-full bg-gray-400" />{searchData.counts.exists} exists</span>
+                  <span className="font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">{searchData.total} results</span>
+                  <span className="text-[#64748B] os-dark:text-[var(--os-text-soft)]">·</span>
+                  <span className="inline-flex items-center gap-1 text-emerald-700 os-dark:text-emerald-300"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{searchData.counts.new} new</span>
+                  <span className="inline-flex items-center gap-1 text-amber-700 os-dark:text-amber-300"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />{searchData.counts.possible} possible</span>
+                  <span className="inline-flex items-center gap-1 text-[#64748B] os-dark:text-[var(--os-text-soft)]"><span className="w-1.5 h-1.5 rounded-full bg-gray-400" />{searchData.counts.exists} exists</span>
                 </div>
                 {selectableCount > 0 && (
                   <div className="flex items-center gap-2">
@@ -491,9 +491,9 @@ export default function ProspectDiscoveryPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
+                      <tr className="border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium">
                         <th className="px-3 py-2 text-left">
-                          <input type="checkbox" checked={selected.size > 0 && selected.size === selectableCount} onChange={toggleSelectAll} className="rounded border-gray-300 text-purple-600" />
+                          <input type="checkbox" checked={selected.size > 0 && selected.size === selectableCount} onChange={toggleSelectAll} className="rounded border-gray-300 os-dark:border-[var(--os-border-hover)] text-purple-600 os-dark:text-purple-400" />
                         </th>
                         <th className="px-3 py-2 text-left">Business</th>
                         <th className="px-3 py-2 text-left hidden md:table-cell">Contact</th>
@@ -506,51 +506,51 @@ export default function ProspectDiscoveryPage() {
                       {searchData.items.map((item) => {
                         const disabled = item.duplicateStatus === "EXISTS";
                         return (
-                          <tr key={item.sourceId} className={cn("border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60", disabled && "opacity-60")}>
+                          <tr key={item.sourceId} className={cn("border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-hover)]", disabled && "opacity-60")}>
                             <td className="px-3 py-2.5">
                               <input
                                 type="checkbox"
                                 disabled={disabled}
                                 checked={selected.has(item.sourceId)}
                                 onChange={() => toggleSelect(item.sourceId)}
-                                className="rounded border-gray-300 text-purple-600 disabled:opacity-40"
+                                className="rounded border-gray-300 os-dark:border-[var(--os-border-hover)] text-purple-600 os-dark:text-purple-400 disabled:opacity-40"
                               />
                             </td>
                             <td className="px-3 py-2.5">
-                              <div className="text-[13px] font-medium text-[#0F172A]">{item.name}</div>
-                              <div className="text-[11px] text-[#64748B]">
+                              <div className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">{item.name}</div>
+                              <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
                                 {item.neighborhood ? `${item.neighborhood} · ` : ""}{item.city}
-                                {item.website && <a href={item.website} target="_blank" rel="noopener noreferrer" className="ml-2 text-[#8B00FF] hover:underline">website</a>}
-                                {item.instagram && <span className="ml-2 text-[#7C3AED]">{item.instagram.startsWith("@") ? item.instagram : "@" + item.instagram}</span>}
+                                {item.website && <a href={item.website} target="_blank" rel="noopener noreferrer" className="ml-2 text-[#8B00FF] os-dark:text-[var(--os-purple)] hover:underline">website</a>}
+                                {item.instagram && <span className="ml-2 text-[#7C3AED] os-dark:text-[var(--os-purple)]">{item.instagram.startsWith("@") ? item.instagram : "@" + item.instagram}</span>}
                               </div>
                             </td>
-                            <td className="px-3 py-2.5 text-[12px] text-[#475569] hidden md:table-cell tabular-nums">
-                              {item.phone || <span className="text-[#94A3B8]">—</span>}
+                            <td className="px-3 py-2.5 text-[12px] text-[#475569] os-dark:text-[var(--os-text)] hidden md:table-cell tabular-nums">
+                              {item.phone || <span className="text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">—</span>}
                             </td>
                             <td className="px-3 py-2.5 text-[12px] hidden lg:table-cell">
                               {item.rating ? (
-                                <div className="flex items-center gap-1 text-[#475569]">
+                                <div className="flex items-center gap-1 text-[#475569] os-dark:text-[var(--os-text)]">
                                   <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                  {item.rating} <span className="text-[10px] text-[#94A3B8]">({item.reviewCount})</span>
+                                  {item.rating} <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">({item.reviewCount})</span>
                                 </div>
-                              ) : <span className="text-[#94A3B8]">—</span>}
+                              ) : <span className="text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">—</span>}
                             </td>
                             <td className="px-3 py-2.5">
-                              <span className={cn("text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded border", DUP_BADGE[item.duplicateStatus])} title={item.duplicateReason || undefined}>
+                              <span className={cn("text-[11px] font-medium uppercase tracking-wider px-2 py-0.5 rounded border", DUP_BADGE[item.duplicateStatus])} title={item.duplicateReason || undefined}>
                                 {item.duplicateStatus.toLowerCase()}
                               </span>
                             </td>
                             <td className="px-3 py-2.5">
                               <div className="flex items-center justify-end gap-2">
                                 {item.mapsUrl && (
-                                  <a href={item.mapsUrl} target="_blank" rel="noopener noreferrer" className="p-1 rounded text-[#64748B] hover:text-[#8B00FF]" title="Open source">
+                                  <a href={item.mapsUrl} target="_blank" rel="noopener noreferrer" className="p-1 rounded text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-[#8B00FF] os-dark:hover:text-[var(--os-purple)]" title="Open source">
                                     <ExternalLink className="w-3.5 h-3.5" />
                                   </a>
                                 )}
                                 <button
                                   onClick={() => handleImport([item.sourceId])}
                                   disabled={disabled || importing}
-                                  className="text-[11px] font-medium text-[#8B00FF] hover:bg-purple-50 px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed"
+                                  className="text-[11px] font-medium text-[#8B00FF] os-dark:text-[var(--os-purple)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10 px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
                                   Import
                                 </button>
@@ -587,7 +587,7 @@ export default function ProspectDiscoveryPage() {
         <div className="mt-4 flex justify-center">
           <button
             onClick={() => setTab("coverage")}
-            className="text-[12px] text-[#7C3AED] hover:underline inline-flex items-center gap-1"
+            className="text-[12px] text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:underline inline-flex items-center gap-1"
           >
             View coverage stats & find more →
           </button>
@@ -613,40 +613,40 @@ export default function ProspectDiscoveryPage() {
 function ProviderStatusBanner({ provider }: { provider: "GOOGLE" | "OSM" }) {
   if (provider === "GOOGLE") {
     return (
-      <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50/60 to-teal-50/60 p-3 mb-4 flex items-center gap-3">
+      <div className="rounded-2xl border border-emerald-200 os-dark:border-emerald-500/30 bg-gradient-to-br from-emerald-50/60 to-teal-50/60 os-dark:from-emerald-500/10 os-dark:to-teal-500/5 p-3 mb-4 flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-500/30">
           <CheckCircle2 className="w-5 h-5 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[13px] font-semibold text-[#0F172A]">Google Places — connected</div>
-          <div className="text-[12px] text-[#475569]">Rich data: ratings, review counts, phone numbers, and Maps URLs. ~$200/mo free credit covers most sweeps.</div>
+          <div className="text-[13px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Google Places — connected</div>
+          <div className="text-[12px] text-[#475569] os-dark:text-[var(--os-text)]">Rich data: ratings, review counts, phone numbers, and Maps URLs. ~$200/mo free credit covers most sweeps.</div>
         </div>
-        <span className="text-[11px] font-semibold text-emerald-700 bg-white border border-emerald-200 px-2 py-1 rounded-full">Active</span>
+        <span className="text-[11px] font-semibold text-emerald-700 os-dark:text-emerald-300 bg-[var(--os-surface)] border border-emerald-200 os-dark:border-emerald-500/30 px-2 py-1 rounded-full">Active</span>
       </div>
     );
   }
   return (
-    <div className="rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50/40 to-orange-50/40 p-4 mb-4 flex items-start gap-3 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
+    <div className="rounded-2xl border-2 border-amber-200 os-dark:border-amber-500/30 bg-gradient-to-br from-amber-50/40 to-orange-50/40 os-dark:from-amber-500/10 os-dark:to-orange-500/5 p-4 mb-4 flex items-start gap-3 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
       <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center shadow-md shadow-amber-500/30 shrink-0">
         <AlertCircle className="w-5 h-5 text-white" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-0.5">
           <span className="text-[13px] font-semibold text-[var(--os-text)]">Google Places not connected</span>
-          <span className="text-[11px] font-semibold text-amber-700 bg-white border border-amber-200 px-2 py-0.5 rounded-full">OSM only</span>
+          <span className="text-[11px] font-semibold text-amber-700 os-dark:text-amber-300 bg-[var(--os-surface)] border border-amber-200 os-dark:border-amber-500/30 px-2 py-0.5 rounded-full">OSM only</span>
         </div>
         <div className="text-[12px] text-[var(--os-text-muted)]">
           Running on OpenStreetMap. Coverage in Morocco is uneven — niche sectors return 0-3 results.
-          <span className="font-medium"> Add <code className="px-1 py-0.5 bg-white rounded text-[11px] text-[#475569] font-mono">GOOGLE_PLACES_API_KEY</code> to unlock 5–10× more businesses with ratings, reviews, and full contact data.</span>
+          <span className="font-medium"> Add <code className="px-1 py-0.5 bg-[var(--os-surface)] rounded text-[11px] text-[#475569] os-dark:text-[var(--os-text)] font-mono">GOOGLE_PLACES_API_KEY</code> to unlock 5–10× more businesses with ratings, reviews, and full contact data.</span>
         </div>
         <div className="flex flex-wrap gap-3 mt-2 text-[11.5px]">
-          <a href="https://console.cloud.google.com/apis/library/places-backend.googleapis.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[#7C3AED] font-medium hover:underline">
+          <a href="https://console.cloud.google.com/apis/library/places-backend.googleapis.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[#7C3AED] os-dark:text-[var(--os-purple)] font-medium hover:underline">
             1. Enable Places API <ExternalLink className="w-3 h-3" />
           </a>
-          <a href="https://vercel.com/ayoubkhyat-2573s-projects/ibda3-digital/settings/environment-variables" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[#7C3AED] font-medium hover:underline">
+          <a href="https://vercel.com/ayoubkhyat-2573s-projects/ibda3-digital/settings/environment-variables" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[#7C3AED] os-dark:text-[var(--os-purple)] font-medium hover:underline">
             2. Add GOOGLE_PLACES_API_KEY on Vercel <ExternalLink className="w-3 h-3" />
           </a>
-          <span className="text-[#94A3B8]">3. Redeploy — UI auto-switches</span>
+          <span className="text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">3. Redeploy — UI auto-switches</span>
         </div>
       </div>
     </div>
@@ -682,20 +682,20 @@ function TargetsWidget({ targets, onUpdate }: { targets: Target[]; onUpdate: () 
   }
 
   return (
-    <div className="rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
+    <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5">
       <div className="flex items-center gap-2 mb-3">
-        <TargetIcon className="w-4 h-4 text-[#8B00FF]" />
-        <h2 className="text-[14px] font-semibold text-[#0F172A]">Today&apos;s prospecting targets</h2>
+        <TargetIcon className="w-4 h-4 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
+        <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Today&apos;s prospecting targets</h2>
       </div>
       {saveError && (
-        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[12.5px] text-red-700 mb-3 flex items-center gap-2">
+        <div role="alert" className="rounded-xl border border-red-200 os-dark:border-red-500/30 bg-red-50 os-dark:bg-red-500/10 px-3 py-2 text-[12.5px] text-red-700 os-dark:text-red-300 mb-3 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           {saveError}
         </div>
       )}
 
       {targets.length === 0 ? (
-        <p className="text-[12px] text-[#94A3B8]">No active team members.</p>
+        <p className="text-[12px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">No active team members.</p>
       ) : (
         <div className="space-y-3">
           {targets.map((t) => {
@@ -704,22 +704,22 @@ function TargetsWidget({ targets, onUpdate }: { targets: Target[]; onUpdate: () 
             return (
               <div key={t.userId} className="border-b border-[var(--os-border)] last:border-0 pb-3 last:pb-0">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[13px] font-medium text-[#0F172A]">{t.name}</span>
+                  <span className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">{t.name}</span>
                   {editingUser === t.userId ? (
                     <div className="flex items-center gap-1">
                       <input
                         type="number"
                         value={editValue}
                         onChange={(e) => setEditValue(parseInt(e.target.value, 10) || 0)}
-                        className="w-14 px-1.5 py-0.5 rounded border border-[var(--os-border)] text-[11px] text-right"
+                        className="w-14 px-1.5 py-0.5 rounded border border-[var(--os-border)] bg-[var(--os-control-bg)] text-[#0F172A] os-dark:text-[var(--os-text)] text-[11px] text-right"
                       />
-                      <button onClick={() => save(t.userId)} className="text-[11px] text-emerald-600 font-medium hover:text-emerald-700">Save</button>
-                      <button onClick={() => setEditingUser(null)} className="text-[#94A3B8]"><X className="w-3 h-3" /></button>
+                      <button onClick={() => save(t.userId)} className="text-[11px] text-emerald-600 os-dark:text-emerald-400 font-medium hover:text-emerald-700 os-dark:hover:text-emerald-300">Save</button>
+                      <button onClick={() => setEditingUser(null)} className="text-[#94A3B8] os-dark:text-[var(--os-text-soft)]"><X className="w-3 h-3" /></button>
                     </div>
                   ) : (
                     <button
                       onClick={() => { setEditingUser(t.userId); setEditValue(t.targetImports); }}
-                      className="text-[10px] text-[#64748B] hover:text-[#8B00FF]"
+                      className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-[#8B00FF] os-dark:hover:text-[var(--os-purple)]"
                     >
                       Edit target
                     </button>
@@ -727,25 +727,25 @@ function TargetsWidget({ targets, onUpdate }: { targets: Target[]; onUpdate: () 
                 </div>
 
                 {/* Imports bar */}
-                <div className="text-[10px] text-[#64748B] flex items-center justify-between mb-0.5">
+                <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] flex items-center justify-between mb-0.5">
                   <span>Imports</span>
                   <span className="tabular-nums">{t.importedToday} / {t.targetImports}</span>
                 </div>
-                <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden mb-1.5">
+                <div className="h-1.5 rounded-full bg-gray-100 os-dark:bg-[var(--os-surface-2)] overflow-hidden mb-1.5">
                   <div className="h-full bg-gradient-to-r from-[#8B00FF] to-[#C026D3] transition-all" style={{ width: `${importPct}%` }} />
                 </div>
 
                 {/* Contacts bar */}
-                <div className="text-[10px] text-[#64748B] flex items-center justify-between mb-0.5">
+                <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] flex items-center justify-between mb-0.5">
                   <span>Contacts</span>
                   <span className="tabular-nums">{t.contactedToday} / {t.targetContacts}</span>
                 </div>
-                <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                <div className="h-1.5 rounded-full bg-gray-100 os-dark:bg-[var(--os-surface-2)] overflow-hidden">
                   <div className="h-full bg-emerald-500 transition-all" style={{ width: `${contactPct}%` }} />
                 </div>
 
                 {t.repliedToday > 0 && (
-                  <div className="text-[10px] text-emerald-700 mt-1">+ {t.repliedToday} reply{t.repliedToday !== 1 ? "s" : ""} today</div>
+                  <div className="text-[11px] text-emerald-700 os-dark:text-emerald-300 mt-1">+ {t.repliedToday} reply{t.repliedToday !== 1 ? "s" : ""} today</div>
                 )}
               </div>
             );
@@ -802,23 +802,23 @@ function CampaignModal({
     }
   }
 
-  const inputCls = "w-full px-3 py-2 rounded-lg border border-[var(--os-border)] bg-white text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-purple-300";
-  const labelCls = "block text-[12px] font-medium text-[#475569] mb-1.5";
+  const inputCls = "w-full px-3 py-2 rounded-lg border border-[var(--os-border)] bg-[var(--os-control-bg)] text-[13px] text-[#0F172A] os-dark:text-[var(--os-text)] focus:outline-none focus:ring-2 focus:ring-purple-300 os-dark:focus:ring-purple-500/40";
+  const labelCls = "block text-[12px] font-medium text-[#475569] os-dark:text-[var(--os-text)] mb-1.5";
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 sm:pt-20 px-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-      <div {...dialogProps} className="relative w-full max-w-xl bg-white rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
+      <div {...dialogProps} className="relative w-full max-w-xl bg-[var(--os-surface)] rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--os-border)]">
           <div className="flex items-center gap-2">
-            <Megaphone className="w-4 h-4 text-[#8B00FF]" />
-            <h2 id={titleId} className="text-lg font-semibold text-[#0F172A]">New campaign</h2>
+            <Megaphone className="w-4 h-4 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
+            <h2 id={titleId} className="text-lg font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">New campaign</h2>
           </div>
-          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]"><X className="w-5 h-5" /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="text-[12px] text-[#475569]">
-            Group <span className="font-medium text-[#0F172A]">{prospectIds.length} just-imported prospects</span> under one campaign for tracking and assignment.
+          <div className="text-[12px] text-[#475569] os-dark:text-[var(--os-text)]">
+            Group <span className="font-medium text-[#0F172A] os-dark:text-[var(--os-text)]">{prospectIds.length} just-imported prospects</span> under one campaign for tracking and assignment.
           </div>
 
           <div>
@@ -843,15 +843,15 @@ function CampaignModal({
             </div>
           </div>
 
-          <div className="text-[11px] text-[#64748B] bg-gray-50 rounded-lg p-2.5 leading-relaxed">
+          <div className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] bg-gray-50 os-dark:bg-[var(--os-surface-2)] rounded-lg p-2.5 leading-relaxed">
             <Info className="inline w-3 h-3 mr-1" />
             Follow-up sequence is automatic: Day 1 → 4 → 10 → 20 once initial contact is logged. Track in the Sales Playbook.
           </div>
 
-          {error && <div className="text-[12px] text-red-600">{error}</div>}
+          {error && <div className="text-[12px] text-red-600 os-dark:text-red-400">{error}</div>}
 
           <div className="flex items-center justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-[13px] font-medium text-[#475569] hover:bg-[#F1F5F9]">Skip</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-[13px] font-medium text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]">Skip</button>
             <button
               type="submit"
               disabled={saving || !name.trim()}
