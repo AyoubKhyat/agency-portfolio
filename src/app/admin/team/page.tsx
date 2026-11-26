@@ -38,10 +38,10 @@ type TeamStat = {
 const ROLES = ["admin", "sales", "designer", "developer"];
 
 const ROLE_COLORS: Record<string, { bg: string; text: string }> = {
-  admin: { bg: "bg-violet-100", text: "text-violet-700" },
-  sales: { bg: "bg-blue-100", text: "text-blue-700" },
-  designer: { bg: "bg-pink-100", text: "text-pink-700" },
-  developer: { bg: "bg-emerald-100", text: "text-emerald-700" },
+  admin: { bg: "bg-violet-100 os-dark:bg-violet-500/15", text: "text-violet-700 os-dark:text-violet-300" },
+  sales: { bg: "bg-blue-100 os-dark:bg-blue-500/15", text: "text-blue-700 os-dark:text-blue-300" },
+  designer: { bg: "bg-pink-100 os-dark:bg-pink-500/15", text: "text-pink-700 os-dark:text-pink-300" },
+  developer: { bg: "bg-emerald-100 os-dark:bg-emerald-500/15", text: "text-emerald-700 os-dark:text-emerald-300" },
 };
 
 function relativeDate(dateStr: string | null): string {
@@ -131,7 +131,7 @@ export default function TeamPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-purple-300 border-t-[#8B00FF] rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-purple-300 os-dark:border-purple-500/30 border-t-[#8B00FF] rounded-full animate-spin" />
       </div>
     );
   }
@@ -173,11 +173,11 @@ export default function TeamPage() {
               <form onSubmit={handleCreateUser} className="space-y-5">
                 <div className="flex items-center gap-3 mb-1">
                   <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10">
-                    <HiOutlinePlus className="w-4 h-4 text-[#8B00FF]" />
+                    <HiOutlinePlus className="w-4 h-4 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
                   </div>
                   <div>
-                    <h3 className="text-[15px] font-semibold text-[#0F172A]">New team member</h3>
-                    <p className="text-[12px] text-[#64748B] mt-0.5">They&apos;ll get access to the admin OS based on their role.</p>
+                    <h3 className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">New team member</h3>
+                    <p className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-0.5">They&apos;ll get access to the admin OS based on their role.</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -273,7 +273,7 @@ export default function TeamPage() {
                     <div className="flex items-center gap-3 min-w-0">
                       <AvatarChip initials={s.user.avatarInitials} name={s.user.fullName} size="md" showName={false} />
                       <div className="min-w-0">
-                        <p className="text-[14px] font-semibold text-[#0F172A] truncate">{s.user.fullName}</p>
+                        <p className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] truncate">{s.user.fullName}</p>
                         <div className="flex items-center gap-1.5 mt-1">
                           <Badge variant={s.user.role === "admin" ? "purple" : s.user.role === "sales" ? "blue" : s.user.role === "designer" ? "red" : "green"} size="sm">
                             {s.user.role.charAt(0).toUpperCase() + s.user.role.slice(1)}
@@ -288,33 +288,33 @@ export default function TeamPage() {
 
                   <div className="grid grid-cols-3 gap-x-4 gap-y-3 mb-4">
                     <div>
-                      <p className="text-xl font-bold text-[#0F172A]">{s.assigned}</p>
-                      <p className="text-[10px] text-[#64748B] uppercase tracking-wider font-medium mt-0.5">Assigned</p>
+                      <p className="text-xl font-bold text-[#0F172A] os-dark:text-[var(--os-text)]">{s.assigned}</p>
+                      <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider font-medium mt-0.5">Assigned</p>
                     </div>
                     <div>
-                      <p className="text-xl font-bold text-blue-600">{s.sent}</p>
-                      <p className="text-[10px] text-[#64748B] uppercase tracking-wider font-medium mt-0.5">Sent</p>
+                      <p className="text-xl font-bold text-blue-600 os-dark:text-blue-400">{s.sent}</p>
+                      <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider font-medium mt-0.5">Sent</p>
                     </div>
                     <div>
-                      <p className="text-xl font-bold text-[#0F172A]">{s.contacted}</p>
-                      <p className="text-[10px] text-[#64748B] uppercase tracking-wider font-medium mt-0.5">Contacted</p>
+                      <p className="text-xl font-bold text-[#0F172A] os-dark:text-[var(--os-text)]">{s.contacted}</p>
+                      <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider font-medium mt-0.5">Contacted</p>
                     </div>
                     <div>
-                      <p className="text-xl font-bold text-emerald-600">{s.replied}</p>
-                      <p className="text-[10px] text-[#64748B] uppercase tracking-wider font-medium mt-0.5">Replies</p>
+                      <p className="text-xl font-bold text-emerald-600 os-dark:text-emerald-400">{s.replied}</p>
+                      <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider font-medium mt-0.5">Replies</p>
                     </div>
                     <div>
-                      <p className="text-xl font-bold text-[#8B00FF]">{s.converted}</p>
-                      <p className="text-[10px] text-[#64748B] uppercase tracking-wider font-medium mt-0.5">Converted</p>
+                      <p className="text-xl font-bold text-[#8B00FF] os-dark:text-[var(--os-purple)]">{s.converted}</p>
+                      <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider font-medium mt-0.5">Converted</p>
                     </div>
                   </div>
 
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] font-medium text-[#475569]">Workload Progress</span>
-                      <span className="text-[11px] font-semibold text-[#0F172A]">{workload}%</span>
+                      <span className="text-[11px] font-medium text-[#475569] os-dark:text-[var(--os-text)]">Workload Progress</span>
+                      <span className="text-[11px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{workload}%</span>
                     </div>
-                    <div className="h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
+                    <div className="h-2 bg-[#F1F5F9] os-dark:bg-[var(--os-surface-2)] rounded-full overflow-hidden">
                       <motion.div
                         className="h-full rounded-full bg-gradient-to-r from-[#8B00FF] to-[#C026D3]"
                         initial={{ width: 0 }}
@@ -325,19 +325,19 @@ export default function TeamPage() {
                   </div>
                 </div>
 
-                <div className="border-t border-[#F1F5F9] px-5 py-3 flex items-center justify-between">
+                <div className="border-t border-[#F1F5F9] os-dark:border-[var(--os-border)] px-5 py-3 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div>
-                      <p className="text-[13px] font-semibold text-[#0F172A]">{s.replyRate}%</p>
-                      <p className="text-[10px] text-[#64748B]">Reply Rate</p>
+                      <p className="text-[13px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{s.replyRate}%</p>
+                      <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">Reply Rate</p>
                     </div>
                     <div>
-                      <p className="text-[13px] font-semibold text-[#0F172A]">{s.conversionRate}%</p>
-                      <p className="text-[10px] text-[#64748B]">Conversion</p>
+                      <p className="text-[13px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{s.conversionRate}%</p>
+                      <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">Conversion</p>
                     </div>
                     <div>
-                      <p className="text-[13px] font-semibold text-[#0F172A]">{relativeDate(s.lastActivity)}</p>
-                      <p className="text-[10px] text-[#64748B]">Last Active</p>
+                      <p className="text-[13px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{relativeDate(s.lastActivity)}</p>
+                      <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">Last Active</p>
                     </div>
                   </div>
                   {user && (
@@ -345,8 +345,8 @@ export default function TeamPage() {
                       onClick={() => handleToggleActive(user)}
                       className={`px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all ${
                         user.isActive
-                          ? "text-red-600 bg-red-50 hover:bg-red-100"
-                          : "text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+                          ? "text-red-600 os-dark:text-red-400 bg-red-50 os-dark:bg-red-500/10 hover:bg-red-100 os-dark:hover:bg-red-500/15"
+                          : "text-emerald-600 os-dark:text-emerald-400 bg-emerald-50 os-dark:bg-emerald-500/10 hover:bg-emerald-100 os-dark:hover:bg-emerald-500/15"
                       }`}
                     >
                       {user.isActive ? "Deactivate" : "Activate"}
