@@ -38,10 +38,10 @@ type SatData = {
 };
 
 const TIER_TONE: Record<string, { bg: string; border: string; text: string; bar: string; label: string }> = {
-  RED:    { bg: "from-rose-50/40 to-red-50/40",          border: "border-rose-300",   text: "text-rose-700",    bar: "from-rose-500 to-red-600",     label: "RED" },
-  ORANGE: { bg: "from-orange-50/40 to-amber-50/40",      border: "border-orange-300", text: "text-orange-700",  bar: "from-orange-500 to-amber-500", label: "ORANGE" },
-  YELLOW: { bg: "from-amber-50/40 to-yellow-50/40",      border: "border-amber-300",  text: "text-amber-700",   bar: "from-amber-400 to-yellow-500", label: "YELLOW" },
-  GREEN:  { bg: "from-emerald-50/40 to-teal-50/40",      border: "border-emerald-300",text: "text-emerald-700", bar: "from-emerald-500 to-teal-500", label: "GREEN" },
+  RED:    { bg: "from-rose-50/40 to-red-50/40 os-dark:from-rose-500/10 os-dark:to-red-500/5",          border: "border-rose-300 os-dark:border-rose-500/30",   text: "text-rose-700 os-dark:text-rose-300",    bar: "from-rose-500 to-red-600",     label: "RED" },
+  ORANGE: { bg: "from-orange-50/40 to-amber-50/40 os-dark:from-orange-500/10 os-dark:to-amber-500/5",      border: "border-orange-300 os-dark:border-orange-500/30", text: "text-orange-700 os-dark:text-orange-300",  bar: "from-orange-500 to-amber-500", label: "ORANGE" },
+  YELLOW: { bg: "from-amber-50/40 to-yellow-50/40 os-dark:from-amber-500/10 os-dark:to-yellow-500/5",      border: "border-amber-300 os-dark:border-amber-500/30",  text: "text-amber-700 os-dark:text-amber-300",   bar: "from-amber-400 to-yellow-500", label: "YELLOW" },
+  GREEN:  { bg: "from-emerald-50/40 to-teal-50/40 os-dark:from-emerald-500/10 os-dark:to-teal-500/5",      border: "border-emerald-300 os-dark:border-emerald-500/30",text: "text-emerald-700 os-dark:text-emerald-300", bar: "from-emerald-500 to-teal-500", label: "GREEN" },
 };
 
 function fmt(n: number): string {
@@ -97,7 +97,7 @@ export default function SaturationPage() {
         title="Marrakech Saturation"
         subtitle="Don't switch cities until Marrakech is exhausted."
         actions={
-          <button onClick={load} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[var(--os-border)] bg-white text-[#475569] hover:bg-gray-50">
+          <button onClick={load} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[var(--os-border)] bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-hover)]">
             <RefreshCw className="w-3.5 h-3.5" /> Refresh
           </button>
         }
@@ -116,29 +116,29 @@ export default function SaturationPage() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline gap-3 flex-wrap">
-              <h2 className="text-[15px] font-semibold text-[#0F172A]">Marrakech HOT saturation</h2>
-              <span className={cn("text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white border", tone.border, tone.text)}>
+              <h2 className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Marrakech HOT saturation</h2>
+              <span className={cn("text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--os-surface)] border", tone.border, tone.text)}>
                 {tone.label}
               </span>
             </div>
             <div className="flex items-baseline gap-2 mt-1">
               <span className={cn("text-5xl sm:text-6xl font-bold tabular-nums", tone.text)}>{s.percentage}%</span>
-              <span className="text-[13px] text-[#475569]">of HOT prospects contacted</span>
+              <span className="text-[13px] text-[#475569] os-dark:text-[var(--os-text)]">of HOT prospects contacted</span>
             </div>
-            <div className="text-[12px] text-[#64748B] mt-1">
-              <span className="font-semibold text-[#0F172A]">{m.hotContacted}</span> contacted /
-              <span className="font-semibold text-[#0F172A]"> {m.hotTotal}</span> HOT total ·
-              <span className="font-semibold text-[#0F172A]"> {m.hotNotContacted}</span> remaining
+            <div className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-1">
+              <span className="font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{m.hotContacted}</span> contacted /
+              <span className="font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]"> {m.hotTotal}</span> HOT total ·
+              <span className="font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]"> {m.hotNotContacted}</span> remaining
             </div>
             {/* progress bar */}
-            <div className="mt-3 h-3 rounded-full bg-white/60 overflow-hidden border border-white">
+            <div className="mt-3 h-3 rounded-full bg-white/60 os-dark:bg-[var(--os-surface)]/60 overflow-hidden border border-white">
               <div className={cn("h-full bg-gradient-to-r transition-all", tone.bar)} style={{ width: `${Math.min(100, s.percentage)}%` }} />
             </div>
-            <div className="flex items-center justify-between mt-1.5 text-[10px] text-[#64748B]">
+            <div className="flex items-center justify-between mt-1.5 text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)]">
               <span>0%</span>
-              <span className={cn(s.percentage >= 50 && "font-semibold text-orange-700")}>50%</span>
-              <span className={cn(s.percentage >= 80 && "font-semibold text-amber-700")}>80%</span>
-              <span className={cn(s.percentage >= 95 && "font-semibold text-emerald-700")}>95% gate</span>
+              <span className={cn(s.percentage >= 50 && "font-semibold text-orange-700 os-dark:text-orange-300")}>50%</span>
+              <span className={cn(s.percentage >= 80 && "font-semibold text-amber-700 os-dark:text-amber-300")}>80%</span>
+              <span className={cn(s.percentage >= 95 && "font-semibold text-emerald-700 os-dark:text-emerald-300")}>95% gate</span>
               <span>100%</span>
             </div>
           </div>
@@ -146,24 +146,24 @@ export default function SaturationPage() {
 
         {/* Unlock state */}
         <div className={cn(
-          "mt-4 rounded-xl border bg-white p-3 flex items-start gap-3",
-          s.unlockedExpansion ? "border-emerald-200" : "border-amber-200"
+          "mt-4 rounded-xl border bg-[var(--os-surface)] p-3 flex items-start gap-3",
+          s.unlockedExpansion ? "border-emerald-200 os-dark:border-emerald-500/30" : "border-amber-200 os-dark:border-amber-500/30"
         )}>
           {s.unlockedExpansion
-            ? <Unlock className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-            : <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />}
+            ? <Unlock className="w-4 h-4 text-emerald-600 os-dark:text-emerald-400 shrink-0 mt-0.5" />
+            : <Lock className="w-4 h-4 text-amber-600 os-dark:text-amber-400 shrink-0 mt-0.5" />}
           <div className="flex-1 text-[12px]">
-            <div className={cn("font-semibold", s.unlockedExpansion ? "text-emerald-700" : "text-amber-700")}>
+            <div className={cn("font-semibold", s.unlockedExpansion ? "text-emerald-700 os-dark:text-emerald-300" : "text-amber-700 os-dark:text-amber-300")}>
               {s.unlockedExpansion ? "Expansion unlocked" : "Expansion locked"}
             </div>
-            <div className="text-[#475569]">{s.unlockReason}</div>
+            <div className="text-[#475569] os-dark:text-[var(--os-text)]">{s.unlockReason}</div>
           </div>
         </div>
       </div>
 
       {/* 8 metric cards */}
       <div className="mt-5">
-        <h2 className="text-[14px] font-semibold text-[#0F172A] mb-3">Marrakech metrics</h2>
+        <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] mb-3">Marrakech metrics</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Metric label="Total prospects" value={m.totalProspects} icon={<Users className="w-3.5 h-3.5" />} />
           <Metric label="HOT prospects" value={m.hotTotal} icon={<Flame className="w-3.5 h-3.5" />} tone="rose" />
@@ -177,8 +177,8 @@ export default function SaturationPage() {
       </div>
 
       {/* Funnel viz */}
-      <div className="mt-5 rounded-2xl border border-[var(--os-border)] bg-white p-4 sm:p-5">
-        <h2 className="text-[14px] font-semibold text-[#0F172A] mb-3">HOT funnel</h2>
+      <div className="mt-5 rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5">
+        <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] mb-3">HOT funnel</h2>
         <FunnelRow label="HOT total" value={m.hotTotal} max={m.hotTotal || 1} tone="rose" />
         <FunnelRow label="Contacted" value={m.hotContacted} max={m.hotTotal || 1} tone="blue" />
         <FunnelRow label="Replied" value={m.hotReplied} max={m.hotTotal || 1} tone="emerald" />
@@ -204,46 +204,46 @@ export default function SaturationPage() {
 /* ============================================================ */
 function Metric({ label, value, icon, tone = "default", subtle, highlight }: { label: string; value: number; icon: React.ReactNode; tone?: string; subtle?: string; highlight?: boolean }) {
   const tones: Record<string, string> = {
-    default: "text-[#0F172A] border-[var(--os-border)]",
-    rose:    "text-rose-700 border-rose-200",
-    blue:    "text-blue-700 border-blue-200",
-    amber:   "text-amber-700 border-amber-200",
-    emerald: "text-emerald-700 border-emerald-200",
-    purple:  "text-purple-700 border-purple-200",
-    indigo:  "text-indigo-700 border-indigo-200",
-    violet:  "text-[#8B00FF] border-purple-300",
+    default: "text-[#0F172A] os-dark:text-[var(--os-text)] border-[var(--os-border)]",
+    rose:    "text-rose-700 os-dark:text-rose-300 border-rose-200 os-dark:border-rose-500/30",
+    blue:    "text-blue-700 os-dark:text-blue-300 border-blue-200 os-dark:border-blue-500/30",
+    amber:   "text-amber-700 os-dark:text-amber-300 border-amber-200 os-dark:border-amber-500/30",
+    emerald: "text-emerald-700 os-dark:text-emerald-300 border-emerald-200 os-dark:border-emerald-500/30",
+    purple:  "text-purple-700 os-dark:text-purple-300 border-purple-200 os-dark:border-purple-500/30",
+    indigo:  "text-indigo-700 os-dark:text-indigo-300 border-indigo-200 os-dark:border-indigo-500/30",
+    violet:  "text-[#8B00FF] os-dark:text-[var(--os-purple)] border-purple-300 os-dark:border-purple-500/30",
   };
   return (
-    <div className={cn("rounded-2xl border bg-white p-4", tones[tone] || tones.default, highlight && "shadow-md shadow-purple-500/10")}>
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[#64748B] font-medium mb-1">
-        <span className={tones[tone]?.split(" ")[0] || "text-[#475569]"}>{icon}</span>
+    <div className={cn("rounded-2xl border bg-[var(--os-surface)] p-4", tones[tone] || tones.default, highlight && "shadow-md shadow-purple-500/10")}>
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1">
+        <span className={tones[tone]?.split(" ").slice(0, 2).join(" ") || "text-[#475569] os-dark:text-[var(--os-text)]"}>{icon}</span>
         {label}
       </div>
-      <div className={cn("text-2xl sm:text-3xl font-bold tabular-nums", tones[tone]?.split(" ")[0] || "text-[#0F172A]")}>{fmt(value)}</div>
-      {subtle && <div className="text-[10px] text-[#94A3B8] mt-0.5">{subtle}</div>}
+      <div className={cn("text-2xl sm:text-3xl font-bold tabular-nums", tones[tone]?.split(" ").slice(0, 2).join(" ") || "text-[#0F172A] os-dark:text-[var(--os-text)]")}>{fmt(value)}</div>
+      {subtle && <div className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mt-0.5">{subtle}</div>}
     </div>
   );
 }
 
 function FunnelRow({ label, value, max, tone }: { label: string; value: number; max: number; tone: string }) {
   const tones: Record<string, string> = {
-    rose: "bg-rose-100 text-rose-700",
-    blue: "bg-blue-100 text-blue-700",
-    emerald: "bg-emerald-100 text-emerald-700",
-    purple: "bg-purple-100 text-purple-700",
-    indigo: "bg-indigo-100 text-indigo-700",
+    rose: "bg-rose-100 os-dark:bg-rose-500/15 text-rose-700 os-dark:text-rose-300",
+    blue: "bg-blue-100 os-dark:bg-blue-500/15 text-blue-700 os-dark:text-blue-300",
+    emerald: "bg-emerald-100 os-dark:bg-emerald-500/15 text-emerald-700 os-dark:text-emerald-300",
+    purple: "bg-purple-100 os-dark:bg-purple-500/15 text-purple-700 os-dark:text-purple-300",
+    indigo: "bg-indigo-100 os-dark:bg-indigo-500/15 text-indigo-700 os-dark:text-indigo-300",
     violet: "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white",
   };
   const pct = max > 0 ? (value / max) * 100 : 0;
   return (
     <div className="flex items-center gap-3 mb-1.5 last:mb-0">
-      <span className="text-[11px] text-[#64748B] w-24 shrink-0">{label}</span>
-      <div className="flex-1 h-7 rounded-md bg-gray-50 overflow-hidden relative">
+      <span className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] w-24 shrink-0">{label}</span>
+      <div className="flex-1 h-7 rounded-md bg-gray-50 os-dark:bg-[var(--os-surface-2)] overflow-hidden relative">
         <div className={cn("h-full flex items-center px-2 text-[12px] font-bold transition-all", tones[tone])} style={{ width: `${Math.max(8, pct)}%` }}>
           {fmt(value)}
         </div>
       </div>
-      <span className="text-[11px] text-[#64748B] w-12 text-right tabular-nums">{Math.round(pct)}%</span>
+      <span className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] w-12 text-right tabular-nums">{Math.round(pct)}%</span>
     </div>
   );
 }
@@ -252,23 +252,23 @@ function FunnelRow({ label, value, max, tone }: { label: string; value: number; 
 function NextQueueSection({ queue, minScore, onMarkSent }: { queue: SatData["nextQueue"]; minScore: number; onMarkSent: (id: string, name: string, channel: SendChannel) => void }) {
   return (
     <div className="mt-5">
-      <h2 className="text-[14px] font-semibold text-[#0F172A] mb-1 flex items-center gap-2">
-        <Flame className="w-4 h-4 text-rose-600" /> Next Marrakech Prospects · {queue.length}
+      <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] mb-1 flex items-center gap-2">
+        <Flame className="w-4 h-4 text-rose-600 os-dark:text-rose-400" /> Next Marrakech Prospects · {queue.length}
       </h2>
-      <p className="text-[11px] text-[#64748B] mb-3">
+      <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mb-3">
         HOT · never contacted · mobile or Instagram · score &gt; {minScore}. The list to clear before considering expansion.
       </p>
       {queue.length === 0 ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-6 text-center">
-          <CheckCircle2 className="w-7 h-7 text-emerald-600 mx-auto mb-2" />
-          <div className="text-[14px] font-semibold text-[#0F172A]">No prospects match these criteria</div>
-          <div className="text-[12px] text-[#64748B] mt-1">Either you've contacted them all (great), or the threshold (score &gt; {minScore}) is too tight. Loosen via the API config to widen the pool.</div>
+        <div className="rounded-2xl border border-emerald-200 os-dark:border-emerald-500/30 bg-emerald-50/40 os-dark:bg-emerald-500/10 p-6 text-center">
+          <CheckCircle2 className="w-7 h-7 text-emerald-600 os-dark:text-emerald-400 mx-auto mb-2" />
+          <div className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">No prospects match these criteria</div>
+          <div className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mt-1">Either you've contacted them all (great), or the threshold (score &gt; {minScore}) is too tight. Loosen via the API config to widen the pool.</div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-[var(--os-border)] bg-white overflow-hidden">
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] overflow-hidden">
           <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-white border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
+              <thead className="sticky top-0 bg-[var(--os-surface)] border-b border-[var(--os-border)] text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium">
                 <tr>
                   <th className="text-left px-3 py-2">Prospect</th>
                   <th className="text-left px-3 py-2 hidden md:table-cell">Sector</th>
@@ -283,20 +283,20 @@ function NextQueueSection({ queue, minScore, onMarkSent }: { queue: SatData["nex
                   const wa = p.whatsappLink || (p.phone ? `https://wa.me/${p.phone.replace(/\D/g, "")}` : "");
                   const ig = p.instagram ? `https://instagram.com/${p.instagram.replace(/^@/, "")}` : "";
                   return (
-                    <tr key={p.id} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60">
+                    <tr key={p.id} className="border-b border-[var(--os-border)] last:border-0 hover:bg-gray-50/60 os-dark:hover:bg-[var(--os-hover)]">
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-[#94A3B8] tabular-nums w-5">{i + 1}.</span>
-                          <Link href={`/admin/prospecting/${p.id}`} className="text-[13px] font-medium text-[#0F172A] hover:text-[#7C3AED]">{p.name}</Link>
+                          <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] tabular-nums w-5">{i + 1}.</span>
+                          <Link href={`/admin/prospecting/${p.id}`} className="text-[13px] font-medium text-[#0F172A] os-dark:text-[var(--os-text)] hover:text-[#7C3AED] os-dark:hover:text-[var(--os-purple)]">{p.name}</Link>
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-[12px] text-[#475569] hidden md:table-cell">{p.sector}</td>
-                      <td className="px-3 py-2 text-[12px] text-[#475569] hidden lg:table-cell">{p.neighborhood || "—"}</td>
-                      <td className="px-3 py-2 text-right text-[13px] font-bold text-[#7C3AED] tabular-nums">{p.score ?? 0}</td>
+                      <td className="px-3 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)] hidden md:table-cell">{p.sector}</td>
+                      <td className="px-3 py-2 text-[12px] text-[#475569] os-dark:text-[var(--os-text)] hidden lg:table-cell">{p.neighborhood || "—"}</td>
+                      <td className="px-3 py-2 text-right text-[13px] font-bold text-[#7C3AED] os-dark:text-[var(--os-purple)] tabular-nums">{p.score ?? 0}</td>
                       <td className="px-3 py-2 text-center">
                         <div className="inline-flex items-center gap-1">
-                          {p.hasMobile && <span title={p.phone} className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-medium">📱 mobile</span>}
-                          {p.hasInstagram && <span title={p.instagram} className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-[#7C3AED] font-medium">📷 IG</span>}
+                          {p.hasMobile && <span title={p.phone} className="text-[11px] px-1.5 py-0.5 rounded bg-emerald-50 os-dark:bg-emerald-500/10 text-emerald-700 os-dark:text-emerald-300 font-medium">📱 mobile</span>}
+                          {p.hasInstagram && <span title={p.instagram} className="text-[11px] px-1.5 py-0.5 rounded bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] font-medium">📷 IG</span>}
                         </div>
                       </td>
                       <td className="px-3 py-2 text-right">
@@ -316,7 +316,7 @@ function NextQueueSection({ queue, minScore, onMarkSent }: { queue: SatData["nex
                             ><FaInstagram className="w-3 h-3" /> IG</a>
                           )}
                           {p.phone && (
-                            <a href={`tel:${p.phone}`} className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 hover:bg-amber-100">
+                            <a href={`tel:${p.phone}`} className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md text-[11px] font-medium bg-amber-50 os-dark:bg-amber-500/10 text-amber-700 os-dark:text-amber-300 hover:bg-amber-100 os-dark:hover:bg-amber-500/15">
                               <PhoneIcon className="w-3 h-3" />
                             </a>
                           )}
@@ -338,11 +338,11 @@ function NextQueueSection({ queue, minScore, onMarkSent }: { queue: SatData["nex
 function ExpansionSection({ cities, unlocked }: { cities: SatData["expansionCities"]; unlocked: boolean }) {
   return (
     <div className="mt-6">
-      <h2 className="text-[14px] font-semibold text-[#0F172A] mb-1 flex items-center gap-2">
-        {unlocked ? <Unlock className="w-4 h-4 text-emerald-600" /> : <Lock className="w-4 h-4 text-amber-600" />}
+      <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] mb-1 flex items-center gap-2">
+        {unlocked ? <Unlock className="w-4 h-4 text-emerald-600 os-dark:text-emerald-400" /> : <Lock className="w-4 h-4 text-amber-600 os-dark:text-amber-400" />}
         Next-city expansion {unlocked ? "(unlocked)" : "(locked)"}
       </h2>
-      <p className="text-[11px] text-[#64748B] mb-3">
+      <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] mb-3">
         {unlocked
           ? "Marrakech is saturated. Pick a city below to start the next sweep."
           : "These stay grayed out until Marrakech is exhausted. Estimates shown so you can plan ahead, but no Discovery sweeps recommended yet."}
@@ -352,25 +352,25 @@ function ExpansionSection({ cities, unlocked }: { cities: SatData["expansionCiti
           <div key={c.key} className={cn(
             "rounded-2xl border-2 p-4 transition-all",
             c.locked
-              ? "border-gray-200 bg-gray-50/40 opacity-70"
+              ? "border-gray-200 os-dark:border-[var(--os-border)] bg-gray-50/40 os-dark:bg-[var(--os-surface-2)] opacity-70"
               : i === 0
-                ? "border-emerald-300 bg-gradient-to-br from-emerald-50/40 to-teal-50/40 shadow-md"
-                : "border-[var(--os-border)] bg-white"
+                ? "border-emerald-300 os-dark:border-emerald-500/30 bg-gradient-to-br from-emerald-50/40 to-teal-50/40 os-dark:from-emerald-500/10 os-dark:to-teal-500/5 shadow-md"
+                : "border-[var(--os-border)] bg-[var(--os-surface)]"
           )}>
             <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <span className={cn(
                   "inline-flex items-center justify-center w-7 h-7 rounded-lg text-[12px] font-bold",
                   i === 0 && !c.locked ? "bg-gradient-to-br from-emerald-500 to-teal-500 text-white" :
-                  c.locked ? "bg-gray-200 text-[#94A3B8]" :
-                  "bg-purple-100 text-[#7C3AED]"
+                  c.locked ? "bg-gray-200 os-dark:bg-[var(--os-hover)] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]" :
+                  "bg-purple-100 os-dark:bg-purple-500/15 text-[#7C3AED] os-dark:text-[var(--os-purple)]"
                 )}>{i + 1}</span>
-                <span className="text-[15px] font-semibold text-[#0F172A]">{c.label}</span>
-                <span className="text-[11px] text-[#94A3B8]">{c.populationK}k pop</span>
+                <span className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">{c.label}</span>
+                <span className="text-[11px] text-[#94A3B8] os-dark:text-[var(--os-text-soft)]">{c.populationK}k pop</span>
               </div>
               {c.locked
-                ? <span className="text-[10px] uppercase tracking-wider font-bold text-[#94A3B8] bg-gray-100 px-2 py-0.5 rounded">Locked</span>
-                : <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">Available</span>}
+                ? <span className="text-[11px] uppercase tracking-wider font-bold text-[#94A3B8] os-dark:text-[var(--os-text-soft)] bg-gray-100 os-dark:bg-[var(--os-surface-2)] px-2 py-0.5 rounded">Locked</span>
+                : <span className="text-[11px] uppercase tracking-wider font-bold text-emerald-700 os-dark:text-emerald-300 bg-emerald-100 os-dark:bg-emerald-500/15 px-2 py-0.5 rounded">Available</span>}
             </div>
 
             <div className="grid grid-cols-3 gap-2 mb-3">
@@ -379,18 +379,18 @@ function ExpansionSection({ cities, unlocked }: { cities: SatData["expansionCiti
               <CityStat label="Mobile / WA" value={c.mobile} tone="emerald" dim={c.locked} />
             </div>
 
-            <div className="text-[11.5px] text-[#475569] mb-2 leading-snug">{c.rationale}</div>
+            <div className="text-[11.5px] text-[#475569] os-dark:text-[var(--os-text)] mb-2 leading-snug">{c.rationale}</div>
 
             <div className="flex flex-wrap gap-1 mb-3">
               {c.sectors.map((s) => (
-                <span key={s} className={cn("text-[10px] px-1.5 py-0.5 rounded border",
-                  c.locked ? "bg-gray-50 text-[#94A3B8] border-gray-200" : "bg-purple-50 text-[#7C3AED] border-purple-100"
+                <span key={s} className={cn("text-[11px] px-1.5 py-0.5 rounded border",
+                  c.locked ? "bg-gray-50 os-dark:bg-[var(--os-surface-2)] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] border-gray-200 os-dark:border-[var(--os-border)]" : "bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] border-purple-100 os-dark:border-purple-500/30"
                 )}>{s}</span>
               ))}
             </div>
 
             {c.locked ? (
-              <button disabled className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-gray-100 text-[#94A3B8] cursor-not-allowed w-full justify-center">
+              <button disabled className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] cursor-not-allowed w-full justify-center">
                 <Lock className="w-3.5 h-3.5" /> Exhaust Marrakech first
               </button>
             ) : (
@@ -410,13 +410,13 @@ function ExpansionSection({ cities, unlocked }: { cities: SatData["expansionCiti
 
 function CityStat({ label, value, tone, dim }: { label: string; value: number; tone?: string; dim?: boolean }) {
   const tones: Record<string, string> = {
-    rose: "text-rose-700",
-    emerald: "text-emerald-700",
+    rose: "text-rose-700 os-dark:text-rose-300",
+    emerald: "text-emerald-700 os-dark:text-emerald-300",
   };
   return (
-    <div className="rounded-lg border border-[var(--os-border)] bg-white p-2 text-center">
-      <div className="text-[9px] uppercase tracking-wider text-[#64748B] font-medium">{label}</div>
-      <div className={cn("text-base font-bold tabular-nums", dim ? "text-[#94A3B8]" : (tones[tone || ""] || "text-[#0F172A]"))}>
+    <div className="rounded-lg border border-[var(--os-border)] bg-[var(--os-surface)] p-2 text-center">
+      <div className="text-[10px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium">{label}</div>
+      <div className={cn("text-base font-bold tabular-nums", dim ? "text-[#94A3B8] os-dark:text-[var(--os-text-soft)]" : (tones[tone || ""] || "text-[#0F172A] os-dark:text-[var(--os-text)]"))}>
         {value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value}
       </div>
     </div>
