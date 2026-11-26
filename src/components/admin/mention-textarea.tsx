@@ -142,8 +142,8 @@ export const MentionTextarea = forwardRef<HTMLTextAreaElement, Props>(function M
         {...rest}
       />
       {state.open && suggestions.length > 0 && (
-        <div className="absolute z-50 left-3 top-full mt-1 bg-white border border-[#E5E7EB] rounded-lg shadow-lg shadow-slate-900/[0.08] py-1 min-w-[220px] max-w-[320px]">
-          <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF]">
+        <div className="absolute z-50 left-3 top-full mt-1 bg-white os-dark:bg-[var(--os-popover)] border border-[#E5E7EB] os-dark:border-[var(--os-border)] rounded-lg shadow-lg shadow-slate-900/[0.08] py-1 min-w-[220px] max-w-[320px]">
+          <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">
             Mention a teammate
           </div>
           {suggestions.map((u, i) => {
@@ -157,7 +157,7 @@ export const MentionTextarea = forwardRef<HTMLTextAreaElement, Props>(function M
                 onMouseEnter={() => setState((prev) => ({ ...prev, selected: i }))}
                 className={cn(
                   "w-full flex items-center gap-2.5 px-3 py-2 text-left text-[13px] transition-colors",
-                  active ? "bg-[#F3E8FF] text-[#7E22CE]" : "text-[#374151] hover:bg-[#F9FAFB]",
+                  active ? "bg-[#F3E8FF] text-[#7E22CE] os-dark:bg-purple-500/15 os-dark:text-purple-300" : "text-[#374151] os-dark:text-[var(--os-text)] hover:bg-[#F9FAFB] os-dark:hover:bg-[var(--os-hover)]",
                 )}
               >
                 <span className={cn(
@@ -168,7 +168,7 @@ export const MentionTextarea = forwardRef<HTMLTextAreaElement, Props>(function M
                 </span>
                 <span className="flex-1 min-w-0">
                   <span className="block truncate font-medium">{u.fullName}</span>
-                  <span className="block truncate text-[11px] text-[#9CA3AF]">@{handleForUser(u)}</span>
+                  <span className="block truncate text-[11px] text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">@{handleForUser(u)}</span>
                 </span>
               </button>
             );
@@ -204,7 +204,7 @@ export function HighlightedMentions({ text, users, className }: { text: string; 
     <span className={className}>
       {parts.map((p, i) =>
         p.type === "mention" ? (
-          <span key={i} className="inline-flex items-center px-1 rounded bg-[#F3E8FF] text-[#7E22CE] font-medium">
+          <span key={i} className="inline-flex items-center px-1 rounded bg-[#F3E8FF] text-[#7E22CE] os-dark:bg-purple-500/15 os-dark:text-purple-300 font-medium">
             {p.value}
           </span>
         ) : (
