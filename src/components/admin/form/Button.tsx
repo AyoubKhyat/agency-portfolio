@@ -22,7 +22,7 @@ const SIZES: Record<Size, string> = {
 
 const VARIANTS: Record<Variant, string> = {
   primary:
-    "bg-gradient-to-r from-[var(--os-btn-a)] to-[var(--os-btn-b)] text-[var(--os-on-accent)] font-semibold hover:brightness-110 disabled:hover:brightness-100 disabled:opacity-60",
+    "os-btn-primary font-semibold",
   secondary:
     "bg-[var(--os-control-bg)] border border-[var(--os-control-border)] text-[var(--os-text)] font-medium hover:bg-[var(--os-control-hover)] hover:border-[#CBD5E1] [.os-dark_&]:hover:border-[var(--os-border-hover)] disabled:opacity-60",
   ghost:

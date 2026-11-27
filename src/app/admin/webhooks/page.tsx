@@ -298,7 +298,7 @@ export default function WebhooksPage() {
                       className={cn(
                         "px-3 py-1.5 rounded-lg text-[12px] font-medium border transition-all duration-150",
                         selected
-                          ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white border-transparent shadow-sm shadow-purple-500/20"
+                          ? "bg-[var(--os-primary-bg)] text-[var(--os-primary-fg)] border-transparent"
                           : "bg-[var(--os-surface)] border-[#E2E8F0] os-dark:border-[var(--os-border)] text-[#475569] os-dark:text-[var(--os-text)] hover:border-[#CBD5E1] os-dark:hover:border-[var(--os-border)] hover:bg-[#F8FAFC] os-dark:hover:bg-[var(--os-hover)]"
                       )}
                     >
@@ -341,7 +341,7 @@ export default function WebhooksPage() {
       {/* Webhooks Table */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
+          <Loader2 className="w-6 h-6 animate-spin text-[var(--os-text-soft)]" />
         </div>
       ) : webhooks.length === 0 ? (
         <GlassCard className="text-center py-16">
@@ -378,7 +378,7 @@ export default function WebhooksPage() {
                     aria-label={`${wh.name} active`}
                     className={cn(
                       "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors",
-                      wh.isActive ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] shadow-sm shadow-purple-500/30" : "bg-[#CBD5E1] os-dark:bg-[var(--os-control-border)]"
+                      wh.isActive ? "bg-[var(--os-purple-strong)]" : "bg-[#CBD5E1] os-dark:bg-[var(--os-control-border)]"
                     )}
                   >
                     <span className={cn("inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform", wh.isActive ? "translate-x-[22px]" : "translate-x-0.5")} />
@@ -404,7 +404,7 @@ export default function WebhooksPage() {
                   <button
                     onClick={() => startEdit(wh)}
                     aria-label="Edit"
-                    className="p-2 rounded-lg text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-[#8B00FF] os-dark:hover:text-[var(--os-purple)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10 transition-colors"
+                    className="p-2 rounded-lg text-[#64748B] os-dark:text-[var(--os-text-soft)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)] transition-colors"
                   >
                     <Pencil className="w-4 h-4" />
                   </button>
@@ -482,7 +482,7 @@ export default function WebhooksPage() {
                         className={cn(
                           "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors",
                           wh.isActive
-                            ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] shadow-sm shadow-purple-500/30"
+                            ? "bg-[var(--os-purple-strong)]"
                             : "bg-[#CBD5E1] os-dark:bg-[var(--os-control-border)]"
                         )}
                       >
@@ -513,7 +513,7 @@ export default function WebhooksPage() {
                           onClick={() => startEdit(wh)}
                           title="Edit"
                           aria-label="Edit"
-                          className="p-1.5 rounded-lg text-[#94A3B8] os-dark:text-[var(--os-text-soft)] hover:text-[#8B00FF] os-dark:hover:text-[var(--os-purple)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10 transition-colors"
+                          className="p-1.5 rounded-lg text-[#94A3B8] os-dark:text-[var(--os-text-soft)] hover:text-[var(--os-text)] hover:bg-[var(--os-hover)] transition-colors"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>

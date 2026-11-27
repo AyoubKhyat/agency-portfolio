@@ -17,8 +17,8 @@ export function GlassCard({ className, hover, padding = "md", glow, children, ..
       className={cn(
         "rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] shadow-sm",
         paddings[padding],
-        hover && "transition-all duration-200 hover:border-[var(--os-border-hover)] hover:shadow-md hover:shadow-purple-900/[0.06] hover:-translate-y-0.5",
-        glow && "hover:shadow-lg hover:shadow-purple-500/[0.08]",
+        hover && "transition-all duration-200 hover:border-[var(--os-border-hover)] hover:shadow-md hover:shadow-slate-900/[0.06] hover:-translate-y-0.5",
+        glow && "hover:shadow-lg hover:shadow-slate-900/[0.08]",
         className
       )}
       {...props}
