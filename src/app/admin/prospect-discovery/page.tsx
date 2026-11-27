@@ -382,7 +382,7 @@ export default function ProspectDiscoveryPage() {
               <button
                 onClick={handleSearch}
                 disabled={searching}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium os-btn-primary"
               >
                 {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                 {searching ? "Searching..." : "Search"}
@@ -469,7 +469,7 @@ export default function ProspectDiscoveryPage() {
                     <button
                       onClick={() => handleImport()}
                       disabled={importing || selected.size === 0}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm disabled:opacity-40"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium os-btn-primary"
                     >
                       {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
                       Import {selected.size > 0 ? `${selected.size} selected` : "selected"}
@@ -732,7 +732,7 @@ function TargetsWidget({ targets, onUpdate }: { targets: Target[]; onUpdate: () 
                   <span className="tabular-nums">{t.importedToday} / {t.targetImports}</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-gray-100 os-dark:bg-[var(--os-surface-2)] overflow-hidden mb-1.5">
-                  <div className="h-full bg-gradient-to-r from-[#8B00FF] to-[#C026D3] transition-all" style={{ width: `${importPct}%` }} />
+                  <div className="h-full bg-[var(--os-purple)] transition-all" style={{ width: `${importPct}%` }} />
                 </div>
 
                 {/* Contacts bar */}
@@ -856,8 +856,8 @@ function CampaignModal({
               type="submit"
               disabled={saving || !name.trim()}
               className={cn(
-                "px-5 py-2 rounded-xl text-[13px] font-medium text-white shadow-md transition-all",
-                saving ? "bg-gray-400" : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:shadow-lg"
+                "px-5 py-2 rounded-xl text-[13px] font-medium transition-all",
+                saving ? "bg-gray-400 text-white" : "os-btn-primary"
               )}
             >
               {saving ? "Creating..." : "Create campaign"}

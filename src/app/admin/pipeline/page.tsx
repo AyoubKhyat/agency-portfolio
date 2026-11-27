@@ -109,14 +109,14 @@ export default function PipelinePage() {
         actions={
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <div className="flex items-center bg-[var(--os-surface)] border border-[var(--os-border)] rounded-lg p-0.5">
-              <button onClick={() => setView("kanban")} className={cn("p-1.5 rounded-md transition-colors", view === "kanban" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[var(--os-brand)]" : "text-[var(--os-text-muted)] hover:text-[var(--os-text)]")}>
+              <button onClick={() => setView("kanban")} className={cn("p-1.5 rounded-md transition-colors", view === "kanban" ? "bg-[var(--os-hover)] text-[var(--os-text)]" : "text-[var(--os-text-muted)] hover:text-[var(--os-text)]")}>
                 <Kanban className="w-4 h-4" />
               </button>
-              <button onClick={() => setView("table")} className={cn("p-1.5 rounded-md transition-colors", view === "table" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[var(--os-brand)]" : "text-[var(--os-text-muted)] hover:text-[var(--os-text)]")}>
+              <button onClick={() => setView("table")} className={cn("p-1.5 rounded-md transition-colors", view === "table" ? "bg-[var(--os-hover)] text-[var(--os-text)]" : "text-[var(--os-text-muted)] hover:text-[var(--os-text)]")}>
                 <List className="w-4 h-4" />
               </button>
             </div>
-            <button onClick={() => setShowCreate(true)} className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:opacity-90 text-white rounded-lg text-xs sm:text-sm font-medium transition-all shadow-md shadow-purple-500/20">
+            <button onClick={() => setShowCreate(true)} className="os-btn-primary flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium">
               <Plus className="w-4 h-4" /> New Project
             </button>
           </div>
@@ -176,7 +176,7 @@ export default function PipelinePage() {
                         {p.budget > 0 && <p className="text-[11px] font-medium text-[var(--os-text)] mb-1.5">{p.budget.toLocaleString()} {p.currency}</p>}
                         <div className="flex items-center gap-2 mb-2">
                           <div className="flex-1 h-1.5 bg-[var(--os-hover)] rounded-full overflow-hidden">
-                            <div className="h-full rounded-full bg-gradient-to-r from-[#8B00FF] to-[#C026D3]" style={{ width: `${p.progress}%` }} />
+                            <div className="h-full rounded-full bg-[var(--os-purple)]" style={{ width: `${p.progress}%` }} />
                           </div>
                           <span className="text-[10px] font-medium text-[var(--os-text-soft)]">{p.progress}%</span>
                         </div>
@@ -232,7 +232,7 @@ export default function PipelinePage() {
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
                         <div className="w-16 h-1.5 bg-[var(--os-hover)] rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-gradient-to-r from-[#8B00FF] to-[#C026D3]" style={{ width: `${p.progress}%` }} />
+                          <div className="h-full rounded-full bg-[var(--os-purple)]" style={{ width: `${p.progress}%` }} />
                         </div>
                         <span className="text-[10px] text-[var(--os-text-soft)]">{p.progress}%</span>
                       </div>
@@ -334,7 +334,7 @@ function CreateProjectModal({ onClose, onCreated }: { onClose: () => void; onCre
             </div>
             {error && <div className="px-3 py-2 bg-red-50 os-dark:bg-red-500/10 border border-red-100 os-dark:border-red-500/30 rounded-xl text-red-600 os-dark:text-red-400 text-[13px]">{error}</div>}
             <div className="flex gap-2 pt-2">
-              <button type="submit" disabled={saving} className="flex-1 py-2.5 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white rounded-xl text-[13px] font-medium shadow-sm hover:opacity-90 disabled:opacity-40 transition-all flex items-center justify-center gap-2">
+              <button type="submit" disabled={saving} className="os-btn-primary flex-1 py-2.5 rounded-xl text-[13px] font-medium flex items-center justify-center gap-2">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                 Create Project
               </button>
