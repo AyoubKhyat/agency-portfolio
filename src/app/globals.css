@@ -152,6 +152,10 @@ body {
   --os-btn-a: #6a4ee0;
   --os-btn-b: #2563EB;
   --os-on-accent: #ffffff;
+  /* Neutral primary button (.os-btn-primary): charcoal in light, light neutral in dark. */
+  --os-primary-bg: #202126;
+  --os-primary-hover: #34353B;
+  --os-primary-fg: #ffffff;
   /* Pop-ups: backdrop and panel surface. */
   --os-overlay: rgba(15, 23, 42, 0.45);
   --os-popover: #ffffff;
@@ -222,6 +226,9 @@ body {
   --os-info-fg: #8EC5FF;
   --os-info-bg: rgba(59, 130, 246, 0.12);
   --os-info-border: rgba(59, 130, 246, 0.3);
+  --os-primary-bg: #E7E7EA;
+  --os-primary-hover: #FFFFFF;
+  --os-primary-fg: #111114;
 }
 
 @keyframes os-fade-in {
@@ -232,6 +239,27 @@ body {
 @keyframes os-shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
+}
+
+/* Neutral primary action: solid, no gradient or coloured shadow. Brand purple only on the focus ring. */
+.os-btn-primary {
+  background-color: var(--os-primary-bg);
+  color: var(--os-primary-fg);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.os-btn-primary:hover {
+  background-color: var(--os-primary-hover);
+}
+.os-btn-primary:focus-visible {
+  outline: 2px solid var(--os-purple);
+  outline-offset: 2px;
+}
+.os-btn-primary:disabled,
+.os-btn-primary[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--os-primary-bg);
 }
 
 .os-skeleton {
