@@ -629,7 +629,7 @@ function ProspectingContent() {
   const showGroup = (key: DisplayGroupKey | null) => navigate("ALL", sectorFilter, 1, ownerFilter, qualityFilter, segmentFilter, "ALL", channelFilter, evidenceFilter, key);
   const pill = "text-[11.5px] px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-all";
   const pillOff = "text-[var(--os-text-muted)] bg-[var(--os-surface)] border border-[var(--os-border)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-surface-2)]";
-  const pillOn = "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm";
+  const pillOn = "bg-[var(--os-primary-bg)] text-[var(--os-primary-fg)] shadow-sm";
   const rowLabel = "text-[10px] uppercase tracking-wider text-[var(--os-text-faint)] font-bold mr-1 w-[104px] shrink-0";
 
   /** The one primary step for a prospect, from the lead queue's rules. Quiet text when there is nothing to do. */
@@ -637,7 +637,7 @@ function ProspectingContent() {
     const a = p.summary?.nextAction;
     if (!a) return <span className="text-[11px] text-[var(--os-text-faint)]">—</span>;
     if (!a.actionable) return <span title={a.hint} className="text-[12px] text-[var(--os-text-soft)]">{a.label}</span>;
-    const primary = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:opacity-90 transition-all whitespace-nowrap";
+    const primary = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold os-btn-primary transition-all whitespace-nowrap";
     const onClick =
       a.key === "ready" ? () => handleFirstMessage(p)
       : a.key === "follow_up_overdue" || a.key === "follow_up_today" ? () => handleFollowUp(p)
@@ -716,7 +716,7 @@ function ProspectingContent() {
   const pagination = pages > 1 && (
     <div className="flex justify-center gap-1.5 mt-6">
       {Array.from({ length: pages }, (_, i) => i + 1).map((pg) => (
-        <button key={pg} onClick={() => navigate(statusFilter, sectorFilter, pg)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", pg === pageParam ? "bg-purple-500 text-white" : "text-[var(--os-text-muted)] hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)]")}>{pg}</button>
+        <button key={pg} onClick={() => navigate(statusFilter, sectorFilter, pg)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", pg === pageParam ? "bg-[var(--os-primary-bg)] text-[var(--os-primary-fg)]" : "text-[var(--os-text-muted)] hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)]")}>{pg}</button>
       ))}
     </div>
   );
@@ -730,15 +730,15 @@ function ProspectingContent() {
         actions={
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <div className="flex items-center bg-[var(--os-surface)] border border-[var(--os-border)] rounded-lg p-0.5">
-              <button onClick={() => setView("list")} title="List" className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[var(--os-brand)]" : "text-[var(--os-text-muted)] hover:text-[var(--os-text)]")}>
+              <button onClick={() => setView("list")} title="List" className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-[var(--os-surface)] text-[var(--os-text)] shadow-sm shadow-slate-900/[0.04]" : "text-[var(--os-text-muted)] hover:text-[var(--os-text)]")}>
                 <List className="w-4 h-4" />
               </button>
-              <button onClick={() => setView("grid")} title="Cards" className={cn("p-1.5 rounded-md transition-colors", view === "grid" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[var(--os-brand)]" : "text-[var(--os-text-muted)] hover:text-[var(--os-text)]")}>
+              <button onClick={() => setView("grid")} title="Cards" className={cn("p-1.5 rounded-md transition-colors", view === "grid" ? "bg-[var(--os-surface)] text-[var(--os-text)] shadow-sm shadow-slate-900/[0.04]" : "text-[var(--os-text-muted)] hover:text-[var(--os-text)]")}>
                 <LayoutGrid className="w-4 h-4" />
               </button>
             </div>
             <input ref={fileRef} type="file" accept=".csv" onChange={handleImport} className="hidden" />
-            <Link href="/admin/prospecting/new" className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:opacity-90 text-white rounded-lg text-xs sm:text-sm font-medium transition-all shadow-md shadow-purple-500/20">
+            <Link href="/admin/prospecting/new" className="flex items-center gap-1.5 px-3 py-2 os-btn-primary rounded-lg text-xs sm:text-sm font-medium transition-all">
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> New
             </Link>
           </div>
@@ -814,7 +814,7 @@ function ProspectingContent() {
         <summary className="cursor-pointer select-none px-3 py-2 text-[12px] font-medium text-[var(--os-text-muted)] hover:text-[var(--os-text)] flex items-center gap-2">
           More filters
           {advancedCount > 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 os-dark:bg-purple-500/15 text-[#7C3AED] os-dark:text-[var(--os-purple)]">{advancedCount} active</span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--os-hover)] text-[var(--os-text)]">{advancedCount} active</span>
           )}
         </summary>
         <div className="px-3 pb-3 pt-1 space-y-2">

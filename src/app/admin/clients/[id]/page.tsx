@@ -211,7 +211,7 @@ export default function ClientDetailPage() {
             <button
               type="button"
               onClick={() => setScheduleOpen(true)}
-              className="inline-flex items-center gap-1.5 h-10 px-4 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white rounded-lg text-[12px] font-semibold shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+              className="inline-flex items-center gap-1.5 h-10 px-4 os-btn-primary rounded-lg text-[12px] font-semibold transition-all"
               title="Schedule a meeting"
             >
               <CalendarIcon className="w-3.5 h-3.5" /> Schedule meeting
@@ -248,7 +248,7 @@ export default function ClientDetailPage() {
               <a
                 href={client.website.startsWith("http") ? client.website : `https://${client.website}`}
                 target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-purple-50 os-dark:bg-purple-500/10 text-purple-600 os-dark:text-purple-400 hover:bg-purple-100 os-dark:hover:bg-purple-500/15 transition-colors"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-[var(--os-border)] bg-[var(--os-surface)] text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)] hover:bg-[var(--os-hover)] hover:text-[var(--os-text)] transition-colors"
                 title="Website"
               >
                 <Globe className="w-4 h-4" />
@@ -281,7 +281,7 @@ export default function ClientDetailPage() {
                 {count > 0 && (
                   <span className={cn(
                     "text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center",
-                    active ? "bg-purple-100 os-dark:bg-purple-500/15 text-[var(--os-brand)]" : "bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#6B7280] os-dark:text-[var(--os-text)]",
+                    active ? "bg-[var(--os-hover)] text-[var(--os-text)]" : "bg-[#F3F4F6] os-dark:bg-[var(--os-surface-2)] text-[#6B7280] os-dark:text-[var(--os-text)]",
                   )}>
                     {count}
                   </span>
@@ -410,7 +410,7 @@ function OverviewTab({
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="h-8 px-3 bg-[#8B00FF] text-white rounded-md text-[12px] font-semibold disabled:opacity-60 inline-flex items-center gap-1"
+                  className="h-8 px-3 os-btn-primary rounded-md text-[12px] font-semibold disabled:opacity-60 inline-flex items-center gap-1"
                 >
                   {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                   Save
@@ -644,7 +644,7 @@ function NotesTab({ client, onUpdate, team }: { client: Client; onUpdate: (c: Cl
         <button
           type="submit"
           disabled={saving || !content.trim()}
-          className="h-9 px-4 bg-[#8B00FF] hover:bg-[#7A00E0] text-white rounded-lg text-[12px] font-semibold disabled:opacity-60 inline-flex items-center gap-1.5"
+          className="h-9 px-4 os-btn-primary rounded-lg text-[12px] font-semibold disabled:opacity-60 inline-flex items-center gap-1.5"
         >
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
           {saving ? "Saving..." : "Add note"}
@@ -767,7 +767,7 @@ function MeetingsTab({ clientId, companyName, refreshKey, onOpenSchedule }: { cl
         <p className="text-[13px] text-[#6B7280] os-dark:text-[var(--os-text)] mt-1 mb-4">Schedule your first meeting with {companyName}.</p>
         <button
           onClick={onOpenSchedule}
-          className="inline-flex items-center gap-1.5 h-10 px-4 bg-[#8B00FF] hover:bg-[#7A00E0] text-white rounded-lg text-[13px] font-semibold"
+          className="inline-flex items-center gap-1.5 h-10 px-4 os-btn-primary rounded-lg text-[13px] font-semibold"
         >
           <Plus className="w-4 h-4" /> Schedule meeting
         </button>
@@ -867,7 +867,7 @@ function OutcomeEditor({ initialOutcome, initialNextAction, onSave }: { initialO
           type="button"
           onClick={async () => { setSaving(true); await onSave(outcome, nextAction); setSaving(false); }}
           disabled={saving}
-          className="inline-flex items-center gap-1.5 h-8 px-3 bg-[#8B00FF] text-white rounded-lg text-[12px] font-semibold disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 h-8 px-3 os-btn-primary rounded-lg text-[12px] font-semibold disabled:opacity-60"
         >
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
           Save outcome
@@ -1029,7 +1029,7 @@ function ContractsTab({ clientId, companyName, refreshKey }: { clientId: string;
                             ? "bg-emerald-600 text-white hover:bg-emerald-700"
                             : a.next === "CANCELLED"
                               ? "bg-red-50 os-dark:bg-red-500/10 text-red-700 os-dark:text-red-300 border border-red-100 os-dark:border-red-500/30 hover:bg-red-100 os-dark:hover:bg-red-500/15"
-                              : "bg-[#8B00FF] text-white hover:bg-[#7A00E0]",
+                              : "os-btn-primary",
                         )}
                       >
                         {a.next === "SIGNED" ? <ShieldCheck className="w-3.5 h-3.5" /> : <CircleDot className="w-3.5 h-3.5" />}
@@ -1100,7 +1100,7 @@ function TimelineTab({ clientId, team, refreshKey }: { clientId: string; team: T
               onClick={() => setFilter(k)}
               className={cn(
                 "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors",
-                active ? "bg-[#8B00FF] text-white" : "bg-[var(--os-surface)] border border-[var(--os-border)] text-[#6B7280] os-dark:text-[var(--os-text)] hover:text-[#111827] os-dark:hover:text-[var(--os-text)] hover:border-[var(--os-border-hover)]",
+                active ? "bg-[var(--os-primary-bg)] text-[var(--os-primary-fg)]" : "bg-[var(--os-surface)] border border-[var(--os-border)] text-[#6B7280] os-dark:text-[var(--os-text)] hover:text-[#111827] os-dark:hover:text-[var(--os-text)] hover:border-[var(--os-border-hover)]",
               )}
             >
               {label}

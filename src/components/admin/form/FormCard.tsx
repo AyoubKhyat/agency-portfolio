@@ -44,7 +44,7 @@ export function FormCard({
       {hasHeader && (
         <div className={cn("flex items-start gap-3 px-6 pt-6 pb-4", padding === "compact" && "px-5 pt-5 pb-3")}>
           {icon && (
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF] shrink-0">
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)] shrink-0">
               {icon}
             </div>
           )}

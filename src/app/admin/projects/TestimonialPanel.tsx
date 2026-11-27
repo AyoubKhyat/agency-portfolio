@@ -225,7 +225,7 @@ export default function TestimonialPanel({ projectId, initial }: { projectId?: s
               </label>
               <button
                 type="button" onClick={publish} disabled={!confirmed || !!busy}
-                className="inline-flex items-center gap-1.5 h-9 px-3 bg-[#8B00FF] hover:bg-[#7A00E0] text-white rounded-lg text-[12px] font-semibold disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 h-9 px-3 os-btn-primary rounded-lg text-[12px] font-semibold disabled:opacity-50"
               >
                 {busy === "publish" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />} Publish
               </button>
@@ -253,7 +253,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <section className="bg-[var(--os-surface)] border border-[var(--os-border)] rounded-xl p-6" aria-labelledby="tst-heading" data-testimonial-panel>
       <div className="flex items-center gap-2.5 mb-4">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 flex items-center justify-center text-[#8B00FF] os-dark:text-[var(--os-purple)]">
+        <div className="w-8 h-8 rounded-lg bg-[var(--os-hover)] border border-[var(--os-border)] flex items-center justify-center text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)]">
           <MessageSquareQuote className="w-4 h-4" />
         </div>
         <h2 id="tst-heading" className="text-[15px] font-semibold text-[#111827] os-dark:text-[var(--os-text)]">Client testimonial</h2>

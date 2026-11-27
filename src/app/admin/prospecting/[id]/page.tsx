@@ -125,7 +125,7 @@ export default function ProspectDetailPage() {
     if (msgs.ok) setMessages(await msgs.json());
   }
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-violet-300 os-dark:border-violet-500/30 border-t-violet-600 rounded-full animate-spin" /></div>;
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-[var(--os-border)] border-t-[var(--os-text-muted)] rounded-full animate-spin" /></div>;
   if (!prospect) return null;
 
   const summary = prospect.summary ?? null;
@@ -168,16 +168,16 @@ export default function ProspectDetailPage() {
           {told.reply && <p className="text-gray-700 os-dark:text-[var(--os-text-muted)]"><span className="text-gray-400 os-dark:text-[var(--os-text-faint)]">Reply: </span>{told.reply}</p>}
         </div>
 
-        <div className="mt-4 rounded-xl bg-violet-50/60 os-dark:bg-violet-500/10 border border-violet-100 os-dark:border-violet-500/30 p-4 flex flex-col sm:flex-row sm:items-center gap-3" data-testid="next-step">
+        <div className="mt-4 rounded-xl bg-[var(--os-surface-2)] border border-[var(--os-border)] p-4 flex flex-col sm:flex-row sm:items-center gap-3" data-testid="next-step">
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] uppercase tracking-wide text-violet-500 os-dark:text-violet-300 font-semibold">Next step</p>
+            <p className="text-[11px] uppercase tracking-wide text-[var(--os-text-muted)] font-semibold">Next step</p>
             <p className="text-[15px] font-semibold text-gray-900 os-dark:text-[var(--os-text)]">{action?.label ?? "Open the details below"}</p>
             {action?.hint && <p className="text-[12.5px] text-gray-500 os-dark:text-[var(--os-text-soft)] mt-0.5">{action.hint}</p>}
           </div>
           {actionHref && (
             actionHref.startsWith("#")
-              ? <a href={actionHref} className="shrink-0 inline-flex justify-center items-center gap-1.5 px-4 py-2.5 rounded-xl text-[13px] font-semibold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:opacity-90">{action!.label} →</a>
-              : <Link href={actionHref} className="shrink-0 inline-flex justify-center items-center gap-1.5 px-4 py-2.5 rounded-xl text-[13px] font-semibold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:opacity-90">{action!.label} →</Link>
+              ? <a href={actionHref} className="shrink-0 inline-flex justify-center items-center gap-1.5 px-4 py-2.5 rounded-xl text-[13px] font-semibold os-btn-primary">{action!.label} →</a>
+              : <Link href={actionHref} className="shrink-0 inline-flex justify-center items-center gap-1.5 px-4 py-2.5 rounded-xl text-[13px] font-semibold os-btn-primary">{action!.label} →</Link>
           )}
         </div>
       </section>
@@ -270,7 +270,7 @@ export default function ProspectDetailPage() {
           </ul>
         )}
         {prospect.status === "REPONDU" && (
-          <button onClick={handleConvertToLead} className="w-full mt-4 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-2xl text-[13px] font-semibold shadow-sm shadow-violet-200 hover:shadow-md hover:shadow-violet-200 transition-all">
+          <button onClick={handleConvertToLead} className="w-full mt-4 py-3 os-btn-primary rounded-2xl text-[13px] font-semibold transition-all">
             Convert to Lead →
           </button>
         )}

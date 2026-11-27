@@ -260,7 +260,7 @@ export default function ContentPlannerPage() {
         actions={
           <button
             onClick={() => openNew()}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium os-btn-primary transition-all"
           >
             <Plus className="w-4 h-4" />
             New post
@@ -315,7 +315,7 @@ export default function ContentPlannerPage() {
                   aria-label={label}
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 rounded-lg text-[12.5px] font-medium transition-colors",
-                    view === v ? "bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)]" : "text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]",
+                    view === v ? "bg-[var(--os-hover)] text-[var(--os-text)]" : "text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]",
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -351,7 +351,7 @@ export default function ContentPlannerPage() {
           title="No posts planned yet"
           description="Add posts one by one, or load the 30-day calendar with the import script."
           action={
-            <button onClick={() => openNew()} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20">
+            <button onClick={() => openNew()} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium os-btn-primary">
               <Plus className="w-4 h-4" />
               New post
             </button>
@@ -502,7 +502,7 @@ function PostChip({ post, onClick }: { post: ContentPostDTO; onClick: () => void
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#F8FAFC] os-dark:bg-[var(--os-surface-2)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10 text-left"
+      className="w-full flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#F8FAFC] os-dark:bg-[var(--os-surface-2)] hover:bg-[var(--os-hover)] text-left"
       title={`${CONTENT_FORMAT_LABELS[post.format]} · ${CONTENT_STATUS_LABELS[post.status]}`}
     >
       <Icon className="w-3.5 h-3.5 text-[#64748B] os-dark:text-[var(--os-text-soft)] shrink-0" />
