@@ -102,7 +102,7 @@ export default function WorkloadPage() {
           action={
             <Link
               href="/admin/team"
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white rounded-xl text-[13px] font-medium shadow-sm shadow-purple-200 hover:shadow-md hover:shadow-purple-300 transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 os-btn-primary rounded-xl text-[13px] font-medium transition-all"
             >
               Go to Team
             </Link>

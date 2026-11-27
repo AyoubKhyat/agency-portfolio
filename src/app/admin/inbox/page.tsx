@@ -232,7 +232,7 @@ export default function InboxPage() {
                             <FileSignature className="w-3 h-3" /> Proposal
                           </Link>
                           <div className="w-px h-4 bg-[var(--os-border)] mx-0.5" />
-                          <button onClick={() => markWon(item)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm hover:shadow" title="Mark won">
+                          <button onClick={() => markWon(item)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium os-btn-primary" title="Mark won">
                             <Trophy className="w-3 h-3" /> Won
                           </button>
                           <button onClick={() => markLost(item)} className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md text-[11px] font-medium text-[#94A3B8] os-dark:text-[var(--os-text-soft)] hover:text-rose-600 os-dark:hover:text-rose-400 hover:bg-rose-50 os-dark:hover:bg-rose-500/10" title="Mark lost">
@@ -414,7 +414,7 @@ function ModalButtons({ onClose, saving, submitLabel }: { onClose: () => void; s
       <button type="button" onClick={onClose} className="px-3 py-2 rounded-xl text-[13px] font-medium text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]">Cancel</button>
       <button type="submit" disabled={saving} className={cn(
         "inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium text-white shadow-md",
-        saving ? "bg-gray-400" : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:shadow-lg"
+        saving ? "bg-gray-400" : "os-btn-primary"
       )}>
         {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
         {saving ? "Saving..." : submitLabel}

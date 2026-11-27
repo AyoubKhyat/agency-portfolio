@@ -85,7 +85,7 @@ export function TemplatesTab() {
               className={cn(
                 "text-[12px] px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all",
                 filter === c
-                  ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] border border-purple-200 os-dark:border-purple-500/30"
+                  ? "bg-[var(--os-surface)] text-[var(--os-text)] border border-[var(--os-border-hover)] shadow-sm shadow-slate-900/[0.04]"
                   : "text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)] border border-transparent"
               )}
             >
@@ -95,7 +95,7 @@ export function TemplatesTab() {
         </div>
         <button
           onClick={() => setEditing("new")}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20 hover:shadow-lg transition-all"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium os-btn-primary transition-all"
         >
           <Plus className="w-4 h-4" />
           New template
@@ -295,7 +295,7 @@ function TemplateModal({
               disabled={submitting || !name.trim() || !body.trim() || (isNew && !key.trim())}
               className={cn(
                 "px-5 py-2 rounded-xl text-[13px] font-medium text-white shadow-md transition-all",
-                submitting ? "bg-gray-400" : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:shadow-lg"
+                submitting ? "bg-gray-400" : "os-btn-primary"
               )}
             >
               {submitting ? "Saving..." : isNew ? "Create" : "Save"}

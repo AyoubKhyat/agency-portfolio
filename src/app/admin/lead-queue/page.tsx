@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 type Filter = "all" | QueueGroup;
 
-const FIND_NEW = "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-semibold text-white bg-gradient-to-r from-[#8B00FF] to-[#2f5bff] shadow-md shadow-purple-500/20 hover:opacity-90 transition-opacity";
+const FIND_NEW = "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-semibold os-btn-primary transition-opacity";
 
 const dateLabel = (day: string) =>
   new Date(`${day}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
@@ -41,8 +41,8 @@ function EmptyQueue({ filter, done }: { filter: Filter; done: number }) {
   };
   return (
     <section className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] px-6 py-14 text-center">
-      <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#8B00FF] to-[#2f5bff] flex items-center justify-center shadow-lg shadow-purple-500/25">
-        <CheckCircle2 className="w-7 h-7 text-white" />
+      <div className="w-14 h-14 mx-auto rounded-2xl bg-[var(--os-hover)] border border-[var(--os-border)] flex items-center justify-center">
+        <CheckCircle2 className="w-7 h-7 text-[var(--os-text)]" />
       </div>
       <p className="mt-5 text-[18px] font-semibold text-[var(--os-text)]">{filter === "all" ? "You're clear" : "Nothing here"}</p>
       <p className="mt-1.5 text-[14px] text-[var(--os-text-muted)] max-w-md mx-auto">{copy[filter]}</p>
@@ -302,7 +302,7 @@ export default function LeadQueuePage() {
             {done.length > 0 && total > 0 && (
               <div className="mt-3 flex items-center gap-3" aria-label={`${done.length} done this visit`}>
                 <div className="h-1.5 flex-1 rounded-full bg-[var(--os-border)] overflow-hidden">
-                  <motion.div className="h-full rounded-full bg-gradient-to-r from-[#8B00FF] to-[#2f5bff]" animate={{ width: `${Math.min(100, (done.length / (done.length + left.length)) * 100)}%` }} />
+                  <motion.div className="h-full rounded-full bg-[var(--os-purple)]" animate={{ width: `${Math.min(100, (done.length / (done.length + left.length)) * 100)}%` }} />
                 </div>
                 <span className="text-[12px] tabular-nums text-[var(--os-text-muted)]">{done.length} done</span>
               </div>

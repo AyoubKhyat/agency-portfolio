@@ -48,7 +48,7 @@ function ChannelButton({ option, onOpened }: { option: ChannelOption; onOpened: 
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => onOpened(option.channel)}
-      className={cn(primary, "text-white", wa ? "bg-emerald-600 hover:bg-emerald-700" : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:opacity-90")}
+      className={cn(primary, "text-white", wa ? "bg-emerald-600 hover:bg-emerald-700" : "os-btn-primary")}
     >
       <Icon className="w-4 h-4" /> Open {wa ? "WhatsApp" : "Instagram"}
     </a>
@@ -95,7 +95,7 @@ function EnquiryActions({ item, busy, onAct }: Pick<Props, "item" | "busy" | "on
   return (
     <>
       <div className="flex flex-wrap gap-2.5">
-        <a href={`mailto:${e.email}?subject=${encodeURIComponent(`Re: ${e.subject}`)}`} className={cn(primary, "text-white bg-gradient-to-r from-[#8B00FF] to-[#2f5bff] hover:opacity-90")}>
+        <a href={`mailto:${e.email}?subject=${encodeURIComponent(`Re: ${e.subject}`)}`} className={cn(primary, "os-btn-primary")}>
           <Mail className="w-4 h-4" /> Reply by email
         </a>
         {wa && (
@@ -167,7 +167,7 @@ export function NextActionCard({ item, position, total, busy, onAct, onOpened, c
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-      className="relative overflow-hidden rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] shadow-lg shadow-purple-900/[0.05]"
+      className="relative overflow-hidden rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] shadow-lg shadow-slate-900/[0.05]"
     >
       <div className="h-1 bg-gradient-to-r from-[#a259ff] via-[#6d3cf5] to-[#2f5bff]" />
       <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[var(--os-purple-glow)] blur-3xl pointer-events-none" />

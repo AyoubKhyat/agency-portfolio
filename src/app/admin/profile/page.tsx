@@ -63,7 +63,7 @@ export default function ProfilePage() {
       <div className="bg-[var(--os-surface)] rounded-2xl border border-gray-100 os-dark:border-[var(--os-border)] p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
           <div className="flex items-center gap-4 sm:gap-5">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-lg sm:text-xl font-semibold text-white shadow-lg shadow-violet-100 shrink-0">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text)] flex items-center justify-center text-lg sm:text-xl font-semibold shrink-0">
               {me.avatarInitials}
             </div>
             <div className="min-w-0">

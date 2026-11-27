@@ -247,7 +247,7 @@ function SectionHeader({
       onClick={onToggle}
       className="flex items-center gap-2 w-full py-2.5 text-left group"
     >
-      <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF]">
+      <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)]">
         {icon}
       </div>
       <span className="text-[13px] font-semibold text-[#0F172A] flex-1">{title}</span>
@@ -675,7 +675,7 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                       className={cn(
                         "flex items-center justify-center w-9 h-9 rounded-xl transition-colors",
                         showNoteInput
-                          ? "bg-gradient-to-r from-[#8B00FF]/15 to-[#C026D3]/15 text-[#8B00FF]"
+                          ? "bg-[var(--os-surface)] text-[var(--os-text)] border border-[var(--os-border-hover)] shadow-sm shadow-slate-900/[0.04]"
                           : "bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]"
                       )}
                       title="Add note"
@@ -705,7 +705,7 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                         className={cn(
                           "flex items-center justify-center w-9 h-9 rounded-xl transition-colors",
                           showStatusDropdown
-                            ? "bg-gradient-to-r from-[#8B00FF]/15 to-[#C026D3]/15 text-[#8B00FF]"
+                            ? "bg-[var(--os-surface)] text-[var(--os-text)] border border-[var(--os-border-hover)] shadow-sm shadow-slate-900/[0.04]"
                             : "bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]"
                         )}
                         title="Change status"
@@ -802,7 +802,7 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                           <p className="text-[12px] text-[#64748B]">Owner</p>
                           {prospect.owner ? (
                             <div className="flex items-center gap-2">
-                              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[10px] font-bold">
+                              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text)] text-[10px] font-bold">
                                 {prospect.owner.avatarInitials}
                               </span>
                               <span className="text-[13px] font-medium text-[#0F172A]">{prospect.owner.fullName}</span>
@@ -815,7 +815,7 @@ export function ProspectDrawer({ prospectId, onClose, onUpdate }: ProspectDrawer
                           <p className="text-[12px] text-[#64748B]">Sent By</p>
                           {prospect.sentByUser ? (
                             <div className="flex items-center gap-2">
-                              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[10px] font-bold">
+                              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text)] text-[10px] font-bold">
                                 {prospect.sentByUser.avatarInitials}
                               </span>
                               <span className="text-[13px] font-medium text-[#0F172A]">{prospect.sentByUser.fullName}</span>

@@ -197,7 +197,7 @@ export default function MarrakechAuditPage() {
 
       {unlockExpansion && (
         <div className="mt-5 text-[13px]">
-          <Link href="/admin/city-comparison" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md hover:shadow-lg">
+          <Link href="/admin/city-comparison" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold os-btn-primary">
             View city comparison →
           </Link>
         </div>

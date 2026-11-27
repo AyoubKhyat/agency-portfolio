@@ -220,7 +220,7 @@ function AlertsStrip({ alerts }: { alerts: RevenueData["alerts"] }) {
 function CeoWidget({ top10 }: { top10: Opportunity[] }) {
   if (top10.length === 0) {
     return (
-      <div className="rounded-2xl border-2 border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50/40 os-dark:from-purple-500/10 to-violet-50/40 os-dark:to-violet-500/10 p-5 mb-5 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-5 mb-5">
         <div className="flex items-center gap-2 mb-2">
           <Crown className="w-4 h-4 text-[var(--os-brand)]" />
           <h2 className="text-[14px] font-semibold text-[var(--os-text)]">CEO widget — if you only have 1 hour today</h2>
@@ -231,7 +231,7 @@ function CeoWidget({ top10 }: { top10: Opportunity[] }) {
   }
   const totalExpected = top10.reduce((s, o) => s + o.expectedRevenue, 0);
   return (
-    <div className="rounded-2xl border-2 border-purple-300 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50/60 os-dark:from-purple-500/10 to-violet-50/40 os-dark:to-violet-500/10 p-5 mb-5 shadow-md shadow-purple-500/10 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
+    <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-5 mb-5 shadow-sm shadow-slate-900/[0.04]">
       <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -249,7 +249,7 @@ function CeoWidget({ top10 }: { top10: Opportunity[] }) {
                 <td className="px-2 py-2 w-8">
                   <span className={cn(
                     "inline-flex items-center justify-center w-6 h-6 rounded-lg text-[11px] font-bold",
-                    i === 0 ? "bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white" : "bg-purple-100 os-dark:bg-purple-500/15 text-[#7C3AED] os-dark:text-[var(--os-purple)]"
+                    i === 0 ? "bg-[var(--os-primary-bg)] text-[var(--os-primary-fg)]" : "bg-[var(--os-hover)] text-[var(--os-text-muted)]"
                   )}>{i + 1}</span>
                 </td>
                 <td className="px-2 py-2">

@@ -214,7 +214,7 @@ function Metric({ label, value, icon, tone = "default", subtle, highlight }: { l
     violet:  "text-[#8B00FF] os-dark:text-[var(--os-purple)] border-purple-300 os-dark:border-purple-500/30",
   };
   return (
-    <div className={cn("rounded-2xl border bg-[var(--os-surface)] p-4", tones[tone] || tones.default, highlight && "shadow-md shadow-purple-500/10")}>
+    <div className={cn("rounded-2xl border bg-[var(--os-surface)] p-4", tones[tone] || tones.default, highlight && "shadow-md shadow-slate-900/[0.06]")}>
       <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1">
         <span className={tones[tone]?.split(" ").slice(0, 2).join(" ") || "text-[#475569] os-dark:text-[var(--os-text)]"}>{icon}</span>
         {label}
@@ -232,7 +232,7 @@ function FunnelRow({ label, value, max, tone }: { label: string; value: number; 
     emerald: "bg-emerald-100 os-dark:bg-emerald-500/15 text-emerald-700 os-dark:text-emerald-300",
     purple: "bg-purple-100 os-dark:bg-purple-500/15 text-purple-700 os-dark:text-purple-300",
     indigo: "bg-indigo-100 os-dark:bg-indigo-500/15 text-indigo-700 os-dark:text-indigo-300",
-    violet: "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white",
+    violet: "bg-[var(--os-purple-strong)] text-white",
   };
   const pct = max > 0 ? (value / max) * 100 : 0;
   return (
@@ -396,7 +396,7 @@ function ExpansionSection({ cities, unlocked }: { cities: SatData["expansionCiti
             ) : (
               <Link
                 href={`/admin/prospect-discovery?city=${c.key}`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md hover:shadow-lg w-full justify-center"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold os-btn-primary w-full justify-center"
               >
                 Start {c.label} sweep <ChevronRight className="w-3.5 h-3.5" />
               </Link>

@@ -501,7 +501,7 @@ export function TeamPerformanceChart({ data }: { data: TeamMember[] }) {
         {data.map((member, idx) => (
           <div key={idx}>
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 os-dark:from-purple-500/20 os-dark:to-blue-500/20 flex items-center justify-center text-[11px] font-bold text-purple-700 os-dark:text-purple-300 shrink-0">
+              <div className="w-7 h-7 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text)] flex items-center justify-center text-[11px] font-bold shrink-0">
                 {member.initials}
               </div>
               <span className="text-[12px] font-medium text-[#1E293B] os-dark:text-[var(--os-text)] [.os-dark_&]:text-[var(--os-text)] truncate">{member.name}</span>

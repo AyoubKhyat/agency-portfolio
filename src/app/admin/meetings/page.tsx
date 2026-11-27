@@ -182,7 +182,7 @@ export default function MeetingsPage() {
             <button
               type="button"
               onClick={() => setModal(true)}
-              className="inline-flex items-center gap-1.5 h-10 px-4 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white rounded-lg text-[13px] font-semibold shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+              className="inline-flex items-center gap-1.5 h-10 px-4 os-btn-primary rounded-lg text-[13px] font-semibold transition-all"
             >
               <Plus className="w-4 h-4" /> New meeting
             </button>

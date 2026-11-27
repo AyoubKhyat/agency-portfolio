@@ -248,12 +248,12 @@ export default function OverviewPage() {
     <div>
       {/* Hero welcome card */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#8B00FF] via-[#C026D3] to-[#2563EB] p-5 sm:p-7 mb-6 shadow-xl shadow-purple-500/15">
+        className="relative overflow-hidden rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-5 sm:p-7 mb-6 shadow-sm shadow-slate-900/[0.04]">
         <div className="absolute top-0 right-0 w-60 h-60 rounded-full bg-white/10 os-dark:bg-[var(--os-surface)]/10 blur-3xl -translate-y-1/2 translate-x-1/3" />
         <div className="absolute bottom-0 left-1/3 w-40 h-40 rounded-full bg-white/5 os-dark:bg-[var(--os-surface)]/5 blur-2xl translate-y-1/2" />
         <div className="relative z-10">
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Welcome back, Ayoub</h1>
-          <p className="text-white/70 text-sm mt-1">Here&apos;s what&apos;s happening with your business today.</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-[var(--os-text)] tracking-tight">Welcome back, Ayoub</h1>
+          <p className="text-[var(--os-text-muted)] text-sm mt-1">Here&apos;s what&apos;s happening with your business today.</p>
         </div>
       </motion.div>
 
@@ -477,7 +477,7 @@ export default function OverviewPage() {
                 href={`/admin/leads/${lead.id}`}
                 className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 os-dark:hover:bg-[var(--os-hover)] transition-colors"
               >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 os-dark:from-purple-500/20 os-dark:to-blue-500/20 flex items-center justify-center text-xs font-semibold text-purple-700 os-dark:text-purple-300">
+                <div className="w-8 h-8 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text)] flex items-center justify-center text-xs font-semibold">
                   {lead.fullName.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -497,10 +497,10 @@ export default function OverviewPage() {
       {/* Insights — hidden in Focus Mode */}
       {!FOCUS_MODE && (
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7, duration: 0.4 }} className="mt-6">
-        <GlassCard padding="lg" className="border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-r from-purple-50 to-white os-dark:from-purple-500/10 os-dark:to-transparent">
+        <GlassCard padding="lg" className="">
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-lg bg-purple-50 os-dark:bg-purple-500/10 flex items-center justify-center shrink-0">
-              <Reply className="w-4 h-4 text-purple-600 os-dark:text-purple-400" />
+            <div className="w-9 h-9 rounded-lg bg-[var(--os-hover)] border border-[var(--os-border)] flex items-center justify-center shrink-0">
+              <Reply className="w-4 h-4 text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)]" />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-[#0F172A] os-dark:text-[var(--os-text)] mb-1.5">Insights</h3>

@@ -213,7 +213,7 @@ export default function InvoicesPage() {
         actions={
           <button
             onClick={() => setShowForm(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium os-btn-primary transition-all"
           >
             <Plus className="w-4 h-4" />
             New Invoice
@@ -248,7 +248,7 @@ export default function InvoicesPage() {
             invoices.length === 0 ? (
               <button
                 onClick={() => setShowForm(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium os-btn-primary"
               >
                 <Plus className="w-4 h-4" />
                 Create Invoice
@@ -397,9 +397,9 @@ export default function InvoicesPage() {
 /* ---------- Revenue stat (custom for MAD formatting) ---------- */
 function RevenueStatCard({ value }: { value: number }) {
   return (
-    <div className="rounded-2xl border border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50 os-dark:from-purple-500/10 to-violet-50 os-dark:to-violet-500/10 p-4 sm:p-5 shadow-sm">
+    <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5 shadow-sm">
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 text-[var(--os-brand)]">
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)]">
           <DollarSign className="w-5 h-5" />
         </div>
       </div>
@@ -516,7 +516,7 @@ function InvoiceFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 sm:pt-20 px-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-      <div {...dialogProps} className="relative w-full max-w-2xl bg-[var(--os-surface)] rounded-2xl border border-[var(--os-border)] shadow-2xl shadow-purple-900/10 my-8">
+      <div {...dialogProps} className="relative w-full max-w-2xl bg-[var(--os-surface)] rounded-2xl border border-[var(--os-border)] shadow-2xl shadow-slate-900/10 my-8">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--os-border)]">
           <h2 id={titleId} className="text-lg font-semibold text-[var(--os-text)]">New Invoice</h2>
@@ -669,8 +669,8 @@ function InvoiceFormModal({
               type="submit"
               disabled={submitting || !clientName.trim()}
               className={cn(
-                "inline-flex items-center gap-2 px-5 py-2 rounded-xl text-[13px] font-medium text-white shadow-md shadow-purple-500/20 transition-all",
-                submitting ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:shadow-lg hover:shadow-purple-500/30"
+                "inline-flex items-center gap-2 px-5 py-2 rounded-xl text-[13px] font-medium text-white transition-all",
+                submitting ? "bg-gray-400 cursor-not-allowed" : "os-btn-primary"
               )}
             >
               {submitting ? "Creating..." : "Create Invoice"}

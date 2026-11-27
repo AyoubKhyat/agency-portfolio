@@ -213,7 +213,7 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
                 className={cn("flex items-start gap-2 px-3 pt-2 border-b border-[#F3F4F6] os-dark:border-[var(--os-border)]")}
                 style={{ height: laneH }}
               >
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[9px] font-bold shrink-0 mt-0.5">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text)] text-[9px] font-bold shrink-0 mt-0.5">
                   {lane.initials}
                 </span>
                 <span className="text-[12px] font-medium text-[#111827] os-dark:text-[var(--os-text)] truncate leading-7">
@@ -419,7 +419,7 @@ export function TaskTimeline({ tasks, team, loading }: TaskTimelineProps) {
               <div className="flex items-center justify-between">
                 <span className="text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]">Assignee</span>
                 <span className="inline-flex items-center gap-1.5 text-[#374151] os-dark:text-[var(--os-text)] font-medium">
-                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[7px] font-bold">
+                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text)] text-[7px] font-bold">
                     {popup.task.owner.avatarInitials}
                   </span>
                   {popup.task.owner.fullName}
