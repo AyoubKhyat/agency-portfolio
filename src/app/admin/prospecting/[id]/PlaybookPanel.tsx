@@ -277,7 +277,7 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
         </div>
 
         {showLogger && (
-          <div className="space-y-2 mb-3 p-3 rounded-xl border border-purple-200 os-dark:border-purple-500/30 bg-purple-50/30 os-dark:bg-purple-500/10">
+          <div className="space-y-2 mb-3 p-3 rounded-xl border border-[var(--os-border)] bg-[var(--os-surface-2)]">
             <div className="grid grid-cols-2 gap-2">
               <select
                 value={selectedTemplate}
@@ -353,7 +353,7 @@ export function PlaybookPanel({ prospect, onScoreUpdated }: { prospect: Prospect
               <button
                 onClick={handleLog}
                 disabled={logging || !body.trim() || (hasErrors && !qualityOverride)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium os-btn-primary"
               >
                 {logging ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                 {logging ? "Logging..." : "Log as sent"}
@@ -428,7 +428,7 @@ function ReplyButton({ message, onUpdate }: { message: OutreachMessage; onUpdate
             <button
               key={r.value}
               onClick={() => { onUpdate(true, r.value); setOpen(false); }}
-              className="block w-full text-left px-2 py-1 text-[12px] text-[var(--os-text)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10"
+              className="block w-full text-left px-2 py-1 text-[12px] text-[var(--os-text)] hover:bg-[var(--os-hover)]"
             >
               {r.label}
             </button>

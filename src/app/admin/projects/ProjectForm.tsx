@@ -301,7 +301,7 @@ export default function ProjectForm({
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center justify-center gap-2 h-10 px-5 bg-[#8B00FF] hover:bg-[#7A00E0] text-white rounded-lg text-[13px] font-semibold disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 h-10 px-5 os-btn-primary rounded-lg text-[13px] font-semibold disabled:opacity-60"
               >
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                 {saving ? "Saving..." : mode === "create" ? "Create project" : "Save changes"}
@@ -329,7 +329,7 @@ export default function ProjectForm({
                       }}
                       className={`h-8 px-3 rounded-md text-[12px] font-medium transition-colors ${
                         lang === l.value
-                          ? "bg-[#8B00FF] text-white"
+                          ? "bg-[var(--os-primary-bg)] text-[var(--os-primary-fg)]"
                           : "bg-[var(--os-surface)] border border-[#D1D5DB] os-dark:border-[var(--os-control-border)] text-[#374151] os-dark:text-[var(--os-text)] hover:bg-[#F9FAFB] os-dark:hover:bg-[var(--os-hover)]"
                       }`}
                     >
@@ -430,7 +430,7 @@ export default function ProjectForm({
                 className="w-full flex items-center justify-between px-6 py-4 text-left"
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 flex items-center justify-center text-[#8B00FF] os-dark:text-[var(--os-purple)]">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--os-hover)] border border-[var(--os-border)] flex items-center justify-center text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)]">
                     <Sparkles className="w-4 h-4" />
                   </div>
                   <div>

@@ -98,7 +98,7 @@ export default function BlogAdminPage() {
         actions={
           <Link
             href="/admin/blog/new"
-            className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:opacity-90 text-white rounded-lg text-xs sm:text-sm font-medium transition-all shadow-md shadow-purple-500/20"
+            className="flex items-center gap-1.5 px-3 py-2 os-btn-primary rounded-lg text-xs sm:text-sm font-medium transition-all"
           >
             <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> New Post
           </Link>
@@ -122,7 +122,7 @@ export default function BlogAdminPage() {
             className={cn(
               "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border",
               localeFilter === loc
-                ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF] os-dark:text-[var(--os-purple)] border-purple-200 os-dark:border-purple-500/30"
+                ? "bg-[var(--os-surface)] text-[var(--os-text)] border-[var(--os-border-hover)] shadow-sm shadow-slate-900/[0.04]"
                 : "bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] border-[var(--os-border)] hover:border-purple-200 os-dark:hover:border-purple-500/30 hover:text-[#0F172A] os-dark:hover:text-[var(--os-text)]"
             )}
           >

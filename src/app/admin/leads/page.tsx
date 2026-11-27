@@ -130,10 +130,10 @@ function LeadsContent() {
         count={total}
         actions={
           <div className="flex items-center bg-gray-50/80 os-dark:bg-[var(--os-surface-2)] border border-[var(--os-border)] rounded-lg p-0.5">
-            <button onClick={() => setView("kanban")} className={cn("p-1.5 rounded-md transition-colors", view === "kanban" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF] os-dark:text-[var(--os-purple)]" : "text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#1E293B] os-dark:hover:text-[var(--os-text)]")}>
+            <button onClick={() => setView("kanban")} className={cn("p-1.5 rounded-md transition-colors", view === "kanban" ? "bg-[var(--os-surface)] text-[var(--os-text)] shadow-sm shadow-slate-900/[0.04]" : "text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#1E293B] os-dark:hover:text-[var(--os-text)]")}>
               <Kanban className="w-4 h-4" />
             </button>
-            <button onClick={() => setView("list")} className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#8B00FF] os-dark:text-[var(--os-purple)]" : "text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#1E293B] os-dark:hover:text-[var(--os-text)]")}>
+            <button onClick={() => setView("list")} className={cn("p-1.5 rounded-md transition-colors", view === "list" ? "bg-[var(--os-surface)] text-[var(--os-text)] shadow-sm shadow-slate-900/[0.04]" : "text-[#475569] os-dark:text-[var(--os-text)] hover:text-[#1E293B] os-dark:hover:text-[var(--os-text)]")}>
               <List className="w-4 h-4" />
             </button>
           </div>
@@ -309,7 +309,7 @@ function LeadsContent() {
               {pages > 1 && (
                 <div className="flex justify-center gap-2 mt-6">
                   {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-                    <button key={p} onClick={() => navigate(statusFilter, p)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", p === pageParam ? "bg-purple-500 text-white" : "text-[#475569] os-dark:text-[var(--os-text)] hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)]")}>{p}</button>
+                    <button key={p} onClick={() => navigate(statusFilter, p)} className={cn("w-8 h-8 rounded-lg text-xs font-medium transition-colors", p === pageParam ? "bg-[var(--os-primary-bg)] text-[var(--os-primary-fg)]" : "text-[#475569] os-dark:text-[var(--os-text)] hover:bg-gray-100 os-dark:hover:bg-[var(--os-hover)]")}>{p}</button>
                   ))}
                 </div>
               )}

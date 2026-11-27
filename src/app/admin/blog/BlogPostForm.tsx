@@ -151,7 +151,7 @@ export default function BlogPostForm({ mode, initial }: BlogPostFormProps) {
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:opacity-90 text-white rounded-lg text-xs sm:text-sm font-medium transition-all shadow-md shadow-purple-500/20 disabled:opacity-60"
+            className="flex items-center gap-1.5 px-4 py-2 os-btn-primary rounded-lg text-xs sm:text-sm font-medium transition-all "
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {mode === "create" ? "Create" : "Save"}
@@ -240,7 +240,7 @@ export default function BlogPostForm({ mode, initial }: BlogPostFormProps) {
                   onClick={() => updateField("published", !form.published)}
                   className={cn(
                     "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                    form.published ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3]" : "bg-gray-200 os-dark:bg-[var(--os-hover)]"
+                    form.published ? "bg-[var(--os-purple-strong)]" : "bg-gray-200 os-dark:bg-[var(--os-hover)]"
                   )}
                 >
                   <span

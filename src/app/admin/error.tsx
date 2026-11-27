@@ -17,9 +17,9 @@ export default function AdminError({
     <div className="flex items-center justify-center min-h-[60vh] px-4">
       <div className="w-full max-w-md text-center">
         {/* Icon */}
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 border border-[#8B00FF]/20">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--os-hover)] border border-[var(--os-border)]">
           <svg
-            className="h-8 w-8 text-[#8B00FF]"
+            className="h-8 w-8 text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)]"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth={1.5}
@@ -55,7 +55,7 @@ export default function AdminError({
         <div className="flex items-center justify-center gap-3">
           <button
             onClick={reset}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#8B00FF] to-[#C026D3] px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-purple-500/20 transition hover:shadow-lg hover:shadow-purple-500/30 focus:outline-none focus:ring-2 focus:ring-[#8B00FF] focus:ring-offset-2 os-dark:focus:ring-offset-[var(--os-bg)]"
+            className="inline-flex items-center gap-2 os-btn-primary rounded-xl px-5 py-2.5 text-sm font-semibold transition"
           >
             <svg
               className="h-4 w-4"
