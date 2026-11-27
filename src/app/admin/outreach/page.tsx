@@ -456,7 +456,7 @@ export default function OutreachCommandCenter() {
           : "Convert HOT prospects into clients."}
         actions={
           <div className="flex items-center gap-1.5">
-            <button onClick={() => setAddOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20 hover:shadow-lg">
+            <button onClick={() => setAddOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold os-btn-primary">
               <Plus className="w-3.5 h-3.5" /> Add prospect
             </button>
             <button onClick={loadAll} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[var(--os-border)] bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-hover)]">
@@ -522,7 +522,7 @@ function ScoreboardCard({ scoreboard, loading, actionableHot }: { scoreboard: Sc
   }
   const c = scoreboard.counts;
   return (
-    <div className="rounded-2xl border-2 border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50/40 to-violet-50/40 os-dark:from-purple-500/10 os-dark:to-violet-500/5 p-4 sm:p-5 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]">
+    <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5 shadow-sm">
       <div className="flex items-center gap-2 mb-3">
         <Crown className="w-4 h-4 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
         <h2 className="text-[14px] font-semibold text-[var(--os-text)]">Today&apos;s scoreboard</h2>
@@ -558,9 +558,9 @@ function ScoreCard({ label, value, icon, subtle, highlight, pool }: { label: str
   return (
     <div className={cn(
       "rounded-xl border p-2.5",
-      highlight ? "border-purple-300 os-dark:border-purple-500/30 bg-[var(--os-surface)] shadow-sm shadow-purple-500/10"
+      highlight ? "border-[var(--os-border-hover)] bg-[var(--os-surface)] shadow-sm"
         : pool ? "border-rose-200 os-dark:border-rose-500/30 bg-gradient-to-br from-rose-50/60 to-orange-50/4 os-dark:from-rose-500/10 os-dark:to-orange-500/50 [.os-dark_&]:bg-none [.os-dark_&]:bg-[var(--os-surface)]"
-        : "border-purple-100 os-dark:border-purple-500/30 bg-[var(--os-surface)]"
+        : "border-[var(--os-border)] bg-[var(--os-surface)]"
     )}>
       <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-medium mb-1">
         <span className={cn(highlight ? "text-[#8B00FF] os-dark:text-[var(--os-purple)]" : pool ? "text-rose-600 os-dark:text-rose-400" : "text-[#7C3AED] os-dark:text-[var(--os-purple)]")}>{icon}</span>
@@ -642,7 +642,7 @@ function CoverageBlock({ coverage, loading }: { coverage: Coverage | null; loadi
                 <div className="text-[11.5px] text-[#475569] os-dark:text-[var(--os-text)] leading-snug mb-2">{c.rationale}</div>
                 <div className="flex flex-wrap gap-1">
                   {c.sectors.slice(0, 5).map((s) => (
-                    <span key={s} className="text-[11px] px-1.5 py-0.5 rounded bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] border border-purple-100 os-dark:border-purple-500/30">{s}</span>
+                    <span key={s} className="text-[11px] px-1.5 py-0.5 rounded bg-[var(--os-hover)] text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)] border border-[var(--os-border)]">{s}</span>
                   ))}
                 </div>
               </div>
@@ -748,7 +748,7 @@ function ActionRow({ p, onAction, onSend, onFollowUp, compact, templates }: { p:
               arm({ channel: "INSTAGRAM", body: ig.body, templateId: ig.templateId });
             }}
             title={openTitle("INSTAGRAM", ig.body)}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:bg-purple-100 os-dark:hover:bg-purple-500/15"
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border border-[var(--os-border)] bg-[var(--os-surface)] text-[var(--os-text)] hover:bg-[var(--os-hover)]"
           >
             <FaInstagram className="w-3.5 h-3.5" /> IG
           </a>
@@ -782,7 +782,7 @@ function ActionRow({ p, onAction, onSend, onFollowUp, compact, templates }: { p:
       <button onClick={() => onAction(p.id, null, "PROPOSAL_SENT")} title="Mark proposal sent" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-indigo-50 os-dark:bg-indigo-500/10 text-indigo-700 os-dark:text-indigo-300 hover:bg-indigo-100 os-dark:hover:bg-indigo-500/15">
         <FileSignature className="w-3.5 h-3.5" /> Proposal
       </button>
-      <button onClick={() => onAction(p.id, "CONVERTI", "STATUS_CONVERTI")} title="Mark client won" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm hover:shadow">
+      <button onClick={() => onAction(p.id, "CONVERTI", "STATUS_CONVERTI")} title="Mark client won" className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium os-btn-primary">
         <Trophy className="w-3.5 h-3.5" /> Won
       </button>
     </div>
@@ -885,7 +885,7 @@ function PredictionsTab({ predictions, loading, onAction, onSend, onFollowUp, te
       {predictions.map((p, i) => (
         <div key={p.id} className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4">
           <div className="flex items-start gap-3">
-            <div className="shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/30">
+            <div className="shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text)]">
               <div className="text-[10px] uppercase tracking-wider font-medium opacity-80 leading-none">Score</div>
               <div className="text-[15px] font-bold tabular-nums leading-tight">{p.predictionScore}</div>
             </div>
@@ -898,7 +898,7 @@ function PredictionsTab({ predictions, loading, onAction, onSend, onFollowUp, te
               </div>
               <div className="flex flex-wrap gap-1 mb-2">
                 {p.reasons.map((r) => (
-                  <span key={r} className="text-[10.5px] px-1.5 py-0.5 rounded bg-purple-50 os-dark:bg-purple-500/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] border border-purple-100 os-dark:border-purple-500/30">{r}</span>
+                  <span key={r} className="text-[11px] px-1.5 py-0.5 rounded bg-[var(--os-hover)] text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)] border border-[var(--os-border)]">{r}</span>
                 ))}
               </div>
               <ActionRow p={p} onAction={onAction} onSend={onSend} onFollowUp={onFollowUp} templates={templates} />
@@ -946,7 +946,7 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
       </div>
 
       {/* Main card */}
-      <div className="rounded-2xl border-2 border-purple-200 os-dark:border-purple-500/30 bg-[var(--os-surface)] p-6 sm:p-8 mb-4 shadow-md shadow-purple-500/5">
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-6 sm:p-8 mb-4 shadow-sm">
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           <Flame className="w-4 h-4 text-rose-600 os-dark:text-rose-400" />
           <span className="text-[11px] px-2 py-0.5 rounded bg-rose-50 os-dark:bg-rose-500/10 text-rose-700 os-dark:text-rose-300 font-bold uppercase tracking-wider">HOT</span>
@@ -1002,7 +1002,7 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
                     arm({ channel: "INSTAGRAM", body: ig.body, templateId: ig.templateId });
                   }}
                   title={openTitle("INSTAGRAM", ig.body)}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md shadow-purple-500/30 hover:shadow-lg"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm hover:brightness-110"
                 >
                   <FaInstagram className="w-4 h-4" /> Instagram
                 </a>
@@ -1040,7 +1040,7 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
           <button onClick={() => onAction(current.id, null, "PROPOSAL_SENT")} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-indigo-50 os-dark:bg-indigo-500/10 text-indigo-700 os-dark:text-indigo-300 hover:bg-indigo-100 os-dark:hover:bg-indigo-500/15">
             <FileSignature className="w-3 h-3" /> Proposal
           </button>
-          <button onClick={() => onAction(current.id, "CONVERTI", "STATUS_CONVERTI")} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white">
+          <button onClick={() => onAction(current.id, "CONVERTI", "STATUS_CONVERTI")} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium os-btn-primary">
             <Trophy className="w-3 h-3" /> Client won
           </button>
         </div>
@@ -1067,7 +1067,7 @@ function FocusTab({ prospects, onAction, onSend, onFollowUp, templates }: { pros
         </button>
         <button
           onClick={() => setIdx((i) => Math.min(prospects.length - 1, i + 1))}
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-[14px] font-bold bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md hover:shadow-lg"
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-[14px] font-bold os-btn-primary"
         >
           Next prospect <ChevronRight className="w-4 h-4" />
         </button>
@@ -1113,7 +1113,7 @@ function AllHotTab({ prospects, loading, onAction, onSend, onFollowUp, templates
             className={cn(
               "text-[12px] px-3 py-1.5 rounded-lg font-medium transition-all",
               filter === f.id
-                ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
+                ? "bg-[var(--os-surface)] border border-[var(--os-text)] text-[var(--os-text)] shadow-sm"
                 : "bg-[var(--os-surface)] border border-[var(--os-border)] text-[#475569] os-dark:text-[var(--os-text)] hover:bg-gray-50 os-dark:hover:bg-[var(--os-hover)]"
             )}
           >
@@ -1236,8 +1236,8 @@ function QuickAddModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
       <div {...dialogProps} className="relative w-full max-w-lg bg-[var(--os-surface)] rounded-2xl border border-[var(--os-border)] shadow-2xl my-8">
         <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--os-border)]">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8B00FF] to-[#C026D3] flex items-center justify-center shadow-md shadow-purple-500/20">
-              <Plus className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-lg bg-[var(--os-hover)] border border-[var(--os-border)] flex items-center justify-center">
+              <Plus className="w-4 h-4 text-[var(--os-brand)] os-dark:text-[var(--os-purple)]" />
             </div>
             <div>
               <h2 id={titleId} className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Quick add prospect</h2>
@@ -1268,8 +1268,8 @@ function QuickAddModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
               <input type="text" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Restaurant Le Foundouk" className={QINPUT} required />
             </QField>
 
-            <div className="rounded-lg border border-purple-200 os-dark:border-purple-500/30 bg-purple-50/30 os-dark:bg-purple-500/10 p-2.5">
-              <div className="text-[11px] uppercase tracking-wider text-[#7C3AED] os-dark:text-[var(--os-purple)] font-bold mb-2">Contact (need at least one)</div>
+            <div className="rounded-lg border border-[var(--os-border)] bg-[var(--os-surface-2)] p-2.5">
+              <div className="text-[11px] uppercase tracking-wider text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)] font-bold mb-2">Contact (need at least one)</div>
               <div className="grid grid-cols-2 gap-2">
                 <QField label="Phone">
                   <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="06 12 34 56 78" className={QINPUT} />
@@ -1319,8 +1319,8 @@ function QuickAddModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
             <div className="flex justify-end gap-2 pt-1">
               <button type="button" onClick={onClose} className="px-3 py-2 rounded-xl text-[13px] font-medium text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)]">Cancel</button>
               <button type="submit" disabled={!canSubmit || saving} className={cn(
-                "inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-[13px] font-semibold text-white shadow-md transition-all",
-                !canSubmit || saving ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] hover:shadow-lg"
+                "inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-[13px] font-semibold transition-all",
+                !canSubmit || saving ? "bg-gray-400 text-white cursor-not-allowed" : "os-btn-primary"
               )}>
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                 {saving ? "Adding..." : "Add & ready to message"}

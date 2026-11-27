@@ -461,7 +461,7 @@ export function BulkSweepTab({
       )}
 
       {/* Presets */}
-      <div className="rounded-2xl border border-purple-200 os-dark:border-purple-500/30 bg-purple-50/30 os-dark:bg-purple-500/10 p-4 sm:p-5">
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5">
         <div className="flex items-center gap-2 mb-3">
           <Zap className="w-4 h-4 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
           <h2 className="text-[14px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Quick presets</h2>
@@ -478,21 +478,21 @@ export function BulkSweepTab({
           <button
             onClick={presetPriority}
             disabled={running}
-            className="text-[12px] px-3 py-1.5 rounded-lg font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm hover:shadow disabled:opacity-50"
+            className="text-[12px] px-3 py-1.5 rounded-lg font-medium os-btn-primary"
           >
             Priority sectors (12)
           </button>
           <button
             onClick={presetSecondary}
             disabled={running}
-            className="text-[12px] px-3 py-1.5 rounded-lg font-medium border border-purple-200 os-dark:border-purple-500/30 bg-[var(--os-surface)] text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10 disabled:opacity-50"
+            className="text-[12px] px-3 py-1.5 rounded-lg font-medium border border-[var(--os-border)] bg-[var(--os-surface)] text-[var(--os-text)] hover:bg-[var(--os-hover)] hover:border-[var(--os-border-hover)] disabled:opacity-50"
           >
             Secondary sectors
           </button>
           <button
             onClick={presetAllSectors}
             disabled={running}
-            className="text-[12px] px-3 py-1.5 rounded-lg font-medium border border-purple-200 os-dark:border-purple-500/30 bg-[var(--os-surface)] text-[#7C3AED] os-dark:text-[var(--os-purple)] hover:bg-purple-50 os-dark:hover:bg-purple-500/10 disabled:opacity-50"
+            className="text-[12px] px-3 py-1.5 rounded-lg font-medium border border-[var(--os-border)] bg-[var(--os-surface)] text-[var(--os-text)] hover:bg-[var(--os-hover)] hover:border-[var(--os-border-hover)] disabled:opacity-50"
           >
             All sectors ({sectors.length})
           </button>
@@ -528,8 +528,8 @@ export function BulkSweepTab({
               className={cn(
                 "text-[11.5px] px-2.5 py-1 rounded-full border transition-all",
                 selectedCities.has(c.key)
-                  ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white border-transparent"
-                  : "bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] border-[var(--os-border)] hover:border-purple-300 os-dark:hover:border-purple-500/30",
+                  ? "bg-[var(--os-primary-bg)] text-[var(--os-primary-fg)] border-transparent"
+                  : "bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] border-[var(--os-border)] hover:border-[var(--os-border-hover)]",
                 running && "opacity-50 cursor-not-allowed"
               )}
             >
@@ -575,8 +575,8 @@ export function BulkSweepTab({
                       className={cn(
                         "text-[11.5px] px-2.5 py-1 rounded-full border transition-all",
                         selectedSectors.has(s.key)
-                          ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white border-transparent"
-                          : "bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] border-[var(--os-border)] hover:border-purple-300 os-dark:hover:border-purple-500/30",
+                          ? "bg-[var(--os-primary-bg)] text-[var(--os-primary-fg)] border-transparent"
+                          : "bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] border-[var(--os-border)] hover:border-[var(--os-border-hover)]",
                         running && "opacity-50 cursor-not-allowed"
                       )}
                     >
@@ -609,8 +609,8 @@ export function BulkSweepTab({
               className={cn(
                 "text-[11.5px] px-2.5 py-1 rounded-full border transition-all",
                 selectedNeighborhoods.has(n)
-                  ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white border-transparent"
-                  : "bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] border-[var(--os-border)] hover:border-purple-300 os-dark:hover:border-purple-500/30",
+                  ? "bg-[var(--os-primary-bg)] text-[var(--os-primary-fg)] border-transparent"
+                  : "bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] border-[var(--os-border)] hover:border-[var(--os-border-hover)]",
                 running && "opacity-50 cursor-not-allowed"
               )}
             >
@@ -632,7 +632,7 @@ export function BulkSweepTab({
       )}
 
       {/* Plan + start */}
-      <div className="rounded-2xl border-2 border-purple-200 os-dark:border-purple-500/30 bg-purple-50/30 os-dark:bg-purple-500/10 p-4 sm:p-5">
+      <div className="rounded-2xl border border-[var(--os-border-hover)] bg-[var(--os-surface)] shadow-sm p-4 sm:p-5">
         {/* Sweep history pre-check banner */}
         {sweepCheck && sweepCheck.matches.length > 0 && (
           <div className="rounded-lg border border-amber-200 os-dark:border-amber-500/30 bg-amber-50/40 os-dark:bg-amber-500/10 p-3 mb-3">
@@ -681,7 +681,7 @@ export function BulkSweepTab({
             <button
               onClick={startSweep}
               disabled={effectiveQueries.length === 0 || tooMany}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium os-btn-primary"
             >
               <Play className="w-4 h-4" />
               Start sweep
@@ -695,8 +695,8 @@ export function BulkSweepTab({
               <span>{progress.completed} / {progress.total} · {progress.currentLabel}</span>
               <span>{Math.round((progress.completed / progress.total) * 100)}%</span>
             </div>
-            <div className="h-2 rounded-full bg-purple-100 os-dark:bg-purple-500/15 overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#8B00FF] to-[#C026D3] transition-all" style={{ width: `${(progress.completed / progress.total) * 100}%` }} />
+            <div className="h-2 rounded-full bg-[var(--os-hover)] overflow-hidden">
+              <div className="h-full bg-[var(--os-purple)] transition-all" style={{ width: `${(progress.completed / progress.total) * 100}%` }} />
             </div>
             {progress.errors > 0 && <div className="text-[11px] text-amber-700 os-dark:text-amber-300 mt-1">{progress.errors} queries errored (typically rate-limit or no-data)</div>}
           </div>
@@ -758,7 +758,7 @@ export function BulkSweepTab({
               <button
                 onClick={importAllNew}
                 disabled={importing || tierEligibleCount === 0}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm disabled:opacity-40"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium os-btn-primary"
               >
                 {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                 {importing ? "Importing..." : `Import ${tierEligibleCount}`}
@@ -975,7 +975,7 @@ function PostSweepReport({
       </div>
 
       {importResult && (
-        <div className="mt-3 p-2.5 rounded-lg bg-purple-50 os-dark:bg-purple-500/10 border border-purple-200 os-dark:border-purple-500/30 text-[12.5px] text-[#7C3AED] os-dark:text-[var(--os-purple)]">
+        <div className="mt-3 p-2.5 rounded-lg bg-[var(--os-surface-2)] border border-[var(--os-border)] text-[12.5px] text-[var(--os-text)]">
           ✓ Imported <span className="font-bold">{importResult.imported}</span> prospect{importResult.imported !== 1 ? "s" : ""}
           {importResult.skipped > 0 && ` · skipped ${importResult.skipped} final-check duplicates`}
         </div>
@@ -988,7 +988,7 @@ function SummaryStat({ label, value, subtle, highlight, warn }: { label: string;
   return (
     <div className={cn(
       "rounded-xl border bg-[var(--os-surface)] p-3",
-      highlight ? "border-purple-200 os-dark:border-purple-500/30" : warn ? "border-amber-200 os-dark:border-amber-500/30" : "border-emerald-100 os-dark:border-emerald-500/30"
+      highlight ? "border-[var(--os-border-hover)]" : warn ? "border-amber-200 os-dark:border-amber-500/30" : "border-emerald-100 os-dark:border-emerald-500/30"
     )}>
       <div className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-0.5">{label}</div>
       <div className={cn("text-2xl font-bold tabular-nums", highlight ? "text-[#8B00FF] os-dark:text-[var(--os-purple)]" : warn ? "text-amber-700 os-dark:text-amber-300" : "text-[#0F172A] os-dark:text-[var(--os-text)]")}>

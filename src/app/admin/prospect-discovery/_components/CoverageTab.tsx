@@ -103,10 +103,10 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
       )}
 
       {/* Find More */}
-      <div className="rounded-2xl border-2 border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50/40 to-violet-50/40 os-dark:from-purple-500/10 os-dark:to-violet-500/5 p-4 sm:p-5 flex items-center justify-between gap-3 flex-wrap">
+      <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] shadow-sm p-4 sm:p-5 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B00FF] to-[#C026D3] flex items-center justify-center shadow-md shadow-purple-500/30">
-            <TrendingDown className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-xl bg-[var(--os-hover)] border border-[var(--os-border)] flex items-center justify-center">
+            <TrendingDown className="w-5 h-5 text-[var(--os-brand)] os-dark:text-[var(--os-purple)]" />
           </div>
           <div className="min-w-0">
             <div className="text-[14px] font-semibold text-[var(--os-text)]">Find more prospects in low-coverage sectors</div>
@@ -120,7 +120,7 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
         <button
           onClick={() => onFindMore(findMoreSectors)}
           disabled={data.lowCoverageSectors.length === 0}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md hover:shadow-lg disabled:opacity-40 transition-all"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium os-btn-primary"
         >
           <Sparkles className="w-4 h-4" />
           Find more →
@@ -157,7 +157,7 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
                   <td className="px-3 py-2 text-right text-[13px] text-[#7C3AED] os-dark:text-[var(--os-purple)] tabular-nums font-medium">{row.remaining}</td>
                   <td className="px-4 py-2">
                     <div className="h-1.5 rounded-full bg-gray-100 os-dark:bg-[var(--os-surface-2)] overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-[#8B00FF] to-[#C026D3]" style={{ width: `${(row.discovered / maxSectorDiscovered) * 100}%` }} />
+                      <div className="h-full bg-[var(--os-purple)]" style={{ width: `${(row.discovered / maxSectorDiscovered) * 100}%` }} />
                     </div>
                   </td>
                 </tr>
@@ -194,7 +194,7 @@ export function CoverageTab({ onFindMore }: { onFindMore: (sectorKeys: string[])
                   <td className="px-3 py-2 text-right text-[13px] text-[#7C3AED] os-dark:text-[var(--os-purple)] tabular-nums font-medium">{row.remaining}</td>
                   <td className="px-4 py-2">
                     <div className="h-1.5 rounded-full bg-gray-100 os-dark:bg-[var(--os-surface-2)] overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-[#8B00FF] to-[#C026D3]" style={{ width: `${(row.discovered / maxNbDiscovered) * 100}%` }} />
+                      <div className="h-full bg-[var(--os-purple)]" style={{ width: `${(row.discovered / maxNbDiscovered) * 100}%` }} />
                     </div>
                   </td>
                 </tr>
@@ -286,7 +286,7 @@ function Stat({ label, value, subtle, highlight }: { label: string; value: numbe
   return (
     <div className={cn(
       "rounded-2xl border p-4 sm:p-5",
-      highlight ? "border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50 to-violet-50 os-dark:from-purple-500/10 os-dark:to-violet-500/5" : "border-[var(--os-border)] bg-[var(--os-surface)]"
+      highlight ? "border-[var(--os-border-hover)] bg-[var(--os-surface)] shadow-sm" : "border-[var(--os-border)] bg-[var(--os-surface)]"
     )}>
       <div className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1.5">{label}</div>
       <div className={cn("text-2xl sm:text-3xl font-bold tabular-nums", highlight ? "text-[#8B00FF] os-dark:text-[var(--os-purple)]" : "text-[#0F172A] os-dark:text-[var(--os-text)]")}>
