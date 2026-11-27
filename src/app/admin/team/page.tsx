@@ -131,7 +131,7 @@ export default function TeamPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-purple-300 os-dark:border-purple-500/30 border-t-[#8B00FF] rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-[var(--os-border)] border-t-[var(--os-text-muted)] rounded-full animate-spin" />
       </div>
     );
   }
@@ -145,7 +145,7 @@ export default function TeamPage() {
         actions={
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white rounded-xl text-[13px] font-medium shadow-sm shadow-purple-200 hover:shadow-md hover:shadow-purple-300 transition-all hover:-translate-y-0.5 active:translate-y-0"
+            className="flex items-center gap-2 px-5 py-2.5 os-btn-primary rounded-xl text-[13px] font-medium transition-all hover:-translate-y-0.5 active:translate-y-0"
           >
             <HiOutlinePlus className="w-4 h-4" />
             Add Member
@@ -172,8 +172,8 @@ export default function TeamPage() {
             <GlassCard padding="lg">
               <form onSubmit={handleCreateUser} className="space-y-5">
                 <div className="flex items-center gap-3 mb-1">
-                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10">
-                    <HiOutlinePlus className="w-4 h-4 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
+                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[var(--os-hover)] border border-[var(--os-border)]">
+                    <HiOutlinePlus className="w-4 h-4 text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)]" />
                   </div>
                   <div>
                     <h3 className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">New team member</h3>
@@ -244,7 +244,7 @@ export default function TeamPage() {
           action={
             <button
               onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white rounded-xl text-[13px] font-medium shadow-sm shadow-purple-200 hover:shadow-md hover:shadow-purple-300 transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 os-btn-primary rounded-xl text-[13px] font-medium transition-all"
             >
               <HiOutlinePlus className="w-4 h-4" />
               Add Member
@@ -304,7 +304,7 @@ export default function TeamPage() {
                       <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider font-medium mt-0.5">Replies</p>
                     </div>
                     <div>
-                      <p className="text-xl font-bold text-[#8B00FF] os-dark:text-[var(--os-purple)]">{s.converted}</p>
+                      <p className="text-xl font-bold text-[var(--os-text)]">{s.converted}</p>
                       <p className="text-[11px] text-[#64748B] os-dark:text-[var(--os-text-soft)] uppercase tracking-wider font-medium mt-0.5">Converted</p>
                     </div>
                   </div>
@@ -316,7 +316,7 @@ export default function TeamPage() {
                     </div>
                     <div className="h-2 bg-[#F1F5F9] os-dark:bg-[var(--os-surface-2)] rounded-full overflow-hidden">
                       <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-[#8B00FF] to-[#C026D3]"
+                        className="h-full rounded-full bg-[var(--os-purple)]"
                         initial={{ width: 0 }}
                         animate={{ width: `${Math.min(workload, 100)}%` }}
                         transition={{ duration: 0.8, delay: i * 0.06 + 0.3, ease: "easeOut" }}

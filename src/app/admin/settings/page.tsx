@@ -148,7 +148,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-6 h-6 animate-spin text-purple-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-[var(--os-text-soft)]" />
       </div>
     );
   }
@@ -162,8 +162,8 @@ export default function SettingsPage() {
       {/* Profile Section */}
       <GlassCard padding="lg" className="max-w-2xl">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
-            <User className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] flex items-center justify-center">
+            <User className="w-5 h-5 text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)]" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Profile</h2>
@@ -194,7 +194,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="flex items-center gap-3 text-xs text-[#94A3B8] os-dark:text-[var(--os-text-soft)] mb-4">
-          <span className="px-2 py-0.5 rounded-md bg-purple-50 os-dark:bg-purple-500/10 text-purple-600 os-dark:text-purple-400 font-medium capitalize">{me?.role}</span>
+          <span className="px-2 py-0.5 rounded-md bg-[var(--os-hover)] text-[var(--os-text)] border border-[var(--os-border)] font-medium capitalize">{me?.role}</span>
           <span>{me?.email}</span>
         </div>
 
@@ -206,8 +206,8 @@ export default function SettingsPage() {
       {/* Password Section */}
       <GlassCard padding="lg" className="max-w-2xl">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-            <Lock className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] flex items-center justify-center">
+            <Lock className="w-5 h-5 text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)]" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Change Password</h2>
@@ -276,8 +276,8 @@ export default function SettingsPage() {
       {isAdmin && (
         <GlassCard padding="lg">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] flex items-center justify-center">
+              <Shield className="w-5 h-5 text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)]" />
             </div>
             <div>
               <h2 className="text-base font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Team Management</h2>
@@ -291,8 +291,8 @@ export default function SettingsPage() {
               <li key={user.id} className="py-3 space-y-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0",
-                    user.isActive ? "bg-gradient-to-br from-purple-500 to-violet-600" : "bg-gray-300 os-dark:bg-[var(--os-surface-3)]",
+                    "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 border",
+                    user.isActive ? "bg-[var(--os-hover)] border-[var(--os-border)] text-[var(--os-text)]" : "bg-gray-300 os-dark:bg-[var(--os-surface-3)] border-transparent text-white",
                   )}>
                     {user.avatarInitials}
                   </div>
@@ -354,8 +354,8 @@ export default function SettingsPage() {
                     <td className="py-3 px-2">
                       <div className="flex items-center gap-2.5">
                         <div className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white",
-                          user.isActive ? "bg-gradient-to-br from-purple-500 to-violet-600" : "bg-gray-300 os-dark:bg-[var(--os-surface-3)]",
+                          "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border",
+                          user.isActive ? "bg-[var(--os-hover)] border-[var(--os-border)] text-[var(--os-text)]" : "bg-gray-300 os-dark:bg-[var(--os-surface-3)] border-transparent text-white",
                         )}>
                           {user.avatarInitials}
                         </div>

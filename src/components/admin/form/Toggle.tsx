@@ -31,7 +31,7 @@ export function Toggle({ checked, onChange, label, description, disabled }: Togg
       <span
         className={cn(
           "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors",
-          checked ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] shadow-sm shadow-purple-500/30" : "bg-[#CBD5E1]",
+          checked ? "bg-[var(--os-purple-strong)]" : "bg-[#CBD5E1]",
         )}
       >
         <span
