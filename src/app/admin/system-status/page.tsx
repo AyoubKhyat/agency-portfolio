@@ -131,7 +131,7 @@ export default function SystemStatusPage() {
     <div className="max-w-5xl mx-auto space-y-6">
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-[var(--os-hover)] border border-[var(--os-border)] flex items-center justify-center">
             <Shield className="w-5 h-5 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
           </div>
           <div>

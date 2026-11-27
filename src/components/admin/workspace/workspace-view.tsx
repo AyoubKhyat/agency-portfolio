@@ -224,7 +224,7 @@ function CompanyMark({ name, domain }: { name: string; domain: string | null }) 
 function ContinuityBanner({ data }: { data: LeadWorkspace }) {
   if (data.source === "discovery" && data.imported) {
     return (
-      <div className="mt-6 rounded-2xl border border-purple-100 os-dark:border-purple-500/30 bg-gradient-to-r from-purple-50/70 os-dark:from-purple-500/10 to-fuchsia-50/40 os-dark:to-fuchsia-500/10 px-5 py-4">
+      <div className="mt-6 rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface-2)] px-5 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
           <div className="flex items-center gap-2 text-[13px] text-purple-900 os-dark:text-purple-300 flex-wrap">
             <span className="font-semibold">Discovery</span>
@@ -233,7 +233,7 @@ function ContinuityBanner({ data }: { data: LeadWorkspace }) {
             {data.imported.importedByName && <span className="text-purple-700/70 os-dark:text-purple-300">· by {data.imported.importedByName}</span>}
           </div>
           <Link href={`/admin/workspace/prospect/${data.imported.prospectId}`}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12.5px] font-semibold text-white bg-gradient-to-r from-[#8B00FF] to-[#C026D3] shadow-sm hover:shadow-md transition-all shrink-0">
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12.5px] font-semibold os-btn-primary transition-all shrink-0">
             Continue in Relationship Workspace <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -330,7 +330,7 @@ function AiResearchModule({ data }: { data: LeadWorkspace }) {
   return (
     <ModuleShell
       id="ai-research" icon={Sparkles}
-      iconClass="bg-gradient-to-br from-purple-50 os-dark:from-purple-500/10 to-fuchsia-50 os-dark:to-fuchsia-500/10 border-purple-100 os-dark:border-purple-500/30 text-purple-600 os-dark:text-purple-400"
+      iconClass="bg-[var(--os-hover)] border-[var(--os-border)] text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)]"
       title="AI Research" subtitle="What our agent understands about this company"
     >
       {ai ? (
@@ -378,8 +378,7 @@ function ResearchBlock({ index, question, body, icon: Icon }: { index: string; q
 
 function SuggestedOffer({ body }: { body: string }) {
   return (
-    <div className="relative rounded-2xl border border-purple-200/70 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50/80 os-dark:from-purple-500/10 via-white to-fuchsia-50/50 os-dark:to-fuchsia-500/10 p-6 overflow-hidden">
-      <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-purple-200/20 blur-2xl" />
+    <div className="relative rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface-2)] p-6 overflow-hidden">
       <div className="relative">
         <div className="flex items-center gap-2 mb-2.5">
           <Wand2 className="w-4 h-4 text-purple-600 os-dark:text-purple-400" />
@@ -476,7 +475,7 @@ function OutreachModule({ data }: { data: LeadWorkspace }) {
               </p>
             </div>
             <Link href={href}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-[12.5px] font-semibold text-white bg-gradient-to-r from-[#8B00FF] to-[#C026D3] shadow-sm hover:shadow-md transition-all shrink-0">
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-[12.5px] font-semibold os-btn-primary transition-all shrink-0">
               Draft on the prospect page <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           </div>

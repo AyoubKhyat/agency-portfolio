@@ -159,7 +159,7 @@ export function ProposalBuilder({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10">
+                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[var(--os-hover)] border border-[var(--os-border)]">
                     <FileText className="w-4.5 h-4.5 text-[#8B00FF]" />
                   </div>
                   <div>
@@ -198,7 +198,7 @@ export function ProposalBuilder({
                       className={cn(
                         "shrink-0 w-[180px] p-3.5 rounded-xl border text-left transition-all",
                         selectedPackage === pkg.name
-                          ? "border-[#8B00FF] bg-gradient-to-br from-[#8B00FF]/5 to-[#C026D3]/5 ring-2 ring-[#8B00FF]/20"
+                          ? "border-[#8B00FF] bg-white ring-2 ring-[#8B00FF]/20"
                           : "border-[#E5E7EB] bg-white hover:border-[#8B00FF]/30 hover:bg-[#FAFAFE]"
                       )}
                     >
@@ -255,7 +255,7 @@ export function ProposalBuilder({
                         <div className={cn(
                           "flex items-center justify-center w-4.5 h-4.5 rounded-md border transition-all shrink-0",
                           checked
-                            ? "bg-gradient-to-br from-[#8B00FF] to-[#C026D3] border-transparent"
+                            ? "bg-[var(--os-purple-strong)] border-transparent"
                             : "border-[#D1D5DB] bg-white"
                         )}>
                           {checked && <Check className="w-3 h-3 text-white" />}

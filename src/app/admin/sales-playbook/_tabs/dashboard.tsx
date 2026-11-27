@@ -148,9 +148,9 @@ export function DashboardTab() {
 
       {/* Winning insight banner */}
       {data.winningInsight && (
-        <div className="rounded-2xl border-2 border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50 to-violet-50 os-dark:from-purple-500/10 os-dark:to-violet-500/5 p-4 sm:p-5 flex items-start gap-3">
-          <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B00FF] to-[#C026D3] flex items-center justify-center shadow-md shadow-purple-500/30">
-            <Trophy className="w-5 h-5 text-white" />
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5 flex items-start gap-3">
+          <div className="shrink-0 w-10 h-10 rounded-xl bg-[var(--os-primary-bg)] flex items-center justify-center">
+            <Trophy className="w-5 h-5 text-[var(--os-primary-fg)]" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[11px] uppercase tracking-wider text-[#8B00FF] os-dark:text-[var(--os-purple)] font-bold mb-0.5">Winning insight</div>
@@ -278,13 +278,13 @@ function VariantPerformance({ variants }: { variants: { variant: string; sent: n
               key={v.variant}
               className={cn(
                 "rounded-2xl border p-4 bg-[var(--os-surface)]",
-                isWinner ? "border-purple-300 os-dark:border-purple-500/30 shadow-sm shadow-purple-500/10" : "border-[var(--os-border)]"
+                isWinner ? "border-purple-300 os-dark:border-purple-500/30 shadow-sm shadow-slate-900/[0.06]" : "border-[var(--os-border)]"
               )}
             >
               <div className="flex items-center justify-between mb-2">
                 <div className={cn(
                   "w-7 h-7 rounded-lg flex items-center justify-center text-[12px] font-bold",
-                  isWinner ? "bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white" : "bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-[#475569] os-dark:text-[var(--os-text)]"
+                  isWinner ? "bg-[var(--os-primary-bg)] text-[var(--os-primary-fg)]" : "bg-gray-100 os-dark:bg-[var(--os-surface-2)] text-[#475569] os-dark:text-[var(--os-text)]"
                 )}>
                   {v.variant}
                 </div>
@@ -316,7 +316,7 @@ function ConversionFunnel({ funnel }: { funnel: FunnelStage[] }) {
               <span className="text-[12px] text-[#64748B] os-dark:text-[var(--os-text-soft)] w-28 shrink-0">{stage.stage}</span>
               <div className="flex-1 relative">
                 <div
-                  className="h-7 rounded-md bg-gradient-to-r from-[#8B00FF] to-[#C026D3] flex items-center px-2 text-white text-[12px] font-semibold transition-all"
+                  className="h-7 rounded-md bg-[var(--os-purple-strong)] flex items-center px-2 text-white text-[12px] font-semibold transition-all"
                   style={{ width: `${widthPct}%`, opacity: 1 - i * 0.12 }}
                 >
                   {stage.count.toLocaleString()}
@@ -437,7 +437,7 @@ function MonthlySnapshot({ monthly }: { monthly: DashboardData["monthly"] }) {
             {monthly.replyRate}%
           </div>
         </div>
-        <div className="rounded-2xl border border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50 to-violet-50 os-dark:from-purple-500/10 os-dark:to-violet-500/5 p-4">
+        <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4">
           <div className="text-[11px] uppercase tracking-wider text-[#64748B] os-dark:text-[var(--os-text-soft)] font-medium mb-1.5">Clients won</div>
           <div className="text-2xl font-bold text-[#8B00FF] os-dark:text-[var(--os-purple)] tabular-nums">{monthly.clientsWon}</div>
         </div>

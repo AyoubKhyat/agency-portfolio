@@ -409,7 +409,7 @@ function ChatInner() {
                 active={active?.id === c.id}
                 onClick={() => openConversation(c)}
                 icon={
-                  <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[10px] font-bold flex items-center justify-center">
+                  <span className="w-5 h-5 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text)] text-[10px] font-bold flex items-center justify-center">
                     {c.partner?.avatarInitials ?? "?"}
                   </span>
                 }
@@ -475,7 +475,7 @@ function ChatInner() {
                 <ArrowLeft className="w-4 h-4" />
               </button>
               {active.isDm ? (
-                <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[11px] font-bold flex items-center justify-center">
+                <span className="w-7 h-7 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text)] text-[11px] font-bold flex items-center justify-center">
                   {active.partner?.avatarInitials ?? "?"}
                 </span>
               ) : (
@@ -697,7 +697,7 @@ function MessageBubble({ message, isMe, isAdmin, groupWithPrev, team, reactions,
               <Sparkles className="w-4 h-4" />
             </span>
           ) : (
-            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[11px] font-bold">
+            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text)] text-[11px] font-bold">
               {author?.avatarInitials ?? message.authorName.slice(0, 2).toUpperCase()}
             </span>
           )

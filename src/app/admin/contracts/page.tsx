@@ -208,9 +208,9 @@ export default function ContractsPage() {
 
 function SignedValueStat({ value }: { value: number }) {
   return (
-    <div className="rounded-2xl border border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50 os-dark:from-purple-500/10 to-violet-50 os-dark:to-violet-500/10 p-4 sm:p-5 shadow-sm">
+    <div className="rounded-2xl border border-[var(--os-border)] bg-[var(--os-surface)] p-4 sm:p-5 shadow-sm">
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10 text-[var(--os-brand)]">
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)]">
           <DollarSign className="w-5 h-5" />
         </div>
       </div>

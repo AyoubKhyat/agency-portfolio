@@ -221,7 +221,7 @@ function LeadCard({ lead, state, onImport, canDraft = false }: { lead: TodayLead
           </Link>
         ) : (
           <button type="button" onClick={onImport} disabled={state.busy}
-            className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-semibold text-white bg-gradient-to-r from-[#8B00FF] to-[#2f5bff] disabled:opacity-60">
+            className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-semibold os-btn-primary disabled:opacity-60">
             {state.busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Import to prospects
           </button>
         )}

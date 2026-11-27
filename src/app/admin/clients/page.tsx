@@ -161,13 +161,13 @@ export default function ClientsPage() {
           active={filter}
           onChange={setFilter}
         />
-        <div className="relative ml-auto">
+        <div className="relative w-full sm:w-auto sm:ml-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF] os-dark:text-[var(--os-text-soft)]" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search clients..."
-            className="h-10 pl-9 pr-3 w-72 bg-[var(--os-surface)] border border-[var(--os-border)] rounded-lg text-[13px] text-[#111827] os-dark:text-[var(--os-text)] placeholder:text-[#9CA3AF] os-dark:placeholder:text-[var(--os-text-soft)] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15"
+            className="h-10 pl-9 pr-3 w-full sm:w-72 bg-[var(--os-surface)] border border-[var(--os-border)] rounded-lg text-[13px] text-[#111827] os-dark:text-[var(--os-text)] placeholder:text-[#9CA3AF] os-dark:placeholder:text-[var(--os-text-soft)] focus:outline-none focus:border-[#8B00FF] focus:ring-2 focus:ring-[#8B00FF]/15"
           />
         </div>
       </div>

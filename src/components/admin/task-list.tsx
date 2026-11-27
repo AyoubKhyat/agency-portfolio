@@ -324,7 +324,7 @@ export function TaskList({
                         </span>
                         {t.owner && (
                           <span className="inline-flex items-center gap-1 text-[#6B7280] os-dark:text-[var(--os-text)]">
-                            <span className="flex items-center justify-center w-4 h-4 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[8px] font-bold">
+                            <span className="flex items-center justify-center w-4 h-4 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text)] text-[8px] font-bold">
                               {t.owner.avatarInitials}
                             </span>
                             {t.owner.fullName}

@@ -71,7 +71,7 @@ export function SequencesTab() {
               className={cn(
                 "text-[12px] px-3 py-1.5 rounded-lg font-medium capitalize transition-all",
                 filter === f
-                  ? "bg-gradient-to-r from-[#8B00FF]/10 to-[#C026D3]/10 text-[#7C3AED] os-dark:text-[var(--os-purple)] border border-purple-200 os-dark:border-purple-500/30"
+                  ? "bg-[var(--os-surface)] text-[var(--os-text)] border border-[var(--os-border-hover)] shadow-sm shadow-slate-900/[0.04]"
                   : "text-[#475569] os-dark:text-[var(--os-text)] hover:bg-[#F1F5F9] os-dark:hover:bg-[var(--os-hover)] border border-transparent"
               )}
             >

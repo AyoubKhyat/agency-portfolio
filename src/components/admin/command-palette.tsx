@@ -286,14 +286,14 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
                 isSelected
-                  ? "bg-gradient-to-r from-[#8B00FF]/5 to-[#C026D3]/5 os-dark:from-[#8B00FF]/15 os-dark:to-[#C026D3]/10"
+                  ? "bg-[var(--os-hover)]"
                   : "hover:bg-[#F8FAFC] os-dark:hover:bg-[var(--os-hover)]"
               )}
             >
               <div className={cn(
                 "flex items-center justify-center w-8 h-8 rounded-lg shrink-0",
                 isSelected
-                  ? "bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white"
+                  ? "bg-[var(--os-primary-bg)] text-[var(--os-primary-fg)]"
                   : "bg-[#F1F5F9] os-dark:bg-[var(--os-hover)] text-[#475569] os-dark:text-[var(--os-text)]"
               )}>
                 <Icon className="w-4 h-4" />
@@ -347,14 +347,14 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
                 isSelected
-                  ? "bg-gradient-to-r from-[#8B00FF]/5 to-[#C026D3]/5 os-dark:from-[#8B00FF]/15 os-dark:to-[#C026D3]/10"
+                  ? "bg-[var(--os-hover)]"
                   : "hover:bg-[#F8FAFC] os-dark:hover:bg-[var(--os-hover)]"
               )}
             >
               <div className={cn(
                 "flex items-center justify-center w-8 h-8 rounded-lg shrink-0",
                 isSelected
-                  ? "bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white"
+                  ? "bg-[var(--os-primary-bg)] text-[var(--os-primary-fg)]"
                   : "bg-[#F1F5F9] os-dark:bg-[var(--os-hover)] text-[#475569] os-dark:text-[var(--os-text)]"
               )}>
                 <Icon className="w-4 h-4" />

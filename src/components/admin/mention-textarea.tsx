@@ -182,7 +182,7 @@ export const MentionTextarea = forwardRef<HTMLTextAreaElement, Props>(function M
               >
                 <span className={cn(
                   "flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold text-white shrink-0",
-                  active ? "bg-[#7E22CE]" : "bg-gradient-to-br from-[#8B00FF] to-[#C026D3]",
+                  active ? "bg-[#7E22CE]" : "bg-[#64748B]",
                 )}>
                   {u.avatarInitials ?? u.fullName.charAt(0)}
                 </span>

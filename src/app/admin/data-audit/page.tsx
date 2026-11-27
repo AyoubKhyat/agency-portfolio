@@ -361,7 +361,7 @@ function IssueCard({
         <button
           onClick={() => onFix(fixAction)}
           disabled={!!running}
-          className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm disabled:opacity-50"
+          className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium os-btn-primary disabled:opacity-50"
         >
           {running === fixAction ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
           {fixLabel}

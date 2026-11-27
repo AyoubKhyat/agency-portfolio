@@ -338,11 +338,11 @@ export default function CommandCenterPage() {
 
       {/* Top performers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <GlassCard padding="lg" className="border-purple-200 os-dark:border-purple-500/30 bg-gradient-to-br from-purple-50 to-violet-50 os-dark:from-purple-500/10 os-dark:to-violet-500/5">
+        <GlassCard padding="lg" className="">
           <SectionHeader title="Top salesperson" subtitle="By signed contract value (MAD)." icon={<Crown className="w-4 h-4 text-[#8B00FF] os-dark:text-[var(--os-purple)]" />} />
           {topSalesperson ? (
             <div className="flex items-center gap-4">
-              <span className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[#8B00FF] to-[#C026D3] text-white text-[16px] font-bold">
+              <span className="flex items-center justify-center w-14 h-14 rounded-full bg-[var(--os-hover)] border border-[var(--os-border)] text-[var(--os-text)] text-[16px] font-bold">
                 {topSalesperson.avatarInitials ?? (topSalesperson.fullName?.charAt(0) ?? "?")}
               </span>
               <div>
@@ -454,7 +454,7 @@ function MoneyDetail({ money }: { money: Money }) {
 
 function KPI({ label, value, suffix, tone, hint }: { label: string; value: string; suffix?: string; tone: "purple" | "blue" | "emerald" | "amber" | "indigo" | "cyan" | "red" | "ok"; hint?: string }) {
   const tones: Record<typeof tone, { ring: string; text: string; bg: string }> = {
-    purple:  { ring: "border-purple-200 os-dark:border-purple-500/30",  text: "text-[#8B00FF] os-dark:text-[var(--os-purple)]",  bg: "bg-gradient-to-br from-purple-50 to-violet-50 os-dark:from-purple-500/10 os-dark:to-violet-500/5" },
+    purple:  { ring: "border-[var(--os-border)]",  text: "text-[#8B00FF] os-dark:text-[var(--os-purple)]",  bg: "bg-[var(--os-surface)]" },
     blue:    { ring: "border-blue-200 os-dark:border-blue-500/30",    text: "text-blue-600 os-dark:text-blue-400",   bg: "bg-gradient-to-br from-blue-50 to-sky-50 os-dark:from-blue-500/10 os-dark:to-sky-500/5" },
     emerald: { ring: "border-emerald-200 os-dark:border-emerald-500/30", text: "text-emerald-600 os-dark:text-emerald-400",bg: "bg-gradient-to-br from-emerald-50 to-green-50 os-dark:from-emerald-500/10 os-dark:to-green-500/5" },
     amber:   { ring: "border-amber-200 os-dark:border-amber-500/30",   text: "text-amber-600 os-dark:text-amber-400",  bg: "bg-gradient-to-br from-amber-50 to-yellow-50 os-dark:from-amber-500/10 os-dark:to-yellow-500/5" },

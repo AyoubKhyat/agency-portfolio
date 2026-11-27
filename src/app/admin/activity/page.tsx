@@ -325,7 +325,7 @@ export default function ActivityPage() {
           onClick={() => setFilterUser(null)}
           className={`px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-all shrink-0 ${
             filterUser === null
-              ? "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm"
+              ? "bg-[var(--os-primary-bg)] text-[var(--os-primary-fg)] shadow-sm"
               : "bg-[var(--os-surface)] text-[#475569] os-dark:text-[var(--os-text)] border border-[#E2E8F0] os-dark:border-[var(--os-border)] hover:border-[#CBD5E1] os-dark:hover:border-[var(--os-border)]"
           }`}
         >
@@ -347,7 +347,7 @@ export default function ActivityPage() {
       {sortedStats.length > 0 && (
         <GlassCard padding="lg">
           <div className="flex items-center gap-2 mb-5">
-            <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-[#8B00FF]/10 to-[#C026D3]/10">
+            <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-[var(--os-hover)] border border-[var(--os-border)]">
               <Trophy size={16} className="text-[#8B00FF] os-dark:text-[var(--os-purple)]" />
             </div>
             <h3 className="text-[15px] font-semibold text-[#0F172A] os-dark:text-[var(--os-text)]">Team Leaderboard</h3>
@@ -398,7 +398,7 @@ export default function ActivityPage() {
                           delay: 0.2 + i * 0.06,
                           ease: [0.25, 0.46, 0.45, 0.94],
                         }}
-                        className="h-full rounded-full bg-gradient-to-r from-[#8B00FF] to-[#C026D3]"
+                        className="h-full rounded-full bg-[var(--os-purple)]"
                       />
                     </div>
                   </div>

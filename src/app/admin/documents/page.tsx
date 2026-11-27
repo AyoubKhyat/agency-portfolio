@@ -298,7 +298,7 @@ export default function DocumentsPage() {
               setEditing(null);
               setFormOpen(true);
             }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium os-btn-primary transition-all"
           >
             <Plus className="w-4 h-4" />
             Add Document
@@ -401,7 +401,7 @@ export default function DocumentsPage() {
                   setEditing(null);
                   setFormOpen(true);
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/20"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium os-btn-primary"
               >
                 <Plus className="w-4 h-4" />
                 Add Document

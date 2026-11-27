@@ -122,7 +122,7 @@ export default function DiscoveryPage() {
                 "shrink-0 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all flex items-center gap-1.5",
                 query.trim().length < 3 || state.kind === "loading"
                   ? "bg-[#F1F5F9] os-dark:bg-[var(--os-surface-2)] text-[#94A3B8] os-dark:text-[var(--os-text-soft)] cursor-not-allowed"
-                  : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-md shadow-purple-500/25 hover:shadow-lg hover:shadow-purple-500/30"
+                  : "os-btn-primary"
               )}
             >
               {state.kind === "loading" ? (
@@ -294,8 +294,8 @@ export default function DiscoveryPage() {
           transition={{ duration: 0.3, delay: 0.15 }}
           className="mt-12 text-center"
         >
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-50 to-fuchsia-50 os-dark:from-purple-500/15 os-dark:to-fuchsia-500/10 border border-purple-100 os-dark:border-purple-500/30 mb-4">
-            <Sparkles className="w-6 h-6 text-purple-600 os-dark:text-purple-400" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--os-hover)] border border-[var(--os-border)] mb-4">
+            <Sparkles className="w-6 h-6 text-[var(--os-text-muted)] os-dark:text-[var(--os-text-soft)]" />
           </div>
           <div className="text-[15px] font-semibold text-[var(--os-text)]">Ready to find your next clients</div>
           <p className="text-[13px] text-[var(--os-text-muted)] mt-1.5 max-w-md mx-auto">
@@ -442,7 +442,7 @@ function ResultCard({
         "group relative rounded-2xl border bg-[var(--os-surface)] overflow-hidden transition-all",
         isDuplicate
           ? "border-amber-200/70 os-dark:border-amber-500/30 bg-amber-50/30 os-dark:bg-amber-500/10"
-          : "border-[var(--os-border)] hover:border-purple-200 os-dark:hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/[0.04]"
+          : "border-[var(--os-border)] hover:border-purple-200 os-dark:hover:border-purple-500/30 hover:shadow-lg hover:shadow-slate-900/[0.04]"
       )}
     >
       <div className="p-5">
@@ -614,7 +614,7 @@ function ResultCard({
                   "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12.5px] font-semibold transition-all",
                   importing
                     ? "bg-purple-100 os-dark:bg-purple-500/15 text-purple-500 cursor-wait"
-                    : "bg-gradient-to-r from-[#8B00FF] to-[#C026D3] text-white shadow-sm hover:shadow-md"
+                    : "os-btn-primary"
                 )}
               >
                 {importing ? (
